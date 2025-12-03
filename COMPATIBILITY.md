@@ -174,10 +174,10 @@
 | `fz_append_string` | ✅ |
 | `fz_append_data` | ✅ |
 | `fz_md5_buffer` | ✅ |
-| `fz_append_int16_le` | ❌ |
-| `fz_append_int32_le` | ❌ |
-| `fz_append_int16_be` | ❌ |
-| `fz_append_int32_be` | ❌ |
+| `fz_append_int16_le` | ✅ |
+| `fz_append_int32_le` | ✅ |
+| `fz_append_int16_be` | ✅ |
+| `fz_append_int32_be` | ✅ |
 | `fz_append_bits` | ❌ |
 | `fz_append_bits_pad` | ❌ |
 | `fz_append_pdf_string` | ❌ |
@@ -193,17 +193,21 @@
 | `fz_read_byte` | ✅ |
 | `fz_peek_byte` | ✅ |
 | `fz_read` | ✅ |
-| `fz_read_all` | ❌ |
-| `fz_read_line` | ❌ |
-| `fz_skip` | ❌ |
+| `fz_read_all` | ✅ |
+| `fz_read_line` | ✅ |
+| `fz_skip` | ✅ |
 | `fz_tell` | ✅ |
 | `fz_seek` | ✅ |
 | `fz_is_eof` | ✅ |
-| `fz_read_uint16` | ❌ |
-| `fz_read_uint24` | ❌ |
-| `fz_read_uint32` | ❌ |
-| `fz_read_int16_le` | ❌ |
-| `fz_read_int32_le` | ❌ |
+| `fz_read_uint16` | ✅ |
+| `fz_read_uint24` | ✅ |
+| `fz_read_uint32` | ✅ |
+| `fz_read_int16_le` | ✅ |
+| `fz_read_int32_le` | ✅ |
+| `fz_read_uint16_le` | ✅ |
+| `fz_read_uint32_le` | ✅ |
+| `fz_read_bits` | ✅ |
+| `fz_sync_bits` | ✅ |
 
 ### Colorspace (`fz_color.h`)
 
