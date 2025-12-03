@@ -1,5 +1,5 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
 # Rust 2024 Code Generation Standards
 
@@ -238,6 +238,319 @@ lazy_static! {
 5. **Byte manipulation** - Use `bytes`, `byteorder` crates
 6. **Image formats** - Use `image` crate
 7. **Font parsing** - Use `ttf-parser`, `fontdb`
+
+## Code Organization and Module Structure
+
+### File Size Limits
+
+**ALWAYS split large source files into smaller, focused modules.**
+
+Recommended maximum file sizes:
+
+- **Soft limit**: 500 lines per file
+- **Hard limit**: 1000 lines per file
+- **Action required**: Files >1000 lines MUST be split into submodules
+
+```rust
+// ❌ BAD: Single large file (2000+ lines)
+// src/ffi/pdf_object.rs - Contains all PDF object operations
+
+// ✅ GOOD: Split into focused modules
+// src/ffi/pdf_object/
+//   ├── mod.rs          - Re-exports and module structure
+//   ├── types.rs        - Core types and data structures
+//   ├── create.rs       - Object creation functions
+//   ├── lifecycle.rs    - Keep/drop/refcount operations
+//   ├── array.rs        - Array operations
+//   ├── dict.rs         - Dictionary operations
+//   └── conversion.rs   - Type conversions
+```
+
+### When to Split a File
+
+Split a file into submodules when:
+
+1. **File exceeds 1000 lines**
+2. **Multiple distinct responsibilities** (violates Single Responsibility Principle)
+3. **Clear logical groupings** exist (create, read, update, delete)
+4. **Different feature sets** that could be conditionally compiled
+5. **Hard to navigate** or find specific functionality
+
+### Module Organization Patterns
+
+#### Pattern 1: By Functionality
+
+```rust
+// src/pdf/filter/
+mod mod.rs;          // Public API and FilterType enum
+mod flate.rs;        // FlateDecode implementation
+mod lzw.rs;          // LZWDecode implementation
+mod ascii85.rs;      // ASCII85Decode implementation
+mod asciihex.rs;     // ASCIIHexDecode implementation
+mod predictor.rs;    // Shared predictor functions
+mod chain.rs;        // Filter chaining logic
+
+// In mod.rs - re-export everything
+pub use flate::*;
+pub use lzw::*;
+pub use ascii85::*;
+```
+
+#### Pattern 2: By Object Lifecycle
+
+```rust
+// src/ffi/buffer/
+mod core.rs;         // Core Buffer struct and methods
+mod lifecycle.rs;    // new, keep, drop functions
+mod data_ops.rs;     // append, clear, resize operations
+mod conversion.rs;   // to_bytes, from_slice, etc.
+mod io.rs;          // Read/Write trait implementations
+```
+
+#### Pattern 3: By Layer (Recommended for FFI)
+
+```rust
+// src/ffi/pixmap/
+mod core.rs;         // Internal Pixmap structure
+mod lifecycle.rs;    // FFI lifecycle functions
+mod properties.rs;   // FFI property getters
+mod operations.rs;   // FFI operations (clear, invert, etc.)
+mod pixel_access.rs; // FFI pixel-level access
+```
+
+### Module File Structure
+
+#### Main Module File (mod.rs)
+
+```rust
+//! Module-level documentation
+//!
+//! Describes the overall purpose of this module.
+
+// Submodule declarations
+mod core;
+mod operations;
+mod helpers;
+
+// Re-exports (keep public API clean)
+pub use core::{MainType, ImportantTrait};
+pub use operations::*;
+
+// Internal items stay private
+use helpers::internal_function;
+
+// Module-level tests (if small)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // ...
+}
+```
+
+#### Individual Module Files
+
+```rust
+//! Focused documentation for this specific module
+
+use super::core::MainType;
+use crate::other::SomeType;
+
+// Keep tests WITH the implementation
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_specific_function() {
+        // Test code here
+    }
+}
+```
+
+### Module Splitting Guidelines
+
+#### Step 1: Identify Logical Groups
+
+Look for:
+- Groups of related functions (all array operations, all dict operations)
+- Different phases (creation, modification, destruction)
+- Feature boundaries (optional features, platform-specific)
+- Type families (different kinds of objects)
+
+#### Step 2: Create Module Structure
+
+```bash
+# Before: Single large file
+src/ffi/buffer.rs (1189 lines)
+
+# After: Organized modules
+src/ffi/buffer/
+├── mod.rs          # 50 lines  - Public API
+├── core.rs         # 200 lines - Core types
+├── lifecycle.rs    # 150 lines - Creation/destruction
+├── data_ops.rs     # 300 lines - Data operations
+├── conversion.rs   # 250 lines - Conversions
+└── encoding.rs     # 239 lines - Encoding operations
+```
+
+#### Step 3: Move Code Systematically
+
+1. Create the submodule directory
+2. Create `mod.rs` with module declarations
+3. Move related code to focused files
+4. Keep tests WITH their implementations
+5. Update imports and re-exports
+6. Verify with `cargo build` and `cargo test`
+
+### Re-exports Best Practices
+
+Keep your public API clean:
+
+```rust
+// ✅ GOOD: Clean re-exports in mod.rs
+mod types;
+mod create;
+mod operations;
+
+// Re-export public API
+pub use types::{PdfObj, PdfObjType};
+pub use create::*;
+pub use operations::*;
+
+// Users can simply: use crate::pdf_object::{PdfObj, create_null};
+```
+
+```rust
+// ❌ BAD: Forcing users to know internal structure
+mod types;
+mod create;
+mod operations;
+
+// Users have to: use crate::pdf_object::types::PdfObj;
+// Users have to: use crate::pdf_object::create::create_null;
+```
+
+### Anti-Patterns to Avoid
+
+#### ❌ Don't Split Just to Split
+
+```rust
+// ❌ BAD: Unnecessary splits
+mod add.rs          // Just one function
+mod subtract.rs     // Just one function
+mod multiply.rs     // Just one function
+
+// ✅ GOOD: Keep related operations together
+mod arithmetic.rs   // All basic arithmetic
+```
+
+#### ❌ Don't Create Circular Dependencies
+
+```rust
+// ❌ BAD: Module A depends on B, B depends on A
+// src/module_a.rs
+use crate::module_b::TypeB;
+
+// src/module_b.rs
+use crate::module_a::TypeA;  // Circular!
+
+// ✅ GOOD: Extract common types to a separate module
+// src/types.rs
+pub struct TypeA;
+pub struct TypeB;
+
+// src/module_a.rs
+use crate::types::{TypeA, TypeB};
+
+// src/module_b.rs
+use crate::types::{TypeA, TypeB};
+```
+
+#### ❌ Don't Duplicate Code Across Modules
+
+```rust
+// ❌ BAD: Duplicated helper function in each module
+// src/module_a.rs
+fn helper() { /* ... */ }
+
+// src/module_b.rs
+fn helper() { /* ... */ }  // Same function!
+
+// ✅ GOOD: Shared helpers in a common module
+// src/common/helpers.rs
+pub(crate) fn helper() { /* ... */ }
+
+// src/module_a.rs
+use crate::common::helpers::helper;
+
+// src/module_b.rs
+use crate::common::helpers::helper;
+```
+
+### Module Organization Checklist
+
+When organizing modules:
+
+- [ ] Each file has a single, clear responsibility
+- [ ] File is under 1000 lines (preferably under 500)
+- [ ] Tests are in the same file as implementation
+- [ ] Related functionality is grouped together
+- [ ] Public API is clean and well-documented
+- [ ] No circular dependencies
+- [ ] Common code is shared, not duplicated
+- [ ] Module structure mirrors conceptual organization
+
+### Example: Before and After
+
+#### Before (2000+ lines in one file)
+
+```rust
+// src/ffi/pdf_object.rs (2077 lines - too large!)
+
+pub struct PdfObj { /* ... */ }
+pub extern "C" fn pdf_new_null() { /* ... */ }
+pub extern "C" fn pdf_new_bool() { /* ... */ }
+pub extern "C" fn pdf_keep_obj() { /* ... */ }
+pub extern "C" fn pdf_drop_obj() { /* ... */ }
+pub extern "C" fn pdf_array_len() { /* ... */ }
+pub extern "C" fn pdf_array_push() { /* ... */ }
+// ... 50+ more functions ...
+```
+
+#### After (modularized)
+
+```rust
+// src/ffi/pdf_object/mod.rs (40 lines)
+mod types;
+mod create;
+mod refcount;
+mod array;
+mod dict;
+
+pub use types::*;
+pub use create::*;
+pub use refcount::*;
+pub use array::*;
+pub use dict::*;
+
+// src/ffi/pdf_object/types.rs (200 lines)
+pub struct PdfObj { /* ... */ }
+pub enum PdfObjType { /* ... */ }
+
+// src/ffi/pdf_object/create.rs (150 lines)
+pub extern "C" fn pdf_new_null() { /* ... */ }
+pub extern "C" fn pdf_new_bool() { /* ... */ }
+
+// src/ffi/pdf_object/refcount.rs (100 lines)
+pub extern "C" fn pdf_keep_obj() { /* ... */ }
+pub extern "C" fn pdf_drop_obj() { /* ... */ }
+
+// src/ffi/pdf_object/array.rs (200 lines)
+pub extern "C" fn pdf_array_len() { /* ... */ }
+pub extern "C" fn pdf_array_push() { /* ... */ }
+```
+
+**Result**: Much easier to navigate, understand, and maintain!
 
 ## Testing
 
