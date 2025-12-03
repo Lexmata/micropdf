@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+prebuilds/
+native/lib/
+*.node
+*.log
+.DS_Store
+
