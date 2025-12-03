@@ -243,4 +243,179 @@ mod tests {
         assert_eq!(fz_colorspace_is_rgb(0, FZ_COLORSPACE_RGB), 1);
         assert_eq!(fz_colorspace_is_cmyk(0, FZ_COLORSPACE_CMYK), 1);
     }
+
+    #[test]
+    fn test_colorspace_is_gray_negative() {
+        assert_eq!(fz_colorspace_is_gray(0, FZ_COLORSPACE_RGB), 0);
+        assert_eq!(fz_colorspace_is_gray(0, FZ_COLORSPACE_CMYK), 0);
+    }
+
+    #[test]
+    fn test_colorspace_is_rgb_negative() {
+        assert_eq!(fz_colorspace_is_rgb(0, FZ_COLORSPACE_GRAY), 0);
+        assert_eq!(fz_colorspace_is_rgb(0, FZ_COLORSPACE_CMYK), 0);
+    }
+
+    #[test]
+    fn test_colorspace_is_cmyk_negative() {
+        assert_eq!(fz_colorspace_is_cmyk(0, FZ_COLORSPACE_GRAY), 0);
+        assert_eq!(fz_colorspace_is_cmyk(0, FZ_COLORSPACE_RGB), 0);
+    }
+
+    #[test]
+    fn test_colorspace_type() {
+        assert!(matches!(colorspace_type(FZ_COLORSPACE_GRAY), ColorspaceType::Gray));
+        assert!(matches!(colorspace_type(FZ_COLORSPACE_RGB), ColorspaceType::Rgb));
+        assert!(matches!(colorspace_type(FZ_COLORSPACE_CMYK), ColorspaceType::Cmyk));
+        assert!(matches!(colorspace_type(99), ColorspaceType::None));
+    }
+
+    #[test]
+    fn test_colorspace_n() {
+        assert_eq!(colorspace_n(FZ_COLORSPACE_GRAY), 1);
+        assert_eq!(colorspace_n(FZ_COLORSPACE_RGB), 3);
+        assert_eq!(colorspace_n(FZ_COLORSPACE_CMYK), 4);
+        assert_eq!(colorspace_n(99), 0);
+    }
+
+    #[test]
+    fn test_device_gray_handle() {
+        let handle = fz_device_gray(0);
+        assert_eq!(handle, FZ_COLORSPACE_GRAY);
+    }
+
+    #[test]
+    fn test_device_rgb_handle() {
+        let handle = fz_device_rgb(0);
+        assert_eq!(handle, FZ_COLORSPACE_RGB);
+    }
+
+    #[test]
+    fn test_device_cmyk_handle() {
+        let handle = fz_device_cmyk(0);
+        assert_eq!(handle, FZ_COLORSPACE_CMYK);
+    }
+
+    #[test]
+    fn test_keep_drop_colorspace() {
+        // Keep and drop should not panic
+        let handle = fz_keep_colorspace(0, FZ_COLORSPACE_RGB);
+        assert_eq!(handle, FZ_COLORSPACE_RGB);
+        fz_drop_colorspace(0, handle);
+    }
+
+    #[test]
+    fn test_convert_color_gray_to_rgb() {
+        let src = [0.5f32];
+        let mut dst = [0.0f32; 3];
+        
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_GRAY,
+            src.as_ptr(),
+            FZ_COLORSPACE_RGB,
+            dst.as_mut_ptr(),
+            0,
+        );
+        
+        assert!((dst[0] - 0.5).abs() < 0.01);
+        assert!((dst[1] - 0.5).abs() < 0.01);
+        assert!((dst[2] - 0.5).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_convert_color_rgb_to_gray() {
+        let src = [1.0f32, 1.0, 1.0]; // White
+        let mut dst = [0.0f32];
+        
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_RGB,
+            src.as_ptr(),
+            FZ_COLORSPACE_GRAY,
+            dst.as_mut_ptr(),
+            0,
+        );
+        
+        // Luminance should be close to 1.0 for white
+        assert!((dst[0] - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_convert_color_rgb_to_cmyk() {
+        let src = [1.0f32, 0.0, 0.0]; // Red
+        let mut dst = [0.0f32; 4];
+        
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_RGB,
+            src.as_ptr(),
+            FZ_COLORSPACE_CMYK,
+            dst.as_mut_ptr(),
+            0,
+        );
+        
+        // Red in CMYK: C=0, M=1, Y=1, K=0
+        assert!(dst[0] < 0.1); // Cyan should be low
+        assert_eq!(dst[3], 0.0); // Black should be 0
+    }
+
+    #[test]
+    fn test_convert_color_cmyk_to_rgb() {
+        let src = [0.0f32, 0.0, 0.0, 0.0]; // No ink = white
+        let mut dst = [0.0f32; 3];
+        
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_CMYK,
+            src.as_ptr(),
+            FZ_COLORSPACE_RGB,
+            dst.as_mut_ptr(),
+            0,
+        );
+        
+        assert!((dst[0] - 1.0).abs() < 0.01);
+        assert!((dst[1] - 1.0).abs() < 0.01);
+        assert!((dst[2] - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_convert_color_same_colorspace() {
+        let src = [0.25f32, 0.5, 0.75];
+        let mut dst = [0.0f32; 3];
+        
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_RGB,
+            src.as_ptr(),
+            FZ_COLORSPACE_RGB,
+            dst.as_mut_ptr(),
+            0,
+        );
+        
+        assert_eq!(dst, src);
+    }
+
+    #[test]
+    fn test_convert_color_null_pointers() {
+        // Should not panic with null pointers
+        fz_convert_color(0, FZ_COLORSPACE_RGB, std::ptr::null(), FZ_COLORSPACE_GRAY, std::ptr::null_mut(), 0);
+    }
+
+    #[test]
+    fn test_convert_color_invalid_colorspace() {
+        let src = [0.5f32];
+        let mut dst = [1.0f32; 3];
+        
+        // Invalid source colorspace - dst should be filled with zeros
+        fz_convert_color(0, 99, src.as_ptr(), FZ_COLORSPACE_RGB, dst.as_mut_ptr(), 0);
+        // Operation should not panic even with invalid colorspace
+    }
+
+    #[test]
+    fn test_colorspace_is_device() {
+        assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_GRAY), 1);
+        assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_RGB), 1);
+        assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_CMYK), 1);
+    }
 }

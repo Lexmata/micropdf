@@ -315,4 +315,183 @@ mod tests {
 
         fz_drop_stream(0, handle);
     }
+
+    #[test]
+    fn test_stream_keep() {
+        let data = vec![1, 2, 3];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+        let kept = fz_keep_stream(0, handle);
+        assert_eq!(kept, handle);
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_peek_byte() {
+        let data = vec![42, 43, 44];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        // Peek should return byte without advancing
+        let peeked = fz_peek_byte(0, handle);
+        assert_eq!(peeked, 42);
+        assert_eq!(fz_tell(0, handle), 0); // Position unchanged
+
+        // Read should advance
+        let read = fz_read_byte(0, handle);
+        assert_eq!(read, 42);
+        assert_eq!(fz_tell(0, handle), 1);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_read_multiple() {
+        let data = vec![1, 2, 3, 4, 5, 6, 7, 8];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        let mut buf = [0u8; 4];
+        let n = fz_read(0, handle, buf.as_mut_ptr(), 4);
+        assert_eq!(n, 4);
+        assert_eq!(buf, [1, 2, 3, 4]);
+
+        let n = fz_read(0, handle, buf.as_mut_ptr(), 4);
+        assert_eq!(n, 4);
+        assert_eq!(buf, [5, 6, 7, 8]);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_seek_modes() {
+        let data = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        // SEEK_SET (0)
+        fz_seek(0, handle, 5, 0);
+        assert_eq!(fz_tell(0, handle), 5);
+
+        // SEEK_CUR (1)
+        fz_seek(0, handle, 2, 1);
+        assert_eq!(fz_tell(0, handle), 7);
+
+        // SEEK_END (2)
+        fz_seek(0, handle, -3, 2);
+        assert_eq!(fz_tell(0, handle), 7);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_read_uint16() {
+        let data = vec![0x12, 0x34, 0x56, 0x78];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        let val = fz_read_uint16(0, handle);
+        assert_eq!(val, 0x1234);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_read_uint32() {
+        let data = vec![0x12, 0x34, 0x56, 0x78];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        let val = fz_read_uint32(0, handle);
+        assert_eq!(val, 0x12345678);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_read_uint16_le() {
+        let data = vec![0x34, 0x12, 0x78, 0x56];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        let val = fz_read_uint16_le(0, handle);
+        assert_eq!(val, 0x1234);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_read_uint32_le() {
+        let data = vec![0x78, 0x56, 0x34, 0x12];
+        let handle = STREAMS.insert(Stream::from_memory(data));
+
+        let val = fz_read_uint32_le(0, handle);
+        assert_eq!(val, 0x12345678);
+
+        fz_drop_stream(0, handle);
+    }
+
+    #[test]
+    fn test_stream_invalid_handle() {
+        assert_eq!(fz_read_byte(0, 0), -1);
+        assert_eq!(fz_peek_byte(0, 0), -1);
+        assert_eq!(fz_is_eof(0, 0), 1);
+        assert_eq!(fz_tell(0, 0), 0);
+    }
+
+    #[test]
+    fn test_stream_internal_new() {
+        let stream = Stream::new();
+        assert!(stream.data.is_empty());
+        assert_eq!(stream.position, 0);
+    }
+
+    #[test]
+    fn test_stream_internal_from_memory() {
+        let stream = Stream::from_memory(vec![1, 2, 3]);
+        assert_eq!(stream.data.len(), 3);
+        assert_eq!(stream.position, 0);
+    }
+
+    #[test]
+    fn test_stream_internal_read_byte() {
+        let mut stream = Stream::from_memory(vec![10, 20, 30]);
+        assert_eq!(stream.read_byte(), Some(10));
+        assert_eq!(stream.read_byte(), Some(20));
+        assert_eq!(stream.read_byte(), Some(30));
+        assert_eq!(stream.read_byte(), None);
+    }
+
+    #[test]
+    fn test_stream_internal_peek_byte() {
+        let mut stream = Stream::from_memory(vec![99]);
+        assert_eq!(stream.peek_byte(), Some(99));
+        assert_eq!(stream.peek_byte(), Some(99)); // Should not advance
+        assert_eq!(stream.read_byte(), Some(99));
+        assert_eq!(stream.peek_byte(), None);
+    }
+
+    #[test]
+    fn test_stream_internal_is_eof() {
+        let mut stream = Stream::from_memory(vec![1]);
+        assert!(!stream.is_eof());
+        stream.read_byte();
+        assert!(stream.is_eof());
+    }
+
+    #[test]
+    fn test_stream_internal_seek_set() {
+        let mut stream = Stream::from_memory(vec![0, 1, 2, 3, 4]);
+        stream.seek(3, 0);
+        assert_eq!(stream.tell(), 3);
+        assert_eq!(stream.read_byte(), Some(3));
+    }
+
+    #[test]
+    fn test_stream_internal_seek_cur() {
+        let mut stream = Stream::from_memory(vec![0, 1, 2, 3, 4]);
+        stream.seek(2, 0); // Start at 2
+        stream.seek(2, 1); // Move forward 2
+        assert_eq!(stream.tell(), 4);
+    }
+
+    #[test]
+    fn test_stream_internal_seek_end() {
+        let mut stream = Stream::from_memory(vec![0, 1, 2, 3, 4]);
+        stream.seek(-2, 2); // 2 from end
+        assert_eq!(stream.tell(), 3);
+    }
 }

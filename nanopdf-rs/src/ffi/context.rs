@@ -197,3 +197,160 @@ impl Drop for Context {
         // Clean up any resources
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_context_new() {
+        let ctx = Context::new();
+        assert_eq!(ctx.error_code, 0);
+        assert!(ctx.error_message.is_empty());
+        assert!(ctx.user_data.is_none());
+    }
+
+    #[test]
+    fn test_context_default() {
+        let ctx: Context = Default::default();
+        assert_eq!(ctx.error_code, 0);
+    }
+
+    #[test]
+    fn test_context_set_error() {
+        let mut ctx = Context::new();
+        ctx.set_error(FZ_ERROR_GENERIC, "Test error");
+        assert_eq!(ctx.error_code, FZ_ERROR_GENERIC);
+        assert_eq!(ctx.error_message, "Test error");
+    }
+
+    #[test]
+    fn test_context_clear_error() {
+        let mut ctx = Context::new();
+        ctx.set_error(FZ_ERROR_SYNTAX, "Syntax error");
+        ctx.clear_error();
+        assert_eq!(ctx.error_code, FZ_ERROR_NONE);
+        assert!(ctx.error_message.is_empty());
+    }
+
+    #[test]
+    fn test_fz_new_context() {
+        let handle = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        assert_ne!(handle, 0);
+        fz_drop_context(handle);
+    }
+
+    #[test]
+    fn test_fz_clone_context() {
+        let handle1 = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        let handle2 = fz_clone_context(handle1);
+        assert_ne!(handle2, 0);
+        assert_ne!(handle1, handle2);
+        fz_drop_context(handle1);
+        fz_drop_context(handle2);
+    }
+
+    #[test]
+    fn test_fz_clone_invalid_context() {
+        let handle = fz_clone_context(0);
+        assert_eq!(handle, 0);
+    }
+
+    #[test]
+    fn test_fz_user_context() {
+        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        
+        // Initially null
+        let user = fz_user_context(ctx);
+        assert!(user.is_null());
+        
+        // Set user data
+        let data: usize = 0x12345678;
+        fz_set_user_context(ctx, data as *mut c_void);
+        
+        // Get it back
+        let user = fz_user_context(ctx);
+        assert_eq!(user as usize, data);
+        
+        fz_drop_context(ctx);
+    }
+
+    #[test]
+    fn test_fz_caught() {
+        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        
+        // Initially 0
+        assert_eq!(fz_caught(ctx), 0);
+        
+        fz_drop_context(ctx);
+    }
+
+    #[test]
+    fn test_fz_caught_message() {
+        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        let msg = fz_caught_message(ctx);
+        assert!(!msg.is_null());
+        fz_drop_context(ctx);
+    }
+
+    #[test]
+    fn test_fz_malloc() {
+        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        
+        // Zero size returns null
+        let ptr = fz_malloc(ctx, 0);
+        assert!(ptr.is_null());
+        
+        // Normal allocation
+        let ptr = fz_malloc(ctx, 100);
+        assert!(!ptr.is_null());
+        fz_free(ctx, ptr);
+        
+        fz_drop_context(ctx);
+    }
+
+    #[test]
+    fn test_fz_strdup() {
+        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+        
+        // Null input returns null
+        let result = fz_strdup(ctx, std::ptr::null());
+        assert!(result.is_null());
+        
+        // Valid string
+        let s = c"Hello, World!";
+        let result = fz_strdup(ctx, s.as_ptr());
+        assert!(!result.is_null());
+        fz_free(ctx, result as *mut c_void);
+        
+        fz_drop_context(ctx);
+    }
+
+    #[test]
+    fn test_error_codes() {
+        assert_eq!(FZ_ERROR_NONE, 0);
+        assert_eq!(FZ_ERROR_MEMORY, 1);
+        assert_eq!(FZ_ERROR_GENERIC, 2);
+        assert_eq!(FZ_ERROR_SYNTAX, 3);
+        assert_eq!(FZ_ERROR_MINOR, 4);
+        assert_eq!(FZ_ERROR_TRYLATER, 5);
+        assert_eq!(FZ_ERROR_ABORT, 6);
+        assert_eq!(FZ_ERROR_SYSTEM, 7);
+        assert_eq!(FZ_ERROR_LIBRARY, 8);
+        assert_eq!(FZ_ERROR_FORMAT, 9);
+        assert_eq!(FZ_ERROR_LIMIT, 10);
+        assert_eq!(FZ_ERROR_UNSUPPORTED, 11);
+        assert_eq!(FZ_ERROR_ARGUMENT, 12);
+    }
+
+    #[test]
+    fn test_fz_user_context_invalid_handle() {
+        let user = fz_user_context(0);
+        assert!(user.is_null());
+    }
+
+    #[test]
+    fn test_fz_caught_invalid_handle() {
+        assert_eq!(fz_caught(0), 0);
+    }
+}

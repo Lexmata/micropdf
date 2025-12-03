@@ -345,4 +345,120 @@ mod tests {
 
         fz_drop_buffer(0, handle);
     }
+
+    #[test]
+    fn test_buffer_keep() {
+        let handle = fz_new_buffer(0, 0);
+        let kept = fz_keep_buffer(0, handle);
+        assert_eq!(kept, handle);
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_resize() {
+        let handle = fz_new_buffer(0, 10);
+        fz_resize_buffer(0, handle, 100);
+        // Resize should succeed
+        assert_eq!(fz_buffer_len(0, handle), 100);
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_grow() {
+        let handle = fz_new_buffer(0, 10);
+        fz_grow_buffer(0, handle);
+        // Buffer should be able to accommodate growth
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_trim() {
+        let handle = fz_new_buffer(0, 100);
+        fz_append_byte(0, handle, b'A' as i32);
+        fz_trim_buffer(0, handle);
+        assert_eq!(fz_buffer_len(0, handle), 1);
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_clone() {
+        let handle1 = fz_new_buffer(0, 0);
+        fz_append_byte(0, handle1, b'X' as i32);
+        fz_append_byte(0, handle1, b'Y' as i32);
+
+        let handle2 = fz_clone_buffer(0, handle1);
+        assert_ne!(handle2, 0);
+        assert_eq!(fz_buffer_len(0, handle2), 2);
+
+        // Modify original, clone should be unchanged
+        fz_clear_buffer(0, handle1);
+        assert_eq!(fz_buffer_len(0, handle1), 0);
+        assert_eq!(fz_buffer_len(0, handle2), 2);
+
+        fz_drop_buffer(0, handle1);
+        fz_drop_buffer(0, handle2);
+    }
+
+    #[test]
+    fn test_buffer_len_invalid() {
+        let len = fz_buffer_len(0, 0);
+        assert_eq!(len, 0);
+    }
+
+    #[test]
+    fn test_buffer_append_multiple() {
+        let handle = fz_new_buffer(0, 0);
+        for i in 0..100 {
+            fz_append_byte(0, handle, i as i32);
+        }
+        assert_eq!(fz_buffer_len(0, handle), 100);
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_storage() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_byte(0, handle, b'H' as i32);
+        fz_append_byte(0, handle, b'i' as i32);
+
+        let mut datap: *mut u8 = std::ptr::null_mut();
+        let size = fz_buffer_storage(0, handle, &mut datap);
+        
+        // Size should be the length of the buffer
+        assert_eq!(size, 2);
+        // datap will be null because we can't safely return internal pointer
+        assert!(datap.is_null());
+
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_buffer_internal() {
+        let buf = Buffer::new(10);
+        assert_eq!(buf.len(), 0);
+        assert!(buf.data().is_empty());
+    }
+
+    #[test]
+    fn test_buffer_from_data() {
+        let data = [1u8, 2, 3, 4, 5];
+        let buf = Buffer::from_data(&data);
+        assert_eq!(buf.len(), 5);
+        assert_eq!(buf.data(), &data);
+    }
+
+    #[test]
+    fn test_buffer_append_internal() {
+        let mut buf = Buffer::new(0);
+        buf.append_byte(0x42);
+        assert_eq!(buf.len(), 1);
+        assert_eq!(buf.data(), &[0x42]);
+    }
+
+    #[test]
+    fn test_buffer_clear_internal() {
+        let mut buf = Buffer::from_data(&[1, 2, 3]);
+        buf.clear();
+        assert_eq!(buf.len(), 0);
+    }
 }

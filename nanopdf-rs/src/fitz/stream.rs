@@ -131,3 +131,206 @@ impl std::fmt::Debug for Stream {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_stream_open_memory() {
+        let data = b"Hello World";
+        let stream = Stream::open_memory(data);
+        assert_eq!(stream.tell(), 0);
+        assert_eq!(stream.len(), Some(data.len() as u64));
+        assert!(!stream.is_empty());
+    }
+
+    #[test]
+    fn test_stream_open_memory_empty() {
+        let stream = Stream::open_memory(&[]);
+        assert!(stream.is_empty());
+        assert_eq!(stream.len(), Some(0));
+    }
+
+    #[test]
+    fn test_stream_open_buffer() {
+        let buffer = Buffer::from_slice(b"Test Data");
+        let stream = Stream::open_buffer(&buffer);
+        assert_eq!(stream.len(), Some(9));
+    }
+
+    #[test]
+    fn test_stream_read_byte() {
+        let data = b"ABC";
+        let mut stream = Stream::open_memory(data);
+        
+        let b1 = stream.read_byte().unwrap();
+        assert_eq!(b1, Some(b'A'));
+        
+        let b2 = stream.read_byte().unwrap();
+        assert_eq!(b2, Some(b'B'));
+        
+        let b3 = stream.read_byte().unwrap();
+        assert_eq!(b3, Some(b'C'));
+        
+        let b4 = stream.read_byte().unwrap();
+        assert_eq!(b4, None); // EOF
+    }
+
+    #[test]
+    fn test_stream_read() {
+        let data = b"Hello World";
+        let mut stream = Stream::open_memory(data);
+        let mut buf = [0u8; 5];
+        
+        let n = stream.read(&mut buf).unwrap();
+        assert_eq!(n, 5);
+        assert_eq!(&buf, b"Hello");
+    }
+
+    #[test]
+    fn test_stream_read_exact() {
+        let data = b"Hello World";
+        let mut stream = Stream::open_memory(data);
+        let mut buf = [0u8; 5];
+        
+        stream.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"Hello");
+    }
+
+    #[test]
+    fn test_stream_read_exact_eof() {
+        let data = b"Hi";
+        let mut stream = Stream::open_memory(data);
+        let mut buf = [0u8; 10];
+        
+        let result = stream.read_exact(&mut buf);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_stream_read_all() {
+        let data = b"Hello World";
+        let mut stream = Stream::open_memory(data);
+        
+        let buffer = stream.read_all(0).unwrap();
+        assert_eq!(buffer.as_slice(), data);
+    }
+
+    #[test]
+    fn test_stream_tell() {
+        let data = b"Hello";
+        let mut stream = Stream::open_memory(data);
+        
+        assert_eq!(stream.tell(), 0);
+        stream.read_byte().unwrap();
+        // After reading, tell should advance (though buffering may affect exact position)
+    }
+
+    #[test]
+    fn test_stream_debug() {
+        let stream = Stream::open_memory(b"test");
+        let debug = format!("{:?}", stream);
+        assert!(debug.contains("Stream"));
+        assert!(debug.contains("pos"));
+        assert!(debug.contains("eof"));
+    }
+
+    #[test]
+    fn test_stream_sequential_reads() {
+        let data = b"ABCDEFGHIJ";
+        let mut stream = Stream::open_memory(data);
+        
+        let mut buf = [0u8; 3];
+        stream.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"ABC");
+        
+        stream.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"DEF");
+        
+        stream.read_exact(&mut buf).unwrap();
+        assert_eq!(&buf, b"GHI");
+    }
+
+    #[test]
+    fn test_stream_large_read() {
+        // Create data larger than buffer size
+        let data: Vec<u8> = (0..20000).map(|i| (i % 256) as u8).collect();
+        let mut stream = Stream::open_memory(&data);
+        
+        let buffer = stream.read_all(0).unwrap();
+        assert_eq!(buffer.len(), data.len());
+        assert_eq!(buffer.as_slice(), &data[..]);
+    }
+
+    #[test]
+    fn test_memory_source_seek() {
+        let data = b"Hello World";
+        let mut source = MemorySource {
+            data: data.as_ref().into(),
+            position: 0,
+        };
+        
+        // Seek to start
+        let pos = source.seek(SeekFrom::Start(6)).unwrap();
+        assert_eq!(pos, 6);
+        assert_eq!(source.position, 6);
+        
+        // Seek from current
+        let pos = source.seek(SeekFrom::Current(2)).unwrap();
+        assert_eq!(pos, 8);
+        
+        // Seek from end
+        let pos = source.seek(SeekFrom::End(-5)).unwrap();
+        assert_eq!(pos, 6);
+    }
+
+    #[test]
+    fn test_memory_source_seek_before_start() {
+        let data = b"Hello";
+        let mut source = MemorySource {
+            data: data.as_ref().into(),
+            position: 2,
+        };
+        
+        let result = source.seek(SeekFrom::Current(-10));
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_memory_source_read() {
+        let data = b"Hello";
+        let mut source = MemorySource {
+            data: data.as_ref().into(),
+            position: 0,
+        };
+        
+        let mut buf = [0u8; 3];
+        let n = source.read(&mut buf).unwrap();
+        assert_eq!(n, 3);
+        assert_eq!(&buf, b"Hel");
+        assert_eq!(source.position, 3);
+    }
+
+    #[test]
+    fn test_memory_source_tell() {
+        let data = b"Hello";
+        let mut source = MemorySource {
+            data: data.as_ref().into(),
+            position: 3,
+        };
+        
+        assert_eq!(source.tell().unwrap(), 3);
+    }
+
+    #[test]
+    fn test_memory_source_len() {
+        let data = b"Hello";
+        let source = MemorySource {
+            data: data.as_ref().into(),
+            position: 0,
+        };
+        
+        assert_eq!(source.len(), Some(5));
+    }
+}
+

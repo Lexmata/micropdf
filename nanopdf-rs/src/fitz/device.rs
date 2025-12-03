@@ -23,3 +23,79 @@ impl Device for NullDevice {
     fn fill_image(&mut self, _: &Image, _: Matrix, _: f32) {}
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::fitz::geometry::Point;
+
+    #[test]
+    fn test_stroke_state_default() {
+        let ss: StrokeState = Default::default();
+        assert_eq!(ss.linewidth, 1.0);
+        assert_eq!(ss.linecap, 0);
+        assert_eq!(ss.linejoin, 0);
+    }
+
+    #[test]
+    fn test_stroke_state_custom() {
+        let ss = StrokeState {
+            linewidth: 2.5,
+            linecap: 1,
+            linejoin: 2,
+        };
+        assert_eq!(ss.linewidth, 2.5);
+        assert_eq!(ss.linecap, 1);
+        assert_eq!(ss.linejoin, 2);
+    }
+
+    #[test]
+    fn test_null_device_fill_path() {
+        let mut device = NullDevice;
+        let path = Path::new();
+        let cs = Colorspace::device_rgb();
+        let color = [1.0, 0.0, 0.0];
+        
+        // Should not panic
+        device.fill_path(&path, Matrix::IDENTITY, &cs, &color, 1.0);
+    }
+
+    #[test]
+    fn test_null_device_stroke_path() {
+        let mut device = NullDevice;
+        let path = Path::new();
+        let cs = Colorspace::device_rgb();
+        let color = [0.0, 1.0, 0.0];
+        let stroke = StrokeState::default();
+        
+        // Should not panic
+        device.stroke_path(&path, &stroke, Matrix::IDENTITY, &cs, &color, 1.0);
+    }
+
+    #[test]
+    fn test_null_device_fill_text() {
+        let mut device = NullDevice;
+        let text = TextSpan::new();
+        let cs = Colorspace::device_rgb();
+        let color = [0.0, 0.0, 0.0];
+        
+        // Should not panic
+        device.fill_text(&text, Matrix::IDENTITY, &cs, &color, 1.0);
+    }
+
+    #[test]
+    fn test_null_device_fill_image() {
+        let mut device = NullDevice;
+        let image = Image::new(100, 100, None);
+        
+        // Should not panic
+        device.fill_image(&image, Matrix::IDENTITY, 1.0);
+    }
+
+    #[test]
+    fn test_null_device_implements_device_trait() {
+        fn takes_device<D: Device>(_d: &mut D) {}
+        let mut device = NullDevice;
+        takes_device(&mut device);
+    }
+}
+

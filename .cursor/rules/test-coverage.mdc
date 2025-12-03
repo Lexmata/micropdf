@@ -1,0 +1,247 @@
+# Test Coverage Requirements
+
+Maintain approximately 90% unit test coverage across the codebase.
+
+## Coverage Target
+
+| Metric | Target | Minimum |
+|--------|--------|---------|
+| Line Coverage | 90% | 85% |
+| Branch Coverage | 85% | 80% |
+| Function Coverage | 95% | 90% |
+
+## Running Coverage
+
+### Using cargo-tarpaulin
+
+```bash
+# Install tarpaulin
+cargo install cargo-tarpaulin
+
+# Run coverage
+cargo tarpaulin --out Html --output-dir coverage
+
+# Run with specific options
+cargo tarpaulin --ignore-tests --out Lcov --output-dir coverage
+```
+
+### Viewing Results
+
+```bash
+# Open HTML report
+open coverage/tarpaulin-report.html
+
+# Or for CI, check the summary
+cargo tarpaulin --out Stdout
+```
+
+## Test Organization
+
+### Unit Tests
+Location: Inside source files in `#[cfg(test)]` modules
+
+```rust
+// src/module.rs
+pub fn calculate(x: i32) -> i32 {
+    x * 2
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_calculate() {
+        assert_eq!(calculate(5), 10);
+    }
+
+    #[test]
+    fn test_calculate_zero() {
+        assert_eq!(calculate(0), 0);
+    }
+
+    #[test]
+    fn test_calculate_negative() {
+        assert_eq!(calculate(-3), -6);
+    }
+}
+```
+
+### Integration Tests
+Location: `tests/` directory
+
+```rust
+// tests/integration_test.rs
+use nanopdf::*;
+
+#[test]
+fn test_full_workflow() {
+    // Test complete functionality
+}
+```
+
+## What to Test
+
+### Must Test (High Priority)
+- [ ] All public functions
+- [ ] Error handling paths
+- [ ] Edge cases (empty input, max values, null)
+- [ ] FFI boundary functions
+- [ ] Parsing logic
+- [ ] Encoding/decoding roundtrips
+
+### Should Test (Medium Priority)
+- [ ] Internal helper functions
+- [ ] State transitions
+- [ ] Resource cleanup
+
+### May Skip (Low Priority)
+- Trivial getters/setters
+- Debug/display implementations
+- Generated code
+
+## Test Naming Convention
+
+```rust
+#[test]
+fn test_<function>_<scenario>_<expected_result>() {
+    // Example names:
+    // test_parse_valid_pdf_returns_document
+    // test_decode_empty_input_returns_error
+    // test_compress_large_data_succeeds
+}
+```
+
+## Test Patterns
+
+### Roundtrip Testing
+```rust
+#[test]
+fn test_encode_decode_roundtrip() {
+    let original = b"test data";
+    let encoded = encode(original).unwrap();
+    let decoded = decode(&encoded).unwrap();
+    assert_eq!(decoded, original);
+}
+```
+
+### Error Testing
+```rust
+#[test]
+fn test_invalid_input_returns_error() {
+    let result = parse_pdf(b"invalid");
+    assert!(result.is_err());
+}
+```
+
+### Boundary Testing
+```rust
+#[test]
+fn test_empty_input() {
+    let result = process(&[]);
+    assert!(result.is_empty());
+}
+
+#[test]
+fn test_max_size_input() {
+    let large = vec![0u8; MAX_SIZE];
+    let result = process(&large);
+    assert!(result.is_ok());
+}
+```
+
+### Property-Based Testing
+```rust
+use proptest::prelude::*;
+
+proptest! {
+    #[test]
+    fn test_roundtrip_any_data(data: Vec<u8>) {
+        let encoded = encode(&data)?;
+        let decoded = decode(&encoded)?;
+        prop_assert_eq!(decoded, data);
+    }
+}
+```
+
+## Coverage Exclusions
+
+Some code may be excluded from coverage requirements:
+
+```rust
+// Exclude from coverage
+#[cfg(not(tarpaulin_include))]
+fn debug_only_function() {
+    // ...
+}
+```
+
+Valid exclusions:
+- Platform-specific code not testable in CI
+- Debug/logging code
+- Panic handlers
+- Unreachable code branches
+
+## CI Integration
+
+Coverage is checked in CI. PRs must maintain minimum coverage:
+
+```yaml
+# .github/workflows/coverage.yml
+- name: Run coverage
+  run: cargo tarpaulin --out Xml
+  
+- name: Check coverage threshold
+  run: |
+    COVERAGE=$(cargo tarpaulin --out Stdout | grep "Coverage" | awk '{print $2}')
+    if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+      echo "Coverage $COVERAGE% is below 85% threshold"
+      exit 1
+    fi
+```
+
+## Improving Coverage
+
+When coverage drops below target:
+
+1. **Identify uncovered code**
+   ```bash
+   cargo tarpaulin --out Html
+   # Review red lines in report
+   ```
+
+2. **Prioritize by risk**
+   - Critical paths first
+   - Error handling second
+   - Edge cases third
+
+3. **Add targeted tests**
+   - One test per uncovered branch
+   - Test both success and failure paths
+
+4. **Consider refactoring**
+   - Unreachable code? Remove it
+   - Complex branches? Simplify
+   - Hard to test? Extract pure functions
+
+## Quick Commands
+
+```bash
+# Run all tests
+cargo test
+
+# Run with coverage
+cargo tarpaulin
+
+# Run specific test
+cargo test test_name
+
+# Run tests in specific module
+cargo test module::tests
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run ignored tests
+cargo test -- --ignored
+```

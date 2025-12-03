@@ -115,3 +115,284 @@ impl Quad {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Point tests
+    #[test]
+    fn test_point_origin() {
+        assert_eq!(Point::ORIGIN.x, 0.0);
+        assert_eq!(Point::ORIGIN.y, 0.0);
+    }
+
+    #[test]
+    fn test_point_new() {
+        let p = Point::new(3.0, 4.0);
+        assert_eq!(p.x, 3.0);
+        assert_eq!(p.y, 4.0);
+    }
+
+    #[test]
+    fn test_point_transform_identity() {
+        let p = Point::new(5.0, 10.0);
+        let transformed = p.transform(&Matrix::IDENTITY);
+        assert_eq!(transformed.x, 5.0);
+        assert_eq!(transformed.y, 10.0);
+    }
+
+    #[test]
+    fn test_point_transform_translate() {
+        let p = Point::new(5.0, 10.0);
+        let m = Matrix::translate(2.0, 3.0);
+        let transformed = p.transform(&m);
+        assert!((transformed.x - 7.0).abs() < 0.001);
+        assert!((transformed.y - 13.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_point_transform_scale() {
+        let p = Point::new(5.0, 10.0);
+        let m = Matrix::scale(2.0, 3.0);
+        let transformed = p.transform(&m);
+        assert!((transformed.x - 10.0).abs() < 0.001);
+        assert!((transformed.y - 30.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_point_default() {
+        let p: Point = Default::default();
+        assert_eq!(p.x, 0.0);
+        assert_eq!(p.y, 0.0);
+    }
+
+    // Rect tests
+    #[test]
+    fn test_rect_new() {
+        let r = Rect::new(1.0, 2.0, 10.0, 20.0);
+        assert_eq!(r.x0, 1.0);
+        assert_eq!(r.y0, 2.0);
+        assert_eq!(r.x1, 10.0);
+        assert_eq!(r.y1, 20.0);
+    }
+
+    #[test]
+    fn test_rect_width_height() {
+        let r = Rect::new(0.0, 0.0, 10.0, 20.0);
+        assert_eq!(r.width(), 10.0);
+        assert_eq!(r.height(), 20.0);
+    }
+
+    #[test]
+    fn test_rect_is_empty() {
+        assert!(Rect::EMPTY.is_empty());
+        assert!(!Rect::UNIT.is_empty());
+        assert!(Rect::new(10.0, 10.0, 5.0, 5.0).is_empty()); // inverted
+    }
+
+    #[test]
+    fn test_rect_is_infinite() {
+        assert!(Rect::INFINITE.is_infinite());
+        assert!(!Rect::UNIT.is_infinite());
+    }
+
+    #[test]
+    fn test_rect_contains() {
+        let r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        assert!(r.contains(5.0, 5.0));
+        assert!(r.contains(0.0, 0.0));
+        assert!(!r.contains(10.0, 10.0)); // exclusive upper bound
+        assert!(!r.contains(-1.0, 5.0));
+        assert!(!r.contains(5.0, -1.0));
+        assert!(!r.contains(11.0, 5.0));
+        assert!(!r.contains(5.0, 11.0));
+    }
+
+    #[test]
+    fn test_rect_union() {
+        let r1 = Rect::new(0.0, 0.0, 5.0, 5.0);
+        let r2 = Rect::new(3.0, 3.0, 10.0, 10.0);
+        let u = r1.union(&r2);
+        assert_eq!(u.x0, 0.0);
+        assert_eq!(u.y0, 0.0);
+        assert_eq!(u.x1, 10.0);
+        assert_eq!(u.y1, 10.0);
+    }
+
+    #[test]
+    fn test_rect_intersect() {
+        let r1 = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let r2 = Rect::new(5.0, 5.0, 15.0, 15.0);
+        let i = r1.intersect(&r2);
+        assert_eq!(i.x0, 5.0);
+        assert_eq!(i.y0, 5.0);
+        assert_eq!(i.x1, 10.0);
+        assert_eq!(i.y1, 10.0);
+    }
+
+    #[test]
+    fn test_rect_include_point() {
+        let mut r = Rect::EMPTY;
+        r.include_point(Point::new(5.0, 5.0));
+        r.include_point(Point::new(0.0, 0.0));
+        r.include_point(Point::new(10.0, 10.0));
+        assert_eq!(r.x0, 0.0);
+        assert_eq!(r.y0, 0.0);
+        assert_eq!(r.x1, 10.0);
+        assert_eq!(r.y1, 10.0);
+    }
+
+    #[test]
+    fn test_rect_constants() {
+        assert!(Rect::EMPTY.is_empty());
+        assert!(Rect::INFINITE.is_infinite());
+        assert_eq!(Rect::UNIT.width(), 1.0);
+        assert_eq!(Rect::UNIT.height(), 1.0);
+    }
+
+    // IRect tests
+    #[test]
+    fn test_irect_new() {
+        let r = IRect::new(1, 2, 10, 20);
+        assert_eq!(r.x0, 1);
+        assert_eq!(r.y0, 2);
+        assert_eq!(r.x1, 10);
+        assert_eq!(r.y1, 20);
+    }
+
+    #[test]
+    fn test_irect_width_height() {
+        let r = IRect::new(0, 0, 10, 20);
+        assert_eq!(r.width(), 10);
+        assert_eq!(r.height(), 20);
+    }
+
+    #[test]
+    fn test_irect_is_empty() {
+        assert!(IRect::new(5, 5, 5, 5).is_empty());
+        assert!(IRect::new(10, 10, 5, 5).is_empty());
+        assert!(!IRect::new(0, 0, 10, 10).is_empty());
+    }
+
+    #[test]
+    fn test_irect_from_rect() {
+        let r = Rect::new(0.5, 1.5, 9.5, 19.5);
+        let ir: IRect = r.into();
+        assert_eq!(ir.x0, 0);
+        assert_eq!(ir.y0, 1);
+        assert_eq!(ir.x1, 10);
+        assert_eq!(ir.y1, 20);
+    }
+
+    // Matrix tests
+    #[test]
+    fn test_matrix_identity() {
+        let m = Matrix::IDENTITY;
+        assert_eq!(m.a, 1.0);
+        assert_eq!(m.b, 0.0);
+        assert_eq!(m.c, 0.0);
+        assert_eq!(m.d, 1.0);
+        assert_eq!(m.e, 0.0);
+        assert_eq!(m.f, 0.0);
+    }
+
+    #[test]
+    fn test_matrix_new() {
+        let m = Matrix::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
+        assert_eq!(m.a, 1.0);
+        assert_eq!(m.b, 2.0);
+        assert_eq!(m.c, 3.0);
+        assert_eq!(m.d, 4.0);
+        assert_eq!(m.e, 5.0);
+        assert_eq!(m.f, 6.0);
+    }
+
+    #[test]
+    fn test_matrix_translate() {
+        let m = Matrix::translate(10.0, 20.0);
+        assert_eq!(m.e, 10.0);
+        assert_eq!(m.f, 20.0);
+        // Should be identity otherwise
+        assert_eq!(m.a, 1.0);
+        assert_eq!(m.d, 1.0);
+    }
+
+    #[test]
+    fn test_matrix_scale() {
+        let m = Matrix::scale(2.0, 3.0);
+        assert_eq!(m.a, 2.0);
+        assert_eq!(m.d, 3.0);
+    }
+
+    #[test]
+    fn test_matrix_rotate() {
+        let m = Matrix::rotate(90.0);
+        // cos(90) ≈ 0, sin(90) = 1
+        assert!((m.a - 0.0).abs() < 0.001);
+        assert!((m.b - 1.0).abs() < 0.001);
+        assert!((m.c - (-1.0)).abs() < 0.001);
+        assert!((m.d - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_matrix_concat_identity() {
+        let m1 = Matrix::scale(2.0, 3.0);
+        let m2 = Matrix::IDENTITY;
+        let result = m1.concat(&m2);
+        assert_eq!(result.a, 2.0);
+        assert_eq!(result.d, 3.0);
+    }
+
+    #[test]
+    fn test_matrix_concat_scale_translate() {
+        let scale = Matrix::scale(2.0, 2.0);
+        let translate = Matrix::translate(10.0, 10.0);
+        let result = scale.concat(&translate);
+        // Scaling first, then translating
+        assert_eq!(result.e, 10.0);
+        assert_eq!(result.f, 10.0);
+    }
+
+    #[test]
+    fn test_matrix_default() {
+        let m: Matrix = Default::default();
+        assert_eq!(m, Matrix::IDENTITY);
+    }
+
+    // Quad tests
+    #[test]
+    fn test_quad_from_rect() {
+        let r = Rect::new(0.0, 0.0, 10.0, 20.0);
+        let q = Quad::from_rect(&r);
+        assert_eq!(q.ul.x, 0.0);
+        assert_eq!(q.ul.y, 0.0);
+        assert_eq!(q.ur.x, 10.0);
+        assert_eq!(q.ur.y, 0.0);
+        assert_eq!(q.ll.x, 0.0);
+        assert_eq!(q.ll.y, 20.0);
+        assert_eq!(q.lr.x, 10.0);
+        assert_eq!(q.lr.y, 20.0);
+    }
+
+    #[test]
+    fn test_quad_transform() {
+        let r = Rect::new(0.0, 0.0, 10.0, 10.0);
+        let q = Quad::from_rect(&r);
+        let m = Matrix::translate(5.0, 5.0);
+        let transformed = q.transform(&m);
+        assert_eq!(transformed.ul.x, 5.0);
+        assert_eq!(transformed.ul.y, 5.0);
+        assert_eq!(transformed.lr.x, 15.0);
+        assert_eq!(transformed.lr.y, 15.0);
+    }
+
+    #[test]
+    fn test_quad_default() {
+        let q: Quad = Default::default();
+        assert_eq!(q.ul, Point::default());
+        assert_eq!(q.ur, Point::default());
+        assert_eq!(q.ll, Point::default());
+        assert_eq!(q.lr, Point::default());
+    }
+}
+

@@ -47,3 +47,145 @@ impl Pixmap {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pixmap_new_rgb() {
+        let cs = Colorspace::device_rgb();
+        let pm = Pixmap::new(Some(cs), 100, 50, false).unwrap();
+        assert_eq!(pm.width(), 100);
+        assert_eq!(pm.height(), 50);
+        assert_eq!(pm.n(), 3); // RGB
+        assert!(!pm.has_alpha());
+        assert_eq!(pm.stride(), 300); // 100 * 3
+    }
+
+    #[test]
+    fn test_pixmap_new_rgb_with_alpha() {
+        let cs = Colorspace::device_rgb();
+        let pm = Pixmap::new(Some(cs), 100, 50, true).unwrap();
+        assert_eq!(pm.n(), 4); // RGBA
+        assert!(pm.has_alpha());
+        assert_eq!(pm.stride(), 400); // 100 * 4
+    }
+
+    #[test]
+    fn test_pixmap_new_gray() {
+        let cs = Colorspace::device_gray();
+        let pm = Pixmap::new(Some(cs), 100, 100, false).unwrap();
+        assert_eq!(pm.n(), 1);
+        assert!(!pm.has_alpha());
+    }
+
+    #[test]
+    fn test_pixmap_new_cmyk() {
+        let cs = Colorspace::device_cmyk();
+        let pm = Pixmap::new(Some(cs), 50, 50, false).unwrap();
+        assert_eq!(pm.n(), 4);
+    }
+
+    #[test]
+    fn test_pixmap_new_alpha_only() {
+        let pm = Pixmap::new(None, 100, 100, true).unwrap();
+        assert_eq!(pm.n(), 1);
+        assert!(pm.has_alpha());
+        assert!(pm.colorspace().is_none());
+    }
+
+    #[test]
+    fn test_pixmap_new_invalid_dimensions() {
+        let cs = Colorspace::device_rgb();
+        assert!(Pixmap::new(Some(cs.clone()), 0, 100, false).is_err());
+        assert!(Pixmap::new(Some(cs.clone()), 100, 0, false).is_err());
+        assert!(Pixmap::new(Some(cs), -1, 100, false).is_err());
+    }
+
+    #[test]
+    fn test_pixmap_new_no_colorspace_no_alpha() {
+        // Must have either colorspace or alpha
+        assert!(Pixmap::new(None, 100, 100, false).is_err());
+    }
+
+    #[test]
+    fn test_pixmap_samples() {
+        let cs = Colorspace::device_rgb();
+        let pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        let samples = pm.samples();
+        assert_eq!(samples.len(), 10 * 10 * 3);
+        // Should be initialized to 0
+        assert!(samples.iter().all(|&b| b == 0));
+    }
+
+    #[test]
+    fn test_pixmap_samples_mut() {
+        let cs = Colorspace::device_rgb();
+        let mut pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        let samples = pm.samples_mut();
+        samples[0] = 255;
+        samples[1] = 128;
+        samples[2] = 64;
+        
+        let samples_read = pm.samples();
+        assert_eq!(samples_read[0], 255);
+        assert_eq!(samples_read[1], 128);
+        assert_eq!(samples_read[2], 64);
+    }
+
+    #[test]
+    fn test_pixmap_clear() {
+        let cs = Colorspace::device_rgb();
+        let mut pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        pm.clear(128);
+        
+        assert!(pm.samples().iter().all(|&b| b == 128));
+    }
+
+    #[test]
+    fn test_pixmap_get_pixel() {
+        let cs = Colorspace::device_rgb();
+        let mut pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        
+        // Set pixel at (2, 3)
+        let offset = 3 * 30 + 2 * 3; // y * stride + x * n
+        pm.samples_mut()[offset] = 255;
+        pm.samples_mut()[offset + 1] = 128;
+        pm.samples_mut()[offset + 2] = 64;
+        
+        let pixel = pm.get_pixel(2, 3).unwrap();
+        assert_eq!(pixel, &[255, 128, 64]);
+    }
+
+    #[test]
+    fn test_pixmap_get_pixel_out_of_bounds() {
+        let cs = Colorspace::device_rgb();
+        let pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        
+        assert!(pm.get_pixel(-1, 0).is_none());
+        assert!(pm.get_pixel(0, -1).is_none());
+        assert!(pm.get_pixel(10, 0).is_none());
+        assert!(pm.get_pixel(0, 10).is_none());
+    }
+
+    #[test]
+    fn test_pixmap_colorspace() {
+        let cs = Colorspace::device_rgb();
+        let pm = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        
+        let cs_ref = pm.colorspace().unwrap();
+        assert_eq!(cs_ref.name(), "DeviceRGB");
+    }
+
+    #[test]
+    fn test_pixmap_clone() {
+        let cs = Colorspace::device_rgb();
+        let pm1 = Pixmap::new(Some(cs), 10, 10, false).unwrap();
+        let pm2 = pm1.clone();
+        
+        assert_eq!(pm1.width(), pm2.width());
+        assert_eq!(pm1.height(), pm2.height());
+        assert_eq!(pm1.n(), pm2.n());
+    }
+}
+
