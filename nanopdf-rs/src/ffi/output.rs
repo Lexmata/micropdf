@@ -45,7 +45,7 @@ pub extern "C" fn fz_new_output_with_path(
 pub extern "C" fn fz_new_output_with_buffer(_ctx: Handle, buf: Handle) -> Handle {
     use super::BUFFERS;
     use crate::fitz::buffer::Buffer as FitzBuffer;
-    
+
     if let Some(buffer_arc) = BUFFERS.get(buf) {
         if let Ok(guard) = buffer_arc.lock() {
             // Convert from FFI buffer to Fitz buffer
@@ -217,7 +217,7 @@ pub extern "C" fn fz_write_uint32_le(_ctx: Handle, out: Handle, x: u32) {
 pub extern "C" fn fz_write_buffer(_ctx: Handle, out: Handle, buf: Handle) {
     use super::BUFFERS;
     use crate::fitz::buffer::Buffer as FitzBuffer;
-    
+
     if let Some(buffer_arc) = BUFFERS.get(buf) {
         if let Ok(buffer_guard) = buffer_arc.lock() {
             if let Some(output_arc) = OUTPUTS.get(out) {
@@ -235,14 +235,14 @@ pub extern "C" fn fz_write_buffer(_ctx: Handle, out: Handle, buf: Handle) {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_seek_output(_ctx: Handle, out: Handle, off: i64, whence: i32) {
     use crate::fitz::output::SeekFrom;
-    
+
     let seek_from = match whence {
         0 => SeekFrom::Start(off as u64),
         1 => SeekFrom::Current(off),
         2 => SeekFrom::End(off),
         _ => return,
     };
-    
+
     if let Some(output_arc) = OUTPUTS.get(out) {
         if let Ok(mut guard) = output_arc.lock() {
             let _ = guard.seek(off, seek_from);
@@ -319,164 +319,164 @@ mod tests {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
         assert_ne!(out, 0);
-        
+
         fz_write_string(ctx, out, c"Hello, World!".as_ptr());
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read_to_string(path).unwrap();
         assert_eq!(content, "Hello, World!");
     }
-    
+
     #[test]
     fn test_output_write_data() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         let data = b"Test data";
         fz_write_data(ctx, out, data.as_ptr() as *const c_void, data.len());
-        
+
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read(path).unwrap();
         assert_eq!(&content, data);
     }
-    
+
     #[test]
     fn test_output_write_integers() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         fz_write_int16_be(ctx, out, 0x1234);
         fz_write_uint32_le(ctx, out, 0xDEADBEEF);
-        
+
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read(path).unwrap();
         assert_eq!(content.len(), 6); // 2 + 4 bytes
         assert_eq!(&content[0..2], &[0x12, 0x34]); // Big-endian i16
         assert_eq!(&content[2..6], &[0xEF, 0xBE, 0xAD, 0xDE]); // Little-endian u32
     }
-    
+
     #[test]
     fn test_output_seek_tell() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         fz_write_string(ctx, out, c"Hello".as_ptr());
         let pos1 = fz_tell_output(ctx, out);
         assert_eq!(pos1, 5);
-        
+
         fz_seek_output(ctx, out, 0, SEEK_SET);
         let pos2 = fz_tell_output(ctx, out);
         assert_eq!(pos2, 0);
-        
+
         fz_write_string(ctx, out, c"Jello".as_ptr());
-        
+
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read_to_string(path).unwrap();
         assert_eq!(content, "Jello");
     }
-    
+
     #[test]
     fn test_output_null_filename() {
         let out = fz_new_output_with_path(0, std::ptr::null(), 0);
         assert_eq!(out, 0);
     }
-    
+
     #[test]
     fn test_output_write_byte() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         fz_write_byte(ctx, out, b'A');
         fz_write_byte(ctx, out, b'B');
         fz_write_byte(ctx, out, b'C');
-        
+
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read_to_string(path).unwrap();
         assert_eq!(content, "ABC");
     }
-    
+
     #[test]
     fn test_output_flush() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         fz_write_string(ctx, out, c"Data".as_ptr());
         fz_flush_output(ctx, out);
-        
+
         // Data should be flushed to disk
         let content = std::fs::read_to_string(path).unwrap();
         assert_eq!(content, "Data");
-        
+
         fz_drop_output(ctx, out);
     }
-    
+
     #[test]
     fn test_output_truncate() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
-        
+
         fz_write_string(ctx, out, c"Hello, World!".as_ptr());
         fz_seek_output(ctx, out, 5, SEEK_SET);
         fz_truncate_output(ctx, out);
-        
+
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
-        
+
         let content = std::fs::read_to_string(path).unwrap();
         assert_eq!(content, "Hello");
     }
-    
+
     #[test]
     fn test_output_keep() {
         let temp_file = NamedTempFile::new().unwrap();
         let path = temp_file.path();
         let c_path = CString::new(path.to_str().unwrap()).unwrap();
-        
+
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
         let kept = fz_keep_output(ctx, out);
         assert_eq!(kept, out);
-        
+
         fz_drop_output(ctx, out);
     }
-    
+
     #[test]
     fn test_seek_constants() {
         assert_eq!(SEEK_SET, 0);
