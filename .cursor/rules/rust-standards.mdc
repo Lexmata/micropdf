@@ -1,7 +1,6 @@
 ---
 alwaysApply: false
 ---
-
 # Rust 2024 Code Generation Standards
 
 This project uses Rust Edition 2024 with modern, safe coding practices.

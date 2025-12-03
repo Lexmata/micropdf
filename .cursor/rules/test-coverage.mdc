@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+---
+
 # Test Coverage Requirements
 
 Maintain approximately 90% unit test coverage across the codebase.

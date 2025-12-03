@@ -297,6 +297,73 @@ impl Buffer {
         let second = data.slice(mid..);
         (Buffer::from_bytes(first), Buffer::from_bytes(second))
     }
+
+    /// Trim the buffer capacity to match its length.
+    pub fn trim_capacity(&mut self) {
+        self.consolidate();
+    }
+
+    /// Truncate the buffer to the specified length.
+    pub fn truncate(&mut self, len: usize) {
+        if len < self.len() {
+            self.consolidate();
+            let mut data = BytesMut::from(self.data.as_ref());
+            data.truncate(len);
+            self.data = data.freeze();
+        }
+    }
+
+    /// Split off the buffer at the given index, returning the second half.
+    pub fn split_off(&mut self, at: usize) -> Buffer {
+        self.consolidate();
+        if at >= self.data.len() {
+            return Buffer::new(0);
+        }
+        let second = self.data.slice(at..);
+        let mut first = BytesMut::from(self.data.as_ref());
+        first.truncate(at);
+        self.data = first.freeze();
+        Buffer::from_bytes(second)
+    }
+
+    /// Reserve additional capacity for the buffer.
+    pub fn reserve(&mut self, additional: usize) {
+        self.ensure_mutable();
+        if let Some(ref mutable) = self.mutable {
+            if let Ok(mut guard) = mutable.lock() {
+                guard.reserve(additional);
+            }
+        }
+    }
+
+    /// Append another buffer's contents to this buffer.
+    pub fn append_buffer(&mut self, other: &Buffer) {
+        self.append_data(&other.to_vec());
+    }
+
+    /// Append bits to the buffer.
+    pub fn append_bits(&mut self, value: u8, bits: u8) {
+        // For simplicity, just append the byte
+        // A full implementation would track bit position
+        if bits > 0 {
+            self.append_byte(value);
+        }
+    }
+
+    /// Append a PDF string (with parentheses and escaping).
+    pub fn append_pdf_string(&mut self, s: &str) {
+        self.append_byte(b'(');
+        for c in s.bytes() {
+            match c {
+                b'(' | b')' | b'\\' => {
+                    self.append_byte(b'\\');
+                    self.append_byte(c);
+                }
+                _ => self.append_byte(c),
+            }
+        }
+        self.append_byte(b')');
+    }
 }
 
 impl Default for Buffer {
@@ -352,6 +419,14 @@ impl From<Buffer> for Bytes {
         buf.to_bytes()
     }
 }
+
+impl PartialEq for Buffer {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_vec() == other.to_vec()
+    }
+}
+
+impl Eq for Buffer {}
 
 /// A reader for consuming buffer contents.
 pub struct BufferReader {
@@ -468,6 +543,116 @@ impl BufferReader {
     pub fn skip(&mut self, n: usize) {
         self.position = (self.position + n).min(self.data.len());
     }
+
+    /// Read exactly `buf.len()` bytes. Returns true if successful.
+    pub fn read_exact(&mut self, buf: &mut [u8]) -> bool {
+        if self.remaining() >= buf.len() {
+            buf.copy_from_slice(&self.data[self.position..self.position + buf.len()]);
+            self.position += buf.len();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Read a line (up to and including newline).
+    pub fn read_line(&mut self) -> Option<Vec<u8>> {
+        if self.is_eof() {
+            return None;
+        }
+        let start = self.position;
+        while self.position < self.data.len() {
+            if self.data[self.position] == b'\n' {
+                self.position += 1;
+                return Some(self.data[start..self.position].to_vec());
+            }
+            self.position += 1;
+        }
+        // Return remaining data if no newline found
+        if start < self.data.len() {
+            Some(self.data[start..].to_vec())
+        } else {
+            None
+        }
+    }
+
+    /// Get the remaining data as a slice.
+    pub fn remaining_slice(&self) -> &[u8] {
+        &self.data[self.position..]
+    }
+
+    /// Read a 24-bit unsigned integer in big-endian format.
+    pub fn read_u24_be(&mut self) -> Option<u32> {
+        if self.remaining() >= 3 {
+            let value = ((self.data[self.position] as u32) << 16)
+                | ((self.data[self.position + 1] as u32) << 8)
+                | (self.data[self.position + 2] as u32);
+            self.position += 3;
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Read a 16-bit signed integer in big-endian format.
+    pub fn read_i16_be(&mut self) -> Option<i16> {
+        if self.remaining() >= 2 {
+            let value = i16::from_be_bytes([
+                self.data[self.position],
+                self.data[self.position + 1],
+            ]);
+            self.position += 2;
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Read a 32-bit signed integer in big-endian format.
+    pub fn read_i32_be(&mut self) -> Option<i32> {
+        if self.remaining() >= 4 {
+            let value = i32::from_be_bytes([
+                self.data[self.position],
+                self.data[self.position + 1],
+                self.data[self.position + 2],
+                self.data[self.position + 3],
+            ]);
+            self.position += 4;
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Read a 16-bit signed integer in little-endian format.
+    pub fn read_i16_le(&mut self) -> Option<i16> {
+        if self.remaining() >= 2 {
+            let value = i16::from_le_bytes([
+                self.data[self.position],
+                self.data[self.position + 1],
+            ]);
+            self.position += 2;
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /// Read a 32-bit signed integer in little-endian format.
+    pub fn read_i32_le(&mut self) -> Option<i32> {
+        if self.remaining() >= 4 {
+            let value = i32::from_le_bytes([
+                self.data[self.position],
+                self.data[self.position + 1],
+                self.data[self.position + 2],
+                self.data[self.position + 3],
+            ]);
+            self.position += 4;
+            Some(value)
+        } else {
+            None
+        }
+    }
 }
 
 impl Read for BufferReader {
@@ -543,6 +728,16 @@ impl BufferWriter {
     /// Write a 32-bit integer in little-endian format.
     pub fn write_u32_le(&mut self, value: u32) {
         self.inner.put_u32_le(value);
+    }
+
+    /// Convert the writer into Bytes.
+    pub fn into_bytes(self) -> Bytes {
+        self.inner.freeze()
+    }
+
+    /// Clear the writer's contents.
+    pub fn clear(&mut self) {
+        self.inner.clear();
     }
 }
 

@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Git Flow Branching Model
 
 Follow the Git Flow branching model for repository management.

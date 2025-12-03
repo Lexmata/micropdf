@@ -1,0 +1,104 @@
+---
+alwaysApply: true
+---
+
+# GitFlow Branch Protection
+
+All development work must occur on GitFlow-allowed branches. Direct commits to `main` and `develop` are prohibited.
+
+## Rule
+
+**NEVER commit directly to:**
+- `main` - Production releases only (via merge from release/hotfix)
+- `develop` - Integration branch only (via merge from feature/bugfix)
+
+**ALWAYS work on:**
+- `feature/*` - New features
+- `bugfix/*` - Bug fixes (merged to develop)
+- `release/*` - Release preparation
+- `hotfix/*` - Production emergency fixes
+
+## Before Starting Work
+
+1. **Check current branch:**
+   ```bash
+   git branch --show-current
+   ```
+
+2. **If on `main` or `develop`, create appropriate branch:**
+   ```bash
+   # For new features
+   git checkout -b feature/descriptive-name
+
+   # For bug fixes
+   git checkout -b bugfix/issue-description
+
+   # For releases
+   git checkout -b release/v1.0.0
+
+   # For hotfixes
+   git checkout -b hotfix/critical-fix
+   ```
+
+## Branch Naming Conventions
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Feature | `feature/<description>` | `feature/add-pdf-encryption` |
+| Bugfix | `bugfix/<description>` | `bugfix/fix-buffer-overflow` |
+| Release | `release/v<version>` | `release/v1.0.0` |
+| Hotfix | `hotfix/<description>` | `hotfix/security-patch` |
+
+## Workflow
+
+### Features
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/my-feature
+# ... work ...
+git push -u origin feature/my-feature
+# Create PR to develop
+```
+
+### Bug Fixes
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b bugfix/fix-issue
+# ... work ...
+git push -u origin bugfix/fix-issue
+# Create PR to develop
+```
+
+### Releases
+```bash
+git checkout develop
+git checkout -b release/v1.0.0
+# ... final testing, version bumps ...
+# Merge to main AND develop when complete
+```
+
+### Hotfixes
+```bash
+git checkout main
+git checkout -b hotfix/critical-fix
+# ... fix ...
+# Merge to main AND develop when complete
+```
+
+## Enforcement
+
+If you find yourself on `main` or `develop`:
+1. **STOP** before making changes
+2. Stash any uncommitted work: `git stash`
+3. Create the appropriate branch
+4. Apply stashed work: `git stash pop`
+5. Continue development
+
+## Exceptions
+
+The only exception is when explicitly instructed by the user to:
+- Merge a completed feature/bugfix branch
+- Create initial repository setup
+- Perform administrative tasks on protected branches
