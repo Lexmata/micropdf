@@ -26,7 +26,7 @@ pub enum BlendMode {
     SoftLight = 9,
     Difference = 10,
     Exclusion = 11,
-    
+
     // PDF 1.4 - standard non-separable
     Hue = 12,
     Saturation = 13,
@@ -505,7 +505,7 @@ mod tests {
     fn test_null_device_fill_image() {
         let mut device = NullDevice;
         let image = Image::new(100, 100, None);
-        
+
         // Should not panic
         device.fill_image(&image, &Matrix::IDENTITY, 1.0);
     }
@@ -519,17 +519,17 @@ mod tests {
     #[test]
     fn test_bbox_device_fill_path() {
         use crate::fitz::geometry::Point;
-        
+
         let mut device = BBoxDevice::new();
         let mut path = Path::new();
         path.move_to(Point::new(10.0, 10.0));
         path.line_to(Point::new(100.0, 100.0));
-        
+
         let cs = Colorspace::device_rgb();
         let color = [1.0, 0.0, 0.0];
-        
+
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &color, 1.0);
-        
+
         let bbox = device.bbox();
         assert!(!bbox.is_empty());
     }
@@ -539,7 +539,7 @@ mod tests {
         let mut device = BBoxDevice::new();
         let mut text = Text::new();
         let font = Arc::new(Font::new("TestFont"));
-        
+
         text.show_string(
             font,
             Matrix::IDENTITY,
@@ -549,12 +549,12 @@ mod tests {
             crate::fitz::text::BidiDirection::Ltr,
             crate::fitz::text::TextLanguage::Unset,
         );
-        
+
         let cs = Colorspace::device_rgb();
         let color = [0.0, 0.0, 0.0];
-        
+
         device.fill_text(&text, &Matrix::IDENTITY, &cs, &color, 1.0);
-        
+
         let bbox = device.bbox();
         assert!(!bbox.is_empty());
     }
@@ -563,9 +563,9 @@ mod tests {
     fn test_bbox_device_fill_image() {
         let mut device = BBoxDevice::new();
         let image = Image::new(100, 100, None);
-        
+
         device.fill_image(&image, &Matrix::IDENTITY, 1.0);
-        
+
         let bbox = device.bbox();
         assert!(!bbox.is_empty());
         assert_eq!(bbox, Rect::UNIT);
@@ -574,20 +574,20 @@ mod tests {
     #[test]
     fn test_bbox_device_multiple_operations() {
         use crate::fitz::geometry::Point;
-        
+
         let mut device = BBoxDevice::new();
-        
+
         // Add path
         let mut path = Path::new();
         path.move_to(Point::new(0.0, 0.0));
         path.line_to(Point::new(50.0, 50.0));
         let cs = Colorspace::device_rgb();
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
-        
+
         // Add image at different location
         let transform = Matrix::translate(100.0, 100.0);
         device.fill_image(&Image::new(10, 10, None), &transform, 1.0);
-        
+
         let bbox = device.bbox();
         assert!(!bbox.is_empty());
         // Should encompass both operations
@@ -601,7 +601,7 @@ mod tests {
         let path = Path::new();
         let cs = Colorspace::device_rgb();
         let color = [1.0, 0.0, 0.0];
-        
+
         // Should not panic, logs to stdout
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &color, 1.0);
         device.close();
@@ -611,11 +611,11 @@ mod tests {
     fn test_trace_device_indentation() {
         let mut device = TraceDevice::new();
         assert_eq!(device.indent, 0);
-        
+
         let path = Path::new();
         device.clip_path(&path, false, &Matrix::IDENTITY, Rect::EMPTY);
         assert_eq!(device.indent, 1);
-        
+
         device.pop_clip();
         assert_eq!(device.indent, 0);
     }
@@ -626,7 +626,7 @@ mod tests {
         let mask = ContainerType::Mask { luminosity: true };
         let group = ContainerType::Group { isolated: true, knockout: false };
         let tile = ContainerType::Tile;
-        
+
         // Just ensure they can be created
         assert!(matches!(clip, ContainerType::Clip));
         assert!(matches!(mask, ContainerType::Mask { .. }));

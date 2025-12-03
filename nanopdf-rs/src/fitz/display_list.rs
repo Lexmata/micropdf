@@ -481,7 +481,7 @@ mod tests {
     fn test_display_list_new() {
         let mediabox = Rect::new(0.0, 0.0, 612.0, 792.0);
         let list = DisplayList::new(mediabox);
-        
+
         assert_eq!(list.mediabox(), mediabox);
         assert!(list.is_empty());
         assert_eq!(list.len(), 0);
@@ -490,19 +490,19 @@ mod tests {
     #[test]
     fn test_list_device_record_fill_path() {
         use crate::fitz::geometry::Point;
-        
+
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let mut path = Path::new();
         path.move_to(Point::new(10.0, 10.0));
         path.line_to(Point::new(90.0, 90.0));
-        
+
         let cs = Colorspace::device_rgb();
         let color = [1.0, 0.0, 0.0];
-        
+
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &color, 1.0);
-        
+
         assert_eq!(device.display_list().len(), 1);
     }
 
@@ -510,7 +510,7 @@ mod tests {
     fn test_list_device_record_fill_text() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let mut text = Text::new();
         let font = Arc::new(Font::new("TestFont"));
         text.show_string(
@@ -522,12 +522,12 @@ mod tests {
             crate::fitz::text::BidiDirection::Ltr,
             crate::fitz::text::TextLanguage::Unset,
         );
-        
+
         let cs = Colorspace::device_rgb();
         let color = [0.0, 0.0, 0.0];
-        
+
         device.fill_text(&text, &Matrix::IDENTITY, &cs, &color, 1.0);
-        
+
         assert_eq!(device.display_list().len(), 1);
     }
 
@@ -535,10 +535,10 @@ mod tests {
     fn test_list_device_record_fill_image() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let image = Image::new(50, 50, None);
         device.fill_image(&image, &Matrix::IDENTITY, 1.0);
-        
+
         assert_eq!(device.display_list().len(), 1);
     }
 
@@ -546,20 +546,20 @@ mod tests {
     fn test_list_device_record_multiple_operations() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         // Fill path
         let path = Path::new();
         let cs = Colorspace::device_rgb();
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
-        
+
         // Fill image
         let image = Image::new(10, 10, None);
         device.fill_image(&image, &Matrix::IDENTITY, 0.5);
-        
+
         // Fill text
         let text = Text::new();
         device.fill_text(&text, &Matrix::IDENTITY, &cs, &[0.0, 0.0, 0.0], 1.0);
-        
+
         assert_eq!(device.display_list().len(), 3);
     }
 
@@ -567,14 +567,14 @@ mod tests {
     fn test_display_list_run_on_null_device() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut list_device = ListDevice::new(mediabox);
-        
+
         // Record some operations
         let path = Path::new();
         let cs = Colorspace::device_rgb();
         list_device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
-        
+
         let list = list_device.into_display_list();
-        
+
         // Run on null device (should not panic)
         let mut null_device = NullDevice;
         list.run(&mut null_device, &Matrix::IDENTITY, Rect::INFINITE);
@@ -583,24 +583,24 @@ mod tests {
     #[test]
     fn test_display_list_run_on_bbox_device() {
         use crate::fitz::geometry::Point;
-        
+
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut list_device = ListDevice::new(mediabox);
-        
+
         // Record a path operation
         let mut path = Path::new();
         path.move_to(Point::new(10.0, 10.0));
         path.line_to(Point::new(50.0, 50.0));
-        
+
         let cs = Colorspace::device_rgb();
         list_device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
-        
+
         let list = list_device.into_display_list();
-        
+
         // Run on bbox device
         let mut bbox_device = BBoxDevice::new();
         list.run(&mut bbox_device, &Matrix::IDENTITY, Rect::INFINITE);
-        
+
         let bbox = bbox_device.bbox();
         assert!(!bbox.is_empty());
     }
@@ -609,18 +609,18 @@ mod tests {
     fn test_display_list_run_with_transform() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut list_device = ListDevice::new(mediabox);
-        
+
         // Record an image
         let image = Image::new(10, 10, None);
         list_device.fill_image(&image, &Matrix::IDENTITY, 1.0);
-        
+
         let list = list_device.into_display_list();
-        
+
         // Run with scaling transform
         let mut bbox_device = BBoxDevice::new();
         let scale_ctm = Matrix::scale(2.0, 2.0);
         list.run(&mut bbox_device, &scale_ctm, Rect::INFINITE);
-        
+
         let bbox = bbox_device.bbox();
         assert!(!bbox.is_empty());
         // Should be scaled
@@ -633,14 +633,14 @@ mod tests {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut list = DisplayList::new(mediabox);
         let mut device = ListDevice::new(mediabox);
-        
+
         let path = Path::new();
         let cs = Colorspace::device_rgb();
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
-        
+
         list = device.into_display_list();
         assert!(!list.is_empty());
-        
+
         list.clear();
         assert!(list.is_empty());
     }
@@ -649,11 +649,11 @@ mod tests {
     fn test_display_list_clip_operations() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let path = Path::new();
         device.clip_path(&path, false, &Matrix::IDENTITY, Rect::EMPTY);
         device.pop_clip();
-        
+
         assert_eq!(device.display_list().len(), 2);
     }
 
@@ -661,13 +661,13 @@ mod tests {
     fn test_display_list_group_operations() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let area = Rect::new(10.0, 10.0, 90.0, 90.0);
         let cs = Colorspace::device_rgb();
-        
+
         device.begin_group(area, Some(&cs), true, false, BlendMode::Normal, 1.0);
         device.end_group();
-        
+
         assert_eq!(device.display_list().len(), 2);
     }
 
@@ -675,14 +675,14 @@ mod tests {
     fn test_display_list_mask_operations() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let area = Rect::new(10.0, 10.0, 90.0, 90.0);
         let cs = Colorspace::device_rgb();
         let color = [0.0, 0.0, 0.0];
-        
+
         device.begin_mask(area, false, &cs, &color);
         device.end_mask();
-        
+
         assert_eq!(device.display_list().len(), 2);
     }
 
@@ -690,13 +690,13 @@ mod tests {
     fn test_display_list_tile_operations() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
         let mut device = ListDevice::new(mediabox);
-        
+
         let area = Rect::new(0.0, 0.0, 10.0, 10.0);
         let view = Rect::new(0.0, 0.0, 10.0, 10.0);
-        
+
         device.begin_tile(area, view, 10.0, 10.0, &Matrix::IDENTITY);
         device.end_tile();
-        
+
         assert_eq!(device.display_list().len(), 2);
     }
 }
