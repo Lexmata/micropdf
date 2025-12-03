@@ -1,0 +1,204 @@
+---
+alwaysApply: true
+---
+
+# Branch Protection Rules
+
+Protected branches ensure the integrity of critical branches in the repository.
+
+## Protected Branches
+
+The following branches are **PROTECTED** and must **NEVER** be deleted:
+
+- `main` - Production release branch
+- `develop` - Integration/development branch
+
+## Enforcement
+
+### AI Assistant Rules
+
+When working with Git commands:
+
+1. **NEVER** delete `main` or `develop` branches
+2. **NEVER** run commands like:
+   - `git branch -D main`
+   - `git branch -D develop`
+   - `git push origin --delete main`
+   - `git push origin --delete develop`
+   - `git push origin :main`
+   - `git push origin :develop`
+
+3. **ALWAYS** verify branch name before any delete operation
+4. **WARN** the user if they request deletion of protected branches
+
+### Human Developer Rules
+
+Developers must:
+
+1. Never delete `main` or `develop` branches locally or remotely
+2. Follow Git Flow branching model
+3. Create feature/bugfix/hotfix branches as needed
+4. Delete only feature branches after they are merged
+
+## GitHub Branch Protection Settings
+
+To configure these protections in GitHub:
+
+### For `main` branch:
+
+Navigate to: **Settings → Branches → Add rule**
+
+**Branch name pattern**: `main`
+
+Required settings:
+- ✅ Require a pull request before merging
+  - ✅ Require approvals (1+)
+  - ✅ Dismiss stale pull request approvals when new commits are pushed
+- ✅ Require status checks to pass before merging
+  - ✅ Require branches to be up to date before merging
+  - Required checks: CI, tests, linter
+- ✅ Require conversation resolution before merging
+- ✅ Require signed commits (recommended)
+- ✅ Include administrators
+- ✅ Restrict deletions
+- ✅ Allow force pushes: **DISABLED**
+- ✅ Allow deletions: **DISABLED**
+
+### For `develop` branch:
+
+Navigate to: **Settings → Branches → Add rule**
+
+**Branch name pattern**: `develop`
+
+Required settings:
+- ✅ Require a pull request before merging
+  - ✅ Require approvals (1+)
+- ✅ Require status checks to pass before merging
+  - Required checks: CI, tests, linter
+- ✅ Include administrators
+- ✅ Restrict deletions
+- ✅ Allow force pushes: **DISABLED**
+- ✅ Allow deletions: **DISABLED**
+
+## Verification
+
+Check branch protection status:
+
+```bash
+# List protected branches (requires GitHub CLI)
+gh api repos/:owner/:repo/branches --jq '.[] | select(.protected == true) | .name'
+
+# Or check in GitHub UI
+# Settings → Branches → Branch protection rules
+```
+
+## Examples of Allowed Operations
+
+### Safe Operations ✅
+
+```bash
+# Create branches from main/develop
+git checkout main
+git checkout -b feature/new-feature
+
+git checkout develop
+git checkout -b bugfix/fix-issue
+
+# Delete feature branches (after merge)
+git branch -d feature/completed-feature
+git push origin --delete feature/completed-feature
+
+# Merge to main/develop via PR
+git checkout develop
+git merge feature/my-feature
+git push origin develop
+```
+
+### Forbidden Operations ❌
+
+```bash
+# NEVER DO THESE:
+git branch -D main                    # ❌ Delete main locally
+git branch -D develop                 # ❌ Delete develop locally
+git push origin --delete main         # ❌ Delete main remotely
+git push origin --delete develop      # ❌ Delete develop remotely
+git push origin :main                 # ❌ Delete main (short syntax)
+git push origin :develop              # ❌ Delete develop (short syntax)
+git push --force origin main          # ❌ Force push to main
+git push --force origin develop       # ❌ Force push to develop
+```
+
+## Recovery
+
+If a protected branch is accidentally deleted:
+
+### Local deletion recovery:
+
+```bash
+# Fetch from remote
+git fetch origin
+
+# Recreate the branch
+git checkout -b main origin/main
+# or
+git checkout -b develop origin/develop
+```
+
+### Remote deletion recovery (if protection wasn't set):
+
+```bash
+# Find the last commit SHA
+git reflog
+
+# Push the branch back
+git checkout <commit-sha>
+git checkout -b main  # or develop
+git push origin main  # or develop
+```
+
+## Automation
+
+Consider adding a pre-push Git hook to prevent accidental deletion:
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-push
+
+protected_branches="main develop"
+current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+
+for branch in $protected_branches; do
+    if [ "$current_branch" = "$branch" ]; then
+        if git log origin/$branch..HEAD | grep -q "^commit"; then
+            if echo "$*" | grep -q "\-\-force\|\-f"; then
+                echo "ERROR: Force push to protected branch '$branch' is forbidden!"
+                exit 1
+            fi
+        fi
+    fi
+done
+```
+
+## Rationale
+
+Protected branches are essential because:
+
+1. **main** contains production-ready code
+2. **develop** is the integration branch for all development
+3. Deleting either would lose critical history
+4. Both branches are central to the Git Flow workflow
+5. Multiple developers depend on these branches
+
+## Enforcement Checklist
+
+- [ ] GitHub branch protection rules configured for `main`
+- [ ] GitHub branch protection rules configured for `develop`
+- [ ] Team members educated on branch protection
+- [ ] Pre-push hooks installed (optional)
+- [ ] Regular audits of branch protection settings
+
+## Contact
+
+If you need to perform an operation that requires modifying protection rules, contact the repository administrator.
+
+**Remember**: Protected branches exist to protect the codebase. Follow the rules!

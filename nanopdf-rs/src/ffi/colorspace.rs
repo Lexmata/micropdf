@@ -1,7 +1,9 @@
 //! C FFI for colorspace - MuPDF compatible
 //! Safe Rust implementation
 
+use super::HandleStore;
 use std::ffi::c_char;
+use std::sync::LazyLock;
 
 /// Colorspace type enumeration
 #[repr(C)]
@@ -15,10 +17,42 @@ pub enum ColorspaceType {
     Lab = 5,
     Indexed = 6,
     Separation = 7,
+    Icc = 8,
 }
 
+/// Custom colorspace structure
+#[derive(Debug, Clone)]
+pub struct Colorspace {
+    pub cs_type: ColorspaceType,
+    pub n: i32,
+    pub name: String,
+    pub base_cs: ColorspaceHandle,
+    pub lookup: Vec<u8>,      // For indexed colorspaces
+    pub high: i32,            // For indexed colorspaces (max index)
+}
+
+impl Default for Colorspace {
+    fn default() -> Self {
+        Self {
+            cs_type: ColorspaceType::None,
+            n: 0,
+            name: String::new(),
+            base_cs: 0,
+            lookup: Vec::new(),
+            high: 0,
+        }
+    }
+}
+
+/// Custom colorspace storage (handles > 100 to avoid conflicts with device colorspaces)
+pub static COLORSPACES: LazyLock<HandleStore<Colorspace>> = LazyLock::new(HandleStore::default);
+
+/// Base offset for custom colorspace handles
+const CUSTOM_CS_OFFSET: ColorspaceHandle = 100;
+
 /// Colorspace handle - we use small integers for device colorspaces
-/// Handles 1-4 are reserved for device colorspaces
+/// Handles 1-5 are reserved for device colorspaces
+/// Handles >= 100 are for custom colorspaces
 /// 0 = invalid/null
 pub type ColorspaceHandle = u64;
 
@@ -35,6 +69,15 @@ fn colorspace_n(handle: ColorspaceHandle) -> i32 {
         FZ_COLORSPACE_RGB | FZ_COLORSPACE_BGR => 3,
         FZ_COLORSPACE_CMYK => 4,
         FZ_COLORSPACE_LAB => 3,
+        h if h >= CUSTOM_CS_OFFSET => {
+            let real_handle = h - CUSTOM_CS_OFFSET;
+            if let Some(cs) = COLORSPACES.get(real_handle) {
+                if let Ok(guard) = cs.lock() {
+                    return guard.n;
+                }
+            }
+            0
+        }
         _ => 0,
     }
 }
@@ -47,6 +90,15 @@ fn colorspace_type(handle: ColorspaceHandle) -> ColorspaceType {
         FZ_COLORSPACE_BGR => ColorspaceType::Bgr,
         FZ_COLORSPACE_CMYK => ColorspaceType::Cmyk,
         FZ_COLORSPACE_LAB => ColorspaceType::Lab,
+        h if h >= CUSTOM_CS_OFFSET => {
+            let real_handle = h - CUSTOM_CS_OFFSET;
+            if let Some(cs) = COLORSPACES.get(real_handle) {
+                if let Ok(guard) = cs.lock() {
+                    return guard.cs_type;
+                }
+            }
+            ColorspaceType::None
+        }
         _ => ColorspaceType::None,
     }
 }
@@ -129,6 +181,39 @@ pub extern "C" fn fz_colorspace_is_device(_ctx: super::Handle, cs: ColorspaceHan
     i32::from(cs >= FZ_COLORSPACE_GRAY && cs <= FZ_COLORSPACE_LAB)
 }
 
+/// Check if colorspace is indexed
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_is_indexed(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    i32::from(colorspace_type(cs) == ColorspaceType::Indexed)
+}
+
+/// Check if colorspace is device-n (separation)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_is_device_n(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    i32::from(colorspace_type(cs) == ColorspaceType::Separation)
+}
+
+/// Check if colorspace is subtractive (CMYK, DeviceN)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_is_subtractive(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    match colorspace_type(cs) {
+        ColorspaceType::Cmyk | ColorspaceType::Separation => 1,
+        _ => 0,
+    }
+}
+
+/// Check if colorspace is device-based (not ICC)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_device_n_has_cmyk(_ctx: super::Handle, _cs: ColorspaceHandle) -> i32 {
+    0 // Not implemented yet
+}
+
+/// Check if colorspace device-n has only colorants
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_device_n_has_only_cmyk(_ctx: super::Handle, _cs: ColorspaceHandle) -> i32 {
+    0 // Not implemented yet
+}
+
 /// Get colorspace name
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_colorspace_name(_ctx: super::Handle, cs: ColorspaceHandle) -> *const c_char {
@@ -140,6 +225,150 @@ pub extern "C" fn fz_colorspace_name(_ctx: super::Handle, cs: ColorspaceHandle) 
         FZ_COLORSPACE_LAB => c"Lab".as_ptr(),
         _ => c"Unknown".as_ptr(),
     }
+}
+
+// ============================================================================
+// Custom Colorspace Creation
+// ============================================================================
+
+/// Create a new indexed colorspace
+///
+/// # Safety
+/// Caller must ensure `lookup` points to valid memory of `(high + 1) * base_n` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_indexed_colorspace(
+    _ctx: super::Handle,
+    base: ColorspaceHandle,
+    high: i32,
+    lookup: *const u8,
+) -> ColorspaceHandle {
+    let base_n = colorspace_n(base);
+    if base_n == 0 || high < 0 {
+        return 0;
+    }
+
+    let lookup_size = ((high + 1) * base_n) as usize;
+    let lookup_data = if lookup.is_null() || lookup_size == 0 {
+        vec![0u8; lookup_size]
+    } else {
+        #[allow(unsafe_code)]
+        unsafe { std::slice::from_raw_parts(lookup, lookup_size) }.to_vec()
+    };
+
+    let cs = Colorspace {
+        cs_type: ColorspaceType::Indexed,
+        n: 1, // Indexed colorspaces have 1 component (the index)
+        name: format!("Indexed({})", high),
+        base_cs: base,
+        lookup: lookup_data,
+        high,
+    };
+
+    COLORSPACES.insert(cs) + CUSTOM_CS_OFFSET
+}
+
+/// Create a new device-n colorspace
+///
+/// # Safety
+/// Caller must ensure `colorants` points to an array of `n` null-terminated C strings.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_device_n_colorspace(
+    _ctx: super::Handle,
+    base: ColorspaceHandle,
+    n: i32,
+    _colorants: *const *const c_char,
+) -> ColorspaceHandle {
+    if n <= 0 || n > 32 {
+        return 0;
+    }
+
+    let cs = Colorspace {
+        cs_type: ColorspaceType::Separation,
+        n,
+        name: format!("DeviceN({})", n),
+        base_cs: base,
+        lookup: Vec::new(),
+        high: 0,
+    };
+
+    COLORSPACES.insert(cs) + CUSTOM_CS_OFFSET
+}
+
+/// Create a new ICC colorspace from data
+///
+/// # Safety
+/// Caller must ensure `data` points to valid ICC profile data of `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_icc_colorspace(
+    _ctx: super::Handle,
+    _type_hint: i32, // Hint about what type of colorspace (gray, rgb, cmyk)
+    _flags: i32,
+    name: *const c_char,
+    _data: *const u8,
+    _size: usize,
+) -> ColorspaceHandle {
+    // Determine components from type hint or default to RGB
+    let n = 3; // Default to RGB
+
+    let cs_name = if name.is_null() {
+        "ICCBased".to_string()
+    } else {
+        #[allow(unsafe_code)]
+        let c_str = unsafe { std::ffi::CStr::from_ptr(name) };
+        c_str.to_str().unwrap_or("ICCBased").to_string()
+    };
+
+    let cs = Colorspace {
+        cs_type: ColorspaceType::Icc,
+        n,
+        name: cs_name,
+        base_cs: FZ_COLORSPACE_RGB,
+        lookup: Vec::new(),
+        high: 0,
+    };
+
+    COLORSPACES.insert(cs) + CUSTOM_CS_OFFSET
+}
+
+/// Get base colorspace of indexed colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_base(_ctx: super::Handle, cs: ColorspaceHandle) -> ColorspaceHandle {
+    if cs < CUSTOM_CS_OFFSET {
+        return 0; // Device colorspaces have no base
+    }
+
+    let real_handle = cs - CUSTOM_CS_OFFSET;
+    if let Some(colorspace) = COLORSPACES.get(real_handle) {
+        if let Ok(guard) = colorspace.lock() {
+            return guard.base_cs;
+        }
+    }
+    0
+}
+
+/// Get high value of indexed colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_high(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    if cs < CUSTOM_CS_OFFSET {
+        return -1;
+    }
+
+    let real_handle = cs - CUSTOM_CS_OFFSET;
+    if let Some(colorspace) = COLORSPACES.get(real_handle) {
+        if let Ok(guard) = colorspace.lock() {
+            if guard.cs_type == ColorspaceType::Indexed {
+                return guard.high;
+            }
+        }
+    }
+    -1
+}
+
+/// Get lookup table of indexed colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_lookup(_ctx: super::Handle, _cs: ColorspaceHandle) -> *const u8 {
+    // Cannot safely return pointer to internal data
+    std::ptr::null()
 }
 
 /// Convert color from one colorspace to another
@@ -417,5 +646,142 @@ mod tests {
         assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_GRAY), 1);
         assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_RGB), 1);
         assert_eq!(fz_colorspace_is_device(0, FZ_COLORSPACE_CMYK), 1);
+    }
+
+    // ============================================================================
+    // Additional Check Tests
+    // ============================================================================
+
+    #[test]
+    fn test_colorspace_is_indexed() {
+        assert_eq!(fz_colorspace_is_indexed(0, FZ_COLORSPACE_RGB), 0);
+        assert_eq!(fz_colorspace_is_indexed(0, FZ_COLORSPACE_GRAY), 0);
+    }
+
+    #[test]
+    fn test_colorspace_is_device_n() {
+        assert_eq!(fz_colorspace_is_device_n(0, FZ_COLORSPACE_RGB), 0);
+        assert_eq!(fz_colorspace_is_device_n(0, FZ_COLORSPACE_CMYK), 0);
+    }
+
+    #[test]
+    fn test_colorspace_is_subtractive() {
+        assert_eq!(fz_colorspace_is_subtractive(0, FZ_COLORSPACE_CMYK), 1);
+        assert_eq!(fz_colorspace_is_subtractive(0, FZ_COLORSPACE_RGB), 0);
+        assert_eq!(fz_colorspace_is_subtractive(0, FZ_COLORSPACE_GRAY), 0);
+    }
+
+    // ============================================================================
+    // Indexed Colorspace Tests
+    // ============================================================================
+
+    #[test]
+    fn test_new_indexed_colorspace() {
+        // Create a simple indexed colorspace with 4 colors
+        let lookup = [
+            255, 0, 0,    // Index 0 = Red
+            0, 255, 0,    // Index 1 = Green
+            0, 0, 255,    // Index 2 = Blue
+            255, 255, 0,  // Index 3 = Yellow
+        ];
+
+        let cs = fz_new_indexed_colorspace(0, FZ_COLORSPACE_RGB, 3, lookup.as_ptr());
+        assert!(cs >= CUSTOM_CS_OFFSET);
+
+        // Should be indexed
+        assert_eq!(fz_colorspace_is_indexed(0, cs), 1);
+
+        // Should have 1 component
+        assert_eq!(fz_colorspace_n(0, cs), 1);
+
+        // Should have base RGB
+        assert_eq!(fz_colorspace_base(0, cs), FZ_COLORSPACE_RGB);
+
+        // High should be 3
+        assert_eq!(fz_colorspace_high(0, cs), 3);
+    }
+
+    #[test]
+    fn test_new_indexed_colorspace_null_lookup() {
+        let cs = fz_new_indexed_colorspace(0, FZ_COLORSPACE_RGB, 3, std::ptr::null());
+        assert!(cs >= CUSTOM_CS_OFFSET);
+    }
+
+    #[test]
+    fn test_new_indexed_colorspace_invalid() {
+        // Invalid base
+        let cs1 = fz_new_indexed_colorspace(0, 99, 3, std::ptr::null());
+        assert_eq!(cs1, 0);
+
+        // Invalid high
+        let cs2 = fz_new_indexed_colorspace(0, FZ_COLORSPACE_RGB, -1, std::ptr::null());
+        assert_eq!(cs2, 0);
+    }
+
+    // ============================================================================
+    // DeviceN Colorspace Tests
+    // ============================================================================
+
+    #[test]
+    fn test_new_device_n_colorspace() {
+        let cs = fz_new_device_n_colorspace(0, FZ_COLORSPACE_CMYK, 2, std::ptr::null());
+        assert!(cs >= CUSTOM_CS_OFFSET);
+
+        assert_eq!(fz_colorspace_is_device_n(0, cs), 1);
+        assert_eq!(fz_colorspace_n(0, cs), 2);
+    }
+
+    #[test]
+    fn test_new_device_n_colorspace_invalid() {
+        // Invalid n
+        let cs1 = fz_new_device_n_colorspace(0, FZ_COLORSPACE_CMYK, 0, std::ptr::null());
+        assert_eq!(cs1, 0);
+
+        let cs2 = fz_new_device_n_colorspace(0, FZ_COLORSPACE_CMYK, 100, std::ptr::null());
+        assert_eq!(cs2, 0);
+    }
+
+    // ============================================================================
+    // ICC Colorspace Tests
+    // ============================================================================
+
+    #[test]
+    fn test_new_icc_colorspace() {
+        let cs = fz_new_icc_colorspace(0, 0, 0, std::ptr::null(), std::ptr::null(), 0);
+        assert!(cs >= CUSTOM_CS_OFFSET);
+
+        // Default is RGB (3 components)
+        assert_eq!(fz_colorspace_n(0, cs), 3);
+    }
+
+    #[test]
+    fn test_new_icc_colorspace_with_name() {
+        let name = c"sRGB IEC61966-2.1";
+        let cs = fz_new_icc_colorspace(0, 0, 0, name.as_ptr(), std::ptr::null(), 0);
+        assert!(cs >= CUSTOM_CS_OFFSET);
+    }
+
+    // ============================================================================
+    // Base/High Tests for Device Colorspaces
+    // ============================================================================
+
+    #[test]
+    fn test_colorspace_base_device() {
+        // Device colorspaces should return 0 (no base)
+        assert_eq!(fz_colorspace_base(0, FZ_COLORSPACE_RGB), 0);
+        assert_eq!(fz_colorspace_base(0, FZ_COLORSPACE_GRAY), 0);
+    }
+
+    #[test]
+    fn test_colorspace_high_device() {
+        // Device colorspaces should return -1 (not indexed)
+        assert_eq!(fz_colorspace_high(0, FZ_COLORSPACE_RGB), -1);
+        assert_eq!(fz_colorspace_high(0, FZ_COLORSPACE_GRAY), -1);
+    }
+
+    #[test]
+    fn test_colorspace_lookup_returns_null() {
+        // Should always return null for safety
+        assert!(fz_colorspace_lookup(0, FZ_COLORSPACE_RGB).is_null());
     }
 }

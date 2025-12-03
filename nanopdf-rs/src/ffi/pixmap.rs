@@ -341,6 +341,268 @@ pub extern "C" fn fz_set_pixmap_sample(_ctx: Handle, pix: Handle, x: i32, y: i32
     }
 }
 
+/// Get pointer to pixmap samples
+///
+/// Note: Returns null as we cannot safely expose internal pointers.
+/// Use fz_get_pixmap_sample to access individual samples.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_samples(_ctx: Handle, _pix: Handle) -> *mut u8 {
+    // Cannot safely return pointer to internal data
+    std::ptr::null_mut()
+}
+
+/// Clone a pixmap
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_pixmap(_ctx: Handle, pix: Handle) -> Handle {
+    if let Some(pixmap) = PIXMAPS.get(pix) {
+        if let Ok(guard) = pixmap.lock() {
+            let cloned = Pixmap {
+                x: guard.x,
+                y: guard.y,
+                width: guard.width,
+                height: guard.height,
+                n: guard.n,
+                alpha: guard.alpha,
+                stride: guard.stride,
+                samples: guard.samples.clone(),
+                colorspace: guard.colorspace,
+            };
+            return PIXMAPS.insert(cloned);
+        }
+    }
+    0
+}
+
+/// Convert pixmap to different colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_convert_pixmap(
+    _ctx: Handle,
+    pix: Handle,
+    cs: ColorspaceHandle,
+    _prf: Handle,    // Color profile (not implemented)
+    _default_cs: Handle,
+    _color_params: Handle,
+    keep_alpha: i32,
+) -> Handle {
+    let cs = if cs == 0 { FZ_COLORSPACE_RGB } else { cs };
+    let target_n = super::colorspace::fz_colorspace_n(0, cs);
+
+    if let Some(pixmap) = PIXMAPS.get(pix) {
+        if let Ok(guard) = pixmap.lock() {
+            let alpha = if keep_alpha != 0 { guard.alpha } else { false };
+            let new_n = target_n + i32::from(alpha);
+            let new_stride = guard.width * new_n;
+            let new_size = (new_stride * guard.height).max(0) as usize;
+
+            let mut new_samples = vec![0u8; new_size];
+
+            // Simple conversion: copy/convert each pixel
+            let src_colorants = (guard.n - i32::from(guard.alpha)) as usize;
+            let dst_colorants = target_n as usize;
+
+            for y in 0..guard.height {
+                for x in 0..guard.width {
+                    let src_offset = (y * guard.stride + x * guard.n) as usize;
+                    let dst_offset = (y * new_stride + x * new_n) as usize;
+
+                    // Get source color values
+                    let mut src_colors = [0u8; 4];
+                    for c in 0..src_colorants.min(4) {
+                        src_colors[c] = guard.samples.get(src_offset + c).copied().unwrap_or(0);
+                    }
+
+                    // Convert colors (simple mapping)
+                    let dst_colors = convert_color(
+                        guard.colorspace,
+                        cs,
+                        &src_colors[..src_colorants.min(4)],
+                        dst_colorants,
+                    );
+
+                    // Write destination colors
+                    for c in 0..dst_colorants {
+                        if let Some(sample) = new_samples.get_mut(dst_offset + c) {
+                            *sample = dst_colors.get(c).copied().unwrap_or(0);
+                        }
+                    }
+
+                    // Copy alpha if requested
+                    if alpha && guard.alpha {
+                        let src_alpha_offset = src_offset + src_colorants;
+                        let dst_alpha_offset = dst_offset + dst_colorants;
+                        if let (Some(&src_alpha), Some(dst_alpha)) = (
+                            guard.samples.get(src_alpha_offset),
+                            new_samples.get_mut(dst_alpha_offset),
+                        ) {
+                            *dst_alpha = src_alpha;
+                        }
+                    } else if alpha {
+                        // Set opaque alpha if no source alpha
+                        let dst_alpha_offset = dst_offset + dst_colorants;
+                        if let Some(dst_alpha) = new_samples.get_mut(dst_alpha_offset) {
+                            *dst_alpha = 255;
+                        }
+                    }
+                }
+            }
+
+            let converted = Pixmap {
+                x: guard.x,
+                y: guard.y,
+                width: guard.width,
+                height: guard.height,
+                n: new_n,
+                alpha,
+                stride: new_stride,
+                samples: new_samples,
+                colorspace: cs,
+            };
+            return PIXMAPS.insert(converted);
+        }
+    }
+    0
+}
+
+/// Simple color conversion helper
+fn convert_color(
+    src_cs: ColorspaceHandle,
+    dst_cs: ColorspaceHandle,
+    src: &[u8],
+    dst_n: usize,
+) -> Vec<u8> {
+    use super::colorspace::{FZ_COLORSPACE_CMYK, FZ_COLORSPACE_GRAY, FZ_COLORSPACE_RGB};
+
+    let mut dst = vec![0u8; dst_n];
+
+    match (src_cs, dst_cs) {
+        // Same colorspace: copy
+        (s, d) if s == d => {
+            for (i, &v) in src.iter().enumerate().take(dst_n) {
+                dst[i] = v;
+            }
+        }
+        // Gray to RGB
+        (FZ_COLORSPACE_GRAY, FZ_COLORSPACE_RGB) => {
+            let gray = src.first().copied().unwrap_or(0);
+            dst[0] = gray;
+            dst[1] = gray;
+            dst[2] = gray;
+        }
+        // RGB to Gray
+        (FZ_COLORSPACE_RGB, FZ_COLORSPACE_GRAY) => {
+            let r = src.first().copied().unwrap_or(0) as u32;
+            let g = src.get(1).copied().unwrap_or(0) as u32;
+            let b = src.get(2).copied().unwrap_or(0) as u32;
+            // Standard luminance formula
+            let gray = ((r * 77 + g * 150 + b * 29) >> 8) as u8;
+            dst[0] = gray;
+        }
+        // CMYK to RGB
+        (FZ_COLORSPACE_CMYK, FZ_COLORSPACE_RGB) => {
+            let c = src.first().copied().unwrap_or(0) as f32 / 255.0;
+            let m = src.get(1).copied().unwrap_or(0) as f32 / 255.0;
+            let y = src.get(2).copied().unwrap_or(0) as f32 / 255.0;
+            let k = src.get(3).copied().unwrap_or(0) as f32 / 255.0;
+            dst[0] = ((1.0 - c) * (1.0 - k) * 255.0) as u8;
+            dst[1] = ((1.0 - m) * (1.0 - k) * 255.0) as u8;
+            dst[2] = ((1.0 - y) * (1.0 - k) * 255.0) as u8;
+        }
+        // RGB to CMYK
+        (FZ_COLORSPACE_RGB, FZ_COLORSPACE_CMYK) => {
+            let r = src.first().copied().unwrap_or(0) as f32 / 255.0;
+            let g = src.get(1).copied().unwrap_or(0) as f32 / 255.0;
+            let b = src.get(2).copied().unwrap_or(0) as f32 / 255.0;
+            let k = 1.0 - r.max(g).max(b);
+            if k < 1.0 {
+                dst[0] = ((1.0 - r - k) / (1.0 - k) * 255.0) as u8;
+                dst[1] = ((1.0 - g - k) / (1.0 - k) * 255.0) as u8;
+                dst[2] = ((1.0 - b - k) / (1.0 - k) * 255.0) as u8;
+            }
+            dst[3] = (k * 255.0) as u8;
+        }
+        // Gray to CMYK
+        (FZ_COLORSPACE_GRAY, FZ_COLORSPACE_CMYK) => {
+            let gray = src.first().copied().unwrap_or(0);
+            dst[0] = 0;
+            dst[1] = 0;
+            dst[2] = 0;
+            dst[3] = 255 - gray;
+        }
+        // CMYK to Gray
+        (FZ_COLORSPACE_CMYK, FZ_COLORSPACE_GRAY) => {
+            // Convert via RGB
+            let c = src.first().copied().unwrap_or(0) as f32 / 255.0;
+            let m = src.get(1).copied().unwrap_or(0) as f32 / 255.0;
+            let y = src.get(2).copied().unwrap_or(0) as f32 / 255.0;
+            let k = src.get(3).copied().unwrap_or(0) as f32 / 255.0;
+            let r = (1.0 - c) * (1.0 - k);
+            let g = (1.0 - m) * (1.0 - k);
+            let b = (1.0 - y) * (1.0 - k);
+            dst[0] = ((r * 0.3 + g * 0.59 + b * 0.11) * 255.0) as u8;
+        }
+        // Default: just copy what we can
+        _ => {
+            for (i, &v) in src.iter().enumerate().take(dst_n) {
+                dst[i] = v;
+            }
+        }
+    }
+
+    dst
+}
+
+/// Tint pixmap with specified color
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_tint_pixmap(_ctx: Handle, pix: Handle, r: i32, g: i32, b: i32) {
+    if let Some(pixmap) = PIXMAPS.get(pix) {
+        if let Ok(mut p) = pixmap.lock() {
+            // Only works for grayscale pixmaps
+            if p.n - i32::from(p.alpha) != 1 {
+                return;
+            }
+
+            let r_factor = (r as f32) / 255.0;
+            let g_factor = (g as f32) / 255.0;
+            let b_factor = (b as f32) / 255.0;
+
+            // We need to convert to RGB to apply tint
+            // For now, just modulate the gray value
+            for y in 0..p.height {
+                for x in 0..p.width {
+                    let offset = (y * p.stride + x * p.n) as usize;
+                    if let Some(sample) = p.samples.get_mut(offset) {
+                        let gray = *sample as f32;
+                        // Apply average tint factor
+                        let factor = (r_factor + g_factor + b_factor) / 3.0;
+                        *sample = (gray * factor).clamp(0.0, 255.0) as u8;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Set pixmap resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_set_pixmap_resolution(_ctx: Handle, _pix: Handle, _xres: i32, _yres: i32) {
+    // Resolution is not stored in our simple implementation
+    // This is a no-op for now
+}
+
+/// Get pixmap resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_resolution(_ctx: Handle, _pix: Handle, xres: *mut i32, yres: *mut i32) {
+    // Return default 72 dpi
+    if !xres.is_null() {
+        #[allow(unsafe_code)]
+        unsafe { *xres = 72; }
+    }
+    if !yres.is_null() {
+        #[allow(unsafe_code)]
+        unsafe { *yres = 72; }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -542,5 +804,219 @@ mod tests {
 
         assert_eq!(pixmap.get_sample(0, 0, 0), Some(255));
         assert_eq!(pixmap.get_sample(4, 4, 0), Some(255));
+    }
+
+    // ============================================================================
+    // Clone Tests
+    // ============================================================================
+
+    #[test]
+    fn test_clone_pixmap() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 123);
+
+        let cloned = fz_clone_pixmap(0, handle);
+        assert_ne!(cloned, 0);
+        assert_ne!(cloned, handle);
+
+        // Cloned should have same values
+        assert_eq!(fz_pixmap_width(0, cloned), 10);
+        assert_eq!(fz_get_pixmap_sample(0, cloned, 5, 5, 0), 123);
+
+        // Modify original, clone should be unchanged
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 200);
+        assert_eq!(fz_get_pixmap_sample(0, cloned, 5, 5, 0), 123);
+
+        fz_drop_pixmap(0, handle);
+        fz_drop_pixmap(0, cloned);
+    }
+
+    #[test]
+    fn test_clone_pixmap_invalid() {
+        let result = fz_clone_pixmap(0, 99999);
+        assert_eq!(result, 0);
+    }
+
+    // ============================================================================
+    // Convert Tests
+    // ============================================================================
+
+    #[test]
+    fn test_convert_pixmap_gray_to_rgb() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 10, 10, 0, 0);
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 128);
+
+        let converted = fz_convert_pixmap(0, handle, FZ_COLORSPACE_RGB, 0, 0, 0, 0);
+        assert_ne!(converted, 0);
+
+        // Check colorspace changed
+        assert_eq!(fz_pixmap_colorspace(0, converted), FZ_COLORSPACE_RGB);
+        assert_eq!(fz_pixmap_components(0, converted), 3);
+
+        // Gray 128 should convert to RGB (128, 128, 128)
+        assert_eq!(fz_get_pixmap_sample(0, converted, 5, 5, 0), 128);
+        assert_eq!(fz_get_pixmap_sample(0, converted, 5, 5, 1), 128);
+        assert_eq!(fz_get_pixmap_sample(0, converted, 5, 5, 2), 128);
+
+        fz_drop_pixmap(0, handle);
+        fz_drop_pixmap(0, converted);
+    }
+
+    #[test]
+    fn test_convert_pixmap_rgb_to_gray() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        // Set to pure red
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 255);
+        fz_set_pixmap_sample(0, handle, 5, 5, 1, 0);
+        fz_set_pixmap_sample(0, handle, 5, 5, 2, 0);
+
+        let converted = fz_convert_pixmap(0, handle, FZ_COLORSPACE_GRAY, 0, 0, 0, 0);
+        assert_ne!(converted, 0);
+
+        assert_eq!(fz_pixmap_colorspace(0, converted), FZ_COLORSPACE_GRAY);
+        assert_eq!(fz_pixmap_components(0, converted), 1);
+
+        // Red should convert to a gray value (luminance)
+        let gray = fz_get_pixmap_sample(0, converted, 5, 5, 0);
+        assert!(gray > 0 && gray < 128); // Should be around 77 based on luminance
+
+        fz_drop_pixmap(0, handle);
+        fz_drop_pixmap(0, converted);
+    }
+
+    #[test]
+    fn test_convert_pixmap_with_alpha() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 10, 10, 0, 1);
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 128); // Gray
+        fz_set_pixmap_sample(0, handle, 5, 5, 1, 200); // Alpha
+
+        let converted = fz_convert_pixmap(0, handle, FZ_COLORSPACE_RGB, 0, 0, 0, 1);
+        assert_ne!(converted, 0);
+
+        // Should have 4 components (RGB + alpha)
+        assert_eq!(fz_pixmap_components(0, converted), 4);
+        assert_eq!(fz_pixmap_alpha(0, converted), 1);
+
+        // Alpha should be preserved
+        assert_eq!(fz_get_pixmap_sample(0, converted, 5, 5, 3), 200);
+
+        fz_drop_pixmap(0, handle);
+        fz_drop_pixmap(0, converted);
+    }
+
+    #[test]
+    fn test_convert_pixmap_invalid() {
+        let result = fz_convert_pixmap(0, 99999, FZ_COLORSPACE_RGB, 0, 0, 0, 0);
+        assert_eq!(result, 0);
+    }
+
+    // ============================================================================
+    // Samples Pointer Test
+    // ============================================================================
+
+    #[test]
+    fn test_pixmap_samples_returns_null() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        let samples = fz_pixmap_samples(0, handle);
+        // Should return null for safety
+        assert!(samples.is_null());
+        fz_drop_pixmap(0, handle);
+    }
+
+    // ============================================================================
+    // Tint Tests
+    // ============================================================================
+
+    #[test]
+    fn test_tint_pixmap() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 10, 10, 0, 0);
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 200);
+
+        // Tint with red (should reduce brightness due to averaging)
+        fz_tint_pixmap(0, handle, 255, 0, 0);
+
+        let sample = fz_get_pixmap_sample(0, handle, 5, 5, 0);
+        assert!(sample < 200); // Should be reduced
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_tint_pixmap_non_gray() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        fz_set_pixmap_sample(0, handle, 5, 5, 0, 100);
+
+        // Tinting RGB should be a no-op (not supported)
+        fz_tint_pixmap(0, handle, 255, 0, 0);
+
+        // Value should be unchanged
+        assert_eq!(fz_get_pixmap_sample(0, handle, 5, 5, 0), 100);
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    // ============================================================================
+    // Resolution Tests
+    // ============================================================================
+
+    #[test]
+    fn test_pixmap_resolution() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+
+        let mut xres: i32 = 0;
+        let mut yres: i32 = 0;
+        fz_pixmap_resolution(0, handle, &mut xres, &mut yres);
+
+        // Default is 72 dpi
+        assert_eq!(xres, 72);
+        assert_eq!(yres, 72);
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_set_pixmap_resolution() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+
+        // This is a no-op in our implementation
+        fz_set_pixmap_resolution(0, handle, 300, 300);
+
+        // Still returns default
+        let mut xres: i32 = 0;
+        let mut yres: i32 = 0;
+        fz_pixmap_resolution(0, handle, &mut xres, &mut yres);
+        assert_eq!(xres, 72);
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    // ============================================================================
+    // Color Conversion Helper Tests
+    // ============================================================================
+
+    #[test]
+    fn test_convert_color_gray_to_rgb() {
+        use super::super::colorspace::{FZ_COLORSPACE_GRAY, FZ_COLORSPACE_RGB};
+        let result = convert_color(FZ_COLORSPACE_GRAY, FZ_COLORSPACE_RGB, &[128], 3);
+        assert_eq!(result, vec![128, 128, 128]);
+    }
+
+    #[test]
+    fn test_convert_color_rgb_to_gray() {
+        use super::super::colorspace::{FZ_COLORSPACE_GRAY, FZ_COLORSPACE_RGB};
+        // Pure white should convert to white
+        let result = convert_color(FZ_COLORSPACE_RGB, FZ_COLORSPACE_GRAY, &[255, 255, 255], 1);
+        assert!(result[0] >= 250); // Allow some rounding
+
+        // Pure black should convert to black
+        let result2 = convert_color(FZ_COLORSPACE_RGB, FZ_COLORSPACE_GRAY, &[0, 0, 0], 1);
+        assert_eq!(result2[0], 0);
+    }
+
+    #[test]
+    fn test_convert_color_same_space() {
+        use super::super::colorspace::FZ_COLORSPACE_RGB;
+        let result = convert_color(FZ_COLORSPACE_RGB, FZ_COLORSPACE_RGB, &[100, 150, 200], 3);
+        assert_eq!(result, vec![100, 150, 200]);
     }
 }

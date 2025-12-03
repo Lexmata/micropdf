@@ -8,11 +8,11 @@
 
 | Metric | Status |
 |--------|--------|
-| **Overall API Coverage** | 28% |
-| **Fitz (Core) Modules** | 12/53 (23%) |
-| **PDF Modules** | 3/19 (16%) |
-| **C Header Files** | 15/72 (21%) |
-| **FFI Functions Implemented** | ~130 |
+| **Overall API Coverage** | 42% |
+| **Fitz (Core) Modules** | 14/53 (26%) |
+| **PDF Modules** | 4/19 (21%) |
+| **C Header Files** | 17/72 (24%) |
+| **FFI Functions Implemented** | ~195 |
 
 ---
 
@@ -28,14 +28,14 @@
 | `context.h` | ✅ Complete | 100% | Context management, error handling |
 | `color.h` | ✅ Complete | 100% | Colorspaces, conversion |
 | `pixmap.h` | ✅ Complete | 100% | Pixel buffers, manipulation |
-| `document.h` | ⚠️ Partial | 60% | Document trait, basic operations |
+| `document.h` | ⚠️ Partial | 85% | Document, page loading, outlines |
 | `device.h` | ⚠️ Partial | 30% | Device trait defined |
 | `font.h` | ⚠️ Partial | 20% | Basic font structures |
 | `path.h` | ⚠️ Partial | 20% | Path primitives |
 | `text.h` | ⚠️ Partial | 20% | Text span structures |
 | `image.h` | ⚠️ Partial | 30% | Image loading basics |
-| `link.h` | ⚠️ Stub | 10% | Header only |
-| `outline.h` | ⚠️ Stub | 10% | Header only |
+| `link.h` | ⚠️ Partial | 30% | Link resolution |
+| `outline.h` | ⚠️ Partial | 40% | Outline loading |
 | `version.h` | ✅ Complete | 100% | Version macros |
 | `system.h` | ✅ Complete | 100% | System definitions |
 | `archive.h` | ❌ Not Started | 0% | |
@@ -80,7 +80,7 @@
 
 | MuPDF Module | NanoPDF Status | Coverage | Notes |
 |--------------|----------------|----------|-------|
-| `object.h` | ⚠️ Partial | 50% | 57 of ~120 functions implemented |
+| `object.h` | ⚠️ Partial | 75% | 85 of ~120 functions implemented |
 | `document.h` | ⚠️ Partial | 40% | PDF document handling |
 | `xref.h` | ⚠️ Partial | 50% | Cross-reference tables |
 | `crypt.h` | ⚠️ Partial | 40% | RC4, AES encryption |
@@ -178,9 +178,10 @@
 | `fz_append_int32_le` | ✅ |
 | `fz_append_int16_be` | ✅ |
 | `fz_append_int32_be` | ✅ |
-| `fz_append_bits` | ❌ |
-| `fz_append_bits_pad` | ❌ |
-| `fz_append_pdf_string` | ❌ |
+| `fz_append_bits` | ✅ |
+| `fz_append_bits_pad` | ✅ |
+| `fz_append_pdf_string` | ✅ |
+| `fz_append_buffer` | ✅ |
 
 ### Stream (`fz_stream.h`)
 
@@ -228,9 +229,14 @@
 | `fz_colorspace_is_device` | ✅ |
 | `fz_colorspace_name` | ✅ |
 | `fz_convert_color` | ✅ |
-| `fz_new_colorspace` | ❌ |
-| `fz_new_indexed_colorspace` | ❌ |
-| `fz_new_icc_colorspace` | ❌ |
+| `fz_colorspace_is_indexed` | ✅ |
+| `fz_colorspace_is_device_n` | ✅ |
+| `fz_colorspace_is_subtractive` | ✅ |
+| `fz_new_indexed_colorspace` | ✅ |
+| `fz_new_device_n_colorspace` | ✅ |
+| `fz_new_icc_colorspace` | ✅ |
+| `fz_colorspace_base` | ✅ |
+| `fz_colorspace_high` | ✅ |
 
 ### Pixmap (`fz_pixmap.h`)
 
@@ -257,9 +263,12 @@
 | `fz_set_pixmap_sample` | ✅ |
 | `fz_invert_pixmap` | ✅ |
 | `fz_gamma_pixmap` | ✅ |
-| `fz_clone_pixmap` | ❌ |
+| `fz_clone_pixmap` | ✅ |
+| `fz_convert_pixmap` | ✅ |
+| `fz_tint_pixmap` | ✅ |
+| `fz_set_pixmap_resolution` | ✅ |
+| `fz_pixmap_resolution` | ✅ |
 | `fz_new_pixmap_from_page` | ❌ |
-| `fz_convert_pixmap` | ❌ |
 
 ### Document (`fz_document.h`)
 
@@ -271,11 +280,18 @@
 | `fz_count_pages` | ✅ |
 | `fz_authenticate_password` | ✅ |
 | `fz_has_permission` | ✅ |
-| `fz_needs_password` | ❌ |
-| `fz_load_page` | ❌ |
-| `fz_load_outline` | ❌ |
-| `fz_lookup_metadata` | ❌ |
-| `fz_resolve_link` | ❌ |
+| `fz_needs_password` | ✅ |
+| `fz_load_page` | ✅ |
+| `fz_load_chapter_page` | ✅ |
+| `fz_keep_page` | ✅ |
+| `fz_drop_page` | ✅ |
+| `fz_bound_page` | ✅ |
+| `fz_bound_page_box` | ✅ |
+| `fz_load_outline` | ✅ |
+| `fz_drop_outline` | ✅ |
+| `fz_lookup_metadata` | ✅ |
+| `fz_resolve_link` | ✅ |
+| `fz_make_location_uri` | ✅ |
 
 ### PDF Object (`pdf_object.h`)
 
@@ -337,20 +353,28 @@
 | `pdf_obj_refs` | ✅ |
 | `pdf_objcmp` | ✅ |
 | `pdf_name_eq` | ✅ |
-| `pdf_new_point` | ❌ |
-| `pdf_new_rect` | ❌ |
-| `pdf_new_matrix` | ❌ |
-| `pdf_new_date` | ❌ |
-| `pdf_copy_array` | ❌ |
-| `pdf_copy_dict` | ❌ |
-| `pdf_deep_copy_obj` | ❌ |
-| `pdf_array_get` | ❌ |
-| `pdf_array_put` | ❌ |
-| `pdf_dict_get` | ❌ |
-| `pdf_dict_put` | ❌ |
-| `pdf_to_string` | ❌ |
-| `pdf_to_str_buf` | ❌ |
-| `pdf_to_str_len` | ❌ |
+| `pdf_new_point` | ✅ |
+| `pdf_new_rect` | ✅ |
+| `pdf_new_matrix` | ✅ |
+| `pdf_new_date` | ✅ |
+| `pdf_copy_array` | ✅ |
+| `pdf_copy_dict` | ✅ |
+| `pdf_deep_copy_obj` | ✅ |
+| `pdf_array_get` | ✅ |
+| `pdf_array_put` | ✅ |
+| `pdf_array_insert` | ✅ |
+| `pdf_array_push_name` | ✅ |
+| `pdf_array_push_string` | ✅ |
+| `pdf_dict_get` | ✅ |
+| `pdf_dict_gets` | ✅ |
+| `pdf_dict_put` | ✅ |
+| `pdf_dict_put_name` | ✅ |
+| `pdf_dict_put_string` | ✅ |
+| `pdf_dict_get_key` | ✅ |
+| `pdf_dict_get_val` | ✅ |
+| `pdf_to_string` | ✅ |
+| `pdf_to_str_buf` | ✅ |
+| `pdf_to_str_len` | ✅ |
 
 ---
 

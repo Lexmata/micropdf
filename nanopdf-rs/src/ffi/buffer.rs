@@ -303,6 +303,215 @@ pub extern "C" fn fz_buffer_len(_ctx: Handle, buf: Handle) -> usize {
     0
 }
 
+// ============================================================================
+// Integer Append Functions
+// ============================================================================
+
+/// Append 16-bit integer in little-endian format
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_int16_le(_ctx: Handle, buf: Handle, x: i16) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.append(&x.to_le_bytes());
+        }
+    }
+}
+
+/// Append 32-bit integer in little-endian format
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_int32_le(_ctx: Handle, buf: Handle, x: i32) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.append(&x.to_le_bytes());
+        }
+    }
+}
+
+/// Append 16-bit integer in big-endian format
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_int16_be(_ctx: Handle, buf: Handle, x: i16) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.append(&x.to_be_bytes());
+        }
+    }
+}
+
+/// Append 32-bit integer in big-endian format
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_int32_be(_ctx: Handle, buf: Handle, x: i32) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.append(&x.to_be_bytes());
+        }
+    }
+}
+
+// ============================================================================
+// Bit Append Functions
+// ============================================================================
+
+/// Internal state for bit accumulation
+pub struct BitBuffer {
+    accumulator: u32,
+    bits_in_accumulator: u8,
+}
+
+impl BitBuffer {
+    pub fn new() -> Self {
+        Self {
+            accumulator: 0,
+            bits_in_accumulator: 0,
+        }
+    }
+}
+
+impl Default for BitBuffer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+use std::sync::LazyLock;
+use std::sync::Mutex;
+use std::collections::HashMap;
+
+/// Global bit buffer state for each buffer handle
+static BIT_BUFFERS: LazyLock<Mutex<HashMap<Handle, BitBuffer>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+/// Append bits to buffer
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_bits(_ctx: Handle, buf: Handle, value: i32, count: i32) {
+    if count <= 0 || count > 32 {
+        return;
+    }
+
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            if let Ok(mut bit_map) = BIT_BUFFERS.lock() {
+                let bit_buf = bit_map.entry(buf).or_insert_with(BitBuffer::new);
+
+                // Mask to get only the requested bits
+                let mask = if count == 32 { u32::MAX } else { (1u32 << count) - 1 };
+                let bits = (value as u32) & mask;
+
+                // Add bits to accumulator
+                bit_buf.accumulator = (bit_buf.accumulator << count) | bits;
+                bit_buf.bits_in_accumulator += count as u8;
+
+                // Flush complete bytes
+                while bit_buf.bits_in_accumulator >= 8 {
+                    bit_buf.bits_in_accumulator -= 8;
+                    let byte = (bit_buf.accumulator >> bit_buf.bits_in_accumulator) as u8;
+                    guard.append_byte(byte);
+                }
+            }
+        }
+    }
+}
+
+/// Append bits and pad to byte boundary
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_bits_pad(_ctx: Handle, buf: Handle) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            if let Ok(mut bit_map) = BIT_BUFFERS.lock() {
+                if let Some(bit_buf) = bit_map.get_mut(&buf) {
+                    // Flush remaining bits with zero padding
+                    if bit_buf.bits_in_accumulator > 0 {
+                        let pad_bits = 8 - bit_buf.bits_in_accumulator;
+                        let byte = (bit_buf.accumulator << pad_bits) as u8;
+                        guard.append_byte(byte);
+                        bit_buf.accumulator = 0;
+                        bit_buf.bits_in_accumulator = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================================
+// PDF String Functions
+// ============================================================================
+
+/// Append a PDF-escaped string (with parentheses)
+///
+/// # Safety
+/// Caller must ensure `str` is a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_pdf_string(_ctx: Handle, buf: Handle, str: *const c_char) {
+    if str.is_null() {
+        // Append empty string "()"
+        if let Some(buffer) = BUFFERS.get(buf) {
+            if let Ok(mut guard) = buffer.lock() {
+                guard.append(b"()");
+            }
+        }
+        return;
+    }
+
+    // SAFETY: Caller guarantees str is a valid null-terminated C string
+    #[allow(unsafe_code)]
+    let c_str = unsafe { std::ffi::CStr::from_ptr(str) };
+    let bytes = c_str.to_bytes();
+
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.append_byte(b'(');
+
+            for &byte in bytes {
+                match byte {
+                    b'(' | b')' | b'\\' => {
+                        guard.append_byte(b'\\');
+                        guard.append_byte(byte);
+                    }
+                    b'\n' => {
+                        guard.append_byte(b'\\');
+                        guard.append_byte(b'n');
+                    }
+                    b'\r' => {
+                        guard.append_byte(b'\\');
+                        guard.append_byte(b'r');
+                    }
+                    b'\t' => {
+                        guard.append_byte(b'\\');
+                        guard.append_byte(b't');
+                    }
+                    _ => guard.append_byte(byte),
+                }
+            }
+
+            guard.append_byte(b')');
+        }
+    }
+}
+
+/// Append another buffer's contents
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_buffer(_ctx: Handle, buf: Handle, src: Handle) {
+    // Get source data first
+    let src_data = if let Some(src_buffer) = BUFFERS.get(src) {
+        if let Ok(guard) = src_buffer.lock() {
+            Some(guard.data().to_vec())
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    // Then append to destination
+    if let Some(data) = src_data {
+        if let Some(buffer) = BUFFERS.get(buf) {
+            if let Ok(mut guard) = buffer.lock() {
+                guard.append(&data);
+            }
+        }
+    }
+}
+
 // Note: Some functions that return raw pointers to internal data
 // cannot be implemented safely. They would require:
 // 1. A stable buffer address (Box::leak or similar)
@@ -719,5 +928,262 @@ mod tests {
         buf.ensure_null_terminated();
         assert_eq!(buf.len(), 1);
         assert_eq!(buf.data(), &[0]);
+    }
+
+    // ============================================================================
+    // Integer Append Tests
+    // ============================================================================
+
+    #[test]
+    fn test_fz_append_int16_le() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_int16_le(0, handle, 0x0102);
+        assert_eq!(fz_buffer_len(0, handle), 2);
+
+        // Check actual bytes (little-endian: 0x02, 0x01)
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0x02, 0x01]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_int32_le() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_int32_le(0, handle, 0x01020304);
+        assert_eq!(fz_buffer_len(0, handle), 4);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0x04, 0x03, 0x02, 0x01]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_int16_be() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_int16_be(0, handle, 0x0102);
+        assert_eq!(fz_buffer_len(0, handle), 2);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0x01, 0x02]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_int32_be() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_int32_be(0, handle, 0x01020304);
+        assert_eq!(fz_buffer_len(0, handle), 4);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0x01, 0x02, 0x03, 0x04]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_int_invalid_handle() {
+        // Should not panic
+        fz_append_int16_le(0, 99999, 0x1234);
+        fz_append_int32_le(0, 99999, 0x12345678);
+        fz_append_int16_be(0, 99999, 0x1234);
+        fz_append_int32_be(0, 99999, 0x12345678);
+    }
+
+    // ============================================================================
+    // Bit Append Tests
+    // ============================================================================
+
+    #[test]
+    fn test_fz_append_bits_basic() {
+        let handle = fz_new_buffer(0, 0);
+
+        // Append 8 bits at a time - should produce byte
+        fz_append_bits(0, handle, 0b10101010, 8);
+        assert_eq!(fz_buffer_len(0, handle), 1);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0b10101010]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_bits_multiple() {
+        let handle = fz_new_buffer(0, 0);
+
+        // Append 4 bits, then another 4 bits
+        fz_append_bits(0, handle, 0b1010, 4);
+        fz_append_bits(0, handle, 0b0101, 4);
+
+        assert_eq!(fz_buffer_len(0, handle), 1);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), &[0b10100101]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_bits_pad() {
+        let handle = fz_new_buffer(0, 0);
+
+        // Append 5 bits, then pad to byte
+        fz_append_bits(0, handle, 0b11111, 5);
+        fz_append_bits_pad(0, handle);
+
+        assert_eq!(fz_buffer_len(0, handle), 1);
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                // 5 bits of 1s + 3 bits of 0s = 11111000 = 0xF8
+                assert_eq!(guard.data(), &[0xF8]);
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_bits_invalid_count() {
+        let handle = fz_new_buffer(0, 0);
+
+        // Invalid counts should be ignored
+        fz_append_bits(0, handle, 0xFF, 0);
+        fz_append_bits(0, handle, 0xFF, -1);
+        fz_append_bits(0, handle, 0xFF, 33);
+
+        assert_eq!(fz_buffer_len(0, handle), 0);
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_bits_invalid_handle() {
+        // Should not panic
+        fz_append_bits(0, 99999, 0xFF, 8);
+        fz_append_bits_pad(0, 99999);
+    }
+
+    // ============================================================================
+    // PDF String Tests
+    // ============================================================================
+
+    #[test]
+    fn test_fz_append_pdf_string_simple() {
+        let handle = fz_new_buffer(0, 0);
+        let s = std::ffi::CString::new("Hello").unwrap();
+        fz_append_pdf_string(0, handle, s.as_ptr());
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), b"(Hello)");
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_pdf_string_escaping() {
+        let handle = fz_new_buffer(0, 0);
+        let s = std::ffi::CString::new("Test(with)parens\\backslash").unwrap();
+        fz_append_pdf_string(0, handle, s.as_ptr());
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), b"(Test\\(with\\)parens\\\\backslash)");
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_pdf_string_newlines() {
+        let handle = fz_new_buffer(0, 0);
+        let s = std::ffi::CString::new("Line1\nLine2\rLine3\tTab").unwrap();
+        fz_append_pdf_string(0, handle, s.as_ptr());
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), b"(Line1\\nLine2\\rLine3\\tTab)");
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_pdf_string_null() {
+        let handle = fz_new_buffer(0, 0);
+        fz_append_pdf_string(0, handle, std::ptr::null());
+
+        if let Some(buffer) = BUFFERS.get(handle) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), b"()");
+            }
+        }
+        fz_drop_buffer(0, handle);
+    }
+
+    #[test]
+    fn test_fz_append_pdf_string_invalid_handle() {
+        let s = std::ffi::CString::new("Test").unwrap();
+        // Should not panic
+        fz_append_pdf_string(0, 99999, s.as_ptr());
+    }
+
+    // ============================================================================
+    // Buffer Append Buffer Tests
+    // ============================================================================
+
+    #[test]
+    fn test_fz_append_buffer() {
+        let buf1 = fz_new_buffer(0, 0);
+        let buf2 = fz_new_buffer(0, 0);
+
+        fz_append_byte(0, buf1, b'A' as i32);
+        fz_append_byte(0, buf1, b'B' as i32);
+
+        fz_append_byte(0, buf2, b'C' as i32);
+        fz_append_byte(0, buf2, b'D' as i32);
+
+        fz_append_buffer(0, buf1, buf2);
+
+        assert_eq!(fz_buffer_len(0, buf1), 4);
+
+        if let Some(buffer) = BUFFERS.get(buf1) {
+            if let Ok(guard) = buffer.lock() {
+                assert_eq!(guard.data(), b"ABCD");
+            }
+        }
+
+        fz_drop_buffer(0, buf1);
+        fz_drop_buffer(0, buf2);
+    }
+
+    #[test]
+    fn test_fz_append_buffer_invalid() {
+        let buf = fz_new_buffer(0, 0);
+        fz_append_byte(0, buf, b'X' as i32);
+
+        // Append from invalid handle - should be ignored
+        fz_append_buffer(0, buf, 99999);
+        assert_eq!(fz_buffer_len(0, buf), 1);
+
+        // Append to invalid handle - should not panic
+        fz_append_buffer(0, 99999, buf);
+
+        fz_drop_buffer(0, buf);
     }
 }

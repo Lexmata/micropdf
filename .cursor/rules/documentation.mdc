@@ -1,0 +1,123 @@
+---
+alwaysApply: true
+---
+# Documentation File Creation Rules
+
+This rule governs when and how documentation files are created.
+
+## Markdown File Creation Policy
+
+**NEVER proactively create documentation files (*.md) or README files.**
+
+Only create documentation files when:
+
+1. **Explicitly requested by the user**
+   - User says "create a README"
+   - User says "add documentation for X"
+   - User says "write a guide for Y"
+
+2. **Part of a specific deliverable**
+   - User asks for a "complete package with documentation"
+   - Documentation is a stated requirement
+
+## Examples
+
+### ❌ DO NOT CREATE
+
+```
+User: "Add branch protection rules"
+AI: Creates both:
+  - .cursor/rules/branch-protection.mdc ✅ (required for enforcement)
+  - BRANCH-PROTECTION.md ❌ (not explicitly requested)
+```
+
+```
+User: "Add pkg-config support"
+AI: Creates:
+  - nanopdf.pc.in ✅
+  - mupdf.pc.in ✅
+  - build.rs ✅
+  - PKG-CONFIG.md ❌ (not explicitly requested)
+```
+
+```
+User: "Implement feature X"
+AI: Creates:
+  - src/feature_x.rs ✅
+  - FEATURE-X-GUIDE.md ❌ (not explicitly requested)
+```
+
+### ✅ DO CREATE
+
+```
+User: "Add branch protection and document how to set it up"
+AI: Creates both:
+  - .cursor/rules/branch-protection.mdc ✅
+  - BRANCH-PROTECTION.md ✅ (explicitly requested)
+```
+
+```
+User: "Create a README for the project"
+AI: Creates:
+  - README.md ✅ (explicitly requested)
+```
+
+```
+User: "Document the pkg-config usage"
+AI: Creates:
+  - PKG-CONFIG.md ✅ (explicitly requested)
+```
+
+## Rationale
+
+### Why This Rule Exists
+
+1. **Reduces clutter** - Avoid filling the repository with unasked-for documentation
+2. **User control** - Let the user decide what documentation they need
+3. **Stay focused** - Complete the requested task without scope creep
+4. **Less maintenance** - Fewer files to maintain and keep synchronized
+
+### What Documentation IS Allowed
+
+These types of files are always allowed (as they serve specific purposes):
+
+1. **Code comments** - Always document code with `///` and `//!`
+2. **Cursor rules** - `.cursor/rules/*.mdc` files for AI behavior
+3. **Configuration files** - Like `.editorconfig`, `rustfmt.toml`, etc.
+4. **Package metadata** - Like `Cargo.toml`, `package.json`, etc.
+5. **Required files** - Like `LICENSE`, `CHANGELOG.md` (if part of release process)
+
+## When User Wants Documentation
+
+If the user's intent is ambiguous, ask for clarification:
+
+```
+User: "Add branch protection"
+
+AI: "I'll add the cursor rule for branch protection enforcement.
+     Would you also like me to create a setup guide document (BRANCH-PROTECTION.md)?"
+```
+
+## Exceptions
+
+The only exceptions to this rule are:
+
+1. **README.md** - If creating a brand new project/package from scratch
+2. **CHANGELOG.md** - If explicitly part of the release workflow
+3. **LICENSE** files - Required for legal compliance
+4. **Contributing guidelines** - If creating a new open-source project
+
+Even in these cases, prefer asking the user first if ambiguous.
+
+## Summary
+
+**Default behavior: Don't create .md files unless explicitly requested.**
+
+When implementing a feature:
+- ✅ Create code files
+- ✅ Create configuration files
+- ✅ Create cursor rules
+- ✅ Add code comments
+- ❌ Don't create documentation files (unless asked)
+
+**If in doubt, ask the user before creating documentation.**

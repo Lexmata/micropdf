@@ -239,5 +239,102 @@ mod tests {
         });
         assert_eq!(result, 42);
     }
+
+    #[test]
+    fn test_process_buffers_result() {
+        let buffers = vec![
+            Buffer::from_slice(&[1, 2, 3]),
+            Buffer::from_slice(&[4, 5]),
+        ];
+
+        let results: Vec<Result<usize>> = process_buffers_result(&buffers, |b| Ok(b.len()));
+
+        assert_eq!(results.len(), 2);
+        assert!(results[0].is_ok());
+        assert_eq!(results[0].as_ref().unwrap(), &3);
+    }
+
+    #[test]
+    fn test_process_pixmaps() {
+        let pixmaps = vec![
+            Pixmap::new(None, 10, 10, true).unwrap(),
+            Pixmap::new(None, 20, 20, true).unwrap(),
+        ];
+
+        let areas: Vec<usize> = process_pixmaps(&pixmaps, |p| (p.width() * p.height()) as usize);
+        assert_eq!(areas, vec![100, 400]);
+    }
+
+    #[test]
+    fn test_transform_pixmaps() {
+        let pixmaps = vec![
+            Pixmap::new(None, 10, 10, true).unwrap(),
+            Pixmap::new(None, 20, 20, true).unwrap(),
+        ];
+
+        let transformed = transform_pixmaps(pixmaps, |p| {
+            // Just return the pixmap as-is
+            p
+        });
+
+        assert_eq!(transformed.len(), 2);
+        assert_eq!(transformed[0].width(), 10);
+        assert_eq!(transformed[1].width(), 20);
+    }
+
+    #[test]
+    fn test_batch_process_result() {
+        let items = vec![1, 2, 3, 4, 5];
+        let results: Vec<Result<i32>> = batch_process_result(items, |x| Ok(x * 2));
+
+        assert_eq!(results.len(), 5);
+        assert_eq!(results[0].as_ref().unwrap(), &2);
+        assert_eq!(results[4].as_ref().unwrap(), &10);
+    }
+
+    #[test]
+    fn test_parallel_find() {
+        let items = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let found = parallel_find(&items, |x| *x == 7);
+
+        assert!(found.is_some());
+        assert_eq!(*found.unwrap(), 7);
+    }
+
+    #[test]
+    fn test_parallel_find_none() {
+        let items = vec![1, 2, 3, 4, 5];
+        let found = parallel_find(&items, |x| *x > 10);
+
+        assert!(found.is_none());
+    }
+
+    #[test]
+    fn test_parallel_transform_empty() {
+        let buffer = Buffer::new(0);
+        let result = parallel_transform(&buffer, 2, |chunk| chunk.to_vec());
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_parallel_filter_empty() {
+        let items: Vec<i32> = vec![];
+        let filtered = parallel_filter(items, |x| *x > 0);
+        assert_eq!(filtered.len(), 0);
+    }
+
+    #[test]
+    fn test_parallel_count_zero() {
+        let items = vec![1, 2, 3];
+        let count = parallel_count(&items, |x| *x > 10);
+        assert_eq!(count, 0);
+    }
+
+    #[test]
+    fn test_parallel_sum_empty() {
+        let items: Vec<i64> = vec![];
+        let sum = parallel_sum(&items, |x| *x);
+        assert_eq!(sum, 0);
+    }
 }
 

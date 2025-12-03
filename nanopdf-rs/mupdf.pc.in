@@ -3,9 +3,11 @@ exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
-Name: nanopdf
-Description: Pure Rust reimplementation of MuPDF - lightweight PDF, XPS, and E-book viewer
+Name: mupdf
+Description: PDF, XPS, and E-book viewer (nanopdf implementation)
+URL: https://github.com/yourusername/nanopdf
 Version: @VERSION@
 Requires:
 Libs: -L${libdir} -lnanopdf
 Cflags: -I${includedir}/nanopdf
+

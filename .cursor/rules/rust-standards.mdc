@@ -141,6 +141,239 @@ pub fn read_file(path: &str) -> Buffer {
 }
 ```
 
+### Avoid `unwrap()` and `expect()` in Production Code
+
+**NEVER use `unwrap()` or `expect()` in library code or any production code path.** These functions panic and crash the program - unacceptable for a library.
+
+#### When `unwrap()` is NEVER acceptable:
+
+```rust
+// ❌ ABSOLUTELY WRONG: Never unwrap in library functions
+pub fn parse_pdf(data: &[u8]) -> Document {
+    let header = std::str::from_utf8(data).unwrap();  // CRASHES on invalid UTF-8!
+    let obj = parse_object(data).unwrap();            // CRASHES on parse error!
+    Document { header, obj }
+}
+
+// ❌ WRONG: Never unwrap Result types from I/O or parsing
+pub fn load_file(path: &Path) -> Buffer {
+    let data = std::fs::read(path).unwrap();  // CRASHES if file doesn't exist!
+    Buffer::from_data(data)
+}
+
+// ❌ WRONG: Never unwrap Option types that could be None
+pub fn get_first_item(items: &[Item]) -> Item {
+    items.first().unwrap().clone()  // CRASHES on empty slice!
+}
+```
+
+#### Correct alternatives:
+
+```rust
+// ✅ CORRECT: Return Result for fallible operations
+pub fn parse_pdf(data: &[u8]) -> Result<Document> {
+    let header = std::str::from_utf8(data)
+        .map_err(|e| Error::format(format!("Invalid UTF-8: {}", e)))?;
+    let obj = parse_object(data)?;
+    Ok(Document { header: header.to_string(), obj })
+}
+
+// ✅ CORRECT: Propagate I/O errors
+pub fn load_file(path: &Path) -> Result<Buffer> {
+    let data = std::fs::read(path)
+        .map_err(Error::System)?;
+    Ok(Buffer::from_data(data))
+}
+
+// ✅ CORRECT: Return Option for nullable results
+pub fn get_first_item(items: &[Item]) -> Option<Item> {
+    items.first().cloned()
+}
+
+// ✅ CORRECT: Or return Result with a descriptive error
+pub fn get_first_item(items: &[Item]) -> Result<Item> {
+    items.first()
+        .cloned()
+        .ok_or_else(|| Error::argument("Empty item list"))
+}
+```
+
+### When `unwrap()` IS acceptable
+
+The ONLY acceptable uses of `unwrap()` or `expect()`:
+
+#### 1. In test code
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valid_data() {
+        // ✅ OK: Tests can unwrap for clarity
+        let result = parse_data(b"valid").unwrap();
+        assert_eq!(result.value, 42);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid data")]
+    fn test_parse_invalid_data() {
+        // ✅ OK: Explicitly testing panic behavior
+        parse_data(b"invalid").unwrap();
+    }
+}
+```
+
+#### 2. When you have mathematically proven it cannot fail
+
+```rust
+// ✅ OK: Known-valid UTF-8 constant
+const HEADER: &str = std::str::from_utf8(b"PDF-1.7")
+    .expect("hardcoded UTF-8 is valid");
+
+// ✅ OK: Mutex poisoning is not recoverable anyway
+let guard = GLOBAL_STATE.lock()
+    .expect("mutex poisoned - cannot recover");
+
+// ✅ OK: Channel send only fails if receiver dropped (unrecoverable)
+tx.send(data).expect("receiver dropped");
+```
+
+#### 3. In example/documentation code (with clear comment)
+
+```rust
+/// # Examples
+///
+/// ```
+/// use nanopdf::Buffer;
+///
+/// // Note: unwrap() used for example brevity - use proper error handling in production
+/// let buffer = Buffer::from_base64("SGVsbG8=").unwrap();
+/// ```
+pub fn from_base64(data: &str) -> Result<Buffer> {
+    // Implementation uses proper error handling
+}
+```
+
+### Handling Different Error Types
+
+#### Option<T> to Result<T, E>
+
+```rust
+// ✅ CORRECT: Convert Option to Result with context
+pub fn get_value(&self, key: &str) -> Result<i64> {
+    self.map.get(key)
+        .copied()
+        .ok_or_else(|| Error::argument(format!("Key '{}' not found", key)))
+}
+
+// ❌ WRONG: Unwrapping Option
+pub fn get_value(&self, key: &str) -> i64 {
+    *self.map.get(key).unwrap()  // Panic!
+}
+```
+
+#### Providing Default Values
+
+```rust
+// ✅ CORRECT: Use unwrap_or() or unwrap_or_else() when default is acceptable
+pub fn get_timeout(&self) -> Duration {
+    self.timeout.unwrap_or(Duration::from_secs(30))
+}
+
+// ✅ CORRECT: Or make the return type Option<T>
+pub fn get_timeout(&self) -> Option<Duration> {
+    self.timeout
+}
+
+// ❌ WRONG: Unwrapping when None is possible
+pub fn get_timeout(&self) -> Duration {
+    self.timeout.unwrap()  // Panic if no timeout set!
+}
+```
+
+#### Fallible Constructors
+
+```rust
+// ✅ CORRECT: Fallible constructor returns Result
+impl Pixmap {
+    pub fn new(colorspace: Option<Colorspace>, w: i32, h: i32, alpha: bool) -> Result<Self> {
+        if w <= 0 || h <= 0 {
+            return Err(Error::argument("Invalid dimensions"));
+        }
+        if colorspace.is_none() && !alpha {
+            return Err(Error::argument("Pixmap must have colorspace or alpha"));
+        }
+        // ... rest of implementation
+        Ok(Self { /* ... */ })
+    }
+}
+
+// ❌ WRONG: Panicking in constructor
+impl Pixmap {
+    pub fn new(colorspace: Option<Colorspace>, w: i32, h: i32, alpha: bool) -> Self {
+        assert!(w > 0 && h > 0, "Invalid dimensions");  // Don't panic!
+        Self { /* ... */ }
+    }
+}
+```
+
+#### Lock Guards and Mutex
+
+```rust
+// ✅ CORRECT: Handle lock errors gracefully when possible
+pub fn get_value(&self, handle: u64) -> Option<T> {
+    self.store.lock()
+        .ok()?  // Return None if lock is poisoned
+        .get(&handle)
+        .cloned()
+}
+
+// ⚠️ ACCEPTABLE: For global state where poisoning is unrecoverable
+pub fn get_global_value(handle: u64) -> Option<T> {
+    GLOBAL_STORE.lock()
+        .expect("global store poisoned - unrecoverable")
+        .get(&handle)
+        .cloned()
+}
+```
+
+### Error Context with `map_err()`
+
+Always provide context when converting errors:
+
+```rust
+// ✅ CORRECT: Add context to errors
+pub fn parse_integer(s: &str) -> Result<i64> {
+    s.parse()
+        .map_err(|e| Error::format(format!("Failed to parse '{}' as integer: {}", s, e)))
+}
+
+// ❌ WRONG: Generic error with no context
+pub fn parse_integer(s: &str) -> Result<i64> {
+    s.parse()
+        .map_err(|_| Error::format("Parse error".into()))
+}
+
+// ❌ EVEN WORSE: Unwrapping
+pub fn parse_integer(s: &str) -> i64 {
+    s.parse().unwrap()
+}
+```
+
+### Summary: Error Handling Checklist
+
+- [ ] **NEVER** use `unwrap()` in library code
+- [ ] **NEVER** use `expect()` in library code (except for provably safe cases)
+- [ ] **ALWAYS** return `Result<T, E>` for fallible operations
+- [ ] **ALWAYS** use `?` operator for error propagation
+- [ ] **ALWAYS** provide context with `map_err()` when converting errors
+- [ ] Use `unwrap_or()` / `unwrap_or_default()` / `unwrap_or_else()` for defaults
+- [ ] Use `.ok()` to convert `Result<T, E>` to `Option<T>` when error doesn't matter
+- [ ] Use `.ok_or()` / `.ok_or_else()` to convert `Option<T>` to `Result<T, E>`
+- [ ] Only unwrap in: tests, provably safe cases, or examples (with comments)
+
 ## Memory Management
 
 ### Ownership and Borrowing
@@ -238,6 +471,319 @@ lazy_static! {
 5. **Byte manipulation** - Use `bytes`, `byteorder` crates
 6. **Image formats** - Use `image` crate
 7. **Font parsing** - Use `ttf-parser`, `fontdb`
+
+## Code Organization and Module Structure
+
+### File Size Limits
+
+**ALWAYS split large source files into smaller, focused modules.**
+
+Recommended maximum file sizes:
+
+- **Soft limit**: 500 lines per file
+- **Hard limit**: 1000 lines per file
+- **Action required**: Files >1000 lines MUST be split into submodules
+
+```rust
+// ❌ BAD: Single large file (2000+ lines)
+// src/ffi/pdf_object.rs - Contains all PDF object operations
+
+// ✅ GOOD: Split into focused modules
+// src/ffi/pdf_object/
+//   ├── mod.rs          - Re-exports and module structure
+//   ├── types.rs        - Core types and data structures
+//   ├── create.rs       - Object creation functions
+//   ├── lifecycle.rs    - Keep/drop/refcount operations
+//   ├── array.rs        - Array operations
+//   ├── dict.rs         - Dictionary operations
+//   └── conversion.rs   - Type conversions
+```
+
+### When to Split a File
+
+Split a file into submodules when:
+
+1. **File exceeds 1000 lines**
+2. **Multiple distinct responsibilities** (violates Single Responsibility Principle)
+3. **Clear logical groupings** exist (create, read, update, delete)
+4. **Different feature sets** that could be conditionally compiled
+5. **Hard to navigate** or find specific functionality
+
+### Module Organization Patterns
+
+#### Pattern 1: By Functionality
+
+```rust
+// src/pdf/filter/
+mod mod.rs;          // Public API and FilterType enum
+mod flate.rs;        // FlateDecode implementation
+mod lzw.rs;          // LZWDecode implementation
+mod ascii85.rs;      // ASCII85Decode implementation
+mod asciihex.rs;     // ASCIIHexDecode implementation
+mod predictor.rs;    // Shared predictor functions
+mod chain.rs;        // Filter chaining logic
+
+// In mod.rs - re-export everything
+pub use flate::*;
+pub use lzw::*;
+pub use ascii85::*;
+```
+
+#### Pattern 2: By Object Lifecycle
+
+```rust
+// src/ffi/buffer/
+mod core.rs;         // Core Buffer struct and methods
+mod lifecycle.rs;    // new, keep, drop functions
+mod data_ops.rs;     // append, clear, resize operations
+mod conversion.rs;   // to_bytes, from_slice, etc.
+mod io.rs;          // Read/Write trait implementations
+```
+
+#### Pattern 3: By Layer (Recommended for FFI)
+
+```rust
+// src/ffi/pixmap/
+mod core.rs;         // Internal Pixmap structure
+mod lifecycle.rs;    // FFI lifecycle functions
+mod properties.rs;   // FFI property getters
+mod operations.rs;   // FFI operations (clear, invert, etc.)
+mod pixel_access.rs; // FFI pixel-level access
+```
+
+### Module File Structure
+
+#### Main Module File (mod.rs)
+
+```rust
+//! Module-level documentation
+//!
+//! Describes the overall purpose of this module.
+
+// Submodule declarations
+mod core;
+mod operations;
+mod helpers;
+
+// Re-exports (keep public API clean)
+pub use core::{MainType, ImportantTrait};
+pub use operations::*;
+
+// Internal items stay private
+use helpers::internal_function;
+
+// Module-level tests (if small)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // ...
+}
+```
+
+#### Individual Module Files
+
+```rust
+//! Focused documentation for this specific module
+
+use super::core::MainType;
+use crate::other::SomeType;
+
+// Keep tests WITH the implementation
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_specific_function() {
+        // Test code here
+    }
+}
+```
+
+### Module Splitting Guidelines
+
+#### Step 1: Identify Logical Groups
+
+Look for:
+- Groups of related functions (all array operations, all dict operations)
+- Different phases (creation, modification, destruction)
+- Feature boundaries (optional features, platform-specific)
+- Type families (different kinds of objects)
+
+#### Step 2: Create Module Structure
+
+```bash
+# Before: Single large file
+src/ffi/buffer.rs (1189 lines)
+
+# After: Organized modules
+src/ffi/buffer/
+├── mod.rs          # 50 lines  - Public API
+├── core.rs         # 200 lines - Core types
+├── lifecycle.rs    # 150 lines - Creation/destruction
+├── data_ops.rs     # 300 lines - Data operations
+├── conversion.rs   # 250 lines - Conversions
+└── encoding.rs     # 239 lines - Encoding operations
+```
+
+#### Step 3: Move Code Systematically
+
+1. Create the submodule directory
+2. Create `mod.rs` with module declarations
+3. Move related code to focused files
+4. Keep tests WITH their implementations
+5. Update imports and re-exports
+6. Verify with `cargo build` and `cargo test`
+
+### Re-exports Best Practices
+
+Keep your public API clean:
+
+```rust
+// ✅ GOOD: Clean re-exports in mod.rs
+mod types;
+mod create;
+mod operations;
+
+// Re-export public API
+pub use types::{PdfObj, PdfObjType};
+pub use create::*;
+pub use operations::*;
+
+// Users can simply: use crate::pdf_object::{PdfObj, create_null};
+```
+
+```rust
+// ❌ BAD: Forcing users to know internal structure
+mod types;
+mod create;
+mod operations;
+
+// Users have to: use crate::pdf_object::types::PdfObj;
+// Users have to: use crate::pdf_object::create::create_null;
+```
+
+### Anti-Patterns to Avoid
+
+#### ❌ Don't Split Just to Split
+
+```rust
+// ❌ BAD: Unnecessary splits
+mod add.rs          // Just one function
+mod subtract.rs     // Just one function
+mod multiply.rs     // Just one function
+
+// ✅ GOOD: Keep related operations together
+mod arithmetic.rs   // All basic arithmetic
+```
+
+#### ❌ Don't Create Circular Dependencies
+
+```rust
+// ❌ BAD: Module A depends on B, B depends on A
+// src/module_a.rs
+use crate::module_b::TypeB;
+
+// src/module_b.rs
+use crate::module_a::TypeA;  // Circular!
+
+// ✅ GOOD: Extract common types to a separate module
+// src/types.rs
+pub struct TypeA;
+pub struct TypeB;
+
+// src/module_a.rs
+use crate::types::{TypeA, TypeB};
+
+// src/module_b.rs
+use crate::types::{TypeA, TypeB};
+```
+
+#### ❌ Don't Duplicate Code Across Modules
+
+```rust
+// ❌ BAD: Duplicated helper function in each module
+// src/module_a.rs
+fn helper() { /* ... */ }
+
+// src/module_b.rs
+fn helper() { /* ... */ }  // Same function!
+
+// ✅ GOOD: Shared helpers in a common module
+// src/common/helpers.rs
+pub(crate) fn helper() { /* ... */ }
+
+// src/module_a.rs
+use crate::common::helpers::helper;
+
+// src/module_b.rs
+use crate::common::helpers::helper;
+```
+
+### Module Organization Checklist
+
+When organizing modules:
+
+- [ ] Each file has a single, clear responsibility
+- [ ] File is under 1000 lines (preferably under 500)
+- [ ] Tests are in the same file as implementation
+- [ ] Related functionality is grouped together
+- [ ] Public API is clean and well-documented
+- [ ] No circular dependencies
+- [ ] Common code is shared, not duplicated
+- [ ] Module structure mirrors conceptual organization
+
+### Example: Before and After
+
+#### Before (2000+ lines in one file)
+
+```rust
+// src/ffi/pdf_object.rs (2077 lines - too large!)
+
+pub struct PdfObj { /* ... */ }
+pub extern "C" fn pdf_new_null() { /* ... */ }
+pub extern "C" fn pdf_new_bool() { /* ... */ }
+pub extern "C" fn pdf_keep_obj() { /* ... */ }
+pub extern "C" fn pdf_drop_obj() { /* ... */ }
+pub extern "C" fn pdf_array_len() { /* ... */ }
+pub extern "C" fn pdf_array_push() { /* ... */ }
+// ... 50+ more functions ...
+```
+
+#### After (modularized)
+
+```rust
+// src/ffi/pdf_object/mod.rs (40 lines)
+mod types;
+mod create;
+mod refcount;
+mod array;
+mod dict;
+
+pub use types::*;
+pub use create::*;
+pub use refcount::*;
+pub use array::*;
+pub use dict::*;
+
+// src/ffi/pdf_object/types.rs (200 lines)
+pub struct PdfObj { /* ... */ }
+pub enum PdfObjType { /* ... */ }
+
+// src/ffi/pdf_object/create.rs (150 lines)
+pub extern "C" fn pdf_new_null() { /* ... */ }
+pub extern "C" fn pdf_new_bool() { /* ... */ }
+
+// src/ffi/pdf_object/refcount.rs (100 lines)
+pub extern "C" fn pdf_keep_obj() { /* ... */ }
+pub extern "C" fn pdf_drop_obj() { /* ... */ }
+
+// src/ffi/pdf_object/array.rs (200 lines)
+pub extern "C" fn pdf_array_len() { /* ... */ }
+pub extern "C" fn pdf_array_push() { /* ... */ }
+```
+
+**Result**: Much easier to navigate, understand, and maintain!
 
 ## Testing
 
@@ -349,10 +895,15 @@ pub mod parallel {
 
 - [ ] Edition 2024 syntax (`#[unsafe(no_mangle)]`)
 - [ ] No `unsafe` except at FFI boundaries
-- [ ] `Result<T, E>` for error handling
+- [ ] `Result<T, E>` for error handling (NEVER panic in library code)
+- [ ] **NEVER** use `unwrap()` or `expect()` in library code
+- [ ] **ALWAYS** use `?` operator for error propagation
 - [ ] `thiserror` for error types
 - [ ] `LazyLock` for static initialization
 - [ ] `Arc<Mutex<T>>` for shared mutable state
+- [ ] Use mature crates (don't reinvent the wheel)
+- [ ] Split files >1000 lines into focused modules
+- [ ] Tests co-located with implementation
 - [ ] Comprehensive unit tests (90% coverage target)
 - [ ] Doc comments on public API
 - [ ] `cargo fmt` and `cargo clippy` clean

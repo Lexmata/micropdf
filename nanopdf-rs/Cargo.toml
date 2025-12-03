@@ -24,6 +24,9 @@ include = [
     "LICENSE-MIT",
     "LICENSE-APACHE",
     "CHANGELOG.md",
+    "build.rs",
+    "nanopdf.pc.in",
+    "mupdf.pc.in",
 ]
 
 # Badges for crates.io
@@ -91,8 +94,9 @@ priority = "optional"
 assets = [
     ["target/release/libnanopdf.so", "usr/lib/", "644"],
     ["target/release/libnanopdf.a", "usr/lib/", "644"],
-    ["include/**/*", "usr/include/", "644"],
-    ["target/nanopdf.pc", "usr/lib/pkgconfig/nanopdf.pc", "644"],
+    ["include/**/*", "usr/include/nanopdf/", "644"],
+    ["nanopdf.pc", "usr/lib/pkgconfig/", "644"],
+    ["mupdf.pc", "usr/lib/pkgconfig/", "644"],
     ["README.md", "usr/share/doc/nanopdf/README", "644"],
     ["LICENSE-MIT", "usr/share/doc/nanopdf/LICENSE-MIT", "644"],
     ["LICENSE-APACHE", "usr/share/doc/nanopdf/LICENSE-APACHE", "644"],
@@ -103,8 +107,9 @@ assets = [
 assets = [
     { source = "target/release/libnanopdf.so", dest = "/usr/lib64/", mode = "644" },
     { source = "target/release/libnanopdf.a", dest = "/usr/lib64/", mode = "644" },
-    { source = "include/", dest = "/usr/include/", mode = "644", doc = false },
-    { source = "target/nanopdf.pc", dest = "/usr/lib64/pkgconfig/nanopdf.pc", mode = "644" },
+    { source = "include/", dest = "/usr/include/nanopdf/", mode = "644", doc = false },
+    { source = "nanopdf.pc", dest = "/usr/lib64/pkgconfig/", mode = "644" },
+    { source = "mupdf.pc", dest = "/usr/lib64/pkgconfig/", mode = "644" },
     { source = "README.md", dest = "/usr/share/doc/nanopdf/README", mode = "644", doc = true },
     { source = "LICENSE-MIT", dest = "/usr/share/doc/nanopdf/LICENSE-MIT", mode = "644", doc = true },
     { source = "LICENSE-APACHE", dest = "/usr/share/doc/nanopdf/LICENSE-APACHE", mode = "644", doc = true },
