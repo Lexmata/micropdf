@@ -1,6 +1,6 @@
 /**
  * NanoPDF C API Header
- *
+ * 
  * This header defines the C API for the NanoPDF Rust library.
  * The actual implementation is provided by the Rust static library.
  */

@@ -1,0 +1,14 @@
+# Native libraries
+lib/
+
+# Build artifacts
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+

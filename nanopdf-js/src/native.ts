@@ -1,6 +1,6 @@
 /**
  * Native module loader
- * 
+ *
  * Handles loading the native addon, with fallback to mock implementation
  * for development/testing without native bindings.
  */
@@ -18,25 +18,25 @@ const require = createRequire(import.meta.url);
  */
 export interface NativeAddon {
   getVersion(): string;
-  
+
   // Buffer
   Buffer: {
     new(capacity?: number): NativeBuffer;
     fromBuffer(data: globalThis.Buffer): NativeBuffer;
     fromString(str: string): NativeBuffer;
   };
-  
+
   // Geometry
   createPoint(x: number, y: number): NativePoint;
   transformPoint(point: NativePoint, matrix: NativeMatrix): NativePoint;
-  
+
   createRect(x0: number, y0: number, x1: number, y1: number): NativeRect;
   rectEmpty(): NativeRect;
   rectUnit(): NativeRect;
   isRectEmpty(rect: NativeRect): boolean;
   rectUnion(a: NativeRect, b: NativeRect): NativeRect;
   rectIntersect(a: NativeRect, b: NativeRect): NativeRect;
-  
+
   matrixIdentity(): NativeMatrix;
   matrixTranslate(tx: number, ty: number): NativeMatrix;
   matrixScale(sx: number, sy: number): NativeMatrix;
@@ -146,7 +146,7 @@ function createMockAddon(): NativeAddon {
 
   return {
     getVersion: () => '0.1.0-mock',
-    
+
     Buffer: MockBuffer as unknown as NativeAddon['Buffer'],
 
     createPoint: (x: number, y: number): NativePoint => ({ x, y }),
@@ -155,7 +155,7 @@ function createMockAddon(): NativeAddon {
       y: p.x * m.b + p.y * m.d + m.f,
     }),
 
-    createRect: (x0: number, y0: number, x1: number, y1: number): NativeRect => 
+    createRect: (x0: number, y0: number, x1: number, y1: number): NativeRect =>
       ({ x0, y0, x1, y1 }),
     rectEmpty: (): NativeRect => ({ x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }),
     rectUnit: (): NativeRect => ({ x0: 0, y0: 0, x1: 1, y1: 1 }),
@@ -174,9 +174,9 @@ function createMockAddon(): NativeAddon {
     }),
 
     matrixIdentity: (): NativeMatrix => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
-    matrixTranslate: (tx: number, ty: number): NativeMatrix => 
+    matrixTranslate: (tx: number, ty: number): NativeMatrix =>
       ({ a: 1, b: 0, c: 0, d: 1, e: tx, f: ty }),
-    matrixScale: (sx: number, sy: number): NativeMatrix => 
+    matrixScale: (sx: number, sy: number): NativeMatrix =>
       ({ a: sx, b: 0, c: 0, d: sy, e: 0, f: 0 }),
     matrixRotate: (degrees: number): NativeMatrix => {
       const rad = degrees * Math.PI / 180;

@@ -1,6 +1,6 @@
 /**
  * NanoPDF Node.js Native Addon
- * 
+ *
  * Main entry point for the native addon that binds the NanoPDF Rust library
  * to Node.js via N-API.
  */
@@ -30,11 +30,11 @@ Napi::String GetVersion(const Napi::CallbackInfo& info) {
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     // Add version function
     exports.Set("getVersion", Napi::Function::New(env, GetVersion));
-    
+
     // Initialize sub-modules
     InitBuffer(env, exports);
     InitGeometry(env, exports);
-    
+
     return exports;
 }
 

@@ -1,6 +1,6 @@
 /**
  * NanoPDF Buffer Bindings
- * 
+ *
  * Node.js bindings for NanoPDF buffer operations.
  */
 
@@ -87,21 +87,21 @@ Napi::Value Buffer::GetData(const Napi::CallbackInfo& info) {
     if (buffer_ == nullptr) {
         return env.Null();
     }
-    
+
     size_t len = nanopdf_buffer_len(buffer_);
     const uint8_t* data = nanopdf_buffer_data(buffer_);
-    
+
     if (data == nullptr || len == 0) {
         return Napi::Buffer<uint8_t>::New(env, 0);
     }
-    
+
     // Copy data to a new Node.js Buffer
     return Napi::Buffer<uint8_t>::Copy(env, data, len);
 }
 
 Napi::Value Buffer::Append(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 1) {
         Napi::TypeError::New(env, "Expected Buffer or Uint8Array").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -140,7 +140,7 @@ Napi::Value Buffer::ToNodeBuffer(const Napi::CallbackInfo& info) {
 
 Napi::Value Buffer::FromNodeBuffer(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 1 || !info[0].IsBuffer()) {
         Napi::TypeError::New(env, "Expected Buffer").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -148,7 +148,7 @@ Napi::Value Buffer::FromNodeBuffer(const Napi::CallbackInfo& info) {
 
     Napi::Buffer<uint8_t> nodeBuf = info[0].As<Napi::Buffer<uint8_t>>();
     nanopdf_buffer_t* buf = nanopdf_buffer_from_data(nodeBuf.Data(), nodeBuf.Length());
-    
+
     if (buf == nullptr) {
         Napi::Error::New(env, "Failed to create buffer from data").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -157,19 +157,19 @@ Napi::Value Buffer::FromNodeBuffer(const Napi::CallbackInfo& info) {
     // Create a new Buffer instance
     Napi::Object obj = constructor.New({});
     Buffer* wrapper = Napi::ObjectWrap<Buffer>::Unwrap(obj);
-    
+
     // Free the old buffer and set the new one
     if (wrapper->buffer_ != nullptr) {
         nanopdf_buffer_free(wrapper->buffer_);
     }
     wrapper->buffer_ = buf;
-    
+
     return obj;
 }
 
 Napi::Value Buffer::FromString(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 1 || !info[0].IsString()) {
         Napi::TypeError::New(env, "Expected string").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -177,10 +177,10 @@ Napi::Value Buffer::FromString(const Napi::CallbackInfo& info) {
 
     std::string str = info[0].As<Napi::String>().Utf8Value();
     nanopdf_buffer_t* buf = nanopdf_buffer_from_data(
-        reinterpret_cast<const uint8_t*>(str.data()), 
+        reinterpret_cast<const uint8_t*>(str.data()),
         str.length()
     );
-    
+
     if (buf == nullptr) {
         Napi::Error::New(env, "Failed to create buffer from string").ThrowAsJavaScriptException();
         return env.Undefined();
@@ -188,12 +188,12 @@ Napi::Value Buffer::FromString(const Napi::CallbackInfo& info) {
 
     Napi::Object obj = constructor.New({});
     Buffer* wrapper = Napi::ObjectWrap<Buffer>::Unwrap(obj);
-    
+
     if (wrapper->buffer_ != nullptr) {
         nanopdf_buffer_free(wrapper->buffer_);
     }
     wrapper->buffer_ = buf;
-    
+
     return obj;
 }
 

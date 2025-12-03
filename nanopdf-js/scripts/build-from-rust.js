@@ -41,7 +41,7 @@ async function main() {
   // Build the Rust library
   console.log('');
   console.log('Building Rust library...');
-  
+
   try {
     execSync('cargo build --release', {
       cwd: rustDir,

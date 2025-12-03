@@ -2,7 +2,7 @@
 
 /**
  * NanoPDF Installation Script
- * 
+ *
  * Attempts to download prebuilt binaries from GitHub releases.
  * Falls back to building from Rust source if prebuilt is unavailable.
  */
@@ -20,7 +20,7 @@ const rootDir = join(__dirname, '..');
 
 // Package info
 const pkg = JSON.parse(
-  await import('node:fs/promises').then(fs => 
+  await import('node:fs/promises').then(fs =>
     fs.readFile(join(rootDir, 'package.json'), 'utf-8')
   )
 );
@@ -67,7 +67,7 @@ async function downloadFile(url, dest) {
 
   return new Promise((resolve, reject) => {
     const protocol = url.startsWith('https') ? https : http;
-    
+
     const request = protocol.get(url, (response) => {
       // Handle redirects
       if (response.statusCode === 301 || response.statusCode === 302) {
@@ -85,12 +85,12 @@ async function downloadFile(url, dest) {
 
       const file = createWriteStream(dest);
       response.pipe(file);
-      
+
       file.on('finish', () => {
         file.close();
         resolve();
       });
-      
+
       file.on('error', (err) => {
         unlinkSync(dest);
         reject(err);
@@ -110,7 +110,7 @@ async function downloadFile(url, dest) {
  */
 async function extractTarGz(archivePath, destDir) {
   const { createReadStream } = await import('node:fs');
-  
+
   await pipeline(
     createReadStream(archivePath),
     createGunzip(),
@@ -134,7 +134,7 @@ async function extractZip(archivePath, destDir) {
  */
 async function tryDownloadPrebuilt() {
   const filename = getPrebuildFilename();
-  
+
   if (!filename) {
     console.log(`No prebuilt binary available for ${platform}-${arch}`);
     return false;
@@ -168,7 +168,7 @@ async function tryDownloadPrebuilt() {
 
   } catch (error) {
     console.log(`Failed to download prebuilt: ${error.message}`);
-    
+
     // Clean up on failure
     try {
       if (existsSync(tempFile)) {
@@ -246,7 +246,7 @@ async function buildFromSource() {
  */
 async function buildNativeAddon() {
   console.log('Building native addon with node-gyp...');
-  
+
   try {
     execSync('npx node-gyp rebuild', {
       cwd: rootDir,
@@ -276,7 +276,7 @@ async function main() {
   // Check if prebuilt already exists
   const libDir = join(rootDir, 'native', 'lib', `${platform}-${arch}`);
   const libName = platform === 'win32' ? 'nanopdf.lib' : 'libnanopdf.a';
-  
+
   if (existsSync(join(libDir, libName))) {
     console.log('Native library already exists');
     await buildNativeAddon();
@@ -290,7 +290,7 @@ async function main() {
     // Fall back to building from source
     console.log('');
     console.log('Prebuilt not available, attempting to build from source...');
-    
+
     try {
       await buildFromSource();
     } catch (error) {
