@@ -73,8 +73,12 @@ mod tests {
 
     #[test]
     fn test_null_device_fill_text() {
+        use crate::fitz::font::Font;
+        use std::sync::Arc;
+        
         let mut device = NullDevice;
-        let text = TextSpan::new();
+        let font = Arc::new(Font::new("TestFont"));
+        let text = TextSpan::new(font, Matrix::IDENTITY);
         let cs = Colorspace::device_rgb();
         let color = [0.0, 0.0, 0.0];
 
