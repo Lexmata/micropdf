@@ -5,9 +5,14 @@ Node.js bindings for the NanoPDF PDF library.
 ## Installation
 
 ```bash
-npm install nanopdf
-# or
 pnpm add nanopdf
+```
+
+Or with npm/yarn:
+
+```bash
+npm install nanopdf
+yarn add nanopdf
 ```
 
 The package will automatically download prebuilt binaries for your platform. If prebuilt binaries are not available, it will attempt to build from Rust source (requires Rust to be installed).
@@ -115,8 +120,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Build
 cd nanopdf-js
-npm run build:from-rust
-npm run build:native
+pnpm run build:from-rust
+pnpm run build:native
 ```
 
 ## Development
