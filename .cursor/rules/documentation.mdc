@@ -94,7 +94,7 @@ If the user's intent is ambiguous, ask for clarification:
 ```
 User: "Add branch protection"
 
-AI: "I'll add the cursor rule for branch protection enforcement. 
+AI: "I'll add the cursor rule for branch protection enforcement.
      Would you also like me to create a setup guide document (BRANCH-PROTECTION.md)?"
 ```
 
