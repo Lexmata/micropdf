@@ -1,6 +1,6 @@
 /**
  * Geometry primitives - Point, Rect, IRect, Matrix, Quad
- * 
+ *
  * This implementation mirrors the Rust `fitz::geometry` module for 100% API compatibility.
  */
 
@@ -656,11 +656,11 @@ export class Quad implements QuadLike {
   containsPoint(p: PointLike): boolean {
     // Use cross product to check if point is on the correct side of each edge
     const cross = (ax: number, ay: number, bx: number, by: number) => ax * by - ay * bx;
-    
+
     const check = (p1: Point, p2: Point) => {
       return cross(p2.x - p1.x, p2.y - p1.y, p.x - p1.x, p.y - p1.y) >= 0;
     };
-    
+
     return (
       check(this.ul, this.ur) &&
       check(this.ur, this.lr) &&
@@ -675,12 +675,12 @@ export class Quad implements QuadLike {
     const cross = (p1: Point, p2: Point, p3: Point) => {
       return (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
     };
-    
+
     const c1 = cross(this.ul, this.ur, this.lr);
     const c2 = cross(this.ur, this.lr, this.ll);
     const c3 = cross(this.lr, this.ll, this.ul);
     const c4 = cross(this.ll, this.ul, this.ur);
-    
+
     return (c1 >= 0 && c2 >= 0 && c3 >= 0 && c4 >= 0) ||
            (c1 <= 0 && c2 <= 0 && c3 <= 0 && c4 <= 0);
   }

@@ -1,6 +1,6 @@
 /**
  * Buffer - Dynamic byte array wrapper
- * 
+ *
  * This implementation mirrors the Rust `fitz::buffer::Buffer` for 100% API compatibility.
  */
 
@@ -11,7 +11,7 @@ export { BufferLike, isBufferLike };
 
 /**
  * A dynamic byte buffer for PDF data
- * 
+ *
  * Mirrors the Rust `Buffer` implementation with `bytes` crate semantics.
  */
 export class Buffer {
@@ -600,8 +600,8 @@ export class BufferReader {
   private position: number;
 
   constructor(buffer: Buffer | BufferLike) {
-    this.data = buffer instanceof Buffer 
-      ? buffer.toNodeBuffer() 
+    this.data = buffer instanceof Buffer
+      ? buffer.toNodeBuffer()
       : Buffer.from(buffer).toNodeBuffer();
     this.position = 0;
   }

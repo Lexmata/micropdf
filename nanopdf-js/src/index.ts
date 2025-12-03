@@ -1,8 +1,8 @@
 /**
  * NanoPDF - Node.js bindings for the NanoPDF PDF library
- * 
+ *
  * This library provides 100% API compatibility with the Rust NanoPDF library.
- * 
+ *
  * @packageDocumentation
  */
 
@@ -14,40 +14,40 @@ export {
   // Error types
   ErrorCode,
   NanoPDFError,
-  
+
   // Geometry types
   type PointLike,
   type RectLike,
   type IRectLike,
   type MatrixLike,
   type QuadLike,
-  
+
   // Colorspace types
   ColorspaceType,
   type ColorspaceLike,
-  
+
   // Pixmap types
   type PixmapLike,
-  
+
   // Stream types
   SeekOrigin,
   type StreamLike,
-  
+
   // Buffer types
   type BufferLike,
   isBufferLike,
-  
+
   // Document types
   DocumentPermission,
   type PageLocation,
   LinkDestType,
   type Link,
   type OutlineItem as OutlineItemType,
-  
+
   // PDF object types
   PdfObjectType,
   type PdfIndirectRef as PdfIndirectRefType,
-  
+
   // Filter types
   FilterName,
   type FilterType,
@@ -55,15 +55,15 @@ export {
   type CCITTFaxDecodeParams,
   type DCTDecodeParams,
   type JBIG2DecodeParams,
-  
+
   // Rendering types
   type RenderOptions,
   type TextExtractionOptions,
-  
+
   // Annotation types
   AnnotationType,
   type AnnotationLike,
-  
+
   // Form types
   FormFieldType,
   type FormFieldLike,

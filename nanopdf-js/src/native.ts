@@ -498,7 +498,7 @@ function createMockAddon(): NativeAddon {
     ): number[] => {
       // Simplified conversion through RGB
       let rgb: [number, number, number];
-      
+
       switch (srcCs.type) {
         case 'GRAY':
           rgb = [srcValues[0] ?? 0, srcValues[0] ?? 0, srcValues[0] ?? 0];

@@ -173,7 +173,7 @@ describe('BufferReader', () => {
   it('should read bytes', () => {
     const buf = Buffer.fromUint8Array(new Uint8Array([1, 2, 3, 4, 5]));
     const reader = new BufferReader(buf);
-    
+
     expect(reader.readByte()).toBe(1);
     expect(reader.readByte()).toBe(2);
     expect(reader.position).toBe(2);
@@ -182,7 +182,7 @@ describe('BufferReader', () => {
   it('should read multiple bytes', () => {
     const buf = Buffer.fromUint8Array(new Uint8Array([1, 2, 3, 4, 5]));
     const reader = new BufferReader(buf);
-    
+
     const data = reader.read(3);
     expect(data.length).toBe(3);
     expect([...data]).toEqual([1, 2, 3]);
@@ -191,7 +191,7 @@ describe('BufferReader', () => {
   it('should seek to position', () => {
     const buf = Buffer.fromUint8Array(new Uint8Array([1, 2, 3, 4, 5]));
     const reader = new BufferReader(buf);
-    
+
     reader.seek(3);
     expect(reader.position).toBe(3);
     expect(reader.readByte()).toBe(4);
@@ -200,7 +200,7 @@ describe('BufferReader', () => {
   it('should detect EOF', () => {
     const buf = Buffer.fromUint8Array(new Uint8Array([1, 2]));
     const reader = new BufferReader(buf);
-    
+
     expect(reader.isEof).toBe(false);
     reader.readByte();
     reader.readByte();
@@ -210,7 +210,7 @@ describe('BufferReader', () => {
   it('should read integers', () => {
     const buf = Buffer.fromUint8Array(new Uint8Array([0x01, 0x02, 0x03, 0x04]));
     const reader = new BufferReader(buf);
-    
+
     expect(reader.readUInt16BE()).toBe(0x0102);
     expect(reader.readUInt16BE()).toBe(0x0304);
   });
@@ -218,7 +218,7 @@ describe('BufferReader', () => {
   it('should read lines as Uint8Array', () => {
     const buf = Buffer.fromString('Line 1\nLine 2');
     const reader = new BufferReader(buf);
-    
+
     const line1 = reader.readLine();
     expect(line1).not.toBeNull();
     expect(line1!.length).toBe(7); // "Line 1\n"
@@ -227,7 +227,7 @@ describe('BufferReader', () => {
   it('should read line strings', () => {
     const buf = Buffer.fromString('Line 1\nLine 2');
     const reader = new BufferReader(buf);
-    
+
     expect(reader.readLineString()).toBe('Line 1\n');
     expect(reader.readLineString()).toBe('Line 2');
   });
@@ -236,10 +236,10 @@ describe('BufferReader', () => {
 describe('BufferWriter', () => {
   it('should write bytes', () => {
     const writer = new BufferWriter(64);
-    
+
     writer.write(new Uint8Array([1, 2, 3]));
     writer.write(new Uint8Array([4, 5]));
-    
+
     const buf = writer.toBuffer();
     expect(buf.length).toBe(5);
     expect(buf.at(0)).toBe(1);
@@ -249,7 +249,7 @@ describe('BufferWriter', () => {
   it('should write strings', () => {
     const writer = new BufferWriter(64);
     writer.writeString('Hello');
-    
+
     const buf = writer.toBuffer();
     expect(buf.toString()).toBe('Hello');
   });
@@ -257,7 +257,7 @@ describe('BufferWriter', () => {
   it('should track length', () => {
     const writer = new BufferWriter(64);
     expect(writer.length).toBe(0);
-    
+
     writer.writeByte(1);
     writer.writeByte(2);
     expect(writer.length).toBe(2);

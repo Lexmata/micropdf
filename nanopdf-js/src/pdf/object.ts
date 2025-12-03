@@ -1,6 +1,6 @@
 /**
  * PDF Object Model
- * 
+ *
  * This implementation mirrors the Rust `pdf::object` module for 100% API compatibility.
  */
 
@@ -68,7 +68,7 @@ export abstract class PdfObject {
  */
 class PdfNull extends PdfObject {
   get type(): PdfObjectType { return PdfObjectType.Null; }
-  
+
   equals(other: PdfObject): boolean {
     return other instanceof PdfNull;
   }
@@ -350,8 +350,8 @@ export class PdfIndirectRef extends PdfObject {
   get type(): PdfObjectType { return PdfObjectType.Indirect; }
 
   equals(other: PdfObject): boolean {
-    return other instanceof PdfIndirectRef && 
-           other.objNum === this.objNum && 
+    return other instanceof PdfIndirectRef &&
+           other.objNum === this.objNum &&
            other.genNum === this.genNum;
   }
 }

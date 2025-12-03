@@ -1,6 +1,6 @@
 /**
  * Pixmap - Pixel buffer for rendering
- * 
+ *
  * This implementation mirrors the Rust `fitz::pixmap::Pixmap` for 100% API compatibility.
  */
 
@@ -85,7 +85,7 @@ export class Pixmap {
   ): Pixmap {
     const width = bbox.x1 - bbox.x0;
     const height = bbox.y1 - bbox.y0;
-    
+
     if (width <= 0 || height <= 0) {
       throw NanoPDFError.argument('Invalid bounding box');
     }
@@ -430,12 +430,12 @@ export class Pixmap {
   toRGBA(): Uint8ClampedArray {
     // Convert to RGBA format for ImageData
     const rgba = new Uint8ClampedArray(this._width * this._height * 4);
-    
+
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
         const srcOffset = y * this._stride + x * this._n;
         const dstOffset = (y * this._width + x) * 4;
-        
+
         if (this._colorspace?.isGray) {
           const gray = this._samples[srcOffset] ?? 0;
           rgba[dstOffset] = gray;
@@ -471,7 +471,7 @@ export class Pixmap {
         }
       }
     }
-    
+
     return rgba;
   }
 
@@ -500,10 +500,10 @@ export class Pixmap {
   toPNG(): Uint8Array {
     // Simple PNG encoder (no compression for simplicity)
     const rgba = this.toRGBA();
-    
+
     // PNG signature
     const signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-    
+
     // CRC32 table
     const crcTable: number[] = [];
     for (let n = 0; n < 256; n++) {
@@ -513,7 +513,7 @@ export class Pixmap {
       }
       crcTable[n] = c;
     }
-    
+
     function crc32(data: number[]): number {
       let crc = 0xFFFFFFFF;
       for (const byte of data) {
@@ -521,34 +521,34 @@ export class Pixmap {
       }
       return (crc ^ 0xFFFFFFFF) >>> 0;
     }
-    
+
     function writeChunk(type: string, data: number[]): number[] {
       const chunk: number[] = [];
-      
+
       // Length (4 bytes, big-endian)
       const len = data.length;
       chunk.push((len >>> 24) & 0xFF);
       chunk.push((len >>> 16) & 0xFF);
       chunk.push((len >>> 8) & 0xFF);
       chunk.push(len & 0xFF);
-      
+
       // Type (4 bytes)
       const typeBytes = type.split('').map(c => c.charCodeAt(0));
       chunk.push(...typeBytes);
-      
+
       // Data
       chunk.push(...data);
-      
+
       // CRC (4 bytes)
       const crc = crc32([...typeBytes, ...data]);
       chunk.push((crc >>> 24) & 0xFF);
       chunk.push((crc >>> 16) & 0xFF);
       chunk.push((crc >>> 8) & 0xFF);
       chunk.push(crc & 0xFF);
-      
+
       return chunk;
     }
-    
+
     // IHDR chunk
     const ihdr: number[] = [];
     ihdr.push((this._width >>> 24) & 0xFF);
@@ -564,7 +564,7 @@ export class Pixmap {
     ihdr.push(0);  // Compression method
     ihdr.push(0);  // Filter method
     ihdr.push(0);  // Interlace method
-    
+
     // IDAT chunk (raw image data with filter bytes, compressed with deflate)
     const rawData: number[] = [];
     for (let y = 0; y < this._height; y++) {
@@ -574,7 +574,7 @@ export class Pixmap {
         rawData.push(rgba[rowOffset + x] ?? 0);
       }
     }
-    
+
     // Compress using zlib
     let idat: number[];
     try {
@@ -587,7 +587,7 @@ export class Pixmap {
       // Wrap in zlib format
       idat = [0x78, 0x01, ...rawData]; // Very basic zlib header
     }
-    
+
     // IEND chunk (empty)
     const result: number[] = [
       ...signature,
@@ -595,7 +595,7 @@ export class Pixmap {
       ...writeChunk('IDAT', idat),
       ...writeChunk('IEND', []),
     ];
-    
+
     return new Uint8Array(result);
   }
 

@@ -1,6 +1,6 @@
 /**
  * Stream - Buffered I/O abstraction
- * 
+ *
  * This implementation mirrors the Rust `fitz::stream::Stream` for 100% API compatibility.
  */
 
@@ -74,7 +74,7 @@ const STREAM_BUFFER_SIZE = 8192;
 
 /**
  * A buffered stream for reading PDF data
- * 
+ *
  * Mirrors the Rust `Stream` implementation.
  */
 export class Stream {
@@ -277,7 +277,7 @@ export class Stream {
         break;
       }
     }
-    
+
     // Concatenate all chunks
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
     const result = new Uint8Array(totalLength);

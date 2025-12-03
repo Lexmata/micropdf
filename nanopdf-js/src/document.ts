@@ -1,6 +1,6 @@
 /**
  * Document - PDF document handling
- * 
+ *
  * This implementation mirrors the Rust `fitz::document::Document` for 100% API compatibility.
  */
 
@@ -126,16 +126,16 @@ export class Page {
     // Calculate transformed bounds
     const m = Matrix.from(matrix);
     const transformedBounds = this._bounds.transform(m);
-    
+
     const width = Math.ceil(transformedBounds.width);
     const height = Math.ceil(transformedBounds.height);
-    
+
     // Create pixmap with appropriate size
     const pixmap = Pixmap.create(colorspace, width > 0 ? width : 1, height > 0 ? height : 1, alpha);
     pixmap.clearWithValue(255); // White background
-    
+
     // TODO: Actual rendering requires content stream interpretation
-    
+
     return pixmap;
   }
 
@@ -215,26 +215,26 @@ export class Document {
     // Parse PDF header to get version
     const data = buffer.toUint8Array();
     const header = new TextDecoder().decode(data.slice(0, Math.min(1024, data.length)));
-    
+
     // Check if it's a PDF
     if (!header.startsWith('%PDF-')) {
       throw NanoPDFError.argument('Not a PDF document');
     }
-    
+
     // Extract version
     const versionMatch = header.match(/%PDF-(\d+\.\d+)/);
     const version = versionMatch ? versionMatch[1] : '1.4';
     const format = `PDF ${version}`;
-    
+
     // Parse pages (simplified - just count /Type /Page objects)
     const content = new TextDecoder().decode(data);
     const pageMatches = content.match(/\/Type\s*\/Page\b/g);
     const pageCount = pageMatches ? pageMatches.length : 0;
-    
+
     // Create placeholder pages
     const pages: Page[] = [];
     const defaultBounds = new Rect(0, 0, 612, 792); // US Letter size
-    
+
     // Parse MediaBox if present
     const mediaBoxMatch = content.match(/\/MediaBox\s*\[\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*\]/);
     let mediaBox = defaultBounds;
@@ -246,21 +246,21 @@ export class Document {
         parseFloat(mediaBoxMatch[4] ?? '792')
       );
     }
-    
+
     const doc = new Document(buffer, [], format, false, true);
-    
+
     for (let i = 0; i < pageCount; i++) {
       pages.push(new Page(doc, i, mediaBox, mediaBox, 0));
     }
-    
+
     // Update pages array
     doc._pages = pages;
-    
+
     // Try to authenticate if password provided
     if (password !== undefined) {
       doc.authenticate(password);
     }
-    
+
     return doc;
   }
 

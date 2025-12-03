@@ -14,18 +14,18 @@ describe('Document', () => {
 3 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000101 00000 n
 trailer <</Root 1 0 R/Size 4>>
 startxref
 172
 %%EOF`;
-      
+
       const buf = Buffer.fromString(pdfContent);
       const doc = Document.fromBuffer(buf);
-      
+
       expect(doc).toBeDefined();
       expect(doc.pageCount).toBe(1);
     });
@@ -39,25 +39,25 @@ startxref
 3 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000101 00000 n
 trailer <</Root 1 0 R/Size 4>>
 startxref
 172
 %%EOF`;
-      
+
       const buf = Buffer.fromString(pdfContent);
       const doc = Document.fromBuffer(buf, '');
-      
+
       expect(doc.pageCount).toBe(1);
     });
   });
 
   describe('properties', () => {
     let doc: Document;
-    
+
     beforeEach(() => {
       const pdfContent = `%PDF-1.4
 1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj
@@ -66,16 +66,16 @@ startxref
 4 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 5
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000104 00000 n 
-0000000167 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000104 00000 n
+0000000167 00000 n
 trailer <</Root 1 0 R/Size 5>>
 startxref
 230
 %%EOF`;
-      
+
       const buf = Buffer.fromString(pdfContent);
       doc = Document.fromBuffer(buf);
     });
@@ -107,7 +107,7 @@ startxref
 
   describe('pages', () => {
     let doc: Document;
-    
+
     beforeEach(() => {
       const pdfContent = `%PDF-1.4
 1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj
@@ -115,15 +115,15 @@ startxref
 3 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000101 00000 n
 trailer <</Root 1 0 R/Size 4>>
 startxref
 172
 %%EOF`;
-      
+
       const buf = Buffer.fromString(pdfContent);
       doc = Document.fromBuffer(buf);
     });
@@ -154,18 +154,18 @@ startxref
 3 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000101 00000 n
 trailer <</Root 1 0 R/Size 4>>
 startxref
 172
 %%EOF`;
-      
+
       const buf = Buffer.fromString(pdfContent);
       const doc = Document.fromBuffer(buf);
-      
+
       doc.setMetadata('info:Title', 'Test Document');
       // Note: In pure JS implementation, this may not persist
       // until we have native bindings
@@ -176,7 +176,7 @@ startxref
 describe('Page', () => {
   let doc: Document;
   let page: Page;
-  
+
   beforeEach(() => {
     const pdfContent = `%PDF-1.4
 1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj
@@ -184,15 +184,15 @@ describe('Page', () => {
 3 0 obj <</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>> endobj
 xref
 0 4
-0000000000 65535 f 
-0000000009 00000 n 
-0000000052 00000 n 
-0000000101 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000052 00000 n
+0000000101 00000 n
 trailer <</Root 1 0 R/Size 4>>
 startxref
 172
 %%EOF`;
-    
+
     const buf = Buffer.fromString(pdfContent);
     doc = Document.fromBuffer(buf);
     page = doc.getPage(0);
@@ -223,14 +223,14 @@ startxref
     it('should render to pixmap', () => {
       const matrix = Matrix.scale(0.5, 0.5);
       const pixmap = page.toPixmap(matrix, Colorspace.deviceRGB(), true);
-      
+
       expect(pixmap.width).toBeGreaterThan(0);
       expect(pixmap.height).toBeGreaterThan(0);
     });
 
     it('should render to PNG', () => {
       const png = page.toPNG(72); // 72 DPI
-      
+
       // Check PNG magic bytes
       expect(png[0]).toBe(0x89);
       expect(png[1]).toBe(0x50);
@@ -277,7 +277,7 @@ describe('OutlineItem', () => {
     const chapter = new OutlineItem('Chapter 1', 0);
     chapter.children.push(new OutlineItem('Section 1.1', 1));
     chapter.children.push(new OutlineItem('Section 1.2', 5));
-    
+
     expect(chapter.children.length).toBe(2);
     expect(chapter.children[0]?.title).toBe('Section 1.1');
   });

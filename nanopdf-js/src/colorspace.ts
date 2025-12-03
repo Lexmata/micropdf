@@ -1,6 +1,6 @@
 /**
  * Colorspace - Color management
- * 
+ *
  * This implementation mirrors the Rust `fitz::colorspace::Colorspace` for 100% API compatibility.
  */
 
@@ -164,26 +164,26 @@ export class Colorspace implements ColorspaceLike {
         const L = (values[0] ?? 0) * 100;
         const a = (values[1] ?? 0) * 256 - 128;
         const b = (values[2] ?? 0) * 256 - 128;
-        
+
         // Lab to XYZ
         const fy = (L + 16) / 116;
         const fx = a / 500 + fy;
         const fz = fy - b / 200;
-        
+
         const xr = fx > 0.206893 ? fx * fx * fx : (fx - 16 / 116) / 7.787;
         const yr = L > 7.9996 ? Math.pow((L + 16) / 116, 3) : L / 903.3;
         const zr = fz > 0.206893 ? fz * fz * fz : (fz - 16 / 116) / 7.787;
-        
+
         // D65 illuminant
         const X = xr * 0.95047;
         const Y = yr * 1.0;
         const Z = zr * 1.08883;
-        
+
         // XYZ to RGB
         const r = X * 3.2406 + Y * -1.5372 + Z * -0.4986;
         const g = X * -0.9689 + Y * 1.8758 + Z * 0.0415;
         const bl = X * 0.0557 + Y * -0.2040 + Z * 1.0570;
-        
+
         return [
           Math.max(0, Math.min(1, r)),
           Math.max(0, Math.min(1, g)),

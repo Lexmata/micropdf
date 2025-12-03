@@ -19,10 +19,10 @@ import {
 describe('FlateDecode (zlib/deflate)', () => {
   it('should compress and decompress data', () => {
     const input = new TextEncoder().encode('Hello, World! '.repeat(100));
-    
+
     const compressed = flateEncode(input);
     expect(compressed.length).toBeLessThan(input.length);
-    
+
     const decompressed = flateDecode(compressed);
     expect(decompressed).toEqual(input);
   });
@@ -46,7 +46,7 @@ describe('FlateDecode (zlib/deflate)', () => {
     for (let i = 0; i < input.length; i++) {
       input[i] = Math.floor(Math.random() * 256);
     }
-    
+
     const compressed = flateEncode(input);
     const decompressed = flateDecode(compressed);
     expect(decompressed).toEqual(input);
@@ -57,7 +57,7 @@ describe('ASCIIHexDecode', () => {
   it('should encode data to hex', () => {
     const input = new Uint8Array([0, 127, 255]);
     const encoded = asciiHexEncode(input);
-    
+
     // Should be hex string
     const str = new TextDecoder().decode(encoded);
     expect(str.toUpperCase()).toBe('007FFF');
@@ -66,21 +66,21 @@ describe('ASCIIHexDecode', () => {
   it('should decode hex data', () => {
     const encoded = new TextEncoder().encode('48656C6C6F>');
     const decoded = asciiHexDecode(encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
   it('should handle lowercase hex', () => {
     const encoded = new TextEncoder().encode('48656c6c6f');
     const decoded = asciiHexDecode(encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
   it('should ignore whitespace', () => {
     const encoded = new TextEncoder().encode('48 65 6C\n6C 6F');
     const decoded = asciiHexDecode(encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
@@ -88,7 +88,7 @@ describe('ASCIIHexDecode', () => {
     const input = new Uint8Array([1, 2, 3, 127, 128, 255]);
     const encoded = asciiHexEncode(input);
     const decoded = asciiHexDecode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 });
@@ -97,7 +97,7 @@ describe('ASCII85Decode', () => {
   it('should encode data to ASCII85', () => {
     const input = new TextEncoder().encode('Hello');
     const encoded = ascii85Encode(input);
-    
+
     // Should be printable ASCII
     for (const byte of encoded) {
       expect(byte).toBeGreaterThanOrEqual(33);
@@ -109,14 +109,14 @@ describe('ASCII85Decode', () => {
     // "Hello" in ASCII85
     const encoded = new TextEncoder().encode('87cURDZ~>');
     const decoded = ascii85Decode(encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
   it('should handle z abbreviation for zeros', () => {
     const encoded = new TextEncoder().encode('z~>');
     const decoded = ascii85Decode(encoded);
-    
+
     expect(decoded).toEqual(new Uint8Array([0, 0, 0, 0]));
   });
 
@@ -124,7 +124,7 @@ describe('ASCII85Decode', () => {
     const input = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
     const encoded = ascii85Encode(input);
     const decoded = ascii85Decode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 });
@@ -137,7 +137,7 @@ describe('RunLengthDecode', () => {
       1, 66, 67,    // 2 literal bytes 'BC'
       128,          // EOD
     ]);
-    
+
     const decoded = runLengthDecode(encoded);
     expect(new TextDecoder().decode(decoded)).toBe('AAAABC');
   });
@@ -145,7 +145,7 @@ describe('RunLengthDecode', () => {
   it('should encode data with run length', () => {
     const input = new TextEncoder().encode('AAAAABCD');
     const encoded = runLengthEncode(input);
-    
+
     // Should be shorter due to run compression
     const decoded = runLengthDecode(encoded);
     expect(decoded).toEqual(input);
@@ -157,10 +157,10 @@ describe('RunLengthDecode', () => {
       2, 3, 4,        // Literals
       5, 5, 5, 5,     // Run of 4
     ]);
-    
+
     const encoded = runLengthEncode(input);
     const decoded = runLengthDecode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 });
@@ -178,7 +178,7 @@ describe('decodeFilter', () => {
   it('should decode FlateDecode', () => {
     const input = new TextEncoder().encode('Test data');
     const compressed = flateEncode(input);
-    
+
     const decoded = decodeFilter('FlateDecode', compressed);
     expect(decoded).toEqual(input);
   });
@@ -186,21 +186,21 @@ describe('decodeFilter', () => {
   it('should decode ASCIIHexDecode', () => {
     const encoded = new TextEncoder().encode('48656C6C6F');
     const decoded = decodeFilter('ASCIIHexDecode', encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
   it('should decode ASCII85Decode', () => {
     const encoded = new TextEncoder().encode('87cURDZ~>');
     const decoded = decodeFilter('ASCII85Decode', encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('Hello');
   });
 
   it('should decode RunLengthDecode', () => {
     const encoded = new Uint8Array([0, 65, 128]); // 1 literal 'A'
     const decoded = decodeFilter('RunLengthDecode', encoded);
-    
+
     expect(new TextDecoder().decode(decoded)).toBe('A');
   });
 
@@ -216,14 +216,14 @@ describe('encodeFilter', () => {
     const input = new TextEncoder().encode('Test data');
     const encoded = encodeFilter('FlateDecode', input);
     const decoded = flateDecode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 
   it('should encode ASCIIHexDecode', () => {
     const input = new Uint8Array([72, 105]);
     const encoded = encodeFilter('ASCIIHexDecode', input);
-    
+
     expect(new TextDecoder().decode(encoded).toUpperCase()).toBe('4869');
   });
 
@@ -231,7 +231,7 @@ describe('encodeFilter', () => {
     const input = new TextEncoder().encode('Test');
     const encoded = encodeFilter('ASCII85Decode', input);
     const decoded = ascii85Decode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 
@@ -239,7 +239,7 @@ describe('encodeFilter', () => {
     const input = new Uint8Array([1, 1, 1, 1, 2, 3]);
     const encoded = encodeFilter('RunLengthDecode', input);
     const decoded = runLengthDecode(encoded);
-    
+
     expect(decoded).toEqual(input);
   });
 });
@@ -247,27 +247,27 @@ describe('encodeFilter', () => {
 describe('filter chaining', () => {
   it('should chain multiple filters', () => {
     const original = new TextEncoder().encode('Hello World! '.repeat(50));
-    
+
     // Compress, then hex encode
     const compressed = flateEncode(original);
     const hexEncoded = asciiHexEncode(compressed);
-    
+
     // Reverse: hex decode, then decompress
     const hexDecoded = asciiHexDecode(hexEncoded);
     const decompressed = flateDecode(hexDecoded);
-    
+
     expect(decompressed).toEqual(original);
   });
 
   it('should chain ASCII85 and Flate', () => {
     const original = new TextEncoder().encode('Test data for chaining');
-    
+
     const compressed = flateEncode(original);
     const ascii85Encoded = ascii85Encode(compressed);
-    
+
     const ascii85Decoded = ascii85Decode(ascii85Encoded);
     const decompressed = flateDecode(ascii85Decoded);
-    
+
     expect(decompressed).toEqual(original);
   });
 });

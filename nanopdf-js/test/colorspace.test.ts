@@ -78,7 +78,7 @@ describe('Colorspace', () => {
     it('should convert RGB to gray', () => {
       const rgb = Colorspace.deviceRGB();
       const rgbColor = [1.0, 0.5, 0.0]; // Orange
-      
+
       // toRGB should return same values for RGB
       const result = rgb.toRGB(rgbColor);
       expect(result[0]).toBeCloseTo(1.0);
@@ -90,7 +90,7 @@ describe('Colorspace', () => {
       const gray = Colorspace.deviceGray();
       const grayColor = [0.5];
       const result = gray.toRGB(grayColor);
-      
+
       expect(result.length).toBe(3);
       expect(result[0]).toBeCloseTo(0.5);
       expect(result[1]).toBeCloseTo(0.5);
@@ -102,7 +102,7 @@ describe('Colorspace', () => {
       // Pure cyan: C=1, M=0, Y=0, K=0
       const cmykColor = [1.0, 0.0, 0.0, 0.0];
       const result = cmyk.toRGB(cmykColor);
-      
+
       expect(result.length).toBe(3);
       expect(result[0]).toBeCloseTo(0); // No red
       expect(result[1]).toBeCloseTo(1); // Full green
@@ -113,7 +113,7 @@ describe('Colorspace', () => {
       const bgr = Colorspace.deviceBGR();
       const bgrColor = [0.0, 0.5, 1.0]; // B=0, G=0.5, R=1
       const result = bgr.toRGB(bgrColor);
-      
+
       expect(result[0]).toBeCloseTo(1.0); // R
       expect(result[1]).toBeCloseTo(0.5); // G
       expect(result[2]).toBeCloseTo(0.0); // B

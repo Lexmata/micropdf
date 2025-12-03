@@ -1,0 +1,339 @@
+# Rust 2024 Code Generation Standards
+
+This project uses Rust Edition 2024 with modern, safe coding practices.
+
+## Edition and Toolchain
+
+- **Edition**: `2024` (specified in `Cargo.toml`)
+- **Minimum Rust Version**: `1.85` or later
+- **Target**: Stable Rust (no nightly-only features)
+
+## Safety Requirements
+
+### Unsafe Rust Policy
+
+**NEVER use `unsafe` Rust unless absolutely necessary.** Valid exceptions include:
+
+1. **FFI boundaries** - When exposing functions to C via `extern "C"`
+2. **Raw pointer operations** required for C interop
+3. **Performance-critical hot paths** where safe alternatives have proven unacceptable overhead (must be benchmarked and documented)
+
+When `unsafe` is required:
+
+```rust
+// ✅ CORRECT: Use #[unsafe(no_mangle)] for FFI (Rust 2024 syntax)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_context() -> u64 {
+    // Implementation
+}
+
+// ❌ WRONG: Don't use the old syntax
+#[no_mangle]  // This is deprecated in Rust 2024
+pub extern "C" fn fz_new_context() -> u64 {
+    // Implementation
+}
+```
+
+### Safe Abstractions
+
+Always wrap unsafe operations in safe abstractions:
+
+```rust
+// ✅ CORRECT: Handle-based resource management
+pub struct HandleStore<T> {
+    handles: Mutex<HashMap<u64, Arc<Mutex<T>>>>,
+    next_id: AtomicU64,
+}
+
+impl<T> HandleStore<T> {
+    pub fn insert(&self, value: T) -> u64 {
+        // Safe handle creation
+    }
+    
+    pub fn get(&self, handle: u64) -> Option<Arc<Mutex<T>>> {
+        // Safe handle lookup
+    }
+}
+```
+
+## Rust 2024 Specific Syntax
+
+### Reserved Keywords
+
+The following are reserved keywords in Rust 2024 - avoid using them as identifiers:
+
+- `gen` - Use `_gen` or `generation` instead
+- `try` - Already reserved
+
+```rust
+// ✅ CORRECT
+pub fn pdf_new_indirect(num: i32, _gen: i32) -> u64 { }
+
+// ❌ WRONG
+pub fn pdf_new_indirect(num: i32, gen: i32) -> u64 { }  // 'gen' is reserved
+```
+
+### Attribute Syntax
+
+Use the new attribute syntax for unsafe attributes:
+
+```rust
+// ✅ CORRECT (Rust 2024)
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".text")]
+
+// ❌ WRONG (pre-2024)
+#[no_mangle]
+#[link_section = ".text"]
+```
+
+## Error Handling
+
+### Use `Result<T, E>` and `thiserror`
+
+Replace C-style error handling with Rust's `Result` type:
+
+```rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("generic error: {0}")]
+    Generic(String),
+    
+    #[error("I/O error")]
+    System(#[from] std::io::Error),
+    
+    #[error("format error: {0}")]
+    Format(String),
+    
+    #[error("unexpected end of file")]
+    Eof,
+    
+    #[error("invalid argument: {0}")]
+    Argument(String),
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+```
+
+### Error Propagation
+
+Use the `?` operator for error propagation:
+
+```rust
+// ✅ CORRECT
+pub fn read_file(path: &str) -> Result<Buffer> {
+    let file = File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut data = Vec::new();
+    reader.read_to_end(&mut data)?;
+    Ok(Buffer::from_data(data))
+}
+
+// ❌ WRONG: Don't use unwrap() in library code
+pub fn read_file(path: &str) -> Buffer {
+    let file = File::open(path).unwrap();  // Don't do this!
+    // ...
+}
+```
+
+## Memory Management
+
+### Ownership and Borrowing
+
+Prefer ownership over references when appropriate:
+
+```rust
+// ✅ CORRECT: Clear ownership semantics
+pub fn from_data(data: Vec<u8>) -> Self {
+    Self { data: Bytes::from(data) }
+}
+
+// ✅ CORRECT: Use references for non-owning access
+pub fn as_slice(&self) -> &[u8] {
+    &self.data
+}
+```
+
+### Smart Pointers
+
+Use appropriate smart pointers:
+
+- `Arc<T>` - For shared ownership across threads
+- `Mutex<T>` - For interior mutability with thread safety
+- `Arc<Mutex<T>>` - For shared mutable state (common in FFI handles)
+
+```rust
+// ✅ CORRECT: Thread-safe handle storage
+pub static CONTEXTS: LazyLock<HandleStore<Context>> = LazyLock::new(HandleStore::new);
+
+// HandleStore uses Arc<Mutex<T>> for safe concurrent access
+```
+
+## Const and Static
+
+### Const Functions
+
+Use `const fn` where possible:
+
+```rust
+// ✅ CORRECT
+impl<T> HandleStore<T> {
+    pub const fn new() -> Self {
+        Self {
+            handles: Mutex::new(HashMap::new()),
+            next_id: AtomicU64::new(1),
+        }
+    }
+}
+```
+
+### Static Initialization
+
+Use `LazyLock` for lazy static initialization:
+
+```rust
+use std::sync::LazyLock;
+
+// ✅ CORRECT (Rust 2024)
+pub static BUFFERS: LazyLock<HandleStore<Buffer>> = LazyLock::new(HandleStore::new);
+
+// ❌ WRONG: Don't use lazy_static! crate
+lazy_static! {
+    static ref BUFFERS: HandleStore<Buffer> = HandleStore::new();
+}
+```
+
+## Crate Dependencies
+
+### Preferred Crates
+
+| Purpose | Crate | Version |
+|---------|-------|---------|
+| Error handling | `thiserror` | `2` |
+| Byte manipulation | `bytes`, `byteorder` | `1` |
+| Compression | `flate2`, `weezl` | `1`, `0.1` |
+| Encryption | `aes`, `cbc`, `md-5`, `sha2` | Latest |
+| Image processing | `image` | `0.25` |
+| Fonts | `fontdb`, `ttf-parser` | Latest |
+| Parallelism | `rayon` (optional) | `1.10` |
+| Async I/O | `tokio` (optional) | `1` |
+
+## Testing
+
+### Unit Tests
+
+Include unit tests in the same file:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_buffer_new() {
+        let b = Buffer::new(100);
+        assert_eq!(b.len(), 0);
+        assert!(b.is_empty());
+    }
+}
+```
+
+### Test Coverage
+
+Aim for 90% test coverage. Use `cargo tarpaulin` to measure:
+
+```bash
+cargo tarpaulin --out Html
+```
+
+## Documentation
+
+### Doc Comments
+
+Use `///` for public API documentation:
+
+```rust
+/// Creates a new buffer with the specified capacity.
+///
+/// # Arguments
+///
+/// * `capacity` - The initial capacity in bytes
+///
+/// # Returns
+///
+/// A new empty buffer with the given capacity.
+///
+/// # Examples
+///
+/// ```
+/// let buffer = Buffer::new(1024);
+/// assert!(buffer.is_empty());
+/// ```
+pub fn new(capacity: usize) -> Self {
+    // ...
+}
+```
+
+### Module Documentation
+
+Use `//!` for module-level documentation:
+
+```rust
+//! Buffer - Dynamic byte array wrapper using the `bytes` crate
+//!
+//! This module provides a high-performance buffer implementation backed by
+//! `bytes::Bytes` and `bytes::BytesMut` for efficient zero-copy operations.
+```
+
+## Formatting and Linting
+
+### Rustfmt
+
+Use default `rustfmt` settings. Run before committing:
+
+```bash
+cargo fmt
+```
+
+### Clippy
+
+Run Clippy and fix all warnings:
+
+```bash
+cargo clippy -- -D warnings
+```
+
+## Feature Flags
+
+Use feature flags for optional functionality:
+
+```toml
+[features]
+default = []
+jpeg2000 = ["jpeg2k"]
+jbig2 = []
+parallel = ["rayon"]
+async = ["tokio", "futures"]
+```
+
+```rust
+#[cfg(feature = "parallel")]
+pub mod parallel {
+    use rayon::prelude::*;
+    // ...
+}
+```
+
+## Summary Checklist
+
+- [ ] Edition 2024 syntax (`#[unsafe(no_mangle)]`)
+- [ ] No `unsafe` except at FFI boundaries
+- [ ] `Result<T, E>` for error handling
+- [ ] `thiserror` for error types
+- [ ] `LazyLock` for static initialization
+- [ ] `Arc<Mutex<T>>` for shared mutable state
+- [ ] Comprehensive unit tests (90% coverage target)
+- [ ] Doc comments on public API
+- [ ] `cargo fmt` and `cargo clippy` clean

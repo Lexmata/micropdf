@@ -107,7 +107,7 @@ describe('PdfObject', () => {
       const name1 = pdfName('Type');
       const name2 = pdfName('Type');
       const name3 = pdfName('Other');
-      
+
       expect(name1.nameEquals('Type')).toBe(true);
       expect(name1.nameEquals('Other')).toBe(false);
       expect(name1.equals(name2)).toBe(true);
@@ -145,7 +145,7 @@ describe('PdfArray', () => {
 
   it('should get element by index', () => {
     const arr = pdfArray([pdfInt(10), pdfInt(20), pdfInt(30)]);
-    
+
     expect(arr.get(0)?.toInt()).toBe(10);
     expect(arr.get(1)?.toInt()).toBe(20);
     expect(arr.get(2)?.toInt()).toBe(30);
@@ -157,7 +157,7 @@ describe('PdfArray', () => {
     arr.push(pdfInt(1));
     arr.push(pdfString('two'));
     arr.push(pdfBool(true));
-    
+
     expect(arr.length).toBe(3);
     expect(arr.get(0)?.toInt()).toBe(1);
     expect(arr.get(1)?.toString()).toBe('two');
@@ -167,7 +167,7 @@ describe('PdfArray', () => {
   it('should insert elements', () => {
     const arr = pdfArray([pdfInt(1), pdfInt(3)]);
     arr.insert(1, pdfInt(2));
-    
+
     expect(arr.length).toBe(3);
     expect(arr.get(0)?.toInt()).toBe(1);
     expect(arr.get(1)?.toInt()).toBe(2);
@@ -177,7 +177,7 @@ describe('PdfArray', () => {
   it('should delete elements', () => {
     const arr = pdfArray([pdfInt(1), pdfInt(2), pdfInt(3)]);
     arr.delete(1);
-    
+
     expect(arr.length).toBe(2);
     expect(arr.get(0)?.toInt()).toBe(1);
     expect(arr.get(1)?.toInt()).toBe(3);
@@ -186,18 +186,18 @@ describe('PdfArray', () => {
   it('should iterate elements', () => {
     const arr = pdfArray([pdfInt(1), pdfInt(2), pdfInt(3)]);
     const values: number[] = [];
-    
+
     for (const obj of arr) {
       values.push(obj.toInt());
     }
-    
+
     expect(values).toEqual([1, 2, 3]);
   });
 
   it('should convert to JS array', () => {
     const arr = pdfArray([pdfInt(1), pdfString('two'), pdfBool(true)]);
     const jsArr = arr.toArray();
-    
+
     expect(jsArr.length).toBe(3);
     expect(jsArr[0]?.toInt()).toBe(1);
   });
@@ -216,7 +216,7 @@ describe('PdfDict', () => {
       Type: pdfName('Page'),
       Width: pdfInt(612),
     });
-    
+
     expect(dict.length).toBe(2);
   });
 
@@ -225,7 +225,7 @@ describe('PdfDict', () => {
       Name: pdfString('Test'),
       Count: pdfInt(42),
     });
-    
+
     expect(dict.get('Name')?.toString()).toBe('Test');
     expect(dict.get('Count')?.toInt()).toBe(42);
     expect(dict.get('Missing')).toBeUndefined();
@@ -234,7 +234,7 @@ describe('PdfDict', () => {
   it('should put value by key', () => {
     const dict = pdfDict();
     dict.put('Key', pdfString('Value'));
-    
+
     expect(dict.get('Key')?.toString()).toBe('Value');
   });
 
@@ -243,7 +243,7 @@ describe('PdfDict', () => {
       A: pdfInt(1),
       B: pdfInt(2),
     });
-    
+
     dict.del('A');
     expect(dict.get('A')).toBeUndefined();
     expect(dict.get('B')?.toInt()).toBe(2);
@@ -253,7 +253,7 @@ describe('PdfDict', () => {
     const dict = pdfDict({
       Exists: pdfInt(1),
     });
-    
+
     expect(dict.has('Exists')).toBe(true);
     expect(dict.has('Missing')).toBe(false);
   });
@@ -264,7 +264,7 @@ describe('PdfDict', () => {
       Beta: pdfInt(2),
       Gamma: pdfInt(3),
     });
-    
+
     const keys = dict.keys();
     expect(keys.length).toBe(3);
     expect(keys).toContain('Alpha');
@@ -277,12 +277,12 @@ describe('PdfDict', () => {
       A: pdfInt(1),
       B: pdfInt(2),
     });
-    
+
     const entries: [string, number][] = [];
     for (const [key, value] of dict) {
       entries.push([key, value.toInt()]);
     }
-    
+
     expect(entries.length).toBe(2);
   });
 
@@ -294,7 +294,7 @@ describe('PdfDict', () => {
       Ratio: pdfReal(3.14),
       Flag: pdfBool(true),
     });
-    
+
     expect(dict.getName('Name')).toBe('TestName');
     expect(dict.getString('Text')).toBe('TestString');
     expect(dict.getInt('Count')).toBe(42);
@@ -304,7 +304,7 @@ describe('PdfDict', () => {
 
   it('should return defaults for missing typed values', () => {
     const dict = pdfDict();
-    
+
     expect(dict.getName('Missing')).toBe('');
     expect(dict.getString('Missing')).toBe('');
     expect(dict.getInt('Missing')).toBe(0);
@@ -317,7 +317,7 @@ describe('PdfStream', () => {
   it('should create stream', () => {
     const data = new Uint8Array([1, 2, 3, 4, 5]);
     const stream = new PdfStream(pdfDict(), data);
-    
+
     expect(stream.type).toBe(PdfObjectType.Stream);
     expect(stream.isStream).toBe(true);
   });
@@ -325,7 +325,7 @@ describe('PdfStream', () => {
   it('should get stream data', () => {
     const data = new Uint8Array([10, 20, 30]);
     const stream = new PdfStream(pdfDict(), data);
-    
+
     const result = stream.getData();
     expect(result.length).toBe(3);
     expect(result[0]).toBe(10);
@@ -334,7 +334,7 @@ describe('PdfStream', () => {
   it('should set stream data', () => {
     const stream = new PdfStream(pdfDict(), new Uint8Array(0));
     stream.setData(new Uint8Array([100, 200]));
-    
+
     const result = stream.getData();
     expect(result.length).toBe(2);
     expect(result[0]).toBe(100);
@@ -346,7 +346,7 @@ describe('PdfStream', () => {
       Filter: pdfName('FlateDecode'),
     });
     const stream = new PdfStream(dict, new Uint8Array(100));
-    
+
     expect(stream.dict.get('Filter')?.toName()).toBe('FlateDecode');
   });
 });
@@ -354,7 +354,7 @@ describe('PdfStream', () => {
 describe('PdfIndirectRef', () => {
   it('should create indirect reference', () => {
     const ref = new PdfIndirectRef(42, 0);
-    
+
     expect(ref.type).toBe(PdfObjectType.Indirect);
     expect(ref.isIndirect).toBe(true);
     expect(ref.objNum).toBe(42);
@@ -366,7 +366,7 @@ describe('PdfIndirectRef', () => {
     const ref2 = new PdfIndirectRef(10, 0);
     const ref3 = new PdfIndirectRef(10, 1);
     const ref4 = new PdfIndirectRef(20, 0);
-    
+
     expect(ref1.equals(ref2)).toBe(true);
     expect(ref1.equals(ref3)).toBe(false);
     expect(ref1.equals(ref4)).toBe(false);

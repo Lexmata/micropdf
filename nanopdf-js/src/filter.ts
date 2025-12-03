@@ -1,6 +1,6 @@
 /**
  * Filter - PDF compression and decompression filters
- * 
+ *
  * This implementation mirrors the Rust `pdf::filter` module for 100% API compatibility.
  */
 
@@ -52,20 +52,20 @@ export function asciiHexEncode(data: Uint8Array): Uint8Array {
  */
 export function asciiHexDecode(data: Uint8Array): Uint8Array {
   const str = new TextDecoder().decode(data);
-  
+
   // Remove whitespace and EOD marker
   let hex = str.replace(/[\s>]/g, '');
-  
+
   // Handle odd length by appending 0
   if (hex.length % 2 !== 0) {
     hex += '0';
   }
-  
+
   // Validate hex characters
   if (!/^[0-9A-Fa-f]*$/.test(hex)) {
     throw NanoPDFError.argument('Invalid ASCIIHex data');
   }
-  
+
   return new Uint8Array(globalThis.Buffer.from(hex, 'hex'));
 }
 
@@ -82,20 +82,20 @@ export function asciiHexDecode(data: Uint8Array): Uint8Array {
  */
 export function ascii85Encode(data: Uint8Array): Uint8Array {
   const result: number[] = [];
-  
+
   // Process 4 bytes at a time
   let i = 0;
   while (i < data.length) {
     const chunk = data.slice(i, i + 4);
     i += 4;
-    
+
     // Pad with zeros if needed
     const padded = new Uint8Array(4);
     padded.set(chunk);
-    
+
     // Convert to 32-bit value
     const value = (padded[0]! << 24) | (padded[1]! << 16) | (padded[2]! << 8) | padded[3]!;
-    
+
     // Special case: all zeros -> 'z'
     if (value === 0 && chunk.length === 4) {
       result.push(122); // 'z'
@@ -107,7 +107,7 @@ export function ascii85Encode(data: Uint8Array): Uint8Array {
         encoded[j] = (v % 85) + 33;
         v = Math.floor(v / 85);
       }
-      
+
       // Only output as many characters as needed
       const outLen = chunk.length + 1;
       for (let j = 0; j < outLen; j++) {
@@ -115,11 +115,11 @@ export function ascii85Encode(data: Uint8Array): Uint8Array {
       }
     }
   }
-  
+
   // Add EOD marker
   result.push(126); // '~'
   result.push(62);  // '>'
-  
+
   return new Uint8Array(result);
 }
 
@@ -129,13 +129,13 @@ export function ascii85Encode(data: Uint8Array): Uint8Array {
 export function ascii85Decode(data: Uint8Array): Uint8Array {
   const result: number[] = [];
   const str = new TextDecoder().decode(data);
-  
+
   // Remove whitespace
   const cleaned = str.replace(/\s/g, '');
-  
+
   // Remove EOD marker if present
   const content = cleaned.replace(/~>$/, '');
-  
+
   let i = 0;
   while (i < content.length) {
     // Handle 'z' abbreviation for all zeros
@@ -144,7 +144,7 @@ export function ascii85Decode(data: Uint8Array): Uint8Array {
       i++;
       continue;
     }
-    
+
     // Get next group (up to 5 characters)
     let group = '';
     let j = 0;
@@ -152,13 +152,13 @@ export function ascii85Decode(data: Uint8Array): Uint8Array {
       group += content[i + j];
       j++;
     }
-    
+
     if (group.length === 0) break;
-    
+
     // Pad with 'u' if needed
     const padCount = 5 - group.length;
     const paddedGroup = group + 'u'.repeat(padCount);
-    
+
     // Convert from base-85
     let value = 0;
     for (let k = 0; k < 5; k++) {
@@ -168,7 +168,7 @@ export function ascii85Decode(data: Uint8Array): Uint8Array {
       }
       value = value * 85 + (char - 33);
     }
-    
+
     // Convert to bytes
     const bytes = [
       (value >>> 24) & 0xFF,
@@ -176,16 +176,16 @@ export function ascii85Decode(data: Uint8Array): Uint8Array {
       (value >>> 8) & 0xFF,
       value & 0xFF,
     ];
-    
+
     // Output only the non-padded bytes
     const outCount = 4 - padCount;
     for (let k = 0; k < outCount; k++) {
       result.push(bytes[k]!);
     }
-    
+
     i += group.length;
   }
-  
+
   return new Uint8Array(result);
 }
 
@@ -200,19 +200,19 @@ export function runLengthEncode(data: Uint8Array): Uint8Array {
   if (data.length === 0) {
     return new Uint8Array([128]); // Just EOD
   }
-  
+
   const result: number[] = [];
   let i = 0;
-  
+
   while (i < data.length) {
     // Count consecutive identical bytes
     let runLength = 1;
-    while (i + runLength < data.length && 
-           data[i] === data[i + runLength] && 
+    while (i + runLength < data.length &&
+           data[i] === data[i + runLength] &&
            runLength < 128) {
       runLength++;
     }
-    
+
     if (runLength > 1) {
       // Run of identical bytes
       result.push(257 - runLength); // Length byte
@@ -223,13 +223,13 @@ export function runLengthEncode(data: Uint8Array): Uint8Array {
       let litLength = 1;
       while (i + litLength < data.length && litLength < 128) {
         // Check if next bytes start a run
-        if (i + litLength + 1 < data.length && 
+        if (i + litLength + 1 < data.length &&
             data[i + litLength] === data[i + litLength + 1]) {
           break;
         }
         litLength++;
       }
-      
+
       // Literal bytes
       result.push(litLength - 1);   // Length byte
       for (let j = 0; j < litLength; j++) {
@@ -238,7 +238,7 @@ export function runLengthEncode(data: Uint8Array): Uint8Array {
       i += litLength;
     }
   }
-  
+
   result.push(128); // EOD
   return new Uint8Array(result);
 }
@@ -249,11 +249,11 @@ export function runLengthEncode(data: Uint8Array): Uint8Array {
 export function runLengthDecode(data: Uint8Array): Uint8Array {
   const result: number[] = [];
   let i = 0;
-  
+
   while (i < data.length) {
     const length = data[i]!;
     i++;
-    
+
     if (length === 128) {
       // EOD marker
       break;
@@ -274,7 +274,7 @@ export function runLengthDecode(data: Uint8Array): Uint8Array {
       }
     }
   }
-  
+
   return new Uint8Array(result);
 }
 
@@ -289,21 +289,21 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
   // LZW implementation
   const CLEAR_CODE = 256;
   const EOD_CODE = 257;
-  
+
   const result: number[] = [];
   const table: Uint8Array[] = [];
-  
+
   // Initialize table with single-byte entries
   for (let i = 0; i < 256; i++) {
     table.push(new Uint8Array([i]));
   }
   table.push(new Uint8Array(0)); // CLEAR_CODE placeholder
   table.push(new Uint8Array(0)); // EOD_CODE placeholder
-  
+
   let codeSize = 9;
   let bitPos = 0;
   let prevCode: number | null = null;
-  
+
   function readCode(): number {
     let code = 0;
     for (let i = 0; i < codeSize; i++) {
@@ -316,14 +316,14 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
     }
     return code;
   }
-  
+
   while (bitPos < data.length * 8) {
     const code = readCode();
-    
+
     if (code === EOD_CODE) {
       break;
     }
-    
+
     if (code === CLEAR_CODE) {
       // Reset table
       table.length = 258;
@@ -331,7 +331,7 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
       prevCode = null;
       continue;
     }
-    
+
     let entry: Uint8Array;
     if (code < table.length) {
       entry = table[code]!;
@@ -344,12 +344,12 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
     } else {
       throw NanoPDFError.argument('Invalid LZW code');
     }
-    
+
     // Output entry
     for (const byte of entry) {
       result.push(byte);
     }
-    
+
     // Add to table
     if (prevCode !== null && table.length < 4096) {
       const prev = table[prevCode]!;
@@ -357,17 +357,17 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
       newEntry.set(prev);
       newEntry[prev.length] = entry[0]!;
       table.push(newEntry);
-      
+
       // Increase code size if needed
       const nextSize = table.length + (earlyChange ? 0 : 1);
       if (nextSize > (1 << codeSize) && codeSize < 12) {
         codeSize++;
       }
     }
-    
+
     prevCode = code;
   }
-  
+
   return new Uint8Array(result);
 }
 
