@@ -344,6 +344,7 @@ pub extern "C" fn fz_set_pixmap_sample(_ctx: Handle, pix: Handle, x: i32, y: i32
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::colorspace::FZ_COLORSPACE_GRAY;
 
     #[test]
     fn test_pixmap_create() {
@@ -354,6 +355,18 @@ mod tests {
         assert_eq!(fz_pixmap_height(0, handle), 100);
         assert_eq!(fz_pixmap_components(0, handle), 4); // RGB + alpha
         assert_eq!(fz_pixmap_alpha(0, handle), 1);
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_create_gray() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 50, 50, 0, 0);
+        assert_ne!(handle, 0);
+
+        assert_eq!(fz_pixmap_components(0, handle), 1); // Gray only
+        assert_eq!(fz_pixmap_colorants(0, handle), 1);
+        assert_eq!(fz_pixmap_alpha(0, handle), 0);
 
         fz_drop_pixmap(0, handle);
     }
@@ -380,5 +393,154 @@ mod tests {
         assert_eq!(fz_get_pixmap_sample(0, handle, 5, 5, 1), 0);
 
         fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_keep() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        let kept = fz_keep_pixmap(0, handle);
+        assert_eq!(kept, handle);
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_x_y() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        
+        // Default origin is 0,0
+        assert_eq!(fz_pixmap_x(0, handle), 0);
+        assert_eq!(fz_pixmap_y(0, handle), 0);
+
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_stride() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        let stride = fz_pixmap_stride(0, handle);
+        // RGB = 3 components, width = 10, so stride = 30
+        assert_eq!(stride, 30);
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_stride_with_alpha() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 1);
+        let stride = fz_pixmap_stride(0, handle);
+        // RGBA = 4 components, width = 10, so stride = 40
+        assert_eq!(stride, 40);
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_bbox() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 100, 50, 0, 0);
+        let bbox = fz_pixmap_bbox(0, handle);
+        assert_eq!(bbox.x0, 0);
+        assert_eq!(bbox.y0, 0);
+        assert_eq!(bbox.x1, 100);
+        assert_eq!(bbox.y1, 50);
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_colorspace() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        let cs = fz_pixmap_colorspace(0, handle);
+        assert_eq!(cs, FZ_COLORSPACE_RGB);
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_invalid_handle() {
+        assert_eq!(fz_pixmap_width(0, 0), 0);
+        assert_eq!(fz_pixmap_height(0, 0), 0);
+        assert_eq!(fz_pixmap_components(0, 0), 0);
+        assert_eq!(fz_pixmap_x(0, 0), 0);
+        assert_eq!(fz_pixmap_y(0, 0), 0);
+        assert_eq!(fz_pixmap_alpha(0, 0), 0);
+        assert_eq!(fz_pixmap_stride(0, 0), 0);
+        assert_eq!(fz_pixmap_colorants(0, 0), 0);
+        assert_eq!(fz_get_pixmap_sample(0, 0, 0, 0, 0), 0);
+    }
+
+    #[test]
+    fn test_pixmap_invert() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 2, 2, 0, 0);
+        
+        // Set to known values
+        fz_set_pixmap_sample(0, handle, 0, 0, 0, 100);
+        fz_set_pixmap_sample(0, handle, 1, 0, 0, 200);
+        
+        fz_invert_pixmap(0, handle);
+        
+        // Values should be inverted (255 - x)
+        assert_eq!(fz_get_pixmap_sample(0, handle, 0, 0, 0), 155);
+        assert_eq!(fz_get_pixmap_sample(0, handle, 1, 0, 0), 55);
+        
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_gamma() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_GRAY, 2, 2, 0, 0);
+        
+        // Set to mid-gray
+        fz_clear_pixmap_with_value(0, handle, 128);
+        
+        // Apply gamma (1.0 should not change values significantly)
+        fz_gamma_pixmap(0, handle, 1.0);
+        
+        // Value should be roughly the same
+        let sample = fz_get_pixmap_sample(0, handle, 0, 0, 0);
+        assert!(sample >= 125 && sample <= 131);
+        
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_sample_bounds() {
+        let handle = fz_new_pixmap(0, FZ_COLORSPACE_RGB, 10, 10, 0, 0);
+        
+        // Out of bounds access should return 0
+        assert_eq!(fz_get_pixmap_sample(0, handle, -1, 0, 0), 0);
+        assert_eq!(fz_get_pixmap_sample(0, handle, 0, -1, 0), 0);
+        assert_eq!(fz_get_pixmap_sample(0, handle, 10, 0, 0), 0);
+        assert_eq!(fz_get_pixmap_sample(0, handle, 0, 10, 0), 0);
+        assert_eq!(fz_get_pixmap_sample(0, handle, 0, 0, 3), 0); // Component out of bounds
+        
+        fz_drop_pixmap(0, handle);
+    }
+
+    #[test]
+    fn test_pixmap_internal_new() {
+        let pixmap = Pixmap::new(FZ_COLORSPACE_RGB, 100, 50, true);
+        assert_eq!(pixmap.width, 100);
+        assert_eq!(pixmap.height, 50);
+        assert_eq!(pixmap.n, 4); // RGB + alpha
+        assert!(pixmap.alpha);
+        assert_eq!(pixmap.stride, 400); // width * n
+        assert_eq!(pixmap.samples.len(), 400 * 50);
+    }
+
+    #[test]
+    fn test_pixmap_internal_get_set_sample() {
+        let mut pixmap = Pixmap::new(FZ_COLORSPACE_RGB, 10, 10, false);
+        
+        pixmap.set_sample(5, 5, 0, 123);
+        assert_eq!(pixmap.get_sample(5, 5, 0), Some(123));
+        
+        // Out of bounds
+        assert_eq!(pixmap.get_sample(-1, 0, 0), None);
+        assert_eq!(pixmap.get_sample(100, 0, 0), None);
+    }
+
+    #[test]
+    fn test_pixmap_internal_clear() {
+        let mut pixmap = Pixmap::new(FZ_COLORSPACE_GRAY, 5, 5, false);
+        pixmap.clear_with_value(255);
+        
+        assert_eq!(pixmap.get_sample(0, 0, 0), Some(255));
+        assert_eq!(pixmap.get_sample(4, 4, 0), Some(255));
     }
 }

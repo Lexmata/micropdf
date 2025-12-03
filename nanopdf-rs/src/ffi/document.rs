@@ -207,6 +207,8 @@ pub extern "C" fn fz_lookup_metadata(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::STREAMS;
+    use super::super::stream::Stream;
 
     #[test]
     fn test_document_handle() {
@@ -221,6 +223,194 @@ mod tests {
         assert!(fz_count_pages(0, handle) >= 1);
 
         fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_document_new() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        assert_eq!(doc.page_count, 2);
+        assert!(!doc.needs_password);
+        assert!(doc.authenticated);
+    }
+
+    #[test]
+    fn test_document_estimate_page_count() {
+        // No pages
+        let empty = b"%PDF-1.4\n%%EOF";
+        let doc1 = Document::new(empty.to_vec());
+        assert_eq!(doc1.page_count, 1); // Minimum 1
+
+        // Multiple pages
+        let multi = b"%PDF-1.4\n/Type /Page\n/Type /Page\n/Type /Page\n%%EOF";
+        let doc2 = Document::new(multi.to_vec());
+        assert_eq!(doc2.page_count, 3);
+    }
+
+    #[test]
+    fn test_keep_document() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        let kept = fz_keep_document(0, handle);
+        assert_eq!(kept, handle);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_needs_password() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        assert_eq!(fz_needs_password(0, handle), 0);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_needs_password_invalid_handle() {
+        assert_eq!(fz_needs_password(0, 0), 0);
+    }
+
+    #[test]
+    fn test_authenticate_password() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        // No password needed, should succeed
+        let result = fz_authenticate_password(0, handle, c"".as_ptr());
+        assert_eq!(result, 1);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_authenticate_password_invalid_handle() {
+        let result = fz_authenticate_password(0, 0, c"".as_ptr());
+        assert_eq!(result, 0);
+    }
+
+    #[test]
+    fn test_count_pages() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        assert_eq!(fz_count_pages(0, handle), 2);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_count_pages_invalid_handle() {
+        assert_eq!(fz_count_pages(0, 0), 0);
+    }
+
+    #[test]
+    fn test_count_chapters() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        // PDFs always have 1 chapter
+        assert_eq!(fz_count_chapters(0, handle), 1);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_count_chapter_pages() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        assert_eq!(fz_count_chapter_pages(0, handle, 0), 2);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_page_number_from_location() {
+        assert_eq!(fz_page_number_from_location(0, 0, 0, 5), 5);
+        assert_eq!(fz_page_number_from_location(0, 0, 0, 0), 0);
+        assert_eq!(fz_page_number_from_location(0, 0, 1, 5), -1); // Invalid chapter
+    }
+
+    #[test]
+    fn test_has_permission() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        assert_eq!(fz_has_permission(0, handle, FZ_PERMISSION_PRINT), 1);
+        assert_eq!(fz_has_permission(0, handle, FZ_PERMISSION_COPY), 1);
+        assert_eq!(fz_has_permission(0, handle, FZ_PERMISSION_EDIT), 1);
+        assert_eq!(fz_has_permission(0, handle, FZ_PERMISSION_ANNOTATE), 1);
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_has_permission_invalid_handle() {
+        assert_eq!(fz_has_permission(0, 0, FZ_PERMISSION_PRINT), 0);
+    }
+
+    #[test]
+    fn test_lookup_metadata() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let doc = Document::new(pdf_data.to_vec());
+        let handle = DOCUMENTS.insert(doc);
+
+        let mut buf = [0i8; 100];
+        let result = fz_lookup_metadata(0, handle, c"Title".as_ptr(), buf.as_mut_ptr(), 100);
+        assert_eq!(result, -1); // Not found
+
+        fz_drop_document(0, handle);
+    }
+
+    #[test]
+    fn test_lookup_metadata_null_buffer() {
+        let result = fz_lookup_metadata(0, 0, c"Title".as_ptr(), std::ptr::null_mut(), 0);
+        assert_eq!(result, -1);
+    }
+
+    #[test]
+    fn test_open_document_null_filename() {
+        let handle = fz_open_document(0, std::ptr::null());
+        assert_eq!(handle, 0);
+    }
+
+    #[test]
+    fn test_open_document_with_stream() {
+        let pdf_data = b"%PDF-1.4\n/Type /Page\n%%EOF";
+        let stream = Stream::from_memory(pdf_data.to_vec());
+        let stream_handle = STREAMS.insert(stream);
+
+        let doc_handle = fz_open_document_with_stream(0, std::ptr::null(), stream_handle);
+        assert_ne!(doc_handle, 0);
+
+        assert_eq!(fz_count_pages(0, doc_handle), 1);
+
+        fz_drop_document(0, doc_handle);
+        super::super::STREAMS.remove(stream_handle);
+    }
+
+    #[test]
+    fn test_open_document_with_invalid_stream() {
+        let doc_handle = fz_open_document_with_stream(0, std::ptr::null(), 0);
+        assert_eq!(doc_handle, 0);
+    }
+
+    #[test]
+    fn test_permission_constants() {
+        assert_eq!(FZ_PERMISSION_PRINT, 1);
+        assert_eq!(FZ_PERMISSION_COPY, 2);
+        assert_eq!(FZ_PERMISSION_EDIT, 4);
+        assert_eq!(FZ_PERMISSION_ANNOTATE, 8);
     }
 }
 
