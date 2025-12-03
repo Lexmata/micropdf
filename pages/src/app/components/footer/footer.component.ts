@@ -11,7 +11,7 @@ import { faGithub, faNpm, faRust } from '@fortawesome/free-brands-svg-icons';
 })
 export class FooterComponent {
   currentYear = new Date().getFullYear();
-  
+
   // Icons
   faGithub = faGithub;
   faNpm = faNpm;

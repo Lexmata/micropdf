@@ -12,7 +12,7 @@ import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons';
 })
 export class HeaderComponent {
   menuOpen = signal(false);
-  
+
   // Icons
   faGithub = faGithub;
   faBars = faBars;
