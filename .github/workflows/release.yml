@@ -3,15 +3,59 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'           # Main library releases: v0.1.0, v1.0.0
+      - 'rs-v*'        # Rust-specific releases: rs-v0.1.0
+      - 'js-v*'        # Node.js-specific releases: js-v0.1.0
+      - 'go-v*'        # Go-specific releases: go-v0.1.0
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Build static libraries for multiple platforms
-  build-static-libs:
-    name: Build Static Library (${{ matrix.target }})
+  # Determine which packages to release based on tag
+  detect-release:
+    name: Detect Release Type
+    runs-on: ubuntu-latest
+    outputs:
+      release_rust: ${{ steps.detect.outputs.rust }}
+      release_nodejs: ${{ steps.detect.outputs.nodejs }}
+      release_go: ${{ steps.detect.outputs.go }}
+      version: ${{ steps.detect.outputs.version }}
+    steps:
+      - name: Detect release type
+        id: detect
+        run: |
+          TAG="${{ github.ref_name }}"
+          echo "Tag: $TAG"
+
+          # Default: release all for v* tags
+          if [[ "$TAG" == v* ]] && [[ "$TAG" != rs-v* ]] && [[ "$TAG" != js-v* ]] && [[ "$TAG" != go-v* ]]; then
+            echo "rust=true" >> $GITHUB_OUTPUT
+            echo "nodejs=true" >> $GITHUB_OUTPUT
+            echo "go=true" >> $GITHUB_OUTPUT
+            echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == rs-v* ]]; then
+            echo "rust=true" >> $GITHUB_OUTPUT
+            echo "nodejs=false" >> $GITHUB_OUTPUT
+            echo "go=false" >> $GITHUB_OUTPUT
+            echo "version=${TAG#rs-v}" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == js-v* ]]; then
+            echo "rust=false" >> $GITHUB_OUTPUT
+            echo "nodejs=true" >> $GITHUB_OUTPUT
+            echo "go=false" >> $GITHUB_OUTPUT
+            echo "version=${TAG#js-v}" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == go-v* ]]; then
+            echo "rust=false" >> $GITHUB_OUTPUT
+            echo "nodejs=false" >> $GITHUB_OUTPUT
+            echo "go=true" >> $GITHUB_OUTPUT
+            echo "version=${TAG#go-v}" >> $GITHUB_OUTPUT
+          fi
+
+  # Build Rust static libraries for multiple platforms
+  build-rust-libs:
+    name: Build Rust Library (${{ matrix.target }})
+    needs: detect-release
+    if: ${{ needs.detect-release.outputs.release_rust == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -81,13 +125,14 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build static library
+        working-directory: nanopdf-rs
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Create archive (Unix)
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
+          cp nanopdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
           cp README.md LICENSE-MIT LICENSE-APACHE dist/ 2>/dev/null || true
           tar -czvf ${{ matrix.archive }}.tar.gz -C dist .
 
@@ -96,7 +141,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          Copy-Item "target/${{ matrix.target }}/release/${{ matrix.artifact }}" -Destination dist/
+          Copy-Item "nanopdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }}" -Destination dist/
           Copy-Item README.md, LICENSE-MIT, LICENSE-APACHE -Destination dist/ -ErrorAction SilentlyContinue
           Compress-Archive -Path dist/* -DestinationPath "${{ matrix.archive }}.zip"
 
@@ -110,8 +155,10 @@ jobs:
           if-no-files-found: ignore
 
   # Build C header file
-  build-header:
+  build-rust-header:
     name: Generate C Header
+    needs: detect-release
+    if: ${{ needs.detect-release.outputs.release_rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -124,6 +171,7 @@ jobs:
         run: cargo install cbindgen
 
       - name: Generate C header
+        working-directory: nanopdf-rs
         run: |
           cbindgen --config cbindgen.toml --crate nanopdf --output nanopdf.h 2>/dev/null || \
           cbindgen --crate nanopdf --output nanopdf.h || \
@@ -133,11 +181,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nanopdf-header
-          path: nanopdf.h
+          path: nanopdf-rs/nanopdf.h
 
   # Build packages (deb/rpm)
-  build-packages:
-    name: Build Packages
+  build-rust-packages:
+    name: Build Linux Packages
+    needs: detect-release
+    if: ${{ needs.detect-release.outputs.release_rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -154,13 +204,16 @@ jobs:
           sudo apt-get install -y rpm
 
       - name: Build release
+        working-directory: nanopdf-rs
         run: cargo build --release
 
       - name: Build Debian package
+        working-directory: nanopdf-rs
         run: cargo deb --no-build
         continue-on-error: true
 
       - name: Build RPM package
+        working-directory: nanopdf-rs
         run: cargo generate-rpm
         continue-on-error: true
 
@@ -168,20 +221,66 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nanopdf-deb
-          path: target/debian/*.deb
+          path: nanopdf-rs/target/debian/*.deb
           if-no-files-found: ignore
 
       - name: Upload RPM package
         uses: actions/upload-artifact@v4
         with:
           name: nanopdf-rpm
-          path: target/generate-rpm/*.rpm
+          path: nanopdf-rs/target/generate-rpm/*.rpm
+          if-no-files-found: ignore
+
+  # Build Node.js prebuilds
+  build-nodejs:
+    name: Build Node.js (${{ matrix.os }})
+    needs: detect-release
+    if: ${{ needs.detect-release.outputs.release_nodejs == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        working-directory: nanopdf-js
+        run: pnpm install
+
+      - name: Build TypeScript
+        working-directory: nanopdf-js
+        run: pnpm run build:ts
+
+      - name: Build prebuilds
+        working-directory: nanopdf-js
+        run: pnpm run prebuild || true
+        continue-on-error: true
+
+      - name: Upload prebuilds
+        uses: actions/upload-artifact@v4
+        with:
+          name: nanopdf-js-${{ runner.os }}
+          path: nanopdf-js/prebuilds/
           if-no-files-found: ignore
 
   # Create GitHub Release
   create-release:
     name: Create Release
-    needs: [build-static-libs, build-header, build-packages]
+    needs: [detect-release, build-rust-libs, build-rust-header, build-rust-packages, build-nodejs]
+    if: always() && needs.detect-release.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -193,12 +292,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+        continue-on-error: true
 
       - name: Prepare release assets
         run: |
           mkdir -p release
-          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.deb" -o -name "*.rpm" -o -name "*.h" \) -exec cp {} release/ \;
-          ls -la release/
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.deb" -o -name "*.rpm" -o -name "*.h" \) -exec cp {} release/ \; 2>/dev/null || true
+          ls -la release/ || echo "No release assets found"
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -210,10 +310,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Publish to crates.io
-  publish-crates:
+  # Publish Rust to crates.io
+  publish-rust:
     name: Publish to crates.io
-    needs: create-release
+    needs: [detect-release, create-release]
+    if: ${{ needs.detect-release.outputs.release_rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -223,6 +324,50 @@ jobs:
         uses: dtolnay/rust-action@stable
 
       - name: Publish to crates.io
+        working-directory: nanopdf-rs
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
         continue-on-error: true
 
+  # Publish Node.js to npm
+  publish-nodejs:
+    name: Publish to npm
+    needs: [detect-release, create-release, build-nodejs]
+    if: ${{ needs.detect-release.outputs.release_nodejs == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Download prebuilds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nanopdf-js-*
+          path: nanopdf-js/prebuilds/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Install dependencies
+        working-directory: nanopdf-js
+        run: pnpm install --ignore-scripts
+
+      - name: Build
+        working-directory: nanopdf-js
+        run: pnpm run build:ts
+
+      - name: Publish to npm
+        working-directory: nanopdf-js
+        run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true

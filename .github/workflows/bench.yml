@@ -3,8 +3,16 @@ name: Benchmarks
 on:
   push:
     branches: [main]
+    paths:
+      - 'nanopdf-rs/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   pull_request:
     branches: [main]
+    paths:
+      - 'nanopdf-rs/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   workflow_dispatch:
 
 permissions:
@@ -214,4 +222,3 @@ jobs:
                 body: body
               });
             }
-
