@@ -1,0 +1,217 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  deployments: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            nanopdf-rs/target/
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-
+
+      - name: Run benchmarks
+        working-directory: nanopdf-rs
+        run: |
+          cargo bench --all-features -- --noplot --save-baseline main 2>&1 | tee benchmark-output.txt
+
+      - name: Parse benchmark results
+        id: bench
+        working-directory: nanopdf-rs
+        run: |
+          # Create JSON output for benchmark action
+          echo '{"name": "NanoPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [' > bench-results.json
+
+          # Parse criterion output
+          grep -E "^[a-zA-Z_/]+\s+time:" benchmark-output.txt | while read line; do
+            name=$(echo "$line" | cut -d' ' -f1)
+            time=$(echo "$line" | grep -oP '\d+\.?\d*\s*(ns|µs|ms|s)' | head -1)
+            value=$(echo "$time" | grep -oP '\d+\.?\d*')
+            unit=$(echo "$time" | grep -oP '(ns|µs|ms|s)')
+
+            # Convert to nanoseconds for consistency
+            case $unit in
+              s) value=$(echo "$value * 1000000000" | bc) ;;
+              ms) value=$(echo "$value * 1000000" | bc) ;;
+              µs) value=$(echo "$value * 1000" | bc) ;;
+            esac
+
+            echo "{\"name\": \"$name\", \"value\": $value, \"unit\": \"ns\"}," >> bench-results.json
+          done
+
+          # Remove trailing comma and close JSON
+          sed -i '$ s/,$//' bench-results.json
+          echo ']}' >> bench-results.json
+
+          # Fallback if no benchmarks found
+          if [ ! -s bench-results.json ] || [ $(wc -l < bench-results.json) -lt 3 ]; then
+            echo '{"name": "NanoPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [{"name": "placeholder", "value": 0, "unit": "ns"}]}' > bench-results.json
+          fi
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: NanoPDF Rust Benchmarks
+          tool: 'customSmallerIsBetter'
+          output-file-path: nanopdf-rs/bench-results.json
+          # Push to gh-pages branch
+          auto-push: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Alert if performance regresses by more than 20%
+          alert-threshold: '120%'
+          comment-on-alert: true
+          fail-on-alert: false
+          # Store benchmark history
+          benchmark-data-dir-path: dev/bench
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            nanopdf-rs/benchmark-output.txt
+            nanopdf-rs/bench-results.json
+            nanopdf-rs/target/criterion/
+          retention-days: 30
+
+  # Compare PR benchmarks against main
+  benchmark-compare:
+    name: Compare Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            nanopdf-rs/target/
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install critcmp
+        run: cargo install critcmp || true
+
+      - name: Checkout base branch
+        run: git checkout ${{ github.base_ref }}
+
+      - name: Run base benchmarks
+        working-directory: nanopdf-rs
+        run: cargo bench --all-features -- --noplot --save-baseline base
+
+      - name: Checkout PR branch
+        run: git checkout ${{ github.head_ref }}
+
+      - name: Run PR benchmarks
+        working-directory: nanopdf-rs
+        run: cargo bench --all-features -- --noplot --save-baseline pr
+
+      - name: Compare benchmarks
+        working-directory: nanopdf-rs
+        id: compare
+        run: |
+          echo "## Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Comparing \`${{ github.base_ref }}\` (base) vs \`${{ github.head_ref }}\` (PR)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          critcmp base pr 2>&1 | tee -a $GITHUB_STEP_SUMMARY || echo "No benchmark comparison available"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read comparison results
+            let comparison = '';
+            try {
+              const { execSync } = require('child_process');
+              comparison = execSync('cd nanopdf-rs && critcmp base pr 2>&1 || echo "No comparison available"', { encoding: 'utf8' });
+            } catch (e) {
+              comparison = 'Benchmark comparison not available';
+            }
+
+            const body = `## 📊 Benchmark Results
+
+            <details>
+            <summary>Click to expand benchmark comparison</summary>
+
+            \`\`\`
+            ${comparison}
+            \`\`\`
+
+            </details>
+
+            *Comparing \`${{ github.base_ref }}\` (base) vs \`${{ github.head_ref }}\` (PR)*
+            `;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c => c.body.includes('📊 Benchmark Results'));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+

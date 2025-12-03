@@ -1,7 +1,7 @@
 # NanoPDF vs MuPDF 1.26.12 Compatibility Report
 
-**Generated:** December 2025  
-**MuPDF Version:** 1.26.12  
+**Generated:** December 2025
+**MuPDF Version:** 1.26.12
 **NanoPDF Version:** 0.1.0
 
 ## Executive Summary

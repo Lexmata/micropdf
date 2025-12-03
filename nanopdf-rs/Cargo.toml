@@ -43,6 +43,19 @@ async = ["tokio"]
 
 [dev-dependencies]
 tempfile = "3"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "geometry"
+harness = false
+
+[[bench]]
+name = "buffer"
+harness = false
+
+[[bench]]
+name = "pdf_objects"
+harness = false
 
 # Debian package configuration (cargo-deb)
 [package.metadata.deb]
