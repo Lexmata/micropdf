@@ -1,2 +1,0 @@
-//! PDF page implementation
-
