@@ -80,7 +80,7 @@ func main() {
     scale := nanopdf.MatrixScale(2, 2)
     rotate := nanopdf.MatrixRotate(45)
     combined := scale.Concat(rotate)
-    
+
     // Quad (for text highlighting, etc.)
     quad := nanopdf.QuadFromRect(rect)
     transformedQuad := quad.Transform(combined)
