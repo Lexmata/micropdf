@@ -231,6 +231,6 @@ Contributions are welcome! Please read the coding standards in [.cursor/rules/](
 
 <div align="center">
 
-Made with ❤️ by [Lexmata](https://lexmata.com)
+Made with ❤️ by [Lexmata](https://lexmata.ai)
 
 </div>

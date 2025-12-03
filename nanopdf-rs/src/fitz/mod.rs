@@ -7,6 +7,8 @@ pub mod error;
 pub mod geometry;
 pub mod buffer;
 pub mod stream;
+pub mod output;
+pub mod link;
 pub mod colorspace;
 pub mod pixmap;
 pub mod font;

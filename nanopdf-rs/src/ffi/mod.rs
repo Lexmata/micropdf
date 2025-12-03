@@ -7,6 +7,7 @@ pub mod geometry;
 pub mod context;
 pub mod buffer;
 pub mod stream;
+pub mod output;
 pub mod colorspace;
 pub mod pixmap;
 pub mod document;
