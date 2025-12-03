@@ -1,0 +1,21 @@
+# Dockerfile for building NanoPDF as a Debian package (.deb)
+FROM rust:1.87-bookworm AS builder
+
+RUN apt-get update && apt-get install -y \
+    build-essential pkg-config libssl-dev dpkg-dev fakeroot \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN cargo install cargo-deb
+
+WORKDIR /build
+COPY . .
+
+RUN cargo build --release
+RUN cargo deb --no-build
+
+FROM debian:bookworm-slim
+WORKDIR /output
+COPY --from=builder /build/target/debian/*.deb ./
+VOLUME /dist
+CMD cp /output/*.deb /dist/ && echo "Debian package built:" && ls -la /dist/*.deb
+
