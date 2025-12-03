@@ -32,11 +32,11 @@ NanoPDF is a **drop-in replacement for MuPDF** that runs **faster** through mode
 
 This monorepo contains:
 
-| Package | Description | Status |
-|---------|-------------|--------|
-| [`nanopdf-rs`](./nanopdf-rs) | Core Rust library | [![Crates.io](https://img.shields.io/crates/v/nanopdf.svg)](https://crates.io/crates/nanopdf) |
-| [`nanopdf-js`](./nanopdf-js) | Node.js bindings | [![npm](https://img.shields.io/npm/v/nanopdf.svg)](https://www.npmjs.com/package/nanopdf) |
-| [`go-nanopdf`](./go-nanopdf) | Go bindings | [![Go Reference](https://pkg.go.dev/badge/github.com/lexmata/nanopdf/go-nanopdf.svg)](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf) |
+| Package | Description | License | Status |
+|---------|-------------|---------|--------|
+| [`nanopdf-rs`](./nanopdf-rs) | Core Rust library | MIT/Apache-2.0 | [![Crates.io](https://img.shields.io/crates/v/nanopdf.svg)](https://crates.io/crates/nanopdf) |
+| [`nanopdf-js`](./nanopdf-js) | Node.js bindings | Apache-2.0 | [![npm](https://img.shields.io/npm/v/nanopdf.svg)](https://www.npmjs.com/package/nanopdf) |
+| [`go-nanopdf`](./go-nanopdf) | Go bindings | Apache-2.0 | [![Go Reference](https://pkg.go.dev/badge/github.com/lexmata/nanopdf/go-nanopdf.svg)](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf) |
 
 ## 🚀 Quick Start
 
@@ -101,7 +101,9 @@ See [COMPATIBILITY.md](./COMPATIBILITY.md) for detailed MuPDF API coverage.
 
 ## 📄 License
 
-Dual-licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE).
+- **nanopdf-rs** (Rust): Dual-licensed under [MIT](nanopdf-rs/LICENSE-MIT) or [Apache 2.0](nanopdf-rs/LICENSE-APACHE)
+- **nanopdf-js** (Node.js): [Apache 2.0](nanopdf-js/LICENSE)
+- **go-nanopdf** (Go): [Apache 2.0](go-nanopdf/LICENSE)
 
 ---
 
