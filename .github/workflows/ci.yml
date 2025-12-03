@@ -36,7 +36,7 @@ jobs:
             go:
               - 'go-nanopdf/**'
             docker:
-              - 'docker/**'
+              - 'nanopdf-rs/docker/**'
 
   # Rust library tests
   test-rust:
@@ -270,8 +270,8 @@ jobs:
       - name: Build Debian image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: docker/Dockerfile.debian
+          context: ./nanopdf-rs
+          file: nanopdf-rs/docker/Dockerfile.deb
           push: false
           tags: nanopdf:debian-test
           cache-from: type=gha
@@ -280,8 +280,8 @@ jobs:
       - name: Build RPM image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: docker/Dockerfile.rpm
+          context: ./nanopdf-rs
+          file: nanopdf-rs/docker/Dockerfile.rpm
           push: false
           tags: nanopdf:rpm-test
           cache-from: type=gha
