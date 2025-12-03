@@ -141,6 +141,239 @@ pub fn read_file(path: &str) -> Buffer {
 }
 ```
 
+### Avoid `unwrap()` and `expect()` in Production Code
+
+**NEVER use `unwrap()` or `expect()` in library code or any production code path.** These functions panic and crash the program - unacceptable for a library.
+
+#### When `unwrap()` is NEVER acceptable:
+
+```rust
+// ❌ ABSOLUTELY WRONG: Never unwrap in library functions
+pub fn parse_pdf(data: &[u8]) -> Document {
+    let header = std::str::from_utf8(data).unwrap();  // CRASHES on invalid UTF-8!
+    let obj = parse_object(data).unwrap();            // CRASHES on parse error!
+    Document { header, obj }
+}
+
+// ❌ WRONG: Never unwrap Result types from I/O or parsing
+pub fn load_file(path: &Path) -> Buffer {
+    let data = std::fs::read(path).unwrap();  // CRASHES if file doesn't exist!
+    Buffer::from_data(data)
+}
+
+// ❌ WRONG: Never unwrap Option types that could be None
+pub fn get_first_item(items: &[Item]) -> Item {
+    items.first().unwrap().clone()  // CRASHES on empty slice!
+}
+```
+
+#### Correct alternatives:
+
+```rust
+// ✅ CORRECT: Return Result for fallible operations
+pub fn parse_pdf(data: &[u8]) -> Result<Document> {
+    let header = std::str::from_utf8(data)
+        .map_err(|e| Error::format(format!("Invalid UTF-8: {}", e)))?;
+    let obj = parse_object(data)?;
+    Ok(Document { header: header.to_string(), obj })
+}
+
+// ✅ CORRECT: Propagate I/O errors
+pub fn load_file(path: &Path) -> Result<Buffer> {
+    let data = std::fs::read(path)
+        .map_err(Error::System)?;
+    Ok(Buffer::from_data(data))
+}
+
+// ✅ CORRECT: Return Option for nullable results
+pub fn get_first_item(items: &[Item]) -> Option<Item> {
+    items.first().cloned()
+}
+
+// ✅ CORRECT: Or return Result with a descriptive error
+pub fn get_first_item(items: &[Item]) -> Result<Item> {
+    items.first()
+        .cloned()
+        .ok_or_else(|| Error::argument("Empty item list"))
+}
+```
+
+### When `unwrap()` IS acceptable
+
+The ONLY acceptable uses of `unwrap()` or `expect()`:
+
+#### 1. In test code
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valid_data() {
+        // ✅ OK: Tests can unwrap for clarity
+        let result = parse_data(b"valid").unwrap();
+        assert_eq!(result.value, 42);
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid data")]
+    fn test_parse_invalid_data() {
+        // ✅ OK: Explicitly testing panic behavior
+        parse_data(b"invalid").unwrap();
+    }
+}
+```
+
+#### 2. When you have mathematically proven it cannot fail
+
+```rust
+// ✅ OK: Known-valid UTF-8 constant
+const HEADER: &str = std::str::from_utf8(b"PDF-1.7")
+    .expect("hardcoded UTF-8 is valid");
+
+// ✅ OK: Mutex poisoning is not recoverable anyway
+let guard = GLOBAL_STATE.lock()
+    .expect("mutex poisoned - cannot recover");
+
+// ✅ OK: Channel send only fails if receiver dropped (unrecoverable)
+tx.send(data).expect("receiver dropped");
+```
+
+#### 3. In example/documentation code (with clear comment)
+
+```rust
+/// # Examples
+///
+/// ```
+/// use nanopdf::Buffer;
+///
+/// // Note: unwrap() used for example brevity - use proper error handling in production
+/// let buffer = Buffer::from_base64("SGVsbG8=").unwrap();
+/// ```
+pub fn from_base64(data: &str) -> Result<Buffer> {
+    // Implementation uses proper error handling
+}
+```
+
+### Handling Different Error Types
+
+#### Option<T> to Result<T, E>
+
+```rust
+// ✅ CORRECT: Convert Option to Result with context
+pub fn get_value(&self, key: &str) -> Result<i64> {
+    self.map.get(key)
+        .copied()
+        .ok_or_else(|| Error::argument(format!("Key '{}' not found", key)))
+}
+
+// ❌ WRONG: Unwrapping Option
+pub fn get_value(&self, key: &str) -> i64 {
+    *self.map.get(key).unwrap()  // Panic!
+}
+```
+
+#### Providing Default Values
+
+```rust
+// ✅ CORRECT: Use unwrap_or() or unwrap_or_else() when default is acceptable
+pub fn get_timeout(&self) -> Duration {
+    self.timeout.unwrap_or(Duration::from_secs(30))
+}
+
+// ✅ CORRECT: Or make the return type Option<T>
+pub fn get_timeout(&self) -> Option<Duration> {
+    self.timeout
+}
+
+// ❌ WRONG: Unwrapping when None is possible
+pub fn get_timeout(&self) -> Duration {
+    self.timeout.unwrap()  // Panic if no timeout set!
+}
+```
+
+#### Fallible Constructors
+
+```rust
+// ✅ CORRECT: Fallible constructor returns Result
+impl Pixmap {
+    pub fn new(colorspace: Option<Colorspace>, w: i32, h: i32, alpha: bool) -> Result<Self> {
+        if w <= 0 || h <= 0 {
+            return Err(Error::argument("Invalid dimensions"));
+        }
+        if colorspace.is_none() && !alpha {
+            return Err(Error::argument("Pixmap must have colorspace or alpha"));
+        }
+        // ... rest of implementation
+        Ok(Self { /* ... */ })
+    }
+}
+
+// ❌ WRONG: Panicking in constructor
+impl Pixmap {
+    pub fn new(colorspace: Option<Colorspace>, w: i32, h: i32, alpha: bool) -> Self {
+        assert!(w > 0 && h > 0, "Invalid dimensions");  // Don't panic!
+        Self { /* ... */ }
+    }
+}
+```
+
+#### Lock Guards and Mutex
+
+```rust
+// ✅ CORRECT: Handle lock errors gracefully when possible
+pub fn get_value(&self, handle: u64) -> Option<T> {
+    self.store.lock()
+        .ok()?  // Return None if lock is poisoned
+        .get(&handle)
+        .cloned()
+}
+
+// ⚠️ ACCEPTABLE: For global state where poisoning is unrecoverable
+pub fn get_global_value(handle: u64) -> Option<T> {
+    GLOBAL_STORE.lock()
+        .expect("global store poisoned - unrecoverable")
+        .get(&handle)
+        .cloned()
+}
+```
+
+### Error Context with `map_err()`
+
+Always provide context when converting errors:
+
+```rust
+// ✅ CORRECT: Add context to errors
+pub fn parse_integer(s: &str) -> Result<i64> {
+    s.parse()
+        .map_err(|e| Error::format(format!("Failed to parse '{}' as integer: {}", s, e)))
+}
+
+// ❌ WRONG: Generic error with no context
+pub fn parse_integer(s: &str) -> Result<i64> {
+    s.parse()
+        .map_err(|_| Error::format("Parse error".into()))
+}
+
+// ❌ EVEN WORSE: Unwrapping
+pub fn parse_integer(s: &str) -> i64 {
+    s.parse().unwrap()
+}
+```
+
+### Summary: Error Handling Checklist
+
+- [ ] **NEVER** use `unwrap()` in library code
+- [ ] **NEVER** use `expect()` in library code (except for provably safe cases)
+- [ ] **ALWAYS** return `Result<T, E>` for fallible operations
+- [ ] **ALWAYS** use `?` operator for error propagation
+- [ ] **ALWAYS** provide context with `map_err()` when converting errors
+- [ ] Use `unwrap_or()` / `unwrap_or_default()` / `unwrap_or_else()` for defaults
+- [ ] Use `.ok()` to convert `Result<T, E>` to `Option<T>` when error doesn't matter
+- [ ] Use `.ok_or()` / `.ok_or_else()` to convert `Option<T>` to `Result<T, E>`
+- [ ] Only unwrap in: tests, provably safe cases, or examples (with comments)
+
 ## Memory Management
 
 ### Ownership and Borrowing
@@ -662,10 +895,15 @@ pub mod parallel {
 
 - [ ] Edition 2024 syntax (`#[unsafe(no_mangle)]`)
 - [ ] No `unsafe` except at FFI boundaries
-- [ ] `Result<T, E>` for error handling
+- [ ] `Result<T, E>` for error handling (NEVER panic in library code)
+- [ ] **NEVER** use `unwrap()` or `expect()` in library code
+- [ ] **ALWAYS** use `?` operator for error propagation
 - [ ] `thiserror` for error types
 - [ ] `LazyLock` for static initialization
 - [ ] `Arc<Mutex<T>>` for shared mutable state
+- [ ] Use mature crates (don't reinvent the wheel)
+- [ ] Split files >1000 lines into focused modules
+- [ ] Tests co-located with implementation
 - [ ] Comprehensive unit tests (90% coverage target)
 - [ ] Doc comments on public API
 - [ ] `cargo fmt` and `cargo clippy` clean
