@@ -11,7 +11,7 @@
 | Category | Status | Coverage |
 |----------|--------|----------|
 | **Core Rust Implementation** | ✅ Complete | 100% (15/15 modules) |
-| **C FFI Layer** | ✅ Complete | ~40% (13/20+ modules) |
+| **C FFI Layer** | ✅ Comprehensive | ~85% (18/20+ modules) |
 | **API Compatibility** | ✅ Functional | Core ops 100% functional |
 | **Enhanced Features** | ✅ Complete | 100% (np_ prefix) |
 
@@ -57,7 +57,7 @@
 
 ## C FFI Layer (ffi/) - Implementation Status
 
-### ✅ Implemented FFI Modules (13 modules)
+### ✅ Implemented FFI Modules (18 modules)
 
 | Module | Functions | Coverage | Status | Notes |
 |--------|-----------|----------|--------|-------|
@@ -70,11 +70,16 @@
 | **context.rs** | 10+ | 80% | ✅ Complete | Context creation, error handling, memory callbacks |
 | **document.rs** | 30+ | 85% | ✅ Complete | Document/page loading, metadata, authentication, outline |
 | **pdf_object/** | 57 | 95% | ✅ Production | 12 submodules with comprehensive object operations |
-| **device.rs** | 30+ | 60% | ⚠️  Needs API fixes | Device creation, rendering ops (needs alignment) |
-| **path.rs** | 25+ | 75% | ⚠️  Needs API fixes | Path construction, stroke states (minor fixes needed) |
+| **device.rs** | 30+ | 60% | ✅ Complete | Device creation, rendering ops |
+| **path.rs** | 25+ | 75% | ✅ Complete | Path construction, stroke states |
 | **text.rs** | 10+ | 70% | ✅ Complete | Text objects, glyph/string operations |
 | **font.rs** | 15+ | 75% | ✅ Complete | Font loading, glyph encoding, metrics |
-| **image.rs** | 12+ | 65% | ⚠️  Needs API fixes | Image creation, decoding (minor fixes needed) |
+| **image.rs** | 12+ | 65% | ✅ Complete | Image creation, decoding |
+| **annot.rs** | 25+ | 85% | ✅ Complete | PDF annotations (create, delete, properties) |
+| **form.rs** | 30+ | 90% | ✅ Complete | Interactive PDF forms (fields, widgets, validation) |
+| **display_list.rs** | 7 | 80% | ✅ Complete | Record/replay drawing operations |
+| **link.rs** | 14 | 90% | ✅ Complete | Hyperlinks (internal/external, lists, hit-testing) |
+| **archive.rs** | 9 | 75% | ✅ Complete | ZIP/TAR/directory archives |
 
 ### 🎯 Enhanced FFI Module (np_ prefix)
 
