@@ -110,6 +110,7 @@ pub fn validate_color(c: f32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
 
     #[test]
     fn test_c_str_to_str() {
