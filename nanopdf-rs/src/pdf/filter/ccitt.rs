@@ -16,7 +16,7 @@ pub fn decode_ccitt_fax(data: &[u8], params: &CCITTFaxDecodeParams) -> Result<Ve
     // For Group 3 2D (k < 0), we need to implement mixed 1D/2D
 
     // Basic implementation using run-length decoding pattern
-    let bytes_per_row = (width + 7) / 8;
+    let bytes_per_row = width.div_ceil(8);
     let estimated_rows = if height > 0 { height } else { data.len() * 8 / width.max(1) };
 
     let mut result = Vec::with_capacity(bytes_per_row * estimated_rows);
@@ -45,7 +45,7 @@ fn decode_ccitt_g4(data: &[u8], width: usize, height: usize, _params: &CCITTFaxD
     // Group 4 uses 2D coding exclusively
     // This is a simplified implementation
 
-    let bytes_per_row = (width + 7) / 8;
+    let bytes_per_row = width.div_ceil(8);
     let total_rows = if height > 0 { height } else { 1000 }; // Max rows as fallback
 
     let mut result = Vec::with_capacity(bytes_per_row * total_rows);
@@ -72,12 +72,14 @@ fn decode_ccitt_g4(data: &[u8], width: usize, height: usize, _params: &CCITTFaxD
 }
 
 /// Bit reader for CCITT decoding
+#[allow(dead_code)]
 struct BitReader<'a> {
     data: &'a [u8],
     byte_pos: usize,
     bit_pos: u8,
 }
 
+#[allow(dead_code)]
 impl<'a> BitReader<'a> {
     fn new(data: &'a [u8]) -> Self {
         Self {

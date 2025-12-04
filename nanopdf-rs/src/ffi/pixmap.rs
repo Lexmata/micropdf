@@ -417,8 +417,8 @@ pub extern "C" fn fz_convert_pixmap(
 
                     // Get source color values
                     let mut src_colors = [0u8; 4];
-                    for c in 0..src_colorants.min(4) {
-                        src_colors[c] = guard.samples.get(src_offset + c).copied().unwrap_or(0);
+                    for (c, color) in src_colors.iter_mut().enumerate().take(src_colorants.min(4)) {
+                        *color = guard.samples.get(src_offset + c).copied().unwrap_or(0);
                     }
 
                     // Convert colors (simple mapping)
@@ -629,27 +629,27 @@ pub extern "C" fn fz_scale_pixmap(
         if let Ok(guard) = p.lock() {
             let new_width = ((guard.width as f32) * xscale) as i32;
             let new_height = ((guard.height as f32) * yscale) as i32;
-            
+
             if new_width <= 0 || new_height <= 0 {
                 return 0;
             }
-            
+
             let mut scaled = Pixmap::new(guard.colorspace, new_width, new_height, guard.alpha);
-            
+
             // Simple nearest-neighbor scaling
             for y in 0..new_height {
                 for x in 0..new_width {
                     let src_x = ((x as f32) / xscale) as i32;
                     let src_y = ((y as f32) / yscale) as i32;
-                    
+
                     for c in 0..guard.n {
-                        if let Some(value) = guard.get_sample(src_x, src_y, c as i32) {
-                            scaled.set_sample(x, y, c as i32, value);
+                        if let Some(value) = guard.get_sample(src_x, src_y, c) {
+                            scaled.set_sample(x, y, c, value);
                         }
                     }
                 }
             }
-            
+
             return PIXMAPS.insert(scaled);
         }
     }

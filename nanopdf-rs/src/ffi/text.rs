@@ -291,7 +291,7 @@ pub extern "C" fn fz_text_walk(_ctx: Handle, text: Handle, callback: *const std:
                 // Walk through all items in this span
                 for item in span.items() {
                     // Call the callback for this glyph
-                    let result = cb(arg, font_handle, &trm, item.ucs as i32, item.gid as i32);
+                    let result = cb(arg, font_handle, &trm, item.ucs, item.gid);
                     if result == 0 {
                         return 0; // Callback requested termination
                     }

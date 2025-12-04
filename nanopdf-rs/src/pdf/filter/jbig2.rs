@@ -4,7 +4,7 @@ use crate::fitz::error::{Error, Result};
 use super::params::JBIG2DecodeParams;
 
 /// Decode JBIG2 compressed data
-pub fn decode_jbig2(data: &[u8], _params: Option<&JBIG2DecodeParams>) -> Result<Vec<u8>> {
+pub fn decode_jbig2(_data: &[u8], _params: Option<&JBIG2DecodeParams>) -> Result<Vec<u8>> {
     // JBIG2 is a complex format for bi-level (black & white) images
     // Full implementation would require a dedicated JBIG2 decoder
     // For now, return the data as-is or error

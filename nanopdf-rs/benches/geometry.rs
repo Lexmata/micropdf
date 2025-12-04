@@ -11,9 +11,6 @@ fn bench_point_transform(c: &mut Criterion) {
 }
 
 fn bench_point_operations(c: &mut Criterion) {
-    let p1 = Point::new(100.0, 200.0);
-    let p2 = Point::new(50.0, 75.0);
-
     let mut group = c.benchmark_group("point");
 
     group.bench_function("new", |b| {
@@ -60,7 +57,6 @@ fn bench_matrix_operations(c: &mut Criterion) {
 fn bench_rect_operations(c: &mut Criterion) {
     let r1 = Rect::new(0.0, 0.0, 100.0, 100.0);
     let r2 = Rect::new(50.0, 50.0, 150.0, 150.0);
-    let point = Point::new(75.0, 75.0);
 
     let mut group = c.benchmark_group("rect");
 

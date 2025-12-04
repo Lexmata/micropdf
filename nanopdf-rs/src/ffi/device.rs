@@ -176,8 +176,8 @@ pub extern "C" fn fz_fill_path(
                         let n = cs.n() as usize;
                         let mut color_vec = vec![0.0; n];
                         unsafe {
-                            for i in 0..n {
-                                color_vec[i] = *color.add(i);
+                            for (i, item) in color_vec.iter_mut().enumerate() {
+                                *item = *color.add(i);
                             }
                         }
 
@@ -234,8 +234,8 @@ pub extern "C" fn fz_stroke_path(
                                 let n = cs.n() as usize;
                                 let mut color_vec = vec![0.0; n];
                                 unsafe {
-                                    for i in 0..n {
-                                        color_vec[i] = *color.add(i);
+                                    for (i, item) in color_vec.iter_mut().enumerate() {
+                                        *item = *color.add(i);
                                     }
                                 }
 
@@ -353,8 +353,8 @@ pub extern "C" fn fz_fill_text(
                         let n = cs.n() as usize;
                         let mut color_vec = vec![0.0; n];
                         unsafe {
-                            for i in 0..n {
-                                color_vec[i] = *color.add(i);
+                            for (i, item) in color_vec.iter_mut().enumerate() {
+                                *item = *color.add(i);
                             }
                         }
 
@@ -402,8 +402,8 @@ pub extern "C" fn fz_stroke_text(
                                 let n = cs.n() as usize;
                                 let mut color_vec = vec![0.0; n];
                                 unsafe {
-                                    for i in 0..n {
-                                        color_vec[i] = *color.add(i);
+                                    for (i, item) in color_vec.iter_mut().enumerate() {
+                                        *item = *color.add(i);
                                     }
                                 }
 
@@ -575,8 +575,8 @@ pub extern "C" fn fz_fill_image_mask(
                         let n = cs.n() as usize;
                         let mut color_vec = vec![0.0; n];
                         unsafe {
-                            for i in 0..n {
-                                color_vec[i] = *color.add(i);
+                            for (i, item) in color_vec.iter_mut().enumerate() {
+                                *item = *color.add(i);
                             }
                         }
 
@@ -659,8 +659,8 @@ pub extern "C" fn fz_begin_mask(
                 let n = cs.as_ref().unwrap().n() as usize;
                 let mut vec = vec![0.0; n];
                 unsafe {
-                    for i in 0..n {
-                        vec[i] = *color.add(i);
+                    for (i, item) in vec.iter_mut().enumerate() {
+                        *item = *color.add(i);
                     }
                 }
                 Some(vec)

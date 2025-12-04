@@ -7,7 +7,7 @@ use std::os::raw::c_char;
 use std::sync::LazyLock;
 
 use super::{Handle, HandleStore};
-use crate::fitz::link::{Link, LinkDest, LinkDestType, LinkList, Location};
+use crate::fitz::link::{Link, LinkList};
 use crate::fitz::geometry::Rect;
 
 /// Global storage for links

@@ -2,7 +2,7 @@
 //!
 //! This module provides safe abstractions over common unsafe FFI patterns.
 
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::os::raw::c_char;
 
 /// Safely convert a C string pointer to a Rust &str
@@ -45,6 +45,7 @@ pub fn str_to_c_buffer(src: &str, dst: *mut c_char, size: i32) -> i32 {
 /// Safely read a C string buffer
 ///
 /// Returns None if the pointer is null or invalid
+#[allow(dead_code)]
 pub fn read_c_string(ptr: *const c_char) -> Option<String> {
     c_str_to_str(ptr).map(|s| s.to_string())
 }
@@ -68,6 +69,7 @@ pub fn copy_from_ptr<T: Copy>(ptr: *const T, len: usize) -> Option<Vec<T>> {
 /// Safely write data from a slice to a pointer
 ///
 /// Returns false if pointer is null
+#[allow(dead_code)]
 pub fn copy_to_ptr<T: Copy>(src: &[T], dst: *mut T) -> bool {
     if dst.is_null() || src.is_empty() {
         return false;
@@ -94,13 +96,15 @@ pub fn write_ptr<T>(value: T, dst: *mut T) -> bool {
 }
 
 /// Validate color components are in range [0.0, 1.0]
+#[allow(dead_code)]
 pub fn validate_color_components(components: &[f32]) -> bool {
-    components.iter().all(|&c| c >= 0.0 && c <= 1.0)
+    components.iter().all(|&c| (0.0..=1.0).contains(&c))
 }
 
 /// Validate a single color component is in range [0.0, 1.0]
+#[allow(dead_code)]
 pub fn validate_color(c: f32) -> bool {
-    c >= 0.0 && c <= 1.0
+    (0.0..=1.0).contains(&c)
 }
 
 #[cfg(test)]

@@ -93,19 +93,16 @@ pub struct OutlineItem {
 }
 
 /// Document outline (table of contents)
+#[derive(Default)]
 pub struct Outline {
     pub items: Vec<OutlineItem>,
 }
 
-impl Default for Outline {
-    fn default() -> Self {
-        Self { items: Vec::new() }
-    }
-}
 
 /// Internal document state
 pub struct Document {
     // PDF document data - will be expanded with actual PDF parsing
+    #[allow(dead_code)]
     data: Vec<u8>,
     page_count: i32,
     needs_password: bool,
@@ -425,7 +422,7 @@ pub extern "C" fn fz_run_page(
     }
 
     // Get page bounds for rendering
-    let bounds = if let Some(p) = PAGES.get(page) {
+    let _bounds = if let Some(p) = PAGES.get(page) {
         if let Ok(guard) = p.lock() {
             super::geometry::fz_rect {
                 x0: guard.bounds[0],
@@ -441,13 +438,13 @@ pub extern "C" fn fz_run_page(
     };
 
     // Get device for rendering
-    let dev_arc = match super::device::DEVICES.get(device) {
+    let _dev_arc = match super::device::DEVICES.get(device) {
         Some(d) => d,
         None => return,
     };
 
     // Apply transform to page bounds to get rendering area
-    let matrix = crate::fitz::geometry::Matrix {
+    let _matrix = crate::fitz::geometry::Matrix {
         a: transform.a,
         b: transform.b,
         c: transform.c,
@@ -525,7 +522,7 @@ pub extern "C" fn fz_run_page_annots(
     }
 
     // Convert transform to Matrix
-    let matrix = crate::fitz::geometry::Matrix {
+    let _matrix = crate::fitz::geometry::Matrix {
         a: transform.a,
         b: transform.b,
         c: transform.c,
@@ -537,7 +534,7 @@ pub extern "C" fn fz_run_page_annots(
     // Render each annotation
     for annot_handle in annot_handles {
         if let Some(annot_arc) = super::annot::ANNOTATIONS.get(annot_handle) {
-            if let Ok(annot_guard) = annot_arc.lock() {
+            if let Ok(_annot_guard) = annot_arc.lock() {
                 // For each annotation, we would:
                 // 1. Get annotation rectangle and transform it
                 // 2. Render annotation appearance (AP stream) if available
@@ -597,10 +594,10 @@ pub extern "C" fn fz_resolve_link(
     };
 
     // Parse page number from URI (e.g., "#page=5" or just "5")
-    let page_num = if uri_str.starts_with("#page=") {
-        uri_str[6..].parse::<i32>().ok()
-    } else if uri_str.starts_with('#') {
-        uri_str[1..].parse::<i32>().ok()
+    let page_num = if let Some(num_str) = uri_str.strip_prefix("#page=") {
+        num_str.parse::<i32>().ok()
+    } else if let Some(num_str) = uri_str.strip_prefix('#') {
+        num_str.parse::<i32>().ok()
     } else {
         uri_str.parse::<i32>().ok()
     };
@@ -699,14 +696,14 @@ pub extern "C" fn fz_is_document_reflowable(_ctx: Handle, doc: Handle) -> i32 {
 pub extern "C" fn fz_layout_document(
     _ctx: Handle,
     doc: Handle,
-    w: c_float,
-    h: c_float,
-    em: c_float,
+    _w: c_float,
+    _h: c_float,
+    _em: c_float,
 ) {
     // This function is only relevant for reflowable documents (EPUB, etc.)
     // PDF documents are fixed-layout and ignore layout calls
     if let Some(d) = DOCUMENTS.get(doc) {
-        if let Ok(mut guard) = d.lock() {
+        if let Ok(_guard) = d.lock() {
             // For reflowable formats, this would:
             // 1. Reflow text to fit width 'w' and height 'h'
             // 2. Use 'em' as the base font size

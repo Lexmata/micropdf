@@ -178,7 +178,7 @@ pub extern "C" fn fz_colorspace_is_lab(_ctx: super::Handle, cs: ColorspaceHandle
 /// Check if colorspace is device colorspace
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_colorspace_is_device(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
-    i32::from(cs >= FZ_COLORSPACE_GRAY && cs <= FZ_COLORSPACE_LAB)
+    i32::from((FZ_COLORSPACE_GRAY..=FZ_COLORSPACE_LAB).contains(&cs))
 }
 
 /// Check if colorspace is indexed
@@ -579,9 +579,7 @@ pub extern "C" fn fz_colorspace_name_string(_ctx: super::Handle, cs: ColorspaceH
 pub extern "C" fn fz_colorspace_is_valid(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
     if cs == 0 {
         0
-    } else if cs <= 5 {
-        1
-    } else if cs >= CUSTOM_CS_OFFSET {
+    } else if cs <= 5 || cs >= CUSTOM_CS_OFFSET {
         1
     } else {
         0

@@ -11,8 +11,8 @@ pub fn apply_predictor_decode(data: &[u8], params: &FlateDecodeParams) -> Result
     let columns = params.columns.max(1) as usize;
 
     // Calculate bytes per pixel and bytes per row
-    let bytes_per_pixel = (colors * bits + 7) / 8;
-    let bytes_per_row = (colors * bits * columns + 7) / 8;
+    let bytes_per_pixel = (colors * bits).div_ceil(8);
+    let bytes_per_row = (colors * bits * columns).div_ceil(8);
 
     match predictor {
         1 => Ok(data.to_vec()), // No predictor

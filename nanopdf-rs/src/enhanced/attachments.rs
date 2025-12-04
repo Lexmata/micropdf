@@ -187,7 +187,7 @@ pub fn extract_attachment(pdf_path: &str, filename: &str) -> Result<Vec<u8>> {
 pub fn extract_attachment_to_file(pdf_path: &str, filename: &str, output_path: &str) -> Result<()> {
     let data = extract_attachment(pdf_path, filename)?;
     fs::write(output_path, data)
-        .map_err(|e| EnhancedError::Io(e))?;
+        .map_err(EnhancedError::Io)?;
     Ok(())
 }
 
@@ -195,7 +195,7 @@ pub fn extract_attachment_to_file(pdf_path: &str, filename: &str, output_path: &
 pub fn add_attachment_from_file(pdf_path: &str, file_path: &str, description: Option<String>) -> Result<()> {
     // Read file
     let data = fs::read(file_path)
-        .map_err(|e| EnhancedError::Io(e))?;
+        .map_err(EnhancedError::Io)?;
 
     // Get filename from path
     let filename = Path::new(file_path)

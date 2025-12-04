@@ -423,7 +423,7 @@ impl DrawingContext {
     /// Create an ellipse path using Bezier curves
     fn create_ellipse_path(&self, cx: f32, cy: f32, rx: f32, ry: f32) -> Path {
         // Magic constant for circular Bezier approximation
-        const KAPPA: f32 = 0.5522847498;
+        const KAPPA: f32 = 0.552_284_8;
 
         let kx = rx * KAPPA;
         let ky = ry * KAPPA;
@@ -468,7 +468,7 @@ impl DrawingContext {
     /// Create a rounded rectangle path
     fn create_rounded_rect_path(&self, x: f32, y: f32, width: f32, height: f32, radius: f32) -> Path {
         let r = radius.min(width / 2.0).min(height / 2.0);
-        const KAPPA: f32 = 0.5522847498;
+        const KAPPA: f32 = 0.552_284_8;
         let k = r * KAPPA;
 
         let mut path = Path::new();

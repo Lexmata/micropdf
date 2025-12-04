@@ -94,7 +94,7 @@ pub fn update_metadata(pdf_path: &str, metadata: &Metadata) -> Result<()> {
 
     // Read existing PDF
     let _pdf_data = fs::read(pdf_path)
-        .map_err(|e| EnhancedError::Io(e))?;
+        .map_err(EnhancedError::Io)?;
 
     // Full implementation would:
     // 1. Parse PDF structure

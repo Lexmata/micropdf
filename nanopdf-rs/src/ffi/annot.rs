@@ -371,7 +371,7 @@ pub extern "C" fn pdf_annot_interior_color(_ctx: Handle, annot: Handle, n: *mut 
 /// Caller must ensure color array points to valid memory with n floats
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_set_annot_interior_color(_ctx: Handle, annot: Handle, n: i32, color: *const f32) {
-    if color.is_null() || n < 0 || n > 4 {
+    if color.is_null() || !(0..=4).contains(&n) {
         return;
     }
 
