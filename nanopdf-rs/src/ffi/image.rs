@@ -4,8 +4,7 @@
 
 use super::{Handle, HandleStore, PIXMAPS, BUFFERS};
 use crate::fitz::image::Image;
-use crate::fitz::pixmap::Pixmap;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::LazyLock;
 
 /// Image storage
 pub static IMAGES: LazyLock<HandleStore<Image>> =
@@ -52,14 +51,14 @@ pub extern "C" fn fz_new_image_from_data(
     _ctx: Handle,
     w: i32,
     h: i32,
-    bpc: i32,
-    colorspace: Handle,
-    xres: i32,
-    yres: i32,
-    interpolate: i32,
-    imagemask: i32,
-    decode: *const f32,
-    mask: *const u8,
+    _bpc: i32,
+    _colorspace: Handle,
+    _xres: i32,
+    _yres: i32,
+    _interpolate: i32,
+    _imagemask: i32,
+    _decode: *const f32,
+    _mask: *const u8,
     data: *const u8,
     len: i32,
 ) -> Handle {
@@ -158,8 +157,8 @@ pub extern "C" fn fz_image_is_mask(_ctx: Handle, image: Handle) -> i32 {
 pub extern "C" fn fz_get_pixmap_from_image(
     _ctx: Handle,
     image: Handle,
-    subarea: *const super::geometry::fz_irect,
-    ctm: *mut super::geometry::fz_matrix,
+    _subarea: *const super::geometry::fz_irect,
+    _ctm: *mut super::geometry::fz_matrix,
     w: *mut i32,
     h: *mut i32,
 ) -> Handle {

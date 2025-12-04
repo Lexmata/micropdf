@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-**Date**: December 4, 2025  
-**pdfcpu Version**: Latest (v0.8+)  
-**NanoPDF Version**: 0.1.0  
+**Date**: December 4, 2025
+**pdfcpu Version**: Latest (v0.8+)
+**NanoPDF Version**: 0.1.0
 **Purpose**: Identify unique pdfcpu features not in pypdf/MuPDF/FPDF for potential NanoPDF extensions
 
 This document identifies features present in the **pdfcpu** Go library that are **not available** (or not well-implemented) in pypdf, MuPDF, or FPDF. pdfcpu brings unique value through:
@@ -37,8 +37,8 @@ This document identifies features present in the **pdfcpu** Go library that are 
 
 ### 1. Page Box Management (Crop/Trim/Bleed/Art/Media)
 
-**Status**: ❌ Not in pypdf, ⚠️ Partial in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Full control over all 5 PDF page boxes  
+**Status**: ❌ Not in pypdf, ⚠️ Partial in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Full control over all 5 PDF page boxes
 **Value**: Essential for professional print production
 
 #### Background: PDF Page Boxes
@@ -121,8 +121,8 @@ np_page_box_add_bleed(page: Handle, bleed: f32)  // Expand TrimBox
 
 ### 2. N-Up & Grid Page Layouts
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Professional page imposition with grids  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Professional page imposition with grids
 **Value**: Critical for booklet printing, handouts, proofing
 
 #### N-Up Layout
@@ -219,8 +219,8 @@ np_nup_with_booklet_order(doc: Handle, options: NUpOptions) -> Handle
 
 ### 3. PDF Validation & Repair
 
-**Status**: ⚠️ Basic in MuPDF, ❌ Not comprehensive in pypdf/FPDF  
-**pdfcpu Feature**: Industry-grade validation and automatic repair  
+**Status**: ⚠️ Basic in MuPDF, ❌ Not comprehensive in pypdf/FPDF
+**pdfcpu Feature**: Industry-grade validation and automatic repair
 **Value**: Production reliability, PDF/A compliance
 
 #### Validation Capabilities:
@@ -318,8 +318,8 @@ np_check_structure(doc: Handle) -> StructureReport
 
 ### 4. Booklet Creation
 
-**Status**: ❌ Not in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Professional booklet imposition  
+**Status**: ❌ Not in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Professional booklet imposition
 **Value**: Essential for print shops, self-publishing
 
 #### Booklet Imposition
@@ -397,8 +397,8 @@ np_booklet_preview_layout(options: BookletOptions) -> PreviewData
 
 ### 5. Poster & Tiling
 
-**Status**: ❌ Not in pypdf/MuPDF/FPDF  
-**pdfcpu Feature**: Split pages into tiles for large format printing  
+**Status**: ❌ Not in pypdf/MuPDF/FPDF
+**pdfcpu Feature**: Split pages into tiles for large format printing
 **Value**: Large format printing, wall posters
 
 #### Poster/Tiling Operation:
@@ -474,8 +474,8 @@ np_poster_generate_assembly_guide(poster: Handle) -> Handle
 
 ### 6. Form Data CSV/JSON Import/Export
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Batch form filling from structured data  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Batch form filling from structured data
 **Value**: Data integration, mail merge for forms
 
 #### Form Operations:
@@ -565,8 +565,8 @@ np_form_lock(doc: Handle) -> Handle  // Make read-only
 
 ### 7. Page Resize & Scaling
 
-**Status**: ⚠️ Basic in pypdf, ⚠️ Basic in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Flexible page dimension adjustment  
+**Status**: ⚠️ Basic in pypdf, ⚠️ Basic in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Flexible page dimension adjustment
 **Value**: Format conversion, print preparation
 
 #### Resize Operations:
@@ -635,8 +635,8 @@ np_document_normalize_sizes(doc: Handle, target_size: PageSize) -> Handle
 
 ### 8. Multi-Page Stamps & Advanced Watermarks
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ⚠️ Basic in FPDF  
-**pdfcpu Feature**: Complex stamping with multiple pages  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ⚠️ Basic in FPDF
+**pdfcpu Feature**: Complex stamping with multiple pages
 **Value**: Professional branding, security marking
 
 #### Advanced Stamping:
@@ -734,8 +734,8 @@ np_stamp_parse_variables(text: &str, page: u32, total: u32, date: &str) -> Strin
 
 ### 9. PDF Collections/Portfolios
 
-**Status**: ❌ Not in pypdf/MuPDF/FPDF  
-**pdfcpu Feature**: Multi-file PDF containers  
+**Status**: ❌ Not in pypdf/MuPDF/FPDF
+**pdfcpu Feature**: Multi-file PDF containers
 **Value**: Document packaging, deliverables
 
 #### Collection Operations:
@@ -802,8 +802,8 @@ np_collection_set_layout(collection: Handle, layout: CollectionLayout) -> Result
 
 ### 10. Keyword & Metadata Search
 
-**Status**: ⚠️ Basic in pypdf/MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Advanced search and filter  
+**Status**: ⚠️ Basic in pypdf/MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Advanced search and filter
 **Value**: Document organization, batch processing
 
 #### Search Operations:
@@ -828,8 +828,8 @@ pdfcpu extract -search "Chapter" input.pdf output.pdf
 
 ### 11. Page Labels & Numbering
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF  
-**pdfcpu Feature**: Custom page numbering schemes  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF, ❌ Not in FPDF
+**pdfcpu Feature**: Custom page numbering schemes
 **Value**: Professional document navigation
 
 #### Page Label Styles:
@@ -855,8 +855,8 @@ pdfcpu pagelabels add -style "decimal" -range "11-" -prefix "Chapter 1-" input.p
 
 ### 12. PDF/A Conversion
 
-**Status**: ❌ Not comprehensively in pypdf/MuPDF/FPDF  
-**pdfcpu Feature**: Convert to PDF/A for archival  
+**Status**: ❌ Not comprehensively in pypdf/MuPDF/FPDF
+**pdfcpu Feature**: Convert to PDF/A for archival
 **Value**: Long-term document preservation
 
 ```bash
@@ -877,7 +877,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ## Implementation Roadmap
 
 ### Phase 1: Print Production Essentials (Q1 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 4-5 weeks
 
 - [x] Page box management (Crop, Trim, Bleed, Art, Media)
@@ -893,7 +893,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ---
 
 ### Phase 2: N-Up & Grid Layouts (Q2 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 3-4 weeks
 
 - [x] N-Up page layout engine
@@ -910,7 +910,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ---
 
 ### Phase 3: Validation & Repair (Q2 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 5-6 weeks
 
 - [x] PDF structure validation
@@ -927,7 +927,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ---
 
 ### Phase 4: Booklet & Poster (Q2-Q3 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 3-4 weeks
 
 - [x] Booklet imposition algorithms
@@ -943,7 +943,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ---
 
 ### Phase 5: Form Data Integration (Q3 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 2-3 weeks
 
 - [x] JSON form data parser
@@ -960,7 +960,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 ---
 
 ### Phase 6: Advanced Features (Q3-Q4 2026)
-**Priority**: 📊 MEDIUM  
+**Priority**: 📊 MEDIUM
 **Estimated Effort**: 3-4 weeks
 
 - [x] Page resize engine
@@ -1100,7 +1100,7 @@ By implementing pdfcpu features, NanoPDF will:
 2. ✅ **Professional Grade**: Industry-standard validation and repair
 3. ✅ **Batch Processing King**: CSV/JSON form filling beats all competitors
 4. ✅ **Complete Toolchain**: Read + Edit + Generate + Prepare for Print
-5. ✅ **Unique Positioning**: 
+5. ✅ **Unique Positioning**:
    - pypdf: Good editing, weak production tools
    - MuPDF: Great reading, no production tools
    - pdfcpu: Great production tools, Go-only
@@ -1121,9 +1121,9 @@ The **pdfcpu feature set** represents a massive opportunity in the **professiona
 
 ---
 
-**Status**: 📋 Feature Planning  
-**Next Steps**: Review priorities, validate market need, begin Phase 1 implementation  
-**Estimated Total Effort**: 20-26 weeks for complete implementation  
-**Target Release**: Q4 2026 (all phases)  
+**Status**: 📋 Feature Planning
+**Next Steps**: Review priorities, validate market need, begin Phase 1 implementation
+**Estimated Total Effort**: 20-26 weeks for complete implementation
+**Target Release**: Q4 2026 (all phases)
 **Market Impact**: **HIGH** - Professional print production is underserved
 

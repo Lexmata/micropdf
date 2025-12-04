@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-**Date**: December 4, 2025  
-**FPDF2 Version**: 2.x (latest)  
-**NanoPDF Version**: 0.1.0  
+**Date**: December 4, 2025
+**FPDF2 Version**: 2.x (latest)
+**NanoPDF Version**: 0.1.0
 **Purpose**: Identify unique FPDF features not in pypdf/MuPDF for potential NanoPDF extensions
 
 This document identifies features present in the FPDF/FPDF2 library that are **not available** in pypdf or MuPDF. These represent valuable additions that could differentiate NanoPDF as a comprehensive PDF solution combining the best of all worlds:
@@ -35,8 +35,8 @@ This document identifies features present in the FPDF/FPDF2 library that are **n
 
 ### 1. Document Flow Layout System
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Automatic content flow with position tracking  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Automatic content flow with position tracking
 **Value**: Essential for report generation
 
 #### Key Capabilities:
@@ -84,8 +84,8 @@ pdf.ln(h)  # Line break with height
 
 ### 2. Cell-Based Layout System
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Structured cell-based content placement  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Structured cell-based content placement
 **Value**: Critical for forms, tables, structured documents
 
 #### Key Capabilities:
@@ -152,8 +152,8 @@ pdf.set_text_color(r, g, b)           # Text color
 
 ### 3. Table Generation System
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF  
-**FPDF Feature**: Rich table creation with auto-formatting  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF
+**FPDF Feature**: Rich table creation with auto-formatting
 **Value**: Essential for reports, invoices, data display
 
 #### Key Capabilities:
@@ -224,8 +224,8 @@ pdf.table(
 
 ### 4. HTML to PDF Rendering
 
-**Status**: ⚠️ Limited in MuPDF, ❌ Not in pypdf  
-**FPDF Feature**: Convert HTML to PDF with CSS support  
+**Status**: ⚠️ Limited in MuPDF, ❌ Not in pypdf
+**FPDF Feature**: Convert HTML to PDF with CSS support
 **Value**: Web report generation, email templates
 
 #### Key Capabilities:
@@ -277,8 +277,8 @@ pdf.write_html("""
 
 ### 5. Template System
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Visual template designer and template fills  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Visual template designer and template fills
 **Value**: Form filling, mail merge, branded documents
 
 #### Key Capabilities:
@@ -327,8 +327,8 @@ template.render()
 
 ### 6. Header/Footer Auto-System
 
-**Status**: ⚠️ Manual in pypdf, ❌ Not in MuPDF  
-**FPDF Feature**: Automatic header/footer on all pages  
+**Status**: ⚠️ Manual in pypdf, ❌ Not in MuPDF
+**FPDF Feature**: Automatic header/footer on all pages
 **Value**: Professional documents, reports
 
 #### Key Capabilities:
@@ -340,7 +340,7 @@ class MyPDF(FPDF):
         self.set_font('Arial', 'B', 15)
         self.cell(0, 10, 'My Report', align='C')
         self.ln(20)
-    
+
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
@@ -375,8 +375,8 @@ class MyPDF(FPDF):
 
 ### 7. Barcode Generation
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Built-in barcode rendering  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Built-in barcode rendering
 **Value**: Inventory, shipping labels, tickets
 
 #### Supported Barcode Types:
@@ -412,8 +412,8 @@ pdf.interleaved2of5("1234567890", x=10, y=30)
 
 ### 8. Enhanced Cell Styling
 
-**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF  
-**FPDF Feature**: Rich cell styling beyond borders  
+**Status**: ⚠️ Basic in pypdf, ❌ Not in MuPDF
+**FPDF Feature**: Rich cell styling beyond borders
 **Value**: Professional document appearance
 
 #### Key Features:
@@ -457,8 +457,8 @@ pdf.rounded_rect(x, y, w, h, radius, style='D')
 
 ### 9. Section System
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Document sections with different settings  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Document sections with different settings
 **Value**: Complex documents with mixed layouts
 
 #### Key Capabilities:
@@ -502,8 +502,8 @@ pdf.add_page(orientation='L')  # Landscape for wide tables
 
 ### 10. Chart and Graph Embedding
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Embed charts directly  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Embed charts directly
 **Value**: Data visualization in reports
 
 #### Capabilities:
@@ -543,8 +543,8 @@ with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
 
 ### 11. Basic SVG Import
 
-**Status**: ❌ Not in pypdf or MuPDF  
-**FPDF Feature**: Import and render SVG graphics  
+**Status**: ❌ Not in pypdf or MuPDF
+**FPDF Feature**: Import and render SVG graphics
 **Value**: Vector graphics, logos, icons
 
 ```python
@@ -562,8 +562,8 @@ pdf.image("logo.svg", x=10, y=10, w=50)
 
 ### 12. Emoji and Symbol Support
 
-**Status**: ⚠️ Limited in all libraries  
-**FPDF Feature**: Easy emoji embedding  
+**Status**: ⚠️ Limited in all libraries
+**FPDF Feature**: Easy emoji embedding
 **Value**: Modern document styling
 
 ```python
@@ -583,7 +583,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ## Implementation Roadmap
 
 ### Phase 1: Core Flow & Layout (Q1 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 3-4 weeks
 
 - [x] Document flow system with position tracking
@@ -600,7 +600,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ---
 
 ### Phase 2: Table Generation (Q1-Q2 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 2-3 weeks
 
 - [x] Table builder API
@@ -618,7 +618,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ---
 
 ### Phase 3: HTML Rendering (Q2 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 4-5 weeks
 
 - [x] HTML parser integration
@@ -636,7 +636,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ---
 
 ### Phase 4: Templates & Headers/Footers (Q2-Q3 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 2-3 weeks
 
 - [x] Template system
@@ -653,7 +653,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ---
 
 ### Phase 5: Barcode & Charts (Q3 2026)
-**Priority**: 📊 MEDIUM  
+**Priority**: 📊 MEDIUM
 **Estimated Effort**: 2-3 weeks
 
 - [x] Barcode generation library
@@ -669,7 +669,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 ---
 
 ### Phase 6: Advanced Styling (Q4 2026)
-**Priority**: 📊 MEDIUM  
+**Priority**: 📊 MEDIUM
 **Estimated Effort**: 2 weeks
 
 - [x] Enhanced border styles
@@ -836,12 +836,12 @@ By implementing these FPDF features, NanoPDF will:
 
 1. ✅ **Be the ONLY library** with MuPDF performance + pypdf features + FPDF generation
 2. ✅ **Support all use cases**: Read, Manipulate, Generate
-3. ✅ **Offer best-in-class**: 
+3. ✅ **Offer best-in-class**:
    - Reading: MuPDF speed
    - Editing: pypdf capabilities
    - Generation: FPDF ease-of-use
 4. ✅ **Differentiate from**: PyMuPDF (read-only focus), pypdf (slow), FPDF (Python-only)
-5. ✅ **Enable new scenarios**: 
+5. ✅ **Enable new scenarios**:
    - Report servers in Rust
    - Fast invoice generation
    - Template-based documents
@@ -857,8 +857,8 @@ The FPDF feature set represents a **significant opportunity** to make NanoPDF th
 
 ---
 
-**Status**: 📋 Feature Planning  
-**Next Steps**: Review priorities with team, refine API designs, begin Phase 1 implementation  
-**Estimated Total Effort**: 16-20 weeks for complete implementation  
+**Status**: 📋 Feature Planning
+**Next Steps**: Review priorities with team, refine API designs, begin Phase 1 implementation
+**Estimated Total Effort**: 16-20 weeks for complete implementation
 **Target Release**: Q4 2026 (all phases)
 

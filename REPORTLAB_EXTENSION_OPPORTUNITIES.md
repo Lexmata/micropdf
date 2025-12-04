@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-**Date**: December 4, 2025  
-**ReportLab Version**: 4.x (latest)  
-**NanoPDF Version**: 0.1.0  
+**Date**: December 4, 2025
+**ReportLab Version**: 4.x (latest)
+**NanoPDF Version**: 0.1.0
 **Purpose**: Identify unique ReportLab features not in pypdf/MuPDF/FPDF/pdfcpu for potential NanoPDF extensions
 
 This document identifies features present in **ReportLab** that are **not available** (or not well-implemented) in pypdf, MuPDF, FPDF, or pdfcpu. ReportLab brings unique value through:
@@ -40,8 +40,8 @@ ReportLab is the **gold standard** for programmatic PDF generation in the enterp
 
 ### 1. Platypus: Page Layout and Typography Using Scripts
 
-**Status**: ❌ Not in any other library  
-**ReportLab Feature**: High-level document composition framework  
+**Status**: ❌ Not in any other library
+**ReportLab Feature**: High-level document composition framework
 **Value**: Professional document generation with automatic layout
 
 #### What is Platypus?
@@ -171,8 +171,8 @@ np_frame_create(x1: f32, y1: f32, width: f32, height: f32) -> Frame
 
 ### 2. Flowables: Reusable Document Components
 
-**Status**: ❌ Not in other libraries  
-**ReportLab Feature**: Self-contained, reusable document elements  
+**Status**: ❌ Not in other libraries
+**ReportLab Feature**: Self-contained, reusable document elements
 **Value**: Modular, composable document construction
 
 #### Core Flowables:
@@ -210,10 +210,10 @@ class Signature(Flowable):
     def __init__(self, width, height):
         self.width = width
         self.height = height
-    
+
     def wrap(self, availWidth, availHeight):
         return (self.width, self.height)
-    
+
     def draw(self):
         self.canv.line(0, 0, self.width, 0)
         self.canv.drawString(0, -10, "Signature: ___________")
@@ -226,19 +226,19 @@ class Signature(Flowable):
 pub trait Flowable: Send + Sync {
     /// Calculate required width and height
     fn wrap(&mut self, available_width: f32, available_height: f32) -> (f32, f32);
-    
+
     /// Draw the flowable
     fn draw(&self, canvas: &mut Canvas, x: f32, y: f32);
-    
+
     /// Split if doesn't fit (returns Vec of parts)
     fn split(&self, available_height: f32) -> Vec<Box<dyn Flowable>>;
-    
+
     /// Get spacing before (for widow/orphan control)
     fn get_space_before(&self) -> f32 { 0.0 }
-    
+
     /// Get spacing after
     fn get_space_after(&self) -> f32 { 0.0 }
-    
+
     /// Can this flowable be split?
     fn is_splittable(&self) -> bool { false }
 }
@@ -299,8 +299,8 @@ np_image_flowable_create(image: Handle, width: f32, height: f32) -> Handle
 
 ### 3. Paragraph Styles: Professional Typography
 
-**Status**: ⚠️ Basic in FPDF, ❌ Not comprehensive in others  
-**ReportLab Feature**: CSS-like paragraph styling system  
+**Status**: ⚠️ Basic in FPDF, ❌ Not comprehensive in others
+**ReportLab Feature**: CSS-like paragraph styling system
 **Value**: Professional typography control
 
 #### ParagraphStyle Attributes:
@@ -378,7 +378,7 @@ heading2 = ParagraphStyle('Heading2',
 ```python
 text = """
 <para>
-Regular text, <b>bold text</b>, <i>italic text</i>, 
+Regular text, <b>bold text</b>, <i>italic text</i>,
 <font color="red">red text</font>,
 <font size="14">larger text</font>,
 <link href="http://example.com">link text</link>,
@@ -411,50 +411,50 @@ para = Paragraph(text, style)
 pub struct ParagraphStyle {
     pub name: String,
     pub parent: Option<Box<ParagraphStyle>>,
-    
+
     // Font
     pub font_name: String,
     pub font_size: f32,
     pub leading: f32,  // Line height
     pub text_color: Color,
     pub back_color: Option<Color>,
-    
+
     // Indentation
     pub left_indent: f32,
     pub right_indent: f32,
     pub first_line_indent: f32,
-    
+
     // Alignment
     pub alignment: TextAlign,  // Left, Center, Right, Justify
     pub justify_last_line: bool,
     pub justify_breaks: bool,
-    
+
     // Spacing
     pub space_before: f32,
     pub space_after: f32,
-    
+
     // Bullets
     pub bullet_font_name: String,
     pub bullet_font_size: f32,
     pub bullet_indent: f32,
     pub bullet_anchor: String,
-    
+
     // Borders
     pub border_width: f32,
     pub border_padding: f32,
     pub border_color: Option<Color>,
     pub border_radius: f32,
-    
+
     // Widows and Orphans
     pub allow_widows: u32,
     pub allow_orphans: u32,
-    
+
     // Text decoration
     pub underline_width: f32,
     pub underline_offset: f32,
     pub strike_width: f32,
     pub strike_offset: f32,
-    
+
     // Word wrapping
     pub word_wrap: WordWrap,
     pub split_long_words: bool,
@@ -496,8 +496,8 @@ np_paragraph_parse_rich_text(text: &str, style: Handle) -> Handle
 
 ### 4. TableStyle: Rich Table Formatting
 
-**Status**: ⚠️ Basic in FPDF, ⚠️ Basic in pypdf, ❌ Not in others  
-**ReportLab Feature**: Comprehensive table styling system  
+**Status**: ⚠️ Basic in FPDF, ⚠️ Basic in pypdf, ❌ Not in others
+**ReportLab Feature**: Comprehensive table styling system
 **Value**: Professional table formatting
 
 #### TableStyle Commands:
@@ -521,7 +521,7 @@ table.setStyle(TableStyle([
     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
     ('FONTSIZE', (0, 0), (-1, 0), 14),
     ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-    
+
     # Body formatting
     ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
     ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
@@ -530,16 +530,16 @@ table.setStyle(TableStyle([
     ('FONTSIZE', (0, 1), (-1, -1), 10),
     ('TOPPADDING', (0, 1), (-1, -1), 6),
     ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-    
+
     # Grid
     ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    
+
     # Alternating rows
     ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-    
+
     # Spanning cells
     ('SPAN', (0, 0), (1, 0)),  # Merge cells
-    
+
     # Conditional formatting
     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
 ]))
@@ -571,28 +571,28 @@ pub enum TableStyleCommand {
     // Background
     Background { start: (i32, i32), end: (i32, i32), color: Color },
     RowBackgrounds { start: (i32, i32), end: (i32, i32), colors: Vec<Color> },
-    
+
     // Grid
     Grid { start: (i32, i32), end: (i32, i32), width: f32, color: Color },
     Box { start: (i32, i32), end: (i32, i32), width: f32, color: Color },
     LineBelow { start: (i32, i32), end: (i32, i32), width: f32, color: Color },
     LineAbove { start: (i32, i32), end: (i32, i32), width: f32, color: Color },
-    
+
     // Text
     Font { start: (i32, i32), end: (i32, i32), name: String },
     FontSize { start: (i32, i32), end: (i32, i32), size: f32 },
     TextColor { start: (i32, i32), end: (i32, i32), color: Color },
-    
+
     // Alignment
     Align { start: (i32, i32), end: (i32, i32), align: TextAlign },
     VAlign { start: (i32, i32), end: (i32, i32), valign: VAlign },
-    
+
     // Padding
     LeftPadding { start: (i32, i32), end: (i32, i32), padding: f32 },
     RightPadding { start: (i32, i32), end: (i32, i32), padding: f32 },
     TopPadding { start: (i32, i32), end: (i32, i32), padding: f32 },
     BottomPadding { start: (i32, i32), end: (i32, i32), padding: f32 },
-    
+
     // Special
     Span { start: (i32, i32), end: (i32, i32) },
     NoSplit { start: (i32, i32), end: (i32, i32) },
@@ -624,8 +624,8 @@ np_table_set_repeat_rows(table: Handle, count: u32)  // Header rows to repeat
 
 ### 5. PageTemplates: Layout Templates
 
-**Status**: ⚠️ Basic in FPDF (callbacks), ❌ Not in others  
-**ReportLab Feature**: Frame-based page layouts with multiple templates  
+**Status**: ⚠️ Basic in FPDF (callbacks), ❌ Not in others
+**ReportLab Feature**: Frame-based page layouts with multiple templates
 **Value**: Complex page layouts with headers/footers/sidebars
 
 #### PageTemplate Example:
@@ -736,8 +736,8 @@ np_frame_create(id: &str, x: f32, y: f32, width: f32, height: f32) -> Frame
 
 ### 6. Automatic Table of Contents
 
-**Status**: ❌ Not in other libraries  
-**ReportLab Feature**: Auto-generated TOC with page numbers  
+**Status**: ❌ Not in other libraries
+**ReportLab Feature**: Auto-generated TOC with page numbers
 **Value**: Professional documentation
 
 #### TOC Generation:
@@ -811,8 +811,8 @@ np_toc_generate(toc: Handle) -> Vec<Handle>  // Returns flowables
 
 ### 7. Charts & Graphics: ReportLab Graphics
 
-**Status**: ❌ Not in other libraries (or very basic)  
-**ReportLab Feature**: Integrated charting and graphics library  
+**Status**: ❌ Not in other libraries (or very basic)
+**ReportLab Feature**: Integrated charting and graphics library
 **Value**: Professional data visualization in PDFs
 
 #### Chart Types:
@@ -928,8 +928,8 @@ np_chart_to_flowable(chart: Handle) -> Handle
 
 ### 8. Keep-Together & Keep-With-Next
 
-**Status**: ❌ Not in other libraries  
-**ReportLab Feature**: Widow/orphan control and smart pagination  
+**Status**: ❌ Not in other libraries
+**ReportLab Feature**: Widow/orphan control and smart pagination
 **Value**: Professional page breaks
 
 #### Keep-Together:
@@ -973,7 +973,7 @@ impl Flowable for KeepTogether {
             .sum();
         (aw, total_height)
     }
-    
+
     fn split(&self, ah: f32) -> Vec<Box<dyn Flowable>> {
         // If doesn't fit, move all to next page
         vec![]  // Don't split
@@ -998,8 +998,8 @@ np_flowable_set_space_after(flowable: Handle, space: f32)
 
 ### 9. Conditional Page Breaks
 
-**Status**: ❌ Not in other libraries  
-**ReportLab Feature**: Smart conditional breaks  
+**Status**: ❌ Not in other libraries
+**ReportLab Feature**: Smart conditional breaks
 **Value**: Control when breaks occur
 
 ```python
@@ -1025,8 +1025,8 @@ np_cond_page_break_create(min_space: f32) -> Handle
 
 ### 10. Multi-Column Layouts
 
-**Status**: ❌ Not comprehensively in other libraries  
-**ReportLab Feature**: True multi-column flow with balancing  
+**Status**: ❌ Not comprehensively in other libraries
+**ReportLab Feature**: True multi-column flow with balancing
 **Value**: Magazine/newsletter layouts
 
 ```python
@@ -1063,8 +1063,8 @@ np_create_balanced_columns(flowables: Vec<Handle>, columns: u32) -> Handle
 
 ### 11. Drawing Primitives on Canvas
 
-**Status**: ⚠️ Basic in most libraries  
-**ReportLab Feature**: Rich canvas drawing API  
+**Status**: ⚠️ Basic in most libraries
+**ReportLab Feature**: Rich canvas drawing API
 **Value**: Vector graphics control
 
 ```python
@@ -1104,7 +1104,7 @@ c.save()
 ## Implementation Roadmap
 
 ### Phase 1: Platypus Core (Q1 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 6-8 weeks
 
 - [x] DocTemplate architecture
@@ -1121,7 +1121,7 @@ c.save()
 ---
 
 ### Phase 2: Core Flowables (Q1-Q2 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 4-5 weeks
 
 - [x] Paragraph flowable with rich text
@@ -1137,7 +1137,7 @@ c.save()
 ---
 
 ### Phase 3: Paragraph Styles (Q2 2026)
-**Priority**: 🔥 CRITICAL  
+**Priority**: 🔥 CRITICAL
 **Estimated Effort**: 3-4 weeks
 
 - [x] ParagraphStyle system
@@ -1154,7 +1154,7 @@ c.save()
 ---
 
 ### Phase 4: TableStyle & Advanced Tables (Q2-Q3 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 3-4 weeks
 
 - [x] TableStyle commands (40+)
@@ -1170,7 +1170,7 @@ c.save()
 ---
 
 ### Phase 5: PageTemplates & TOC (Q3 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 3-4 weeks
 
 - [x] Multiple page templates
@@ -1186,7 +1186,7 @@ c.save()
 ---
 
 ### Phase 6: Charts & Graphics (Q3-Q4 2026)
-**Priority**: ⭐ HIGH  
+**Priority**: ⭐ HIGH
 **Estimated Effort**: 5-6 weeks
 
 - [x] Chart abstraction layer
@@ -1203,7 +1203,7 @@ c.save()
 ---
 
 ### Phase 7: Layout Control (Q4 2026)
-**Priority**: 📊 MEDIUM  
+**Priority**: 📊 MEDIUM
 **Estimated Effort**: 2-3 weeks
 
 - [x] Keep-together/with-next
@@ -1332,10 +1332,10 @@ ReportLab represents the **highest value** addition to NanoPDF:
 
 ---
 
-**Status**: 📋 Feature Planning  
-**Next Steps**: Prioritize Phases 1-3 (Platypus, Flowables, Styles) for foundation  
-**Estimated Total Effort**: 26-34 weeks for complete implementation  
-**Target Release**: Q4 2026 (all phases)  
-**Market Impact**: **CRITICAL** - Enterprise document generation is a massive market  
+**Status**: 📋 Feature Planning
+**Next Steps**: Prioritize Phases 1-3 (Platypus, Flowables, Styles) for foundation
+**Estimated Total Effort**: 26-34 weeks for complete implementation
+**Target Release**: Q4 2026 (all phases)
+**Market Impact**: **CRITICAL** - Enterprise document generation is a massive market
 **ROI**: Highest of all three extension opportunities
 

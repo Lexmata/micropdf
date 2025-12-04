@@ -34,7 +34,7 @@ fn get_fitz_colorspace(handle: Handle) -> Option<FitzColorspace> {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_new_draw_device(
     _ctx: Handle,
-    transform: super::geometry::fz_matrix,
+    _transform: super::geometry::fz_matrix,
     pixmap: Handle,
 ) -> Handle {
     // Get pixmap from handle

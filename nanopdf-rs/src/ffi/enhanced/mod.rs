@@ -71,8 +71,8 @@ pub extern "C" fn np_add_watermark(
     input_path: *const std::ffi::c_char,
     output_path: *const std::ffi::c_char,
     text: *const std::ffi::c_char,
-    x: f32,
-    y: f32,
+    _x: f32,
+    _y: f32,
     font_size: f32,
     opacity: f32,
 ) -> i32 {
@@ -122,11 +122,11 @@ pub extern "C" fn np_linearize_pdf(
 #[unsafe(no_mangle)]
 pub extern "C" fn np_draw_line(
     _ctx: Handle,
-    page: Handle,
-    x0: f32,
-    y0: f32,
-    x1: f32,
-    y1: f32,
+    _page: Handle,
+    _x0: f32,
+    _y0: f32,
+    _x1: f32,
+    _y1: f32,
     r: f32,
     g: f32,
     b: f32,
@@ -153,16 +153,16 @@ pub extern "C" fn np_draw_line(
 #[unsafe(no_mangle)]
 pub extern "C" fn np_draw_rectangle(
     _ctx: Handle,
-    page: Handle,
-    x: f32,
-    y: f32,
+    _page: Handle,
+    _x: f32,
+    _y: f32,
     width: f32,
     height: f32,
     r: f32,
     g: f32,
     b: f32,
     alpha: f32,
-    fill: i32,
+    _fill: i32,
 ) -> i32 {
     if width <= 0.0 || height <= 0.0 {
         return -1;
@@ -184,15 +184,15 @@ pub extern "C" fn np_draw_rectangle(
 #[unsafe(no_mangle)]
 pub extern "C" fn np_draw_circle(
     _ctx: Handle,
-    page: Handle,
-    x: f32,
-    y: f32,
+    _page: Handle,
+    _x: f32,
+    _y: f32,
     radius: f32,
     r: f32,
     g: f32,
     b: f32,
     alpha: f32,
-    fill: i32,
+    _fill: i32,
 ) -> i32 {
     if radius <= 0.0 {
         return -1;

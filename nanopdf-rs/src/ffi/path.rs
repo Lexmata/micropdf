@@ -133,8 +133,8 @@ pub extern "C" fn fz_rectto(_ctx: Handle, path: Handle, x0: f32, y0: f32, x1: f3
 pub extern "C" fn fz_bound_path(
     _ctx: Handle,
     path: Handle,
-    stroke: Handle,
-    transform: super::geometry::fz_matrix,
+    _stroke: Handle,
+    _transform: super::geometry::fz_matrix,
 ) -> super::geometry::fz_rect {
     if let Some(p) = PATHS.get(path) {
         if let Ok(guard) = p.lock() {

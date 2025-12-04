@@ -175,7 +175,7 @@ pub extern "C" fn fz_clone_text(_ctx: Handle, text: Handle) -> Handle {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_text_language(_ctx: Handle, text: Handle, buf: *mut std::ffi::c_char, len: i32) -> i32 {
     if let Some(t) = TEXTS.get(text) {
-        if let Ok(guard) = t.lock() {
+        if let Ok(_guard) = t.lock() {
             // Get language tag (e.g., "en" for English)
             let lang = "en"; // Default to English
             return safe_helpers::str_to_c_buffer(lang, buf, len);
