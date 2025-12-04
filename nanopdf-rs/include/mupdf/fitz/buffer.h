@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Buffer Functions (36 total)
+// Buffer Functions (35 total)
 // ============================================================================
 
 void fz_append_base64(int32_t _ctx, int32_t buf, const u8 * data, size_t size, int32_t newline);
@@ -34,7 +34,6 @@ void fz_append_pdf_string(int32_t _ctx, int32_t buf, const char * str);
 void fz_append_rune(int32_t _ctx, int32_t buf, int32_t rune);
 void fz_append_string(int32_t _ctx, int32_t buf, const char * data);
 size_t fz_buffer_capacity(int32_t _ctx, int32_t buf);
-const u8 * fz_buffer_data(int32_t _ctx, int32_t buf, size_t * len);
 int32_t fz_buffer_eq(int32_t _ctx, int32_t buf1, int32_t buf2);
 int32_t fz_buffer_extract(int32_t _ctx, int32_t buf);
 size_t fz_buffer_len(int32_t _ctx, int32_t buf);

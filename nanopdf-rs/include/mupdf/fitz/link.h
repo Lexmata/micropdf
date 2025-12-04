@@ -14,17 +14,32 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Link Functions (8 total)
+// Link Functions (23 total)
 // ============================================================================
 
+int32_t fz_clone_link(int32_t _ctx, int32_t link);
+int32_t fz_clone_link_list(int32_t _ctx, int32_t list);
+int32_t fz_create_link(int32_t _ctx, fz_rect rect, const char * uri);
 void fz_drop_link(int32_t _ctx, int32_t link);
-int fz_link_is_external(int32_t _ctx, int32_t link);
-int fz_link_is_valid(int32_t _ctx, int32_t link);
+void fz_drop_link_list(int32_t _ctx, int32_t list);
+int32_t fz_is_external_link(int32_t _ctx, int32_t link);
+int32_t fz_is_page_link(int32_t _ctx, int32_t link);
+int32_t fz_keep_link(int32_t _ctx, int32_t link);
+int32_t fz_link_eq(int32_t _ctx, int32_t link1, int32_t link2);
+int32_t fz_link_is_valid(int32_t _ctx, int32_t link);
+void fz_link_list_add(int32_t _ctx, int32_t list, int32_t link);
+void fz_link_list_clear(int32_t _ctx, int32_t list);
+int32_t fz_link_list_count(int32_t _ctx, int32_t list);
+int32_t fz_link_list_find_at_point(int32_t _ctx, int32_t list, float x, float y);
+int32_t fz_link_list_first(int32_t _ctx, int32_t list);
+int32_t fz_link_list_get(int32_t _ctx, int32_t list, int32_t index);
+int32_t fz_link_list_is_empty(int32_t _ctx, int32_t list);
+int32_t fz_link_page_number(int32_t _ctx, int32_t link);
 fz_rect fz_link_rect(int32_t _ctx, int32_t link);
-void fz_link_uri(int32_t _ctx, int32_t link, char * buffer, size_t size);
-int32_t fz_load_links(int32_t _ctx, int32_t _page);
-int32_t fz_next_link(int32_t _ctx, int32_t _link);
-int fz_resolve_link_page(int32_t _ctx, int32_t _doc, int32_t link);
+int32_t fz_link_uri(int32_t _ctx, int32_t link, char * buf, int32_t bufsize);
+int32_t fz_new_link_list(int32_t _ctx);
+void fz_set_link_rect(int32_t _ctx, int32_t link, fz_rect rect);
+int32_t fz_set_link_uri(int32_t _ctx, int32_t link, const char * uri);
 
 #ifdef __cplusplus
 }

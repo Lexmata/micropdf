@@ -1,14 +1,5 @@
 //! Colorspace definitions
 
-/// Colorspace type enumeration
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ColorType {
-    Gray,
-    RGB,
-    CMYK,
-    Other,
-}
-
 #[derive(Debug, Clone)]
 pub struct Colorspace {
     name: String,
@@ -39,23 +30,6 @@ impl Colorspace {
     }
     pub fn n(&self) -> u8 {
         self.n
-    }
-
-    /// Get the color type
-    pub fn color_type(&self) -> ColorType {
-        match self.name.as_str() {
-            "DeviceGray" => ColorType::Gray,
-            "DeviceRGB" => ColorType::RGB,
-            "DeviceCMYK" => ColorType::CMYK,
-            _ => ColorType::Other,
-        }
-    }
-
-    /// Check if colorspace has alpha channel
-    pub fn has_alpha(&self) -> bool {
-        // Most colorspaces don't have alpha by default
-        // Alpha is typically added as a separate component
-        false
     }
 }
 
