@@ -2,11 +2,7 @@
  * NanoPDF - Fast, lightweight PDF library
  *
  * This is a comprehensive C FFI header for the NanoPDF Rust library.
- * 
- * Function Prefixes:
- * - fz_*  : Core MuPDF-compatible functions (geometry, buffers, devices, etc.)
- * - pdf_* : PDF-specific MuPDF-compatible functions (annotations, forms, objects)
- * - np_*  : Enhanced/extended NanoPDF functions (watermarks, drawing, optimization)
+ * All functions are prefixed with fz_ or pdf_ for compatibility with MuPDF.
  *
  * This header includes all auto-generated module headers with complete
  * function declarations for all 660+ FFI functions.
@@ -98,19 +94,6 @@ typedef int32_t Handle;
  * Total: 660+ functions covering:
  * - Core fitz functions (geometry, buffers, streams, devices, etc.)
  * - PDF-specific functions (annotations, forms, objects, etc.)
- * - Enhanced functions (watermarks, drawing, optimization, etc.)
- * 
- * Enhanced Functions (np_* prefix):
- *   np_add_blank_page      - Add a blank page to a document
- *   np_add_watermark       - Add text watermark to PDF pages
- *   np_draw_circle         - Draw a circle on a page
- *   np_draw_line           - Draw a line on a page
- *   np_draw_rectangle      - Draw a rectangle on a page
- *   np_linearize_pdf       - Optimize PDF for fast web viewing
- *   np_merge_pdfs          - Merge multiple PDF files
- *   np_optimize_pdf        - Compress and optimize PDF
- *   np_split_pdf           - Split PDF into individual pages
- *   np_write_pdf           - Write PDF document to file
  */
 
 // For complete function declarations, include the comprehensive header:

@@ -15,7 +15,6 @@ extern "C" {
 #include "mupdf/fitz/cookie.h"
 #include "mupdf/fitz/device.h"
 #include "mupdf/fitz/display_list.h"
-#include "mupdf/fitz/enhanced.h"
 #include "mupdf/fitz/font.h"
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/image.h"

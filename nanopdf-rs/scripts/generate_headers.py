@@ -241,6 +241,48 @@ extern "C" {{
 
     return header
 
+def generate_enhanced_header(module_name: str, functions: List[Dict]) -> str:
+    """Generate a C header file for the enhanced (NanoPDF-specific) module."""
+    guard = f'NANOPDF_{module_name.upper()}_H'
+    
+    header = f"""// NanoPDF - Enhanced/Extended Functions
+// Auto-generated from Rust FFI - DO NOT EDIT MANUALLY
+// Module: {module_name}
+//
+// These are NanoPDF-specific extensions beyond MuPDF compatibility.
+// All functions are prefixed with np_* to distinguish from MuPDF functions.
+
+#ifndef {guard}
+#define {guard}
+
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {{
+#endif
+
+// ============================================================================
+// {module_name.capitalize()} Functions ({len(functions)} total)
+// ============================================================================
+
+"""
+    
+    # Add function declarations
+    for func in sorted(functions, key=lambda f: f['name']):
+        header += func['declaration'] + '\n'
+    
+    header += f"""
+#ifdef __cplusplus
+}}
+#endif
+
+#endif /* {guard} */
+"""
+    
+    return header
+
 def main():
     """Main entry point."""
     src_dir = Path('src/ffi')
@@ -250,13 +292,13 @@ def main():
     # Create subdirectories
     (include_dir / 'fitz').mkdir(exist_ok=True)
     (include_dir / 'pdf').mkdir(exist_ok=True)
+    Path('include/nanopdf').mkdir(parents=True, exist_ok=True)
 
     # Module categorization
     fitz_modules = {
         'geometry', 'buffer', 'stream', 'output', 'colorspace',
         'pixmap', 'font', 'image', 'path', 'text', 'device',
-        'display_list', 'link', 'archive', 'cookie', 'context',
-        'enhanced'  # Enhanced/extended functionality (np_* functions)
+        'display_list', 'link', 'archive', 'cookie', 'context'
     }
 
     pdf_modules = {'annot', 'form', 'document', 'pdf_object'}
@@ -298,10 +340,15 @@ def main():
     print("Generating header files...")
 
     for module, functions in all_functions.items():
-        is_pdf = module in pdf_modules or any(f['name'].startswith('pdf_') for f in functions)
-        subdir = 'pdf' if is_pdf else 'fitz'
+        # Enhanced module goes in nanopdf/ directory, not mupdf/
+        if module == 'enhanced':
+            subdir = '../nanopdf'
+            header_content = generate_enhanced_header(module, functions)
+        else:
+            is_pdf = module in pdf_modules or any(f['name'].startswith('pdf_') for f in functions)
+            subdir = 'pdf' if is_pdf else 'fitz'
+            header_content = generate_module_header(module, functions, is_pdf)
 
-        header_content = generate_module_header(module, functions, is_pdf)
         header_file = include_dir / subdir / f'{module}.h'
 
         with open(header_file, 'w') as f:
@@ -331,6 +378,9 @@ extern "C" {
 """
 
     for module in sorted(all_modules):
+        # Skip enhanced module - it's in nanopdf/ not mupdf/fitz/
+        if module == 'enhanced':
+            continue
         if module in fitz_modules or not any(module in pdf_modules for _ in [1]):
             fitz_header += f'#include "mupdf/fitz/{module}.h"\n'
 
