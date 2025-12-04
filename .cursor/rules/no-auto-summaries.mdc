@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # No Automatic Summary Documents
 
 **CRITICAL RULE**: Do NOT create summary documents unless explicitly requested by the user.
@@ -47,8 +51,8 @@ Never proactively create any of the following files without explicit user reques
 If you think a summary document would be valuable:
 
 ```
-"I've completed the header generation implementation. Would you like me to 
-create a summary document (e.g., HEADER_GENERATION_SUMMARY.md) documenting 
+"I've completed the header generation implementation. Would you like me to
+create a summary document (e.g., HEADER_GENERATION_SUMMARY.md) documenting
 the changes, or would you prefer to handle documentation yourself?"
 ```
 
