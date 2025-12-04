@@ -3,6 +3,10 @@
 //! This module provides C-compatible exports that match MuPDF's API.
 //! Uses safe Rust patterns with handle-based resource management.
 
+// Clippy false positive: FFI functions with #[unsafe(no_mangle)] are inherently unsafe
+// and all pointer dereferences are wrapped in unsafe blocks after null checks
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 pub mod geometry;
 pub mod context;
 pub mod buffer;
