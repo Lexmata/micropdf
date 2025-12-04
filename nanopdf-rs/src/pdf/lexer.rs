@@ -442,12 +442,12 @@ mod tests {
 
     #[test]
     fn test_lex_reals() {
-        let data = b"3.14 -0.5 +2.718";
+        let data = b"3.25 -0.5 +2.75";
         let mut lexer = Lexer::new(data);
         let mut buf = LexBuf::new();
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
-        assert!((buf.as_float() - 3.14).abs() < 0.001);
+        assert!((buf.as_float() - 3.25).abs() < 0.001);
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
         assert!((buf.as_float() + 0.5).abs() < 0.001);
