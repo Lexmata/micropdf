@@ -505,13 +505,142 @@ pub extern "C" fn fz_append_buffer(_ctx: Handle, buf: Handle, src: Handle) {
     }
 }
 
-// Note: Some functions that return raw pointers to internal data
-// cannot be implemented safely. They would require:
+/// Create a buffer from data with transfer of ownership
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+/// The data will be copied into the buffer (no actual ownership transfer).
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_from_data(
+    _ctx: Handle,
+    data: *mut u8,
+    size: usize,
+) -> Handle {
+    if data.is_null() || size == 0 {
+        return BUFFERS.insert(Buffer::new(0));
+    }
+
+    // SAFETY: Caller guarantees data points to valid memory of `size` bytes
+    let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+    
+    // Copy the data to maintain safety (no actual ownership transfer in Rust FFI)
+    BUFFERS.insert(Buffer::from_data(data_slice))
+}
+
+/// Create a slice/view of a buffer
+///
+/// # Safety
+/// Caller must ensure buffer handle is valid.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_slice_buffer(
+    _ctx: Handle,
+    buf: Handle,
+    offset: usize,
+    len: usize,
+) -> Handle {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(guard) = buffer.lock() {
+            let data = guard.data();
+            if offset < data.len() {
+                let end = (offset + len).min(data.len());
+                let slice = &data[offset..end];
+                return BUFFERS.insert(Buffer::from_data(slice));
+            }
+        }
+    }
+    0
+}
+
+/// Append a Unicode rune (codepoint) to buffer as UTF-8
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_rune(_ctx: Handle, buf: Handle, rune: i32) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            // Convert Unicode codepoint to char and encode as UTF-8
+            if let Some(ch) = char::from_u32(rune as u32) {
+                let mut utf8_buf = [0u8; 4];
+                let utf8_str = ch.encode_utf8(&mut utf8_buf);
+                guard.append(utf8_str.as_bytes());
+            }
+        }
+    }
+}
+
+/// Append base64 encoded data to buffer
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_base64(
+    _ctx: Handle,
+    buf: Handle,
+    data: *const u8,
+    size: usize,
+    newline: i32,
+) {
+    if data.is_null() || size == 0 {
+        return;
+    }
+
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            // SAFETY: Caller guarantees data points to valid memory
+            let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+            
+            // Simple base64 encoding
+            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            
+            let mut line_len = 0;
+            let mut i = 0;
+            
+            while i + 2 < size {
+                let b1 = data_slice[i];
+                let b2 = data_slice[i + 1];
+                let b3 = data_slice[i + 2];
+                
+                guard.append_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+                guard.append_byte(BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize]);
+                guard.append_byte(BASE64_CHARS[(((b2 & 0x0F) << 2) | ((b3 >> 6) & 0x03)) as usize]);
+                guard.append_byte(BASE64_CHARS[(b3 & 0x3F) as usize]);
+                
+                line_len += 4;
+                if newline != 0 && line_len >= 76 {
+                    guard.append_byte(b'\n');
+                    line_len = 0;
+                }
+                
+                i += 3;
+            }
+            
+            // Handle remaining bytes
+            if i < size {
+                let b1 = data_slice[i];
+                guard.append_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+                
+                if i + 1 < size {
+                    let b2 = data_slice[i + 1];
+                    guard.append_byte(BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize]);
+                    guard.append_byte(BASE64_CHARS[((b2 & 0x0F) << 2) as usize]);
+                    guard.append_byte(b'=');
+                } else {
+                    guard.append_byte(BASE64_CHARS[((b1 & 0x03) << 4) as usize]);
+                    guard.append_byte(b'=');
+                    guard.append_byte(b'=');
+                }
+            }
+        }
+    }
+}
+
+// Note: fz_append_printf is not implemented due to variadic function complexity
+// in Rust FFI. Users should format strings in their own code and use fz_append_string.
+//
+// Other functions that return raw pointers to internal data cannot be implemented
+// safely without additional infrastructure. They would require:
 // 1. A stable buffer address (Box::leak or similar)
 // 2. Unsafe blocks to convert to raw pointers
 //
-// For a fully safe API, consider returning handles or using
-// callback-based APIs instead.
+// For a fully safe API, consider returning handles or using callback-based APIs instead.
 
 #[cfg(test)]
 mod tests {

@@ -9,7 +9,7 @@ use crate::fitz::geometry::{Matrix, Rect};
 use crate::fitz::colorspace::Colorspace as FitzColorspace;
 use std::sync::LazyLock;
 
-/// Device storage  
+/// Device storage
 pub static DEVICES: LazyLock<HandleStore<Box<dyn Device + Send + Sync>>> =
     LazyLock::new(HandleStore::default);
 
@@ -95,7 +95,7 @@ pub extern "C" fn fz_drop_device(_ctx: Handle, dev: Handle) {
 pub extern "C" fn fz_close_device(_ctx: Handle, dev: Handle) {
     if let Some(device) = DEVICES.get(dev) {
         if let Ok(mut guard) = device.lock() {
-            let _ = guard.close();
+            guard.close();
         }
     }
 }
@@ -131,7 +131,7 @@ pub extern "C" fn fz_begin_tile(
 pub extern "C" fn fz_end_tile(_ctx: Handle, dev: Handle) {
     if let Some(device) = DEVICES.get(dev) {
         if let Ok(mut guard) = device.lock() {
-            let _ = guard.end_tile();
+            guard.end_tile();
         }
     }
 }
@@ -176,7 +176,7 @@ pub extern "C" fn fz_fill_path(
                             }
                         }
 
-                        let _ = guard.fill_path(
+                        guard.fill_path(
                             &path_guard,
                             even_odd != 0,
                             &matrix,
@@ -234,7 +234,7 @@ pub extern "C" fn fz_stroke_path(
                                     }
                                 }
 
-                                let _ = guard.stroke_path(
+                                guard.stroke_path(
                                     &path_guard,
                                     &stroke_guard,
                                     &matrix,
@@ -274,7 +274,7 @@ pub extern "C" fn fz_clip_path(
 
                     // Use infinite scissor rect for now
                     let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                    let _ = guard.clip_path(&path_guard, even_odd != 0, &matrix, scissor);
+                    guard.clip_path(&path_guard, even_odd != 0, &matrix, scissor);
                 }
             }
         }
@@ -299,14 +299,14 @@ pub extern "C" fn fz_clip_stroke_path(
                 if let Ok(path_guard) = p.lock() {
                     if let Some(s) = super::path::STROKE_STATES.get(stroke) {
                         if let Ok(stroke_guard) = s.lock() {
-                            let matrix = Matrix::new(
-                                transform.a, transform.b, transform.c,
-                                transform.d, transform.e, transform.f
-                            );
+                        let matrix = Matrix::new(
+                            transform.a, transform.b, transform.c,
+                            transform.d, transform.e, transform.f
+                        );
 
-                            // Use infinite scissor rect for now
-                            let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                            let _ = guard.clip_stroke_path(&path_guard, &stroke_guard, &matrix, scissor);
+                        // Use infinite scissor rect for now
+                        let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
+                        guard.clip_stroke_path(&path_guard, &stroke_guard, &matrix, scissor);
                         }
                     }
                 }
@@ -353,7 +353,7 @@ pub extern "C" fn fz_fill_text(
                             }
                         }
 
-                        let _ = guard.fill_text(&text_guard, &matrix, &cs, &color_vec, alpha);
+                        guard.fill_text(&text_guard, &matrix, &cs, &color_vec, alpha);
                     }
                 }
             }
@@ -402,7 +402,7 @@ pub extern "C" fn fz_stroke_text(
                                     }
                                 }
 
-                                let _ = guard.stroke_text(
+                                guard.stroke_text(
                                     &text_guard,
                                     &stroke_guard,
                                     &matrix,
@@ -441,7 +441,7 @@ pub extern "C" fn fz_clip_text(
 
                     // Use infinite scissor rect for now
                     let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                    let _ = guard.clip_text(&text_guard, &matrix, scissor);
+                    guard.clip_text(&text_guard, &matrix, scissor);
                 }
             }
         }
@@ -473,7 +473,7 @@ pub extern "C" fn fz_clip_stroke_text(
 
                             // Use infinite scissor rect for now
                             let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                            let _ = guard.clip_stroke_text(&text_guard, &stroke_guard, &matrix, scissor);
+                            guard.clip_stroke_text(&text_guard, &stroke_guard, &matrix, scissor);
                         }
                     }
                 }
@@ -502,7 +502,7 @@ pub extern "C" fn fz_ignore_text(
                         transform.d, transform.e, transform.f
                     );
 
-                    let _ = guard.ignore_text(&text_guard, &matrix);
+                    guard.ignore_text(&text_guard, &matrix);
                 }
             }
         }
@@ -530,7 +530,7 @@ pub extern "C" fn fz_fill_image(
                         transform.d, transform.e, transform.f
                     );
 
-                    let _ = guard.fill_image(&img_guard, &matrix, alpha);
+                    guard.fill_image(&img_guard, &matrix, alpha);
                 }
             }
         }
@@ -575,7 +575,7 @@ pub extern "C" fn fz_fill_image_mask(
                             }
                         }
 
-                        let _ = guard.fill_image_mask(
+                        guard.fill_image_mask(
                             &img_guard,
                             &matrix,
                             &cs,
@@ -611,7 +611,7 @@ pub extern "C" fn fz_clip_image_mask(
 
                     // Use infinite scissor rect for now
                     let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                    let _ = guard.clip_image_mask(&img_guard, &matrix, scissor);
+                    guard.clip_image_mask(&img_guard, &matrix, scissor);
                 }
             }
         }
@@ -623,7 +623,7 @@ pub extern "C" fn fz_clip_image_mask(
 pub extern "C" fn fz_pop_clip(_ctx: Handle, dev: Handle) {
     if let Some(device) = DEVICES.get(dev) {
         if let Ok(mut guard) = device.lock() {
-            let _ = guard.pop_clip();
+            guard.pop_clip();
         }
     }
 }
@@ -665,7 +665,7 @@ pub extern "C" fn fz_begin_mask(
 
             if let Some(ref cs_val) = cs {
                 let color_slice = color_vec.as_deref().unwrap_or(&[]);
-                let _ = guard.begin_mask(rect, luminosity != 0, cs_val, color_slice);
+                guard.begin_mask(rect, luminosity != 0, cs_val, color_slice);
             }
         }
     }
@@ -676,7 +676,7 @@ pub extern "C" fn fz_begin_mask(
 pub extern "C" fn fz_end_mask(_ctx: Handle, dev: Handle) {
     if let Some(device) = DEVICES.get(dev) {
         if let Ok(mut guard) = device.lock() {
-            let _ = guard.end_mask();
+            guard.end_mask();
         }
     }
 }
@@ -722,7 +722,7 @@ pub extern "C" fn fz_begin_group(
                 _ => BlendMode::Normal,
             };
 
-            let _ = guard.begin_group(
+            guard.begin_group(
                 rect,
                 cs.as_ref(),
                 isolated != 0,
@@ -739,7 +739,7 @@ pub extern "C" fn fz_begin_group(
 pub extern "C" fn fz_end_group(_ctx: Handle, dev: Handle) {
     if let Some(device) = DEVICES.get(dev) {
         if let Ok(mut guard) = device.lock() {
-            let _ = guard.end_group();
+            guard.end_group();
         }
     }
 }

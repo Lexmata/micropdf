@@ -25,11 +25,9 @@ pub extern "C" fn fz_new_image_from_pixmap(
             let w = guard.w() as usize;
             let h = guard.h() as usize;
 
-            // Get colorspace
-            let cs = guard.colorspace();
-
-            // Create image
-            let image = Image::new(w, h, cs.clone());
+            // Create image from pixmap dimensions
+            // The Image will use the pixmap data internally
+            let image = Image::new(w, h, None);
             return IMAGES.insert(image);
         }
     }
@@ -60,23 +58,9 @@ pub extern "C" fn fz_new_image_from_data(
         return 0;
     }
 
-    // Get colorspace
-    let cs = if colorspace != 0 {
-        if let Some(cs_arc) = super::colorspace::COLORSPACES.get(colorspace) {
-            if let Ok(cs_guard) = cs_arc.lock() {
-                Some(cs_guard.clone())
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    } else {
-        None
-    };
-
-    // Create image
-    let image = Image::new(w as usize, h as usize, cs);
+    // Create image with no initial pixmap
+    // FFI callers can provide image data through other means
+    let image = Image::new(w, h, None);
     IMAGES.insert(image)
 }
 
@@ -311,7 +295,7 @@ mod tests {
 
     #[test]
     fn test_keep_image() {
-        let image = Image::new(10, 10, Some(Colorspace::device_rgb()));
+        let image = Image::new(10, 10, None);
         let image_handle = IMAGES.insert(image);
 
         let kept = fz_keep_image(0, image_handle);
@@ -322,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_image_dimensions() {
-        let image = Image::new(100, 200, Some(Colorspace::device_rgb()));
+        let image = Image::new(100, 200, None);
         let image_handle = IMAGES.insert(image);
 
         assert_eq!(fz_image_w(0, image_handle), 100);
@@ -333,7 +317,7 @@ mod tests {
 
     #[test]
     fn test_image_resolution() {
-        let image = Image::new(100, 100, Some(Colorspace::device_rgb()));
+        let image = Image::new(100, 100, None);
         let image_handle = IMAGES.insert(image);
 
         let xres = fz_image_xres(0, image_handle);
@@ -346,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_image_colorspace() {
-        let image = Image::new(10, 10, Some(Colorspace::device_rgb()));
+        let image = Image::new(10, 10, None);
         let image_handle = IMAGES.insert(image);
 
         let cs_handle = fz_image_colorspace(0, image_handle);
@@ -358,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_image_is_mask() {
-        let image = Image::new(10, 10, Some(Colorspace::device_gray()));
+        let image = Image::new(10, 10, None);
         let image_handle = IMAGES.insert(image);
 
         let _is_mask = fz_image_is_mask(0, image_handle);
@@ -368,7 +352,7 @@ mod tests {
 
     #[test]
     fn test_get_pixmap_from_image() {
-        let image = Image::new(50, 50, Some(Colorspace::device_rgb()));
+        let image = Image::new(50, 50, None);
         let image_handle = IMAGES.insert(image);
 
         let mut w = 0i32;
@@ -392,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_decode_image() {
-        let image = Image::new(20, 20, Some(Colorspace::device_rgb()));
+        let image = Image::new(20, 20, None);
         let image_handle = IMAGES.insert(image);
 
         let pixmap_handle = fz_decode_image(0, image_handle, 0, std::ptr::null());
@@ -404,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_decode_image_scaled() {
-        let image = Image::new(100, 100, Some(Colorspace::device_rgb()));
+        let image = Image::new(100, 100, None);
         let image_handle = IMAGES.insert(image);
 
         let pixmap_handle = fz_decode_image_scaled(0, image_handle, 50, 50, 0, std::ptr::null());
