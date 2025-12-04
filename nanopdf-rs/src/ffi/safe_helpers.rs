@@ -2,7 +2,7 @@
 //!
 //! This module provides safe abstractions over common unsafe FFI patterns.
 
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 /// Safely convert a C string pointer to a Rust &str
