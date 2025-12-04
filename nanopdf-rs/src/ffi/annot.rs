@@ -431,6 +431,56 @@ pub extern "C" fn pdf_update_annot(_ctx: Handle, _annot: Handle) -> i32 {
     1 // Return success
 }
 
+/// Check if an annotation is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_annot_is_valid(_ctx: Handle, annot: Handle) -> i32 {
+    if ANNOTATIONS.get(annot).is_some() { 1 } else { 0 }
+}
+
+/// Clone an annotation (create new copy)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_clone_annot(_ctx: Handle, annot: Handle) -> Handle {
+    if let Some(a) = ANNOTATIONS.get(annot) {
+        if let Ok(guard) = a.lock() {
+            let cloned = guard.clone();
+            return ANNOTATIONS.insert(cloned);
+        }
+    }
+    0
+}
+
+/// Get annotation opacity
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_annot_opacity(_ctx: Handle, annot: Handle) -> f32 {
+    if let Some(a) = ANNOTATIONS.get(annot) {
+        if let Ok(guard) = a.lock() {
+            return guard.opacity();
+        }
+    }
+    1.0
+}
+
+/// Set annotation opacity
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_annot_opacity(_ctx: Handle, annot: Handle, opacity: f32) {
+    if let Some(a) = ANNOTATIONS.get(annot) {
+        if let Ok(mut guard) = a.lock() {
+            guard.set_opacity(opacity.clamp(0.0, 1.0));
+        }
+    }
+}
+
+/// Check if annotation has popup
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_annot_has_popup(_ctx: Handle, annot: Handle) -> i32 {
+    if let Some(a) = ANNOTATIONS.get(annot) {
+        if let Ok(guard) = a.lock() {
+            return if guard.popup().is_some() { 1 } else { 0 };
+        }
+    }
+    0
+}
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -512,6 +562,24 @@ mod tests {
         assert_eq!(retrieved[0], 1.0);
 
         pdf_drop_annot(0, annot);
+    }
+
+    #[test]
+    fn test_annot_validation() {
+        let annot = pdf_create_annot(0, 0, 1); // Text
+        assert_eq!(pdf_annot_is_valid(0, annot), 1);
+        assert_eq!(pdf_annot_is_valid(0, 99999), 0);
+        pdf_drop_annot(0, annot);
+    }
+
+    #[test]
+    fn test_clone_annot() {
+        let annot = pdf_create_annot(0, 0, 1);
+        let cloned = pdf_clone_annot(0, annot);
+        assert_ne!(cloned, 0);
+        assert_ne!(cloned, annot);
+        pdf_drop_annot(0, annot);
+        pdf_drop_annot(0, cloned);
     }
 }
 
