@@ -447,7 +447,7 @@ mod tests {
         let mut buf = LexBuf::new();
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
-        assert!((buf.as_float() - std::f64::consts::PI).abs() < 0.001);
+        assert!((buf.as_float() - 3.14).abs() < 0.001);
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
         assert!((buf.as_float() + 0.5).abs() < 0.001);
