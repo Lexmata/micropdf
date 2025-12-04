@@ -483,4 +483,3 @@ mod tests {
         fz_cookie_set_progress(0, 9999, 50);
     }
 }
-

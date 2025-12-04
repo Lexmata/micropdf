@@ -1,7 +1,7 @@
 //! Predictor Functions for PDF Filters
 
-use crate::fitz::error::{Error, Result};
 use super::params::FlateDecodeParams;
+use crate::fitz::error::{Error, Result};
 
 /// Apply PNG/TIFF predictor for decoding
 pub fn apply_predictor_decode(data: &[u8], params: &FlateDecodeParams) -> Result<Vec<u8>> {
@@ -18,12 +18,19 @@ pub fn apply_predictor_decode(data: &[u8], params: &FlateDecodeParams) -> Result
         1 => Ok(data.to_vec()), // No predictor
         2 => apply_tiff_predictor_decode(data, bytes_per_row, bytes_per_pixel),
         10..=15 => apply_png_predictor_decode(data, bytes_per_row, bytes_per_pixel),
-        _ => Err(Error::Generic(format!("Unsupported predictor: {}", predictor))),
+        _ => Err(Error::Generic(format!(
+            "Unsupported predictor: {}",
+            predictor
+        ))),
     }
 }
 
 /// Apply TIFF predictor (horizontal differencing)
-pub fn apply_tiff_predictor_decode(data: &[u8], bytes_per_row: usize, bytes_per_pixel: usize) -> Result<Vec<u8>> {
+pub fn apply_tiff_predictor_decode(
+    data: &[u8],
+    bytes_per_row: usize,
+    bytes_per_pixel: usize,
+) -> Result<Vec<u8>> {
     let mut result = Vec::with_capacity(data.len());
 
     for row in data.chunks(bytes_per_row) {
@@ -42,7 +49,11 @@ pub fn apply_tiff_predictor_decode(data: &[u8], bytes_per_row: usize, bytes_per_
 }
 
 /// Apply PNG predictor
-pub fn apply_png_predictor_decode(data: &[u8], bytes_per_row: usize, bytes_per_pixel: usize) -> Result<Vec<u8>> {
+pub fn apply_png_predictor_decode(
+    data: &[u8],
+    bytes_per_row: usize,
+    bytes_per_pixel: usize,
+) -> Result<Vec<u8>> {
     // PNG predictor includes a filter type byte at the start of each row
     let row_size = bytes_per_row + 1;
     let mut result = Vec::with_capacity(data.len());
@@ -60,9 +71,21 @@ pub fn apply_png_predictor_decode(data: &[u8], bytes_per_row: usize, bytes_per_p
             // Incomplete row, pad with zeros
             let mut padded = row.to_vec();
             padded.resize(bytes_per_row, 0);
-            decode_png_filter(filter_type, &padded, &prev_row, bytes_per_pixel, &mut result)?;
+            decode_png_filter(
+                filter_type,
+                &padded,
+                &prev_row,
+                bytes_per_pixel,
+                &mut result,
+            )?;
         } else {
-            decode_png_filter(filter_type, &row[..bytes_per_row], &prev_row, bytes_per_pixel, &mut result)?;
+            decode_png_filter(
+                filter_type,
+                &row[..bytes_per_row],
+                &prev_row,
+                bytes_per_pixel,
+                &mut result,
+            )?;
         }
 
         // Update previous row
@@ -136,7 +159,10 @@ pub fn decode_png_filter(
             }
         }
         _ => {
-            return Err(Error::Generic(format!("Unknown PNG filter type: {}", filter_type)));
+            return Err(Error::Generic(format!(
+                "Unknown PNG filter type: {}",
+                filter_type
+            )));
         }
     }
 
@@ -328,8 +354,8 @@ mod tests {
     fn test_apply_png_predictor_decode_multiple_rows() {
         // Two rows with None filter
         let data = vec![
-            0, 10, 20, 30,  // Row 1: filter type 0, data
-            0, 40, 50, 60,  // Row 2: filter type 0, data
+            0, 10, 20, 30, // Row 1: filter type 0, data
+            0, 40, 50, 60, // Row 2: filter type 0, data
         ];
         let result = apply_png_predictor_decode(&data, 3, 1).unwrap();
         assert_eq!(result, vec![10, 20, 30, 40, 50, 60]);
@@ -367,4 +393,3 @@ mod tests {
         }
     }
 }
-

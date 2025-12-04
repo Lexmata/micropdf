@@ -1,7 +1,7 @@
 //! CCITTFaxDecode Filter Implementation
 
-use crate::fitz::error::Result;
 use super::params::CCITTFaxDecodeParams;
+use crate::fitz::error::Result;
 
 /// Decode CCITT Group 3/4 fax encoded data
 pub fn decode_ccitt_fax(data: &[u8], params: &CCITTFaxDecodeParams) -> Result<Vec<u8>> {
@@ -9,7 +9,11 @@ pub fn decode_ccitt_fax(data: &[u8], params: &CCITTFaxDecodeParams) -> Result<Ve
     // Full implementation would require a dedicated CCITT decoder
 
     let width = params.columns as usize;
-    let height = if params.rows > 0 { params.rows as usize } else { 0 };
+    let height = if params.rows > 0 {
+        params.rows as usize
+    } else {
+        0
+    };
 
     // For Group 4 (k > 0), we need to implement the 2D coding scheme
     // For Group 3 1D (k = 0), we need to implement the 1D coding scheme
@@ -17,7 +21,11 @@ pub fn decode_ccitt_fax(data: &[u8], params: &CCITTFaxDecodeParams) -> Result<Ve
 
     // Basic implementation using run-length decoding pattern
     let bytes_per_row = width.div_ceil(8);
-    let estimated_rows = if height > 0 { height } else { data.len() * 8 / width.max(1) };
+    let estimated_rows = if height > 0 {
+        height
+    } else {
+        data.len() * 8 / width.max(1)
+    };
 
     let mut result = Vec::with_capacity(bytes_per_row * estimated_rows);
 
@@ -41,7 +49,12 @@ pub fn decode_ccitt_fax(data: &[u8], params: &CCITTFaxDecodeParams) -> Result<Ve
 }
 
 /// Basic CCITT Group 4 decoder
-fn decode_ccitt_g4(data: &[u8], width: usize, height: usize, _params: &CCITTFaxDecodeParams) -> Result<Vec<u8>> {
+fn decode_ccitt_g4(
+    data: &[u8],
+    width: usize,
+    height: usize,
+    _params: &CCITTFaxDecodeParams,
+) -> Result<Vec<u8>> {
     // Group 4 uses 2D coding exclusively
     // This is a simplified implementation
 
@@ -125,4 +138,3 @@ fn decode_g4_row(
     current.fill(0);
     Ok(())
 }
-

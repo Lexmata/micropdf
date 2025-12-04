@@ -8,25 +8,25 @@
 extern "C" {
 #endif
 
-#include "mupdf/fitz/version.h"
-#include "mupdf/fitz/system.h"
-#include "mupdf/fitz/context.h"
-
-#include "mupdf/fitz/geometry.h"
+#include "mupdf/fitz/archive.h"
 #include "mupdf/fitz/buffer.h"
-#include "mupdf/fitz/stream.h"
-
-#include "mupdf/fitz/color.h"
-#include "mupdf/fitz/pixmap.h"
+#include "mupdf/fitz/colorspace.h"
+#include "mupdf/fitz/context.h"
+#include "mupdf/fitz/cookie.h"
 #include "mupdf/fitz/device.h"
-
+#include "mupdf/fitz/display_list.h"
+#include "mupdf/fitz/font.h"
+#include "mupdf/fitz/geometry.h"
+#include "mupdf/fitz/image.h"
 #include "mupdf/fitz/link.h"
-#include "mupdf/fitz/outline.h"
-#include "mupdf/fitz/document.h"
+#include "mupdf/fitz/output.h"
+#include "mupdf/fitz/path.h"
+#include "mupdf/fitz/pixmap.h"
+#include "mupdf/fitz/stream.h"
+#include "mupdf/fitz/text.h"
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* MUPDF_FITZ_H */
-

@@ -8,4 +8,3 @@
 #include "mupdf/pdf.h"
 
 #endif /* MUPDF_H */
-

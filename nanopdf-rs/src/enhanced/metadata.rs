@@ -93,8 +93,7 @@ pub fn update_metadata(pdf_path: &str, metadata: &Metadata) -> Result<()> {
     }
 
     // Read existing PDF
-    let _pdf_data = fs::read(pdf_path)
-        .map_err(EnhancedError::Io)?;
+    let _pdf_data = fs::read(pdf_path).map_err(EnhancedError::Io)?;
 
     // Full implementation would:
     // 1. Parse PDF structure
@@ -105,7 +104,7 @@ pub fn update_metadata(pdf_path: &str, metadata: &Metadata) -> Result<()> {
     if let Some(ref title) = metadata.title {
         if title.len() > 1000 {
             return Err(EnhancedError::InvalidParameter(
-                "Title too long (max 1000 characters)".into()
+                "Title too long (max 1000 characters)".into(),
             ));
         }
     }
@@ -132,11 +131,13 @@ pub fn read_xmp_metadata(pdf_path: &str) -> Result<String> {
     // 3. Extract and decode XML
 
     // Return empty XMP for now
-    Ok(String::from(r#"<?xml version="1.0" encoding="UTF-8"?>
+    Ok(String::from(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
     </rdf:RDF>
-</x:xmpmeta>"#))
+</x:xmpmeta>"#,
+    ))
 }
 
 /// Update XMP metadata
@@ -152,13 +153,13 @@ pub fn update_xmp_metadata(pdf_path: &str, xmp: &str) -> Result<()> {
     // Validate XMP is valid XML
     if !xmp.contains("<?xml") {
         return Err(EnhancedError::InvalidParameter(
-            "XMP must be valid XML starting with <?xml declaration".into()
+            "XMP must be valid XML starting with <?xml declaration".into(),
         ));
     }
 
     if !xmp.contains("xmpmeta") {
         return Err(EnhancedError::InvalidParameter(
-            "XMP must contain xmpmeta element".into()
+            "XMP must contain xmpmeta element".into(),
         ));
     }
 
@@ -188,15 +189,13 @@ mod tests {
 
     #[test]
     fn test_metadata_with_title() {
-        let metadata = Metadata::new()
-            .with_title("Test Document");
+        let metadata = Metadata::new().with_title("Test Document");
         assert_eq!(metadata.title, Some("Test Document".to_string()));
     }
 
     #[test]
     fn test_metadata_with_author() {
-        let metadata = Metadata::new()
-            .with_author("John Doe");
+        let metadata = Metadata::new().with_author("John Doe");
         assert_eq!(metadata.author, Some("John Doe".to_string()));
     }
 
@@ -204,7 +203,10 @@ mod tests {
     fn test_metadata_add_custom() {
         let mut metadata = Metadata::new();
         metadata.add_custom("Department", "Engineering");
-        assert_eq!(metadata.custom.get("Department"), Some(&"Engineering".to_string()));
+        assert_eq!(
+            metadata.custom.get("Department"),
+            Some(&"Engineering".to_string())
+        );
     }
 
     #[test]
@@ -229,8 +231,7 @@ mod tests {
 
     #[test]
     fn test_read_metadata_empty_file() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -251,8 +252,7 @@ mod tests {
 
     #[test]
     fn test_update_metadata_title_too_long() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -266,8 +266,7 @@ mod tests {
 
     #[test]
     fn test_read_xmp_metadata() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -281,8 +280,7 @@ mod tests {
 
     #[test]
     fn test_update_xmp_invalid_xml() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -295,8 +293,7 @@ mod tests {
 
     #[test]
     fn test_update_xmp_valid() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 

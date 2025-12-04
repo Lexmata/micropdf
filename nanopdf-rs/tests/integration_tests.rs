@@ -16,7 +16,7 @@ fn fixture_path(name: &str) -> PathBuf {
 
 /// Read a fixture file as bytes
 fn read_fixture(name: &str) -> Vec<u8> {
-    std::fs::read(fixture_path(name)).expect(&format!("Failed to read fixture: {}", name))
+    std::fs::read(fixture_path(name)).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name))
 }
 
 mod pdf_header {
@@ -50,7 +50,9 @@ mod pdf_structure {
     }
 
     fn count_pattern(data: &[u8], pattern: &[u8]) -> usize {
-        data.windows(pattern.len()).filter(|w| *w == pattern).count()
+        data.windows(pattern.len())
+            .filter(|w| *w == pattern)
+            .count()
     }
 
     #[test]
@@ -260,7 +262,11 @@ mod pdf_geometry {
     fn test_all_pdfs_have_mediabox() {
         for fixture in ["minimal.pdf", "multipage.pdf", "comprehensive_test.pdf"] {
             let data = read_fixture(fixture);
-            assert!(find_pattern(&data, b"/MediaBox"), "Missing MediaBox in {}", fixture);
+            assert!(
+                find_pattern(&data, b"/MediaBox"),
+                "Missing MediaBox in {}",
+                fixture
+            );
         }
     }
 
@@ -279,9 +285,9 @@ mod pdf_geometry {
 }
 
 mod ffi_integration {
-    use nanopdf::ffi::geometry::*;
     use nanopdf::ffi::buffer::*;
     use nanopdf::ffi::context::*;
+    use nanopdf::ffi::geometry::*;
 
     #[test]
     fn test_ffi_context_lifecycle() {
@@ -311,35 +317,42 @@ mod ffi_integration {
 
     #[test]
     fn test_ffi_matrix_operations() {
-        unsafe {
-            // Test identity
-            let identity = fz_matrix::identity();
-            assert_eq!(identity.a, 1.0);
-            assert_eq!(identity.d, 1.0);
+        // Test identity
+        let identity = fz_matrix::identity();
+        assert_eq!(identity.a, 1.0);
+        assert_eq!(identity.d, 1.0);
 
-            // Test translation
-            let translate = fz_translate(100.0, 200.0);
-            assert_eq!(translate.e, 100.0);
-            assert_eq!(translate.f, 200.0);
+        // Test translation
+        let translate = fz_translate(100.0, 200.0);
+        assert_eq!(translate.e, 100.0);
+        assert_eq!(translate.f, 200.0);
 
-            // Test scale
-            let scale = fz_scale(2.0, 3.0);
-            assert_eq!(scale.a, 2.0);
-            assert_eq!(scale.d, 3.0);
+        // Test scale
+        let scale = fz_scale(2.0, 3.0);
+        assert_eq!(scale.a, 2.0);
+        assert_eq!(scale.d, 3.0);
 
-            // Test point transformation
-            let point = fz_point { x: 10.0, y: 20.0 };
-            let transformed = fz_transform_point(point, translate);
-            assert_eq!(transformed.x, 110.0);
-            assert_eq!(transformed.y, 220.0);
-        }
+        // Test point transformation
+        let point = fz_point { x: 10.0, y: 20.0 };
+        let transformed = fz_transform_point(point, translate);
+        assert_eq!(transformed.x, 110.0);
+        assert_eq!(transformed.y, 220.0);
     }
 
     #[test]
     fn test_ffi_rect_operations() {
-        unsafe {
-            let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-            let r2 = fz_rect { x0: 50.0, y0: 50.0, x1: 150.0, y1: 150.0 };
+        let r1 = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+        let r2 = fz_rect {
+            x0: 50.0,
+            y0: 50.0,
+            x1: 150.0,
+            y1: 150.0,
+        };
 
         // Test intersection
         let intersection = fz_intersect_rect(r1, r2);
@@ -355,30 +368,43 @@ mod ffi_integration {
         assert_eq!(union.x1, 150.0);
         assert_eq!(union.y1, 150.0);
 
-            // Test contains
-            assert_eq!(fz_contains_rect(r1, fz_rect { x0: 10.0, y0: 10.0, x1: 50.0, y1: 50.0 }), 1);
-            assert_eq!(fz_contains_rect(r1, r2), 0);
-        }
+        // Test contains
+        assert_eq!(
+            fz_contains_rect(
+                r1,
+                fz_rect {
+                    x0: 10.0,
+                    y0: 10.0,
+                    x1: 50.0,
+                    y1: 50.0
+                }
+            ),
+            1
+        );
+        assert_eq!(fz_contains_rect(r1, r2), 0);
     }
 
     #[test]
     fn test_ffi_quad_operations() {
-        unsafe {
-            let rect = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-            let quad = fz_quad_from_rect(rect);
+        let rect = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+        let quad = fz_quad_from_rect(rect);
 
-            assert_eq!(quad.ul.x, 0.0);
-            assert_eq!(quad.ul.y, 0.0);
-            assert_eq!(quad.lr.x, 100.0);
-            assert_eq!(quad.lr.y, 100.0);
+        assert_eq!(quad.ul.x, 0.0);
+        assert_eq!(quad.ul.y, 0.0);
+        assert_eq!(quad.lr.x, 100.0);
+        assert_eq!(quad.lr.y, 100.0);
 
-            // Test quad back to rect
-            let back = fz_rect_from_quad(quad);
-            assert_eq!(back.x0, rect.x0);
-            assert_eq!(back.y0, rect.y0);
-            assert_eq!(back.x1, rect.x1);
-            assert_eq!(back.y1, rect.y1);
-        }
+        // Test quad back to rect
+        let back = fz_rect_from_quad(quad);
+        assert_eq!(back.x0, rect.x0);
+        assert_eq!(back.y0, rect.y0);
+        assert_eq!(back.x1, rect.x1);
+        assert_eq!(back.y1, rect.y1);
     }
 }
 
@@ -387,90 +413,87 @@ mod colorspace_integration {
 
     #[test]
     fn test_device_colorspaces() {
-        unsafe {
-            let gray = fz_device_gray(0);
-            let rgb = fz_device_rgb(0);
-            let cmyk = fz_device_cmyk(0);
+        let gray = fz_device_gray(0);
+        let rgb = fz_device_rgb(0);
+        let cmyk = fz_device_cmyk(0);
 
-            assert_eq!(fz_colorspace_n(0, gray), 1);
-            assert_eq!(fz_colorspace_n(0, rgb), 3);
-            assert_eq!(fz_colorspace_n(0, cmyk), 4);
+        assert_eq!(fz_colorspace_n(0, gray), 1);
+        assert_eq!(fz_colorspace_n(0, rgb), 3);
+        assert_eq!(fz_colorspace_n(0, cmyk), 4);
 
-            assert_eq!(fz_colorspace_is_gray(0, gray), 1);
-            assert_eq!(fz_colorspace_is_rgb(0, rgb), 1);
-            assert_eq!(fz_colorspace_is_cmyk(0, cmyk), 1);
-        }
+        assert_eq!(fz_colorspace_is_gray(0, gray), 1);
+        assert_eq!(fz_colorspace_is_rgb(0, rgb), 1);
+        assert_eq!(fz_colorspace_is_cmyk(0, cmyk), 1);
     }
 
     #[test]
     fn test_color_conversion() {
-        unsafe {
-            let gray = fz_device_gray(0);
-            let rgb = fz_device_rgb(0);
+        let gray = fz_device_gray(0);
+        let rgb = fz_device_rgb(0);
 
-            let src = [0.5f32];
-            let mut dst = [0.0f32; 3];
+        let src = [0.5f32];
+        let mut dst = [0.0f32; 3];
 
-            fz_convert_color(0, gray, src.as_ptr(), rgb, dst.as_mut_ptr(), 0);
+        fz_convert_color(0, gray, src.as_ptr(), rgb, dst.as_mut_ptr(), 0);
 
-            // Gray to RGB should produce equal components
-            assert!((dst[0] - 0.5).abs() < 0.01);
-            assert!((dst[1] - 0.5).abs() < 0.01);
-            assert!((dst[2] - 0.5).abs() < 0.01);
-        }
+        // Gray to RGB should produce equal components
+        assert!((dst[0] - 0.5).abs() < 0.01);
+        assert!((dst[1] - 0.5).abs() < 0.01);
+        assert!((dst[2] - 0.5).abs() < 0.01);
     }
 }
 
 mod pixmap_integration {
-    use nanopdf::ffi::pixmap::*;
     use nanopdf::ffi::colorspace::*;
+    use nanopdf::ffi::pixmap::*;
 
     #[test]
     fn test_pixmap_creation_and_manipulation() {
-        unsafe {
-            let rgb = fz_device_rgb(0);
-            let pix = fz_new_pixmap(0, rgb, 100, 100, 0, 1);
+        let rgb = fz_device_rgb(0);
+        let pix = fz_new_pixmap(0, rgb, 100, 100, 0, 1);
 
-            assert_ne!(pix, 0);
-            assert_eq!(fz_pixmap_width(0, pix), 100);
-            assert_eq!(fz_pixmap_height(0, pix), 100);
-            assert_eq!(fz_pixmap_alpha(0, pix), 1);
-            assert_eq!(fz_pixmap_components(0, pix), 4); // RGB + alpha
+        assert_ne!(pix, 0);
+        assert_eq!(fz_pixmap_width(0, pix), 100);
+        assert_eq!(fz_pixmap_height(0, pix), 100);
+        assert_eq!(fz_pixmap_alpha(0, pix), 1);
+        assert_eq!(fz_pixmap_components(0, pix), 4); // RGB + alpha
 
-            // Test clear
-            fz_clear_pixmap_with_value(0, pix, 128);
-            assert_eq!(fz_get_pixmap_sample(0, pix, 0, 0, 0), 128);
+        // Test clear
+        fz_clear_pixmap_with_value(0, pix, 128);
+        assert_eq!(fz_get_pixmap_sample(0, pix, 0, 0, 0), 128);
 
-            // Test set/get
-            fz_set_pixmap_sample(0, pix, 50, 50, 0, 255);
-            assert_eq!(fz_get_pixmap_sample(0, pix, 50, 50, 0), 255);
+        // Test set/get
+        fz_set_pixmap_sample(0, pix, 50, 50, 0, 255);
+        assert_eq!(fz_get_pixmap_sample(0, pix, 50, 50, 0), 255);
 
-            fz_drop_pixmap(0, pix);
-        }
+        fz_drop_pixmap(0, pix);
     }
 
     #[test]
     fn test_pixmap_bbox() {
         use nanopdf::ffi::geometry::fz_irect;
 
-        unsafe {
-            let rgb = fz_device_rgb(0);
-            let bbox = fz_irect { x0: 10, y0: 20, x1: 110, y1: 120 };
-            let pix = fz_new_pixmap_with_bbox(0, rgb, bbox, 0, 0);
+        let rgb = fz_device_rgb(0);
+        let bbox = fz_irect {
+            x0: 10,
+            y0: 20,
+            x1: 110,
+            y1: 120,
+        };
+        let pix = fz_new_pixmap_with_bbox(0, rgb, bbox, 0, 0);
 
-            assert_eq!(fz_pixmap_x(0, pix), 10);
-            assert_eq!(fz_pixmap_y(0, pix), 20);
-            assert_eq!(fz_pixmap_width(0, pix), 100);
-            assert_eq!(fz_pixmap_height(0, pix), 100);
+        assert_eq!(fz_pixmap_x(0, pix), 10);
+        assert_eq!(fz_pixmap_y(0, pix), 20);
+        assert_eq!(fz_pixmap_width(0, pix), 100);
+        assert_eq!(fz_pixmap_height(0, pix), 100);
 
-            fz_drop_pixmap(0, pix);
-        }
+        fz_drop_pixmap(0, pix);
     }
 }
 
 mod stream_integration {
-    use nanopdf::ffi::stream::*;
     use nanopdf::ffi::context::*;
+    use nanopdf::ffi::stream::*;
 
     #[test]
     fn test_stream_from_memory() {
@@ -503,4 +526,3 @@ mod stream_integration {
         }
     }
 }
-

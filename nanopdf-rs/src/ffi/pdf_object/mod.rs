@@ -3,31 +3,31 @@
 //! This module provides C-compatible exports for PDF object manipulation.
 
 // Module declarations
-pub mod types;
-pub mod create;
-pub mod refcount;
-pub mod check;
-pub mod extract;
 pub mod array;
-pub mod dict;
-pub mod string;
-pub mod marking;
+pub mod check;
 pub mod compare;
 pub mod copy;
+pub mod create;
+pub mod dict;
+pub mod extract;
+pub mod marking;
+pub mod refcount;
+pub mod string;
+pub mod types;
 pub mod utils;
 
 // Re-export public types and functions
-pub use types::{PdfObj, PdfObjType, PdfObjHandle, PDF_OBJECTS};
-pub use create::*;
-pub use refcount::*;
-pub use check::*;
-pub use extract::*;
 pub use array::*;
-pub use dict::*;
-pub use string::*;
-pub use marking::*;
+pub use check::*;
 pub use compare::*;
 pub use copy::*;
+pub use create::*;
+pub use dict::*;
+pub use extract::*;
+pub use marking::*;
+pub use refcount::*;
+pub use string::*;
+pub use types::{PDF_OBJECTS, PdfObj, PdfObjHandle, PdfObjType};
 pub use utils::*;
 
 // ============================================================================
@@ -85,9 +85,9 @@ mod tests {
 
     #[test]
     fn test_pdf_new_real() {
-        let real_val = pdf_new_real(0, 3.14);
+        let real_val = pdf_new_real(0, std::f32::consts::PI);
         assert_eq!(pdf_is_real(0, real_val), 1);
-        assert!((pdf_to_real(0, real_val) - 3.14).abs() < 0.01);
+        assert!((pdf_to_real(0, real_val) - std::f32::consts::PI).abs() < 0.01);
 
         // Negative value
         let neg_real = pdf_new_real(0, -2.5);
@@ -97,7 +97,7 @@ mod tests {
     #[test]
     fn test_pdf_is_number() {
         let int_val = pdf_new_int(0, 42);
-        let real_val = pdf_new_real(0, 3.14);
+        let real_val = pdf_new_real(0, std::f32::consts::PI);
         let null_val = pdf_new_null(0);
 
         assert_eq!(pdf_is_number(0, int_val), 1);
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_pdf_new_name() {
-        let name = pdf_new_name(0, b"Type\0".as_ptr() as *const c_char);
+        let name = pdf_new_name(0, c"Type".as_ptr());
         assert_eq!(pdf_is_name(0, name), 1);
 
         // Empty name
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_pdf_new_text_string() {
-        let text_obj = pdf_new_text_string(0, b"Hello World\0".as_ptr() as *const c_char);
+        let text_obj = pdf_new_text_string(0, c"Hello World".as_ptr());
         assert_eq!(pdf_is_string(0, text_obj), 1);
 
         // Null text
@@ -200,18 +200,18 @@ mod tests {
 
     #[test]
     fn test_pdf_to_real_default() {
-        let real_obj = pdf_new_real(0, 3.14);
+        let real_obj = pdf_new_real(0, std::f32::consts::PI);
         let null_obj = pdf_new_null(0);
         let int_obj = pdf_new_int(0, 5);
 
-        assert!((pdf_to_real_default(0, real_obj, 0.0) - 3.14).abs() < 0.01);
+        assert!((pdf_to_real_default(0, real_obj, 0.0) - std::f32::consts::PI).abs() < 0.01);
         assert!((pdf_to_real_default(0, null_obj, 99.0) - 99.0).abs() < 0.01);
         assert!((pdf_to_real_default(0, int_obj, 0.0) - 5.0).abs() < 0.01);
     }
 
     #[test]
     fn test_pdf_to_name() {
-        let name = pdf_new_name(0, b"TestName\0".as_ptr() as *const c_char);
+        let name = pdf_new_name(0, c"TestName".as_ptr());
         let ptr = pdf_to_name(0, name);
         assert!(!ptr.is_null());
 
@@ -238,7 +238,7 @@ mod tests {
 
         // Push primitives
         pdf_array_push_int(0, arr, 100);
-        pdf_array_push_real(0, arr, 3.14);
+        pdf_array_push_real(0, arr, std::f64::consts::PI);
         pdf_array_push_bool(0, arr, 1);
         assert_eq!(pdf_array_len(0, arr), 4);
 
@@ -293,20 +293,20 @@ mod tests {
 
         // Add entries using puts
         let val = pdf_new_int(0, 42);
-        pdf_dict_puts(0, dict, b"IntKey\0".as_ptr() as *const c_char, val);
+        pdf_dict_puts(0, dict, c"IntKey".as_ptr(), val);
         assert_eq!(pdf_dict_len(0, dict), 1);
 
         // Add more entries
-        let key2 = pdf_new_name(0, b"RealKey\0".as_ptr() as *const c_char);
-        pdf_dict_put_real(0, dict, key2, 3.14);
+        let key2 = pdf_new_name(0, c"RealKey".as_ptr());
+        pdf_dict_put_real(0, dict, key2, std::f64::consts::PI);
         assert_eq!(pdf_dict_len(0, dict), 2);
 
         // Retrieve value
-        let retrieved = pdf_dict_gets(0, dict, b"IntKey\0".as_ptr() as *const c_char);
+        let retrieved = pdf_dict_gets(0, dict, c"IntKey".as_ptr());
         assert_eq!(pdf_to_int(0, retrieved), 42);
 
         // Delete entry
-        pdf_dict_dels(0, dict, b"IntKey\0".as_ptr() as *const c_char);
+        pdf_dict_dels(0, dict, c"IntKey".as_ptr());
         assert_eq!(pdf_dict_len(0, dict), 1);
     }
 
@@ -314,18 +314,18 @@ mod tests {
     fn test_pdf_dict_put_typed() {
         let dict = pdf_new_dict(0, 0, 5);
 
-        let key1 = pdf_new_name(0, b"Int\0".as_ptr() as *const c_char);
+        let key1 = pdf_new_name(0, c"Int".as_ptr());
         pdf_dict_put_int(0, dict, key1, 100);
 
-        let key2 = pdf_new_name(0, b"Bool\0".as_ptr() as *const c_char);
+        let key2 = pdf_new_name(0, c"Bool".as_ptr());
         pdf_dict_put_bool(0, dict, key2, 1);
 
-        let key3 = pdf_new_name(0, b"Real\0".as_ptr() as *const c_char);
+        let key3 = pdf_new_name(0, c"Real".as_ptr());
         pdf_dict_put_real(0, dict, key3, 2.5);
 
         assert_eq!(pdf_dict_len(0, dict), 3);
 
-        let int_val = pdf_dict_gets(0, dict, b"Int\0".as_ptr() as *const c_char);
+        let int_val = pdf_dict_gets(0, dict, c"Int".as_ptr());
         assert_eq!(pdf_to_int(0, int_val), 100);
     }
 
@@ -413,9 +413,9 @@ mod tests {
 
     #[test]
     fn test_pdf_name_eq() {
-        let name1 = pdf_new_name(0, b"Type\0".as_ptr() as *const c_char);
-        let name2 = pdf_new_name(0, b"Type\0".as_ptr() as *const c_char);
-        let name3 = pdf_new_name(0, b"Other\0".as_ptr() as *const c_char);
+        let name1 = pdf_new_name(0, c"Type".as_ptr());
+        let name2 = pdf_new_name(0, c"Type".as_ptr());
+        let name3 = pdf_new_name(0, c"Other".as_ptr());
 
         assert_eq!(pdf_name_eq(0, name1, name2), 1);
         assert_eq!(pdf_name_eq(0, name1, name3), 0);
@@ -442,13 +442,13 @@ mod tests {
     #[test]
     fn test_pdf_copy_dict() {
         let dict = pdf_new_dict(0, 0, 2);
-        let key = pdf_new_name(0, b"Key\0".as_ptr() as *const c_char);
+        let key = pdf_new_name(0, c"Key".as_ptr());
         pdf_dict_put_int(0, dict, key, 42);
 
         let copy = pdf_copy_dict(0, 0, dict);
         assert_eq!(pdf_dict_len(0, copy), 1);
 
-        let val = pdf_dict_gets(0, copy, b"Key\0".as_ptr() as *const c_char);
+        let val = pdf_dict_gets(0, copy, c"Key".as_ptr());
         assert_eq!(pdf_to_int(0, val), 42);
     }
 
@@ -510,10 +510,10 @@ mod tests {
     fn test_pdf_dict_get_key_val() {
         let dict = pdf_new_dict(0, 0, 2);
 
-        let key1 = pdf_new_name(0, b"First\0".as_ptr() as *const c_char);
+        let key1 = pdf_new_name(0, c"First".as_ptr());
         pdf_dict_put_int(0, dict, key1, 100);
 
-        let key2 = pdf_new_name(0, b"Second\0".as_ptr() as *const c_char);
+        let key2 = pdf_new_name(0, c"Second".as_ptr());
         pdf_dict_put_int(0, dict, key2, 200);
 
         // Get key at index 0
@@ -525,4 +525,3 @@ mod tests {
         assert_eq!(pdf_to_int(0, val_obj), 100);
     }
 }
-

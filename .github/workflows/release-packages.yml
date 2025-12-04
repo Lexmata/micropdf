@@ -1,0 +1,249 @@
+name: Build Release Packages
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-packages:
+    name: Build ${{ matrix.package }} for ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [debian, rpm]
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Build Debian package (${{ matrix.arch }})
+        if: matrix.package == 'debian'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nanopdf-rs
+          file: nanopdf-rs/docker/Dockerfile.debian
+          platforms: linux/${{ matrix.arch }}
+          tags: nanopdf-deb-${{ matrix.arch }}:latest
+          load: true
+          cache-from: type=gha,scope=${{ matrix.arch }}-debian
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-debian
+
+      - name: Build RPM package (${{ matrix.arch }})
+        if: matrix.package == 'rpm'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nanopdf-rs
+          file: nanopdf-rs/docker/Dockerfile.redhat
+          platforms: linux/${{ matrix.arch }}
+          tags: nanopdf-rpm-${{ matrix.arch }}:latest
+          load: true
+          cache-from: type=gha,scope=${{ matrix.arch }}-rpm
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-rpm
+
+      - name: Extract Debian package
+        if: matrix.package == 'debian'
+        run: |
+          mkdir -p dist
+          container_id=$(docker create nanopdf-deb-${{ matrix.arch }}:latest)
+          docker cp ${container_id}:/output/. dist/
+          docker rm ${container_id}
+          
+          # Rename to include architecture
+          for pkg in dist/*.deb; do
+            if [ -f "$pkg" ]; then
+              base="${pkg%.deb}"
+              mv "$pkg" "${base}-${{ matrix.arch }}.deb"
+            fi
+          done
+          
+          ls -lh dist/
+
+      - name: Extract RPM package
+        if: matrix.package == 'rpm'
+        run: |
+          mkdir -p dist
+          container_id=$(docker create nanopdf-rpm-${{ matrix.arch }}:latest)
+          docker cp ${container_id}:/output/. dist/
+          docker rm ${container_id}
+          
+          # Rename to include architecture
+          for pkg in dist/*.rpm; do
+            if [ -f "$pkg" ]; then
+              base="${pkg%.rpm}"
+              mv "$pkg" "${base}-${{ matrix.arch }}.rpm"
+            fi
+          done
+          
+          ls -lh dist/
+
+      - name: Upload packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nanopdf-${{ matrix.package }}-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 30
+
+      - name: Upload to release
+        if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          tag_name: ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-manifest:
+    name: Create Package Manifest
+    needs: build-packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+
+      - name: Create manifest
+        run: |
+          cat > packages/MANIFEST.md << 'EOF'
+          # NanoPDF Release Packages
+          
+          ## Available Packages
+          
+          ### Debian (.deb)
+          - **AMD64**: `nanopdf_*_amd64.deb` - For x86_64 systems
+          - **ARM64**: `nanopdf_*_arm64.deb` - For ARM64/aarch64 systems
+          
+          ### Red Hat / Fedora (.rpm)
+          - **AMD64**: `nanopdf-*-amd64.rpm` - For x86_64 systems
+          - **ARM64**: `nanopdf-*-arm64.rpm` - For ARM64/aarch64 systems
+          
+          ## Installation
+          
+          ### Debian/Ubuntu (AMD64)
+          ```bash
+          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_amd64.deb
+          sudo dpkg -i nanopdf_*_amd64.deb
+          sudo apt-get install -f  # Install dependencies if needed
+          ```
+          
+          ### Debian/Ubuntu (ARM64)
+          ```bash
+          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_arm64.deb
+          sudo dpkg -i nanopdf_*_arm64.deb
+          sudo apt-get install -f  # Install dependencies if needed
+          ```
+          
+          ### Red Hat/Fedora (AMD64)
+          ```bash
+          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-amd64.rpm
+          sudo rpm -i nanopdf-*-amd64.rpm
+          ```
+          
+          ### Red Hat/Fedora (ARM64)
+          ```bash
+          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-arm64.rpm
+          sudo rpm -i nanopdf-*-arm64.rpm
+          ```
+          
+          ## Verification
+          
+          After installation, verify the installation:
+          ```bash
+          pkg-config --modversion nanopdf
+          pkg-config --cflags nanopdf
+          pkg-config --libs nanopdf
+          ```
+          
+          ## Files Included
+          
+          - `/usr/lib64/libnanopdf.so` - Shared library
+          - `/usr/lib64/libnanopdf.a` - Static library
+          - `/usr/include/nanopdf/` - C header files
+          - `/usr/lib64/pkgconfig/nanopdf.pc` - pkg-config file
+          - `/usr/lib64/pkgconfig/mupdf.pc` - MuPDF compatibility alias
+          
+          ## Package Details
+          
+          EOF
+          
+          echo "### Package List" >> packages/MANIFEST.md
+          echo "" >> packages/MANIFEST.md
+          find packages -type f \( -name "*.deb" -o -name "*.rpm" \) | while read pkg; do
+            size=$(du -h "$pkg" | cut -f1)
+            echo "- \`$(basename "$pkg")\` - ${size}" >> packages/MANIFEST.md
+          done
+          
+          cat packages/MANIFEST.md
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-manifest
+          path: packages/MANIFEST.md
+
+      - name: Upload manifest to release
+        if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: packages/MANIFEST.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    name: Build Summary
+    needs: [build-packages, create-manifest]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Package Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Debian AMD64: ${{ needs.build-packages.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Debian ARM64: ${{ needs.build-packages.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- RPM AMD64: ${{ needs.build-packages.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- RPM ARM64: ${{ needs.build-packages.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.build-packages.result }}" == "success" ]]; then
+            echo "✅ All packages built successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some package builds failed!" >> $GITHUB_STEP_SUMMARY
+          fi
+

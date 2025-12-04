@@ -63,8 +63,7 @@ pub enum TextFormat {
 }
 
 /// Field flags (bitfield)
-#[derive(Debug, Clone, Copy)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct FieldFlags(u32);
 
 impl FieldFlags {
@@ -115,7 +114,6 @@ impl FieldFlags {
         self.0
     }
 }
-
 
 /// Choice option (for combo boxes and list boxes)
 #[derive(Debug, Clone)]
@@ -230,7 +228,11 @@ impl FormField {
     /// Create a checkbox
     pub fn checkbox(name: String, rect: Rect, checked: bool) -> Self {
         let mut field = Self::new(name, WidgetType::Checkbox, rect);
-        field.value = if checked { "Yes".to_string() } else { "Off".to_string() };
+        field.value = if checked {
+            "Yes".to_string()
+        } else {
+            "Off".to_string()
+        };
         field
     }
 
@@ -330,7 +332,9 @@ impl FormField {
             }
             WidgetType::ComboBox | WidgetType::ListBox => {
                 // Validate against options
-                if !self.options.iter().any(|opt| opt.value == value) && !self.flags.has(FieldFlags::EDIT) {
+                if !self.options.iter().any(|opt| opt.value == value)
+                    && !self.flags.has(FieldFlags::EDIT)
+                {
                     return Err(Error::Argument("Invalid choice value".into()));
                 }
                 self.value = value;
@@ -809,9 +813,21 @@ mod tests {
     fn test_form_fields_by_type() {
         let mut form = Form::new();
 
-        form.add_field(FormField::text_field("text1".to_string(), Rect::EMPTY, None));
-        form.add_field(FormField::text_field("text2".to_string(), Rect::EMPTY, None));
-        form.add_field(FormField::checkbox("check1".to_string(), Rect::EMPTY, false));
+        form.add_field(FormField::text_field(
+            "text1".to_string(),
+            Rect::EMPTY,
+            None,
+        ));
+        form.add_field(FormField::text_field(
+            "text2".to_string(),
+            Rect::EMPTY,
+            None,
+        ));
+        form.add_field(FormField::checkbox(
+            "check1".to_string(),
+            Rect::EMPTY,
+            false,
+        ));
 
         let text_fields: Vec<_> = form.fields_by_type(WidgetType::Text).collect();
         assert_eq!(text_fields.len(), 2);

@@ -3,17 +3,15 @@
 //! Provides FFI bindings for path construction and manipulation.
 
 use super::{Handle, HandleStore};
-use crate::fitz::path::{Path, StrokeState, LineCap, LineJoin};
 use crate::fitz::geometry::{Point, Rect};
+use crate::fitz::path::{LineCap, LineJoin, Path, StrokeState};
 use std::sync::LazyLock;
 
 /// Path storage
-pub static PATHS: LazyLock<HandleStore<Path>> =
-    LazyLock::new(HandleStore::default);
+pub static PATHS: LazyLock<HandleStore<Path>> = LazyLock::new(HandleStore::default);
 
 /// StrokeState storage
-pub static STROKE_STATES: LazyLock<HandleStore<StrokeState>> =
-    LazyLock::new(HandleStore::default);
+pub static STROKE_STATES: LazyLock<HandleStore<StrokeState>> = LazyLock::new(HandleStore::default);
 
 /// Create a new empty path
 #[unsafe(no_mangle)]
@@ -40,7 +38,10 @@ pub extern "C" fn fz_currentpoint(_ctx: Handle, path: Handle) -> super::geometry
     if let Some(p) = PATHS.get(path) {
         if let Ok(guard) = p.lock() {
             if let Some(point) = guard.current_point() {
-                return super::geometry::fz_point { x: point.x, y: point.y };
+                return super::geometry::fz_point {
+                    x: point.x,
+                    y: point.y,
+                };
             }
         }
     }
@@ -69,14 +70,7 @@ pub extern "C" fn fz_lineto(_ctx: Handle, path: Handle, x: f32, y: f32) {
 
 /// Draw quadratic Bezier curve
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_quadto(
-    _ctx: Handle,
-    path: Handle,
-    x1: f32,
-    y1: f32,
-    x2: f32,
-    y2: f32,
-) {
+pub extern "C" fn fz_quadto(_ctx: Handle, path: Handle, x1: f32, y1: f32, x2: f32, y2: f32) {
     if let Some(p) = PATHS.get(path) {
         if let Ok(mut guard) = p.lock() {
             guard.quad_to(Point::new(x1, y1), Point::new(x2, y2));
@@ -98,11 +92,7 @@ pub extern "C" fn fz_curveto(
 ) {
     if let Some(p) = PATHS.get(path) {
         if let Ok(mut guard) = p.lock() {
-            guard.curve_to(
-                Point::new(x1, y1),
-                Point::new(x2, y2),
-                Point::new(x3, y3),
-            );
+            guard.curve_to(Point::new(x1, y1), Point::new(x2, y2), Point::new(x3, y3));
         }
     }
 }
@@ -147,17 +137,30 @@ pub extern "C" fn fz_bound_path(
             };
         }
     }
-    super::geometry::fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 }
+    super::geometry::fz_rect {
+        x0: 0.0,
+        y0: 0.0,
+        x1: 0.0,
+        y1: 0.0,
+    }
 }
 
 /// Transform path by matrix
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_transform_path(_ctx: Handle, path: Handle, transform: super::geometry::fz_matrix) {
+pub extern "C" fn fz_transform_path(
+    _ctx: Handle,
+    path: Handle,
+    transform: super::geometry::fz_matrix,
+) {
     if let Some(p) = PATHS.get(path) {
         if let Ok(mut guard) = p.lock() {
             let matrix = crate::fitz::geometry::Matrix::new(
-                transform.a, transform.b, transform.c,
-                transform.d, transform.e, transform.f
+                transform.a,
+                transform.b,
+                transform.c,
+                transform.d,
+                transform.e,
+                transform.f,
             );
             guard.transform(|p| p.transform(&matrix));
         }
@@ -361,7 +364,11 @@ pub extern "C" fn fz_clone_path(_ctx: Handle, path: Handle) -> Handle {
 /// Check if a stroke state is valid
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_stroke_state_is_valid(_ctx: Handle, stroke: Handle) -> i32 {
-    if STROKE_STATES.get(stroke).is_some() { 1 } else { 0 }
+    if STROKE_STATES.get(stroke).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Get stroke state dash phase
@@ -495,7 +502,12 @@ mod tests {
 
         fz_rectto(0, path_handle, 0.0, 0.0, 100.0, 200.0);
 
-        let bounds = fz_bound_path(0, path_handle, 0, super::super::geometry::fz_matrix::identity());
+        let bounds = fz_bound_path(
+            0,
+            path_handle,
+            0,
+            super::super::geometry::fz_matrix::identity(),
+        );
         assert!((bounds.x0 - 0.0).abs() < 0.1);
         assert!((bounds.y0 - 0.0).abs() < 0.1);
         assert!((bounds.x1 - 100.0).abs() < 0.1);
@@ -595,4 +607,3 @@ mod tests {
         fz_drop_stroke_state(0, stroke_handle);
     }
 }
-

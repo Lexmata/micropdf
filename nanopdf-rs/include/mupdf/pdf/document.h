@@ -1,187 +1,56 @@
 // NanoPDF - MuPDF API Compatible C Header
-// This file provides 100% API compatibility with MuPDF's pdf/document.h
+// Auto-generated from Rust FFI - DO NOT EDIT MANUALLY
+// Module: document
 
 #ifndef MUPDF_PDF_DOCUMENT_H
 #define MUPDF_PDF_DOCUMENT_H
 
-#include "mupdf/fitz.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // ============================================================================
-// Types
+// Document Functions (31 total)
 // ============================================================================
 
-typedef struct pdf_document pdf_document;
-typedef struct pdf_obj pdf_obj;
-typedef struct pdf_crypt pdf_crypt;
-typedef struct pdf_page pdf_page;
-typedef struct pdf_annot pdf_annot;
-typedef struct pdf_widget pdf_widget;
-typedef struct pdf_xref pdf_xref;
-typedef struct pdf_xref_entry pdf_xref_entry;
-
-// ============================================================================
-// Document opening
-// ============================================================================
-
-pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
-pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *stm);
-
-// ============================================================================
-// Reference counting
-// ============================================================================
-
-pdf_document *pdf_keep_document(fz_context *ctx, pdf_document *doc);
-void pdf_drop_document(fz_context *ctx, pdf_document *doc);
-
-// ============================================================================
-// Document properties
-// ============================================================================
-
-pdf_document *pdf_document_from_fz_document(fz_context *ctx, fz_document *ptr);
-pdf_page *pdf_page_from_fz_page(fz_context *ctx, fz_page *ptr);
-
-int pdf_version(fz_context *ctx, pdf_document *doc);
-int pdf_count_pages(fz_context *ctx, pdf_document *doc);
-int pdf_count_objects(fz_context *ctx, pdf_document *doc);
-
-// ============================================================================
-// Password/encryption
-// ============================================================================
-
-int pdf_needs_password(fz_context *ctx, pdf_document *doc);
-int pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *password);
-
-int pdf_has_permission(fz_context *ctx, pdf_document *doc, int permission);
-
-enum {
-    PDF_PERM_PRINT = 1 << 2,
-    PDF_PERM_MODIFY = 1 << 3,
-    PDF_PERM_COPY = 1 << 4,
-    PDF_PERM_ANNOTATE = 1 << 5,
-    PDF_PERM_FORM = 1 << 8,
-    PDF_PERM_ACCESSIBILITY = 1 << 9,
-    PDF_PERM_ASSEMBLE = 1 << 10,
-    PDF_PERM_PRINT_HQ = 1 << 11,
-};
-
-// ============================================================================
-// Object access
-// ============================================================================
-
-pdf_obj *pdf_trailer(fz_context *ctx, pdf_document *doc);
-pdf_obj *pdf_catalog(fz_context *ctx, pdf_document *doc);
-
-pdf_obj *pdf_load_object(fz_context *ctx, pdf_document *doc, int num);
-pdf_obj *pdf_resolve_indirect(fz_context *ctx, pdf_obj *ref);
-pdf_obj *pdf_resolve_indirect_chain(fz_context *ctx, pdf_obj *ref);
-
-// ============================================================================
-// Page access
-// ============================================================================
-
-pdf_page *pdf_load_page(fz_context *ctx, pdf_document *doc, int number);
-pdf_page *pdf_keep_page(fz_context *ctx, pdf_page *page);
-void pdf_drop_page(fz_context *ctx, pdf_page *page);
-
-pdf_obj *pdf_page_obj(fz_context *ctx, pdf_page *page);
-fz_rect pdf_bound_page(fz_context *ctx, pdf_page *page);
-fz_matrix pdf_page_transform(fz_context *ctx, pdf_page *page);
-int pdf_page_rotation(fz_context *ctx, pdf_page *page);
-
-// ============================================================================
-// Stream access
-// ============================================================================
-
-fz_buffer *pdf_load_stream(fz_context *ctx, pdf_obj *ref);
-fz_buffer *pdf_load_stream_number(fz_context *ctx, pdf_document *doc, int num);
-fz_buffer *pdf_load_raw_stream(fz_context *ctx, pdf_obj *ref);
-fz_buffer *pdf_load_raw_stream_number(fz_context *ctx, pdf_document *doc, int num);
-
-fz_stream *pdf_open_stream(fz_context *ctx, pdf_obj *ref);
-fz_stream *pdf_open_stream_number(fz_context *ctx, pdf_document *doc, int num);
-fz_stream *pdf_open_raw_stream(fz_context *ctx, pdf_obj *ref);
-fz_stream *pdf_open_raw_stream_number(fz_context *ctx, pdf_document *doc, int num);
-
-// ============================================================================
-// Object creation
-// ============================================================================
-
-pdf_obj *pdf_add_object(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
-pdf_obj *pdf_add_object_drop(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
-pdf_obj *pdf_add_stream(fz_context *ctx, pdf_document *doc, fz_buffer *buf, pdf_obj *obj, int compressed);
-pdf_obj *pdf_add_new_dict(fz_context *ctx, pdf_document *doc, int initial);
-pdf_obj *pdf_add_new_array(fz_context *ctx, pdf_document *doc, int initial);
-
-void pdf_delete_object(fz_context *ctx, pdf_document *doc, int num);
-
-// ============================================================================
-// Object update
-// ============================================================================
-
-void pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *obj);
-void pdf_update_stream(fz_context *ctx, pdf_document *doc, pdf_obj *ref, fz_buffer *buf, int compressed);
-
-// ============================================================================
-// Resource lookup
-// ============================================================================
-
-pdf_obj *pdf_dict_get_inheritable(fz_context *ctx, pdf_obj *dict, pdf_obj *key);
-pdf_obj *pdf_page_resources(fz_context *ctx, pdf_page *page);
-
-// ============================================================================
-// Document writing
-// ============================================================================
-
-typedef struct pdf_write_options pdf_write_options;
-
-struct pdf_write_options {
-    int do_incremental;
-    int do_pretty;
-    int do_ascii;
-    int do_compress;
-    int do_compress_images;
-    int do_compress_fonts;
-    int do_decompress;
-    int do_garbage;
-    int do_linear;
-    int do_clean;
-    int do_sanitize;
-    int do_appearance;
-    int do_encrypt;
-    int permissions;
-    char opwd_utf8[128];
-    char upwd_utf8[128];
-};
-
-extern const pdf_write_options pdf_default_write_options;
-
-void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, const pdf_write_options *opts);
-void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, const pdf_write_options *opts);
-
-int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc);
-
-// ============================================================================
-// Journal/Undo
-// ============================================================================
-
-int pdf_undoredo_state(fz_context *ctx, pdf_document *doc, int *steps);
-int pdf_can_undo(fz_context *ctx, pdf_document *doc);
-int pdf_can_redo(fz_context *ctx, pdf_document *doc);
-void pdf_undo(fz_context *ctx, pdf_document *doc);
-void pdf_redo(fz_context *ctx, pdf_document *doc);
-
-void pdf_begin_operation(fz_context *ctx, pdf_document *doc, const char *descr);
-void pdf_begin_implicit_operation(fz_context *ctx, pdf_document *doc);
-void pdf_end_operation(fz_context *ctx, pdf_document *doc);
-void pdf_abandon_operation(fz_context *ctx, pdf_document *doc);
+int32_t fz_authenticate_password(int32_t _ctx, int32_t doc, const char * password);
+fz_rect fz_bound_page(int32_t _ctx, int32_t page);
+fz_rect fz_bound_page_box(int32_t _ctx, int32_t page, int32_t _box_type);
+int32_t fz_clone_document(int32_t _ctx, int32_t doc);
+int32_t fz_count_chapter_pages(int32_t _ctx, int32_t doc, int32_t _chapter);
+int32_t fz_count_chapters(int32_t _ctx, int32_t _doc);
+int32_t fz_count_pages(int32_t _ctx, int32_t doc);
+int32_t fz_document_format(int32_t _ctx, int32_t doc, char * buf, int32_t size);
+int32_t fz_document_is_valid(int32_t _ctx, int32_t doc);
+void fz_drop_document(int32_t _ctx, int32_t doc);
+void fz_drop_outline(int32_t _ctx, int32_t outline);
+void fz_drop_page(int32_t _ctx, int32_t page);
+int32_t fz_has_permission(int32_t _ctx, int32_t doc, int32_t _permission);
+int32_t fz_is_document_reflowable(int32_t _ctx, int32_t doc);
+int32_t fz_keep_document(int32_t _ctx, int32_t doc);
+int32_t fz_keep_page(int32_t _ctx, int32_t page);
+void fz_layout_document(int32_t _ctx, int32_t doc, float _w, float _h, float _em);
+int32_t fz_load_chapter_page(int32_t _ctx, int32_t doc, int32_t chapter, int32_t page);
+int32_t fz_load_outline(int32_t _ctx, int32_t doc);
+int32_t fz_load_page(int32_t _ctx, int32_t doc, int32_t page_num);
+int32_t fz_lookup_metadata(int32_t _ctx, int32_t _doc, const char * _key, char * buf, int32_t size);
+char * fz_make_location_uri(int32_t _ctx, int32_t _doc, int32_t page, char * buf, int32_t size);
+int32_t fz_needs_password(int32_t _ctx, int32_t doc);
+int32_t fz_open_document(int32_t _ctx, const char * filename);
+int32_t fz_open_document_with_stream(int32_t _ctx, const char * _magic, int32_t stm);
+int32_t fz_page_label(int32_t _ctx, int32_t doc, int32_t page_num, char * buf, int32_t size);
+int32_t fz_page_number_from_location(int32_t _ctx, int32_t _doc, int32_t chapter, int32_t page);
+int32_t fz_resolve_link(int32_t _ctx, int32_t doc, const char * uri, float * xp, float * yp);
+void fz_run_page(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
+void fz_run_page_annots(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
+void fz_run_page_contents(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* MUPDF_PDF_DOCUMENT_H */
-

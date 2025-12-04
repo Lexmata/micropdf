@@ -199,8 +199,7 @@ impl Path {
         // Iterate backwards to find the last point
         for element in self.elements.iter().rev() {
             match element {
-                PathElement::MoveTo(p) |
-                PathElement::LineTo(p) => return Some(*p),
+                PathElement::MoveTo(p) | PathElement::LineTo(p) => return Some(*p),
                 PathElement::QuadTo(_, p2) => return Some(*p2),
                 PathElement::CurveTo(_, _, p3) => return Some(*p3),
                 PathElement::Rect(r) => return Some(Point::new(r.x1, r.y1)),
@@ -258,7 +257,9 @@ impl Path {
 
     /// Check if the path contains only rectangles
     pub fn is_rect_only(&self) -> bool {
-        self.elements.iter().all(|e| matches!(e, PathElement::Rect(_)))
+        self.elements
+            .iter()
+            .all(|e| matches!(e, PathElement::Rect(_)))
     }
 }
 impl Default for Path {
@@ -550,4 +551,3 @@ mod tests {
         assert_eq!(bounds.height(), 50.0);
     }
 }
-

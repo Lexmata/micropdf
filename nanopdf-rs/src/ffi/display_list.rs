@@ -19,13 +19,7 @@ pub static DISPLAY_LISTS: LazyLock<HandleStore<DisplayList>> = LazyLock::new(Han
 /// # Returns
 /// Handle to the new display list, or 0 on error
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_display_list(
-    _ctx: Handle,
-    x0: f32,
-    y0: f32,
-    x1: f32,
-    y1: f32,
-) -> Handle {
+pub extern "C" fn fz_new_display_list(_ctx: Handle, x0: f32, y0: f32, x1: f32, y1: f32) -> Handle {
     let mediabox = Rect::new(x0, y0, x1, y1);
     let list = DisplayList::new(mediabox);
     DISPLAY_LISTS.insert(list)
@@ -60,10 +54,7 @@ pub extern "C" fn fz_drop_display_list(_ctx: Handle, list: Handle) {
 /// # Returns
 /// Media box rectangle
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_bound_display_list(
-    _ctx: Handle,
-    list: Handle,
-) -> super::geometry::fz_rect {
+pub extern "C" fn fz_bound_display_list(_ctx: Handle, list: Handle) -> super::geometry::fz_rect {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
             let mediabox = guard.mediabox();
@@ -82,7 +73,6 @@ pub extern "C" fn fz_bound_display_list(
         y1: 0.0,
     }
 }
-
 
 /// Run a display list through a device
 ///
@@ -130,10 +120,7 @@ pub extern "C" fn fz_run_display_list(
 /// # Returns
 /// Number of commands
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_display_list_count_commands(
-    _ctx: Handle,
-    list: Handle,
-) -> i32 {
+pub extern "C" fn fz_display_list_count_commands(_ctx: Handle, list: Handle) -> i32 {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
             return guard.len() as i32;
@@ -150,10 +137,7 @@ pub extern "C" fn fz_display_list_count_commands(
 /// # Returns
 /// 1 if empty, 0 otherwise
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_display_list_is_empty(
-    _ctx: Handle,
-    list: Handle,
-) -> i32 {
+pub extern "C" fn fz_display_list_is_empty(_ctx: Handle, list: Handle) -> i32 {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
             return if guard.is_empty() { 1 } else { 0 };
@@ -167,10 +151,7 @@ pub extern "C" fn fz_display_list_is_empty(
 /// # Arguments
 /// * `list` - Handle to the display list
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_display_list_clear(
-    _ctx: Handle,
-    list: Handle,
-) {
+pub extern "C" fn fz_display_list_clear(_ctx: Handle, list: Handle) {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(mut guard) = l.lock() {
             guard.clear();
@@ -186,11 +167,12 @@ pub extern "C" fn fz_display_list_clear(
 /// # Returns
 /// 1 if valid, 0 otherwise
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_display_list_is_valid(
-    _ctx: Handle,
-    list: Handle,
-) -> i32 {
-    if DISPLAY_LISTS.get(list).is_some() { 1 } else { 0 }
+pub extern "C" fn fz_display_list_is_valid(_ctx: Handle, list: Handle) -> i32 {
+    if DISPLAY_LISTS.get(list).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Clone a display list (create a new copy)
@@ -201,10 +183,7 @@ pub extern "C" fn fz_display_list_is_valid(
 /// # Returns
 /// Handle to the cloned display list, or 0 on error
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_clone_display_list(
-    _ctx: Handle,
-    list: Handle,
-) -> Handle {
+pub extern "C" fn fz_clone_display_list(_ctx: Handle, list: Handle) -> Handle {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
             let cloned = DisplayList::new(guard.mediabox());
@@ -299,4 +278,3 @@ mod tests {
         fz_drop_display_list(0, list);
     }
 }
-

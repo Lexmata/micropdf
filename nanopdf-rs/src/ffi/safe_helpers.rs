@@ -13,9 +13,7 @@ pub fn c_str_to_str<'a>(ptr: *const c_char) -> Option<&'a str> {
         return None;
     }
 
-    unsafe {
-        CStr::from_ptr(ptr).to_str().ok()
-    }
+    unsafe { CStr::from_ptr(ptr).to_str().ok() }
 }
 
 /// Safely copy a Rust string to a C buffer
@@ -31,11 +29,7 @@ pub fn str_to_c_buffer(src: &str, dst: *mut c_char, size: i32) -> i32 {
     let copy_len = src_bytes.len().min((size - 1) as usize);
 
     unsafe {
-        std::ptr::copy_nonoverlapping(
-            src_bytes.as_ptr(),
-            dst as *mut u8,
-            copy_len
-        );
+        std::ptr::copy_nonoverlapping(src_bytes.as_ptr(), dst as *mut u8, copy_len);
         *dst.add(copy_len) = 0; // Null terminate
     }
 
@@ -110,6 +104,7 @@ pub fn validate_color(c: f32) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
 
     #[test]
     fn test_c_str_to_str() {
@@ -138,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_copy_from_ptr() {
-        let data = vec![1u8, 2, 3, 4, 5];
+        let data = [1u8, 2, 3, 4, 5];
         let result = copy_from_ptr(data.as_ptr(), data.len());
         assert_eq!(result, Some(vec![1, 2, 3, 4, 5]));
 
@@ -181,5 +176,3 @@ mod tests {
         assert!(!validate_color_components(&[0.0, 0.5, 1.1]));
     }
 }
-
-

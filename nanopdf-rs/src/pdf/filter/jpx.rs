@@ -42,19 +42,19 @@ pub fn decode_jpx(data: &[u8]) -> Result<Vec<u8>> {
 
 #[cfg(not(feature = "jpeg2000"))]
 pub fn decode_jpx(_data: &[u8]) -> Result<Vec<u8>> {
-    Err(Error::Generic("JPEG 2000 support not enabled. Enable 'jpeg2000' feature.".into()))
+    Err(Error::Generic(
+        "JPEG 2000 support not enabled. Enable 'jpeg2000' feature.".into(),
+    ))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     #[cfg(not(feature = "jpeg2000"))]
     fn test_jpx_disabled() {
+        use super::*;
         let data = &[0u8; 100];
         let result = decode_jpx(data);
         assert!(result.is_err());
     }
 }
-

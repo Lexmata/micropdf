@@ -1,13 +1,11 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use nanopdf::fitz::path::Path;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::geometry::{Point, Rect};
+use nanopdf::fitz::path::Path;
 
 fn bench_path_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("path/creation");
 
-    group.bench_function("new", |b| {
-        b.iter(Path::new)
-    });
+    group.bench_function("new", |b| b.iter(Path::new));
 
     group.bench_function("with_capacity", |b| {
         b.iter(|| Path::with_capacity(black_box(100)))
@@ -83,13 +81,9 @@ fn bench_path_operations(c: &mut Criterion) {
     path.line_to(Point::new(0.0, 100.0));
     path.close();
 
-    group.bench_function("clone", |b| {
-        b.iter(|| black_box(&path).clone())
-    });
+    group.bench_function("clone", |b| b.iter(|| black_box(&path).clone()));
 
-    group.bench_function("is_empty", |b| {
-        b.iter(|| black_box(&path).is_empty())
-    });
+    group.bench_function("is_empty", |b| b.iter(|| black_box(&path).is_empty()));
 
     group.finish();
 }

@@ -94,8 +94,8 @@ mod tests {
         let params = CCITTFaxDecodeParams::default();
         assert_eq!(params.k, 0);
         assert_eq!(params.columns, 1728);
-        assert_eq!(params.end_of_block, true);
-        assert_eq!(params.black_is_1, false);
+        assert!(params.end_of_block);
+        assert!(!params.black_is_1);
     }
 
     #[test]
@@ -110,4 +110,3 @@ mod tests {
         assert!(params.jbig2_globals.is_none());
     }
 }
-

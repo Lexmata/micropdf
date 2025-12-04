@@ -150,38 +150,84 @@ impl DisplayList {
         for cmd in &self.commands {
             // Check if command is within scissor bounds (simplified)
             match cmd {
-                Command::FillPath { path, even_odd, ctm: cmd_ctm, colorspace, color, alpha } => {
+                Command::FillPath {
+                    path,
+                    even_odd,
+                    ctm: cmd_ctm,
+                    colorspace,
+                    color,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.fill_path(path, *even_odd, &final_ctm, colorspace, color, *alpha);
                 }
-                Command::StrokePath { path, stroke, ctm: cmd_ctm, colorspace, color, alpha } => {
+                Command::StrokePath {
+                    path,
+                    stroke,
+                    ctm: cmd_ctm,
+                    colorspace,
+                    color,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.stroke_path(path, stroke, &final_ctm, colorspace, color, *alpha);
                 }
-                Command::ClipPath { path, even_odd, ctm: cmd_ctm, scissor: cmd_scissor } => {
+                Command::ClipPath {
+                    path,
+                    even_odd,
+                    ctm: cmd_ctm,
+                    scissor: cmd_scissor,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     let final_scissor = scissor.intersect(cmd_scissor);
                     device.clip_path(path, *even_odd, &final_ctm, final_scissor);
                 }
-                Command::ClipStrokePath { path, stroke, ctm: cmd_ctm, scissor: cmd_scissor } => {
+                Command::ClipStrokePath {
+                    path,
+                    stroke,
+                    ctm: cmd_ctm,
+                    scissor: cmd_scissor,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     let final_scissor = scissor.intersect(cmd_scissor);
                     device.clip_stroke_path(path, stroke, &final_ctm, final_scissor);
                 }
-                Command::FillText { text, ctm: cmd_ctm, colorspace, color, alpha } => {
+                Command::FillText {
+                    text,
+                    ctm: cmd_ctm,
+                    colorspace,
+                    color,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.fill_text(text, &final_ctm, colorspace, color, *alpha);
                 }
-                Command::StrokeText { text, stroke, ctm: cmd_ctm, colorspace, color, alpha } => {
+                Command::StrokeText {
+                    text,
+                    stroke,
+                    ctm: cmd_ctm,
+                    colorspace,
+                    color,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.stroke_text(text, stroke, &final_ctm, colorspace, color, *alpha);
                 }
-                Command::ClipText { text, ctm: cmd_ctm, scissor: cmd_scissor } => {
+                Command::ClipText {
+                    text,
+                    ctm: cmd_ctm,
+                    scissor: cmd_scissor,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     let final_scissor = scissor.intersect(cmd_scissor);
                     device.clip_text(text, &final_ctm, final_scissor);
                 }
-                Command::ClipStrokeText { text, stroke, ctm: cmd_ctm, scissor: cmd_scissor } => {
+                Command::ClipStrokeText {
+                    text,
+                    stroke,
+                    ctm: cmd_ctm,
+                    scissor: cmd_scissor,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     let final_scissor = scissor.intersect(cmd_scissor);
                     device.clip_stroke_text(text, stroke, &final_ctm, final_scissor);
@@ -190,15 +236,29 @@ impl DisplayList {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.ignore_text(text, &final_ctm);
                 }
-                Command::FillImage { image, ctm: cmd_ctm, alpha } => {
+                Command::FillImage {
+                    image,
+                    ctm: cmd_ctm,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.fill_image(image, &final_ctm, *alpha);
                 }
-                Command::FillImageMask { image, ctm: cmd_ctm, colorspace, color, alpha } => {
+                Command::FillImageMask {
+                    image,
+                    ctm: cmd_ctm,
+                    colorspace,
+                    color,
+                    alpha,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.fill_image_mask(image, &final_ctm, colorspace, color, *alpha);
                 }
-                Command::ClipImageMask { image, ctm: cmd_ctm, scissor: cmd_scissor } => {
+                Command::ClipImageMask {
+                    image,
+                    ctm: cmd_ctm,
+                    scissor: cmd_scissor,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     let final_scissor = scissor.intersect(cmd_scissor);
                     device.clip_image_mask(image, &final_ctm, final_scissor);
@@ -206,19 +266,44 @@ impl DisplayList {
                 Command::PopClip => {
                     device.pop_clip();
                 }
-                Command::BeginMask { area, luminosity, colorspace, color } => {
+                Command::BeginMask {
+                    area,
+                    luminosity,
+                    colorspace,
+                    color,
+                } => {
                     device.begin_mask(*area, *luminosity, colorspace, color);
                 }
                 Command::EndMask => {
                     device.end_mask();
                 }
-                Command::BeginGroup { area, colorspace, isolated, knockout, blendmode, alpha } => {
-                    device.begin_group(*area, colorspace.as_ref(), *isolated, *knockout, *blendmode, *alpha);
+                Command::BeginGroup {
+                    area,
+                    colorspace,
+                    isolated,
+                    knockout,
+                    blendmode,
+                    alpha,
+                } => {
+                    device.begin_group(
+                        *area,
+                        colorspace.as_ref(),
+                        *isolated,
+                        *knockout,
+                        *blendmode,
+                        *alpha,
+                    );
                 }
                 Command::EndGroup => {
                     device.end_group();
                 }
-                Command::BeginTile { area, view, xstep, ystep, ctm: cmd_ctm } => {
+                Command::BeginTile {
+                    area,
+                    view,
+                    xstep,
+                    ystep,
+                    ctm: cmd_ctm,
+                } => {
                     let final_ctm = cmd_ctm.concat(ctm);
                     device.begin_tile(*area, *view, *xstep, *ystep, &final_ctm);
                 }
@@ -475,7 +560,6 @@ mod tests {
     use super::*;
     use crate::fitz::device::{BBoxDevice, NullDevice};
     use crate::fitz::font::Font;
-    use crate::fitz::path::PathElement;
     use std::sync::Arc;
 
     #[test]
@@ -632,14 +716,13 @@ mod tests {
     #[test]
     fn test_display_list_clear() {
         let mediabox = Rect::new(0.0, 0.0, 100.0, 100.0);
-        let mut list = DisplayList::new(mediabox);
         let mut device = ListDevice::new(mediabox);
 
         let path = Path::new();
         let cs = Colorspace::device_rgb();
         device.fill_path(&path, false, &Matrix::IDENTITY, &cs, &[1.0, 0.0, 0.0], 1.0);
 
-        list = device.into_display_list();
+        let mut list = device.into_display_list();
         assert!(!list.is_empty());
 
         list.clear();
@@ -701,4 +784,3 @@ mod tests {
         assert_eq!(device.display_list().len(), 2);
     }
 }
-

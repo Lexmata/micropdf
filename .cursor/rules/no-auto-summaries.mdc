@@ -1,0 +1,117 @@
+---
+alwaysApply: true
+---
+
+# No Automatic Summary Documents
+
+**CRITICAL RULE**: Do NOT create summary documents unless explicitly requested by the user.
+
+## What NOT to Create Automatically
+
+Never proactively create any of the following files without explicit user request:
+
+### Documentation Files
+- `*_SUMMARY.md`
+- `*_REPORT.md`
+- `*_OVERVIEW.md`
+- `*_GUIDE.md`
+- `CHANGELOG_*.md`
+- `MIGRATION_*.md`
+- `COMPLETION_*.md`
+- `IMPLEMENTATION_*.md`
+- `AUDIT_*.md`
+- Any other markdown files documenting completed work
+
+### Status/Report Files
+- Progress reports
+- Completion summaries
+- Architecture summaries
+- Feature implementation summaries
+- Work session summaries
+- Task completion reports
+
+## Rationale
+
+1. **User Control**: The user decides what documentation is needed
+2. **No Clutter**: Avoid filling the repository with unnecessary files
+3. **User's Responsibility**: Documentation strategy is the user's decision
+4. **Ask First**: If documentation seems valuable, suggest it instead
+
+## What IS Allowed Without Asking
+
+- **Code comments**: Always document code with comments
+- **Inline documentation**: Doc strings, JSDoc, Rustdoc, etc.
+- **Commit messages**: Comprehensive commit messages are expected
+- **Required files**: Files like `README.md` if creating a new project from scratch
+- **Configuration files**: Like `.editorconfig`, `rustfmt.toml`, etc.
+- **Code itself**: Implementation files are always allowed
+
+## When to Suggest Documentation
+
+If you think a summary document would be valuable:
+
+```
+"I've completed the header generation implementation. Would you like me to
+create a summary document (e.g., HEADER_GENERATION_SUMMARY.md) documenting
+the changes, or would you prefer to handle documentation yourself?"
+```
+
+## Examples
+
+### ❌ DO NOT DO THIS (Unless Asked)
+
+```
+User: "implement the headers"
+AI: *implements headers*
+AI: *creates HEADER_GENERATION_SUMMARY.md*
+AI: *creates IMPLEMENTATION_NOTES.md*
+AI: "Done! I've also created summary documents..."
+```
+
+### ✅ DO THIS INSTEAD
+
+```
+User: "implement the headers"
+AI: *implements headers*
+AI: *commits with good commit message*
+AI: "Done! Headers implemented. All 660 functions are now declared."
+```
+
+### ✅ OR ASK FIRST
+
+```
+User: "implement the headers"
+AI: *implements headers*
+AI: *commits*
+AI: "Done! Would you like me to create a summary document of the changes?"
+```
+
+## Scope
+
+This rule applies to:
+- ✅ All markdown documentation files
+- ✅ All summary/report files
+- ✅ All overview/guide files
+- ❌ Does NOT apply to code files
+- ❌ Does NOT apply to configuration files
+- ❌ Does NOT apply to commit messages
+
+## Override
+
+The user can override this rule by explicitly saying:
+- "Create a summary document"
+- "Document the changes in a markdown file"
+- "Write a report about X"
+- "Generate documentation for Y"
+
+## Enforcement
+
+**MAXIMUM** - This is a hard rule. Never create summary documents automatically.
+
+## Exception
+
+The ONLY exception is when creating a brand new project from scratch, where a basic README.md is expected and necessary.
+
+---
+
+**Remember**: When in doubt, DON'T create the summary document. Just describe what was done in the response to the user.

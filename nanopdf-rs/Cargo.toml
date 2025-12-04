@@ -105,11 +105,12 @@ assets = [
 # RPM package configuration (cargo-generate-rpm)
 [package.metadata.generate-rpm]
 assets = [
-    { source = "target/release/libnanopdf.so", dest = "/usr/lib64/", mode = "644" },
-    { source = "target/release/libnanopdf.a", dest = "/usr/lib64/", mode = "644" },
-    { source = "include/", dest = "/usr/include/nanopdf/", mode = "644", doc = false },
-    { source = "nanopdf.pc", dest = "/usr/lib64/pkgconfig/", mode = "644" },
-    { source = "mupdf.pc", dest = "/usr/lib64/pkgconfig/", mode = "644" },
+    { source = "target/release/libnanopdf.so", dest = "/usr/lib64/libnanopdf.so", mode = "755" },
+    { source = "target/release/libnanopdf.a", dest = "/usr/lib64/libnanopdf.a", mode = "644" },
+    { source = "include/nanopdf.h", dest = "/usr/include/nanopdf/nanopdf.h", mode = "644" },
+    { source = "include/mupdf-ffi.h", dest = "/usr/include/nanopdf/mupdf-ffi.h", mode = "644" },
+    { source = "nanopdf.pc", dest = "/usr/lib64/pkgconfig/nanopdf.pc", mode = "644" },
+    { source = "mupdf.pc", dest = "/usr/lib64/pkgconfig/mupdf.pc", mode = "644" },
     { source = "README.md", dest = "/usr/share/doc/nanopdf/README", mode = "644", doc = true },
     { source = "LICENSE-MIT", dest = "/usr/share/doc/nanopdf/LICENSE-MIT", mode = "644", doc = true },
     { source = "LICENSE-APACHE", dest = "/usr/share/doc/nanopdf/LICENSE-APACHE", mode = "644", doc = true },

@@ -1,9 +1,9 @@
 //! PDF Dictionary Operations FFI Functions
 
-use std::ffi::{c_char, CStr};
 use super::super::Handle;
-use super::types::{PdfObj, PdfObjHandle, PdfObjType, PDF_OBJECTS};
 use super::refcount::{with_obj, with_obj_mut};
+use super::types::{PDF_OBJECTS, PdfObj, PdfObjHandle, PdfObjType};
+use std::ffi::{CStr, c_char};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_dict_len(_ctx: Handle, dict: PdfObjHandle) -> i32 {
@@ -65,12 +65,7 @@ pub extern "C" fn pdf_dict_dels(_ctx: Handle, dict: PdfObjHandle, key: *const c_
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put_int(
-    _ctx: Handle,
-    dict: PdfObjHandle,
-    key: PdfObjHandle,
-    x: i64,
-) {
+pub extern "C" fn pdf_dict_put_int(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, x: i64) {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -92,12 +87,7 @@ pub extern "C" fn pdf_dict_put_int(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put_real(
-    _ctx: Handle,
-    dict: PdfObjHandle,
-    key: PdfObjHandle,
-    x: f64,
-) {
+pub extern "C" fn pdf_dict_put_real(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, x: f64) {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -119,12 +109,7 @@ pub extern "C" fn pdf_dict_put_real(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put_bool(
-    _ctx: Handle,
-    dict: PdfObjHandle,
-    key: PdfObjHandle,
-    x: i32,
-) {
+pub extern "C" fn pdf_dict_put_bool(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, x: i32) {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -150,7 +135,11 @@ pub extern "C" fn pdf_dict_put_bool(
 // ============================================================================
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_get(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle) -> PdfObjHandle {
+pub extern "C" fn pdf_dict_get(
+    _ctx: Handle,
+    dict: PdfObjHandle,
+    key: PdfObjHandle,
+) -> PdfObjHandle {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -162,11 +151,10 @@ pub extern "C" fn pdf_dict_get(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHand
     };
 
     let obj = with_obj(dict, None, |o| match &o.obj_type {
-        PdfObjType::Dict(entries) => {
-            entries.iter()
-                .find(|(k, _)| k == &key_str)
-                .map(|(_, v)| v.clone())
-        }
+        PdfObjType::Dict(entries) => entries
+            .iter()
+            .find(|(k, _)| k == &key_str)
+            .map(|(_, v)| v.clone()),
         _ => None,
     });
 
@@ -177,7 +165,11 @@ pub extern "C" fn pdf_dict_get(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHand
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_gets(_ctx: Handle, dict: PdfObjHandle, key: *const c_char) -> PdfObjHandle {
+pub extern "C" fn pdf_dict_gets(
+    _ctx: Handle,
+    dict: PdfObjHandle,
+    key: *const c_char,
+) -> PdfObjHandle {
     if key.is_null() {
         return 0;
     }
@@ -188,11 +180,10 @@ pub extern "C" fn pdf_dict_gets(_ctx: Handle, dict: PdfObjHandle, key: *const c_
         .to_string();
 
     let obj = with_obj(dict, None, |o| match &o.obj_type {
-        PdfObjType::Dict(entries) => {
-            entries.iter()
-                .find(|(k, _)| k == &key_str)
-                .map(|(_, v)| v.clone())
-        }
+        PdfObjType::Dict(entries) => entries
+            .iter()
+            .find(|(k, _)| k == &key_str)
+            .map(|(_, v)| v.clone()),
         _ => None,
     });
 
@@ -203,7 +194,12 @@ pub extern "C" fn pdf_dict_gets(_ctx: Handle, dict: PdfObjHandle, key: *const c_
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, val: PdfObjHandle) {
+pub extern "C" fn pdf_dict_put(
+    _ctx: Handle,
+    dict: PdfObjHandle,
+    key: PdfObjHandle,
+    val: PdfObjHandle,
+) {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -231,7 +227,12 @@ pub extern "C" fn pdf_dict_put(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHand
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put_name(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, name: *const c_char) {
+pub extern "C" fn pdf_dict_put_name(
+    _ctx: Handle,
+    dict: PdfObjHandle,
+    key: PdfObjHandle,
+    name: *const c_char,
+) {
     if name.is_null() {
         return;
     }
@@ -246,9 +247,7 @@ pub extern "C" fn pdf_dict_put_name(_ctx: Handle, dict: PdfObjHandle, key: PdfOb
         None => return,
     };
 
-    let name_str = unsafe { CStr::from_ptr(name) }
-        .to_str()
-        .unwrap_or("");
+    let name_str = unsafe { CStr::from_ptr(name) }.to_str().unwrap_or("");
 
     with_obj_mut(dict, (), |d| {
         if let PdfObjType::Dict(ref mut entries) = d.obj_type {
@@ -264,7 +263,13 @@ pub extern "C" fn pdf_dict_put_name(_ctx: Handle, dict: PdfObjHandle, key: PdfOb
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_dict_put_string(_ctx: Handle, dict: PdfObjHandle, key: PdfObjHandle, str: *const c_char, len: usize) {
+pub extern "C" fn pdf_dict_put_string(
+    _ctx: Handle,
+    dict: PdfObjHandle,
+    key: PdfObjHandle,
+    str: *const c_char,
+    len: usize,
+) {
     let key_name = with_obj(key, None, |o| match &o.obj_type {
         PdfObjType::Name(s) => Some(s.clone()),
         _ => None,
@@ -296,8 +301,8 @@ pub extern "C" fn pdf_dict_put_string(_ctx: Handle, dict: PdfObjHandle, key: Pdf
 
 #[cfg(test)]
 mod tests {
+    use super::super::create::{pdf_new_dict, pdf_new_int, pdf_new_name};
     use super::*;
-    use super::super::create::{pdf_new_dict, pdf_new_name, pdf_new_int, pdf_new_real, pdf_new_bool, pdf_new_string};
     use std::ffi::CString;
 
     #[test]
@@ -382,7 +387,7 @@ mod tests {
         let dict = pdf_new_dict(ctx, 0, 2);
         let key = pdf_new_name(ctx, CString::new("PI").unwrap().as_ptr());
 
-        pdf_dict_put_real(ctx, dict, key, 3.14159);
+        pdf_dict_put_real(ctx, dict, key, std::f64::consts::PI);
 
         assert_eq!(pdf_dict_len(ctx, dict), 1);
     }
@@ -499,7 +504,13 @@ mod tests {
         let key = pdf_new_name(ctx, CString::new("Title").unwrap().as_ptr());
         let str_data = b"My Title";
 
-        pdf_dict_put_string(ctx, dict, key, str_data.as_ptr() as *const i8, str_data.len());
+        pdf_dict_put_string(
+            ctx,
+            dict,
+            key,
+            str_data.as_ptr() as *const i8,
+            str_data.len(),
+        );
 
         assert_eq!(pdf_dict_len(ctx, dict), 1);
     }
@@ -522,7 +533,13 @@ mod tests {
         let invalid_key = pdf_new_int(ctx, 456);
         let str_data = b"Test";
 
-        pdf_dict_put_string(ctx, dict, invalid_key, str_data.as_ptr() as *const i8, str_data.len());
+        pdf_dict_put_string(
+            ctx,
+            dict,
+            invalid_key,
+            str_data.as_ptr() as *const i8,
+            str_data.len(),
+        );
 
         // Should not add
         assert_eq!(pdf_dict_len(ctx, dict), 0);
@@ -559,4 +576,3 @@ mod tests {
         assert_eq!(pdf_dict_len(ctx, dict), 3);
     }
 }
-

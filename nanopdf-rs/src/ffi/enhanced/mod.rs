@@ -222,7 +222,10 @@ mod tests {
 
     #[test]
     fn test_merge_pdfs_null_paths() {
-        assert_eq!(np_merge_pdfs(0, std::ptr::null(), 0, c"out.pdf".as_ptr()), -1);
+        assert_eq!(
+            np_merge_pdfs(0, std::ptr::null(), 0, c"out.pdf".as_ptr()),
+            -1
+        );
     }
 
     #[test]
@@ -233,7 +236,16 @@ mod tests {
     #[test]
     fn test_add_watermark_null_text() {
         assert_eq!(
-            np_add_watermark(0, c"in.pdf".as_ptr(), c"out.pdf".as_ptr(), std::ptr::null(), 0.0, 0.0, 12.0, 0.5),
+            np_add_watermark(
+                0,
+                c"in.pdf".as_ptr(),
+                c"out.pdf".as_ptr(),
+                std::ptr::null(),
+                0.0,
+                0.0,
+                12.0,
+                0.5
+            ),
             -1
         );
     }
@@ -241,23 +253,41 @@ mod tests {
     #[test]
     fn test_add_watermark_invalid_opacity() {
         assert_eq!(
-            np_add_watermark(0, c"in.pdf".as_ptr(), c"out.pdf".as_ptr(), c"TEST".as_ptr(), 0.0, 0.0, 12.0, 1.5),
+            np_add_watermark(
+                0,
+                c"in.pdf".as_ptr(),
+                c"out.pdf".as_ptr(),
+                c"TEST".as_ptr(),
+                0.0,
+                0.0,
+                12.0,
+                1.5
+            ),
             -1
         );
     }
 
     #[test]
     fn test_draw_line_invalid_color() {
-        assert_eq!(np_draw_line(0, 0, 0.0, 0.0, 100.0, 100.0, 1.5, 0.5, 0.5, 1.0, 1.0), -1);
+        assert_eq!(
+            np_draw_line(0, 0, 0.0, 0.0, 100.0, 100.0, 1.5, 0.5, 0.5, 1.0, 1.0),
+            -1
+        );
     }
 
     #[test]
     fn test_draw_rectangle_invalid_dimensions() {
-        assert_eq!(np_draw_rectangle(0, 0, 0.0, 0.0, -10.0, 100.0, 0.5, 0.5, 0.5, 1.0, 1), -1);
+        assert_eq!(
+            np_draw_rectangle(0, 0, 0.0, 0.0, -10.0, 100.0, 0.5, 0.5, 0.5, 1.0, 1),
+            -1
+        );
     }
 
     #[test]
     fn test_draw_circle_invalid_radius() {
-        assert_eq!(np_draw_circle(0, 0, 50.0, 50.0, -10.0, 0.5, 0.5, 0.5, 1.0, 1), -1);
+        assert_eq!(
+            np_draw_circle(0, 0, 50.0, 50.0, -10.0, 0.5, 0.5, 0.5, 1.0, 1),
+            -1
+        );
     }
 }

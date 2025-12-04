@@ -3,13 +3,12 @@
 //! Provides FFI bindings for text buffer and text span operations.
 
 use super::{Handle, HandleStore, safe_helpers};
-use crate::fitz::text::Text;
 use crate::fitz::geometry::Matrix;
+use crate::fitz::text::Text;
 use std::sync::{Arc, LazyLock};
 
 /// Text storage
-pub static TEXTS: LazyLock<HandleStore<Text>> =
-    LazyLock::new(HandleStore::default);
+pub static TEXTS: LazyLock<HandleStore<Text>> = LazyLock::new(HandleStore::default);
 
 /// Create a new empty text object
 #[unsafe(no_mangle)]
@@ -50,8 +49,12 @@ pub extern "C" fn fz_show_glyph(
             if let Some(f) = super::font::FONTS.get(font) {
                 if let Ok(font_guard) = f.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Clone the font and wrap in Arc for the Text API
@@ -63,8 +66,8 @@ pub extern "C" fn fz_show_glyph(
                         glyph,
                         unicode,
                         wmode != 0,
-                        0, // bidi_level
-                        crate::fitz::text::BidiDirection::Ltr, // markup_dir
+                        0,                                      // bidi_level
+                        crate::fitz::text::BidiDirection::Ltr,  // markup_dir
                         crate::fitz::text::TextLanguage::Unset, // language
                     );
                 }
@@ -97,8 +100,12 @@ pub extern "C" fn fz_show_string(
             if let Some(f) = super::font::FONTS.get(font) {
                 if let Ok(font_guard) = f.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Clone the font and wrap in Arc for the Text API
@@ -109,8 +116,8 @@ pub extern "C" fn fz_show_string(
                         matrix,
                         s,
                         wmode != 0,
-                        0, // bidi_level
-                        crate::fitz::text::BidiDirection::Ltr, // markup_dir
+                        0,                                      // bidi_level
+                        crate::fitz::text::BidiDirection::Ltr,  // markup_dir
                         crate::fitz::text::TextLanguage::Unset, // language
                     );
                 }
@@ -130,13 +137,18 @@ pub extern "C" fn fz_bound_text(
     if let Some(t) = TEXTS.get(text) {
         if let Ok(guard) = t.lock() {
             let matrix = Matrix::new(
-                transform.a, transform.b, transform.c,
-                transform.d, transform.e, transform.f
+                transform.a,
+                transform.b,
+                transform.c,
+                transform.d,
+                transform.e,
+                transform.f,
             );
 
             // Get stroke state if provided
             let stroke_opt = if stroke != 0 {
-                super::path::STROKE_STATES.get(stroke)
+                super::path::STROKE_STATES
+                    .get(stroke)
                     .and_then(|s| s.lock().ok().map(|guard| guard.clone()))
             } else {
                 None
@@ -153,7 +165,12 @@ pub extern "C" fn fz_bound_text(
         }
     }
 
-    super::geometry::fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 }
+    super::geometry::fz_rect {
+        x0: 0.0,
+        y0: 0.0,
+        x1: 0.0,
+        y1: 0.0,
+    }
 }
 
 /// Clone text object
@@ -173,7 +190,12 @@ pub extern "C" fn fz_clone_text(_ctx: Handle, text: Handle) -> Handle {
 /// # Safety
 /// Caller must ensure buf points to writable memory of at least 8 bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_text_language(_ctx: Handle, text: Handle, buf: *mut std::ffi::c_char, len: i32) -> i32 {
+pub extern "C" fn fz_text_language(
+    _ctx: Handle,
+    text: Handle,
+    buf: *mut std::ffi::c_char,
+    len: i32,
+) -> i32 {
     if let Some(t) = TEXTS.get(text) {
         if let Ok(_guard) = t.lock() {
             // Get language tag (e.g., "en" for English)
@@ -262,7 +284,12 @@ type TextWalkCallback = extern "C" fn(
 
 /// Walk through text items invoking callback for each glyph
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_text_walk(_ctx: Handle, text: Handle, callback: *const std::ffi::c_void, arg: *mut std::ffi::c_void) -> i32 {
+pub extern "C" fn fz_text_walk(
+    _ctx: Handle,
+    text: Handle,
+    callback: *const std::ffi::c_void,
+    arg: *mut std::ffi::c_void,
+) -> i32 {
     if callback.is_null() {
         return 0;
     }
@@ -307,7 +334,6 @@ pub extern "C" fn fz_text_walk(_ctx: Handle, text: Handle, callback: *const std:
 mod tests {
     use super::*;
     use crate::fitz::font::Font;
-    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_new_text() {
@@ -336,7 +362,12 @@ mod tests {
     #[test]
     fn test_bound_text() {
         let text_handle = fz_new_text(0);
-        let bounds = fz_bound_text(0, text_handle, 0, super::super::geometry::fz_matrix::identity());
+        let bounds = fz_bound_text(
+            0,
+            text_handle,
+            0,
+            super::super::geometry::fz_matrix::identity(),
+        );
         // Empty text should return Rect::EMPTY (infinite bounds)
         assert_eq!(bounds.x0, f32::INFINITY);
         assert_eq!(bounds.y0, f32::INFINITY);
@@ -406,4 +437,3 @@ mod tests {
         super::super::font::FONTS.remove(font_handle);
     }
 }
-

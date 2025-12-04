@@ -1,26 +1,26 @@
 //! C FFI for context - MuPDF compatible
 //! Simplified error handling without setjmp/longjmp
 
-use super::{Handle, CONTEXTS};
-use std::sync::{Arc, Mutex, LazyLock};
-use std::ffi::{c_char, c_int, c_void, CStr};
+use super::{CONTEXTS, Handle};
 use std::collections::HashMap;
+use std::ffi::{CStr, c_char, c_int, c_void};
+use std::sync::{Arc, LazyLock, Mutex};
 
 /// Error codes matching MuPDF fz_error_type
 #[repr(C)]
 pub enum FzErrorType {
     None = 0,
     Generic = 1,
-    System = 2,       // Fatal out of memory or syscall error
-    Library = 3,      // Error from third-party library
-    Argument = 4,     // Invalid or out-of-range arguments
-    Limit = 5,        // Resource or hard limits exceeded
-    Unsupported = 6,  // Unsupported feature
-    Format = 7,       // Unrecoverable format errors
-    Syntax = 8,       // Recoverable syntax errors
-    TryLater = 9,     // Progressive loading signal
-    Abort = 10,       // User requested abort
-    Repaired = 11,    // PDF repair flag
+    System = 2,      // Fatal out of memory or syscall error
+    Library = 3,     // Error from third-party library
+    Argument = 4,    // Invalid or out-of-range arguments
+    Limit = 5,       // Resource or hard limits exceeded
+    Unsupported = 6, // Unsupported feature
+    Format = 7,      // Unrecoverable format errors
+    Syntax = 8,      // Recoverable syntax errors
+    TryLater = 9,    // Progressive loading signal
+    Abort = 10,      // User requested abort
+    Repaired = 11,   // PDF repair flag
 }
 
 /// Context error state
@@ -48,8 +48,8 @@ struct ContextSettings {
 impl Default for ContextSettings {
     fn default() -> Self {
         Self {
-            icc_enabled: true,  // ICC enabled by default
-            aa_level: 8,        // 8-bit AA by default
+            icc_enabled: true, // ICC enabled by default
+            aa_level: 8,       // 8-bit AA by default
         }
     }
 }
@@ -117,7 +117,10 @@ impl Context {
         if let Ok(err) = self.error.lock() {
             (err.code, err.message.clone())
         } else {
-            (FzErrorType::Generic as c_int, "Failed to lock error state".into())
+            (
+                FzErrorType::Generic as c_int,
+                "Failed to lock error state".into(),
+            )
         }
     }
 
@@ -139,8 +142,8 @@ impl Context {
 /// alloc and locks can be NULL for default behavior
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fz_new_context(
-    _alloc: *const c_void,  // fz_alloc_context* - ignored, we use Rust allocator
-    _locks: *const c_void,  // fz_locks_context* - ignored, we use Rust sync
+    _alloc: *const c_void, // fz_alloc_context* - ignored, we use Rust allocator
+    _locks: *const c_void, // fz_locks_context* - ignored, we use Rust sync
     max_store: usize,
 ) -> Handle {
     CONTEXTS.insert(Context::new(max_store))
@@ -427,7 +430,11 @@ pub extern "C" fn fz_keep_context(ctx: Handle) -> Handle {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_has_error(ctx: Handle) -> c_int {
     let code = fz_caught(ctx);
-    if code == FzErrorType::None as c_int { 0 } else { 1 }
+    if code == FzErrorType::None as c_int {
+        0
+    } else {
+        1
+    }
 }
 
 /// Check if context is valid
@@ -489,7 +496,8 @@ pub extern "C" fn fz_store_scavenge(_ctx: Handle, size: usize, phase: *mut c_int
 pub extern "C" fn fz_enable_icc(ctx: Handle) {
     if CONTEXTS.get(ctx).is_some() {
         if let Ok(mut settings) = CONTEXT_SETTINGS.lock() {
-            settings.entry(ctx)
+            settings
+                .entry(ctx)
                 .or_insert_with(ContextSettings::default)
                 .icc_enabled = true;
         }
@@ -501,7 +509,8 @@ pub extern "C" fn fz_enable_icc(ctx: Handle) {
 pub extern "C" fn fz_disable_icc(ctx: Handle) {
     if CONTEXTS.get(ctx).is_some() {
         if let Ok(mut settings) = CONTEXT_SETTINGS.lock() {
-            settings.entry(ctx)
+            settings
+                .entry(ctx)
                 .or_insert_with(ContextSettings::default)
                 .icc_enabled = false;
         }
@@ -514,7 +523,8 @@ pub extern "C" fn fz_disable_icc(ctx: Handle) {
 pub extern "C" fn fz_set_aa_level(ctx: Handle, bits: c_int) {
     if CONTEXTS.get(ctx).is_some() {
         if let Ok(mut settings) = CONTEXT_SETTINGS.lock() {
-            settings.entry(ctx)
+            settings
+                .entry(ctx)
                 .or_insert_with(ContextSettings::default)
                 .aa_level = bits.clamp(0, 8); // Clamp to 0-8 bits
         }
@@ -526,9 +536,7 @@ pub extern "C" fn fz_set_aa_level(ctx: Handle, bits: c_int) {
 pub extern "C" fn fz_aa_level(ctx: Handle) -> c_int {
     if CONTEXTS.get(ctx).is_some() {
         if let Ok(settings) = CONTEXT_SETTINGS.lock() {
-            return settings.get(&ctx)
-                .map(|s| s.aa_level)
-                .unwrap_or(8); // Default 8-bit AA
+            return settings.get(&ctx).map(|s| s.aa_level).unwrap_or(8); // Default 8-bit AA
         }
     }
     8

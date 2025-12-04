@@ -1,7 +1,7 @@
 //! PDF Object Types and Core Data Structures
 
-use std::sync::LazyLock;
 use super::super::{Handle, HandleStore};
+use std::sync::LazyLock;
 
 /// PDF Object type enumeration
 #[derive(Debug, Clone)]
@@ -30,9 +30,16 @@ impl PdfObjType {
             (PdfObjType::String(a), PdfObjType::String(b)) => a == b,
             (PdfObjType::Array(a), PdfObjType::Array(b)) => a.len() == b.len(),
             (PdfObjType::Dict(a), PdfObjType::Dict(b)) => a.len() == b.len(),
-            (PdfObjType::Indirect { num: n1, generation: g1 }, PdfObjType::Indirect { num: n2, generation: g2 }) => {
-                n1 == n2 && g1 == g2
-            }
+            (
+                PdfObjType::Indirect {
+                    num: n1,
+                    generation: g1,
+                },
+                PdfObjType::Indirect {
+                    num: n2,
+                    generation: g2,
+                },
+            ) => n1 == n2 && g1 == g2,
             (PdfObjType::Stream { .. }, PdfObjType::Stream { .. }) => false, // Streams never match
             _ => false,
         }
@@ -146,4 +153,3 @@ pub type PdfObjHandle = Handle;
 
 /// Global PDF object storage
 pub static PDF_OBJECTS: LazyLock<HandleStore<PdfObj>> = LazyLock::new(HandleStore::default);
-

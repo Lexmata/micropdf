@@ -1,15 +1,13 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use nanopdf::fitz::text::{Text, BidiDirection, TextLanguage};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::font::Font;
 use nanopdf::fitz::geometry::Matrix;
+use nanopdf::fitz::text::{BidiDirection, Text, TextLanguage};
 use std::sync::Arc;
 
 fn bench_text_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("text/creation");
 
-    group.bench_function("new", |b| {
-        b.iter(Text::new)
-    });
+    group.bench_function("new", |b| b.iter(Text::new));
 
     group.finish();
 }
@@ -64,23 +62,23 @@ fn bench_text_properties(c: &mut Criterion) {
     let trm = Matrix::IDENTITY;
 
     // Add some content
-    text.show_string(Arc::clone(&font), trm, "Hello World", false, 0, BidiDirection::Ltr, TextLanguage::Unset);
+    text.show_string(
+        Arc::clone(&font),
+        trm,
+        "Hello World",
+        false,
+        0,
+        BidiDirection::Ltr,
+        TextLanguage::Unset,
+    );
 
-    group.bench_function("is_empty", |b| {
-        b.iter(|| black_box(&text).is_empty())
-    });
+    group.bench_function("is_empty", |b| b.iter(|| black_box(&text).is_empty()));
 
-    group.bench_function("len", |b| {
-        b.iter(|| black_box(&text).len())
-    });
+    group.bench_function("len", |b| b.iter(|| black_box(&text).len()));
 
-    group.bench_function("span_count", |b| {
-        b.iter(|| black_box(&text).span_count())
-    });
+    group.bench_function("span_count", |b| b.iter(|| black_box(&text).span_count()));
 
-    group.bench_function("item_count", |b| {
-        b.iter(|| black_box(&text).item_count())
-    });
+    group.bench_function("item_count", |b| b.iter(|| black_box(&text).item_count()));
 
     group.finish();
 }
@@ -91,7 +89,15 @@ fn bench_text_bounds(c: &mut Criterion) {
     let font = Arc::new(Font::new("Test"));
     let mut text = Text::new();
     let trm = Matrix::IDENTITY;
-    text.show_string(Arc::clone(&font), trm, "Hello World", false, 0, BidiDirection::Ltr, TextLanguage::Unset);
+    text.show_string(
+        Arc::clone(&font),
+        trm,
+        "Hello World",
+        false,
+        0,
+        BidiDirection::Ltr,
+        TextLanguage::Unset,
+    );
 
     let matrix = Matrix::IDENTITY;
 
@@ -112,7 +118,10 @@ fn bench_text_string_sizes(c: &mut Criterion) {
         ("short", "Hi"),
         ("medium", "Hello World"),
         ("long", "The quick brown fox jumps over the lazy dog"),
-        ("very_long", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"),
+        (
+            "very_long",
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
+        ),
     ];
 
     for (name, string) in strings.iter() {
@@ -144,12 +153,18 @@ fn bench_text_clone(c: &mut Criterion) {
 
     // Create text with varying complexity
     for _ in 0..10 {
-        text.show_string(Arc::clone(&font), trm, "Hello World", false, 0, BidiDirection::Ltr, TextLanguage::Unset);
+        text.show_string(
+            Arc::clone(&font),
+            trm,
+            "Hello World",
+            false,
+            0,
+            BidiDirection::Ltr,
+            TextLanguage::Unset,
+        );
     }
 
-    group.bench_function("clone", |b| {
-        b.iter(|| black_box(&text).clone())
-    });
+    group.bench_function("clone", |b| b.iter(|| black_box(&text).clone()));
 
     group.finish();
 }
@@ -165,4 +180,3 @@ criterion_group!(
 );
 
 criterion_main!(benches);
-

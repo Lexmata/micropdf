@@ -1,8 +1,8 @@
 //! PDF Array Operations FFI Functions
 
 use super::super::Handle;
-use super::types::{PdfObj, PdfObjHandle, PdfObjType, PDF_OBJECTS};
 use super::refcount::{with_obj, with_obj_mut};
+use super::types::{PDF_OBJECTS, PdfObj, PdfObjHandle, PdfObjType};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_array_len(_ctx: Handle, array: PdfObjHandle) -> i32 {
@@ -115,7 +115,12 @@ pub extern "C" fn pdf_array_put(_ctx: Handle, array: PdfObjHandle, index: i32, o
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_array_insert(_ctx: Handle, array: PdfObjHandle, index: i32, obj: PdfObjHandle) {
+pub extern "C" fn pdf_array_insert(
+    _ctx: Handle,
+    array: PdfObjHandle,
+    index: i32,
+    obj: PdfObjHandle,
+) {
     let obj_to_insert = with_obj(obj, None, |o| Some(o.clone()));
 
     if let Some(obj_clone) = obj_to_insert {
@@ -130,16 +135,18 @@ pub extern "C" fn pdf_array_insert(_ctx: Handle, array: PdfObjHandle, index: i32
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_array_push_name(_ctx: Handle, array: PdfObjHandle, name: *const std::ffi::c_char) {
+pub extern "C" fn pdf_array_push_name(
+    _ctx: Handle,
+    array: PdfObjHandle,
+    name: *const std::ffi::c_char,
+) {
     use std::ffi::CStr;
 
     if name.is_null() {
         return;
     }
 
-    let name_str = unsafe { CStr::from_ptr(name) }
-        .to_str()
-        .unwrap_or("");
+    let name_str = unsafe { CStr::from_ptr(name) }.to_str().unwrap_or("");
 
     with_obj_mut(array, (), |arr| {
         if let PdfObjType::Array(ref mut a) = arr.obj_type {
@@ -150,7 +157,12 @@ pub extern "C" fn pdf_array_push_name(_ctx: Handle, array: PdfObjHandle, name: *
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_array_push_string(_ctx: Handle, array: PdfObjHandle, str: *const std::ffi::c_char, len: usize) {
+pub extern "C" fn pdf_array_push_string(
+    _ctx: Handle,
+    array: PdfObjHandle,
+    str: *const std::ffi::c_char,
+    len: usize,
+) {
     if str.is_null() || len == 0 {
         return;
     }
@@ -164,4 +176,3 @@ pub extern "C" fn pdf_array_push_string(_ctx: Handle, array: PdfObjHandle, str: 
         }
     });
 }
-

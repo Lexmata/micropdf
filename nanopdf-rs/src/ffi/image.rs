@@ -2,13 +2,12 @@
 //!
 //! Provides FFI bindings for image loading and rendering.
 
-use super::{Handle, HandleStore, PIXMAPS, BUFFERS};
+use super::{BUFFERS, Handle, HandleStore, PIXMAPS};
 use crate::fitz::image::Image;
 use std::sync::LazyLock;
 
 /// Image storage
-pub static IMAGES: LazyLock<HandleStore<Image>> =
-    LazyLock::new(HandleStore::default);
+pub static IMAGES: LazyLock<HandleStore<Image>> = LazyLock::new(HandleStore::default);
 
 /// Helper to convert fitz::colorspace::Colorspace to a colorspace handle
 fn colorspace_to_handle(cs: &crate::fitz::colorspace::Colorspace) -> u64 {
@@ -23,11 +22,7 @@ fn colorspace_to_handle(cs: &crate::fitz::colorspace::Colorspace) -> u64 {
 
 /// Create a new image from pixmap
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_image_from_pixmap(
-    _ctx: Handle,
-    pixmap: Handle,
-    _mask: Handle,
-) -> Handle {
+pub extern "C" fn fz_new_image_from_pixmap(_ctx: Handle, pixmap: Handle, _mask: Handle) -> Handle {
     if let Some(pm) = PIXMAPS.get(pixmap) {
         if let Ok(guard) = pm.lock() {
             let w = guard.w();
@@ -170,10 +165,14 @@ pub extern "C" fn fz_get_pixmap_from_image(
 
             // Set output dimensions
             if !w.is_null() {
-                unsafe { *w = img_w; }
+                unsafe {
+                    *w = img_w;
+                }
             }
             if !h.is_null() {
-                unsafe { *h = img_h; }
+                unsafe {
+                    *h = img_h;
+                }
             }
 
             // Create pixmap using FFI Pixmap type
@@ -242,7 +241,10 @@ pub extern "C" fn fz_decode_image_scaled(
 /// # Safety
 /// Caller must ensure filename is a valid null-terminated C string.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_image_from_file(_ctx: Handle, filename: *const std::ffi::c_char) -> Handle {
+pub extern "C" fn fz_new_image_from_file(
+    _ctx: Handle,
+    filename: *const std::ffi::c_char,
+) -> Handle {
     if filename.is_null() {
         return 0;
     }
@@ -326,8 +328,6 @@ pub extern "C" fn fz_image_orientation(_ctx: Handle, _image: Handle) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fitz::colorspace::Colorspace;
-    use crate::fitz::pixmap::Pixmap;
 
     #[test]
     fn test_new_image_from_pixmap() {
@@ -448,4 +448,3 @@ mod tests {
         fz_drop_image(0, image_handle);
     }
 }
-

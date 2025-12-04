@@ -195,7 +195,10 @@ impl<'a> Lexer<'a> {
                 b'%' => {
                     // Skip comment until end of line
                     self.pos += 1;
-                    while !self.is_eof() && self.data[self.pos] != b'\n' && self.data[self.pos] != b'\r' {
+                    while !self.is_eof()
+                        && self.data[self.pos] != b'\n'
+                        && self.data[self.pos] != b'\r'
+                    {
                         self.pos += 1;
                     }
                 }
@@ -337,11 +340,15 @@ impl<'a> Lexer<'a> {
         }
 
         if is_real {
-            buf.float_value = buf.buffer.parse()
+            buf.float_value = buf
+                .buffer
+                .parse()
                 .map_err(|_| Error::Generic("Invalid real number".into()))?;
             Ok(Token::Real)
         } else {
-            buf.int_value = buf.buffer.parse()
+            buf.int_value = buf
+                .buffer
+                .parse()
                 .map_err(|_| Error::Generic("Invalid integer".into()))?;
             Ok(Token::Int)
         }
@@ -402,7 +409,10 @@ impl<'a> Lexer<'a> {
     }
 
     fn is_delimiter(ch: u8) -> bool {
-        matches!(ch, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
+        matches!(
+            ch,
+            b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%'
+        )
     }
 
     fn is_whitespace(ch: u8) -> bool {
@@ -432,12 +442,12 @@ mod tests {
 
     #[test]
     fn test_lex_reals() {
-        let data = b"3.14 -0.5 +2.718";
+        let data = b"3.25 -0.5 +2.75";
         let mut lexer = Lexer::new(data);
         let mut buf = LexBuf::new();
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
-        assert!((buf.as_float() - 3.14).abs() < 0.001);
+        assert!((buf.as_float() - 3.25).abs() < 0.001);
 
         assert_eq!(lexer.lex(&mut buf).unwrap(), Token::Real);
         assert!((buf.as_float() + 0.5).abs() < 0.001);
@@ -545,7 +555,7 @@ mod tests {
         let mut buf = LexBuf::new();
         buf.buffer = "test".to_string();
         buf.int_value = 42;
-        buf.float_value = 3.14;
+        buf.float_value = std::f64::consts::PI;
 
         buf.clear();
         assert!(buf.buffer.is_empty());

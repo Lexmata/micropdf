@@ -22,7 +22,9 @@ impl Buffer {
     pub fn new(capacity: usize) -> Self {
         Self {
             data: Bytes::new(),
-            mutable: Some(Arc::new(std::sync::Mutex::new(BytesMut::with_capacity(capacity)))),
+            mutable: Some(Arc::new(std::sync::Mutex::new(BytesMut::with_capacity(
+                capacity,
+            )))),
         }
     }
 
@@ -171,7 +173,9 @@ impl Buffer {
     /// Ensure we have a mutable buffer for writes.
     pub(super) fn ensure_mutable(&mut self) {
         if self.mutable.is_none() {
-            self.mutable = Some(Arc::new(std::sync::Mutex::new(BytesMut::with_capacity(256))));
+            self.mutable = Some(Arc::new(std::sync::Mutex::new(BytesMut::with_capacity(
+                256,
+            ))));
         }
     }
 
@@ -527,4 +531,3 @@ mod tests {
         assert!(result.ends_with(b")"));
     }
 }
-

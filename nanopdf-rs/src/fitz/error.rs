@@ -35,16 +35,36 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn generic<S: Into<String>>(msg: S) -> Self { Error::Generic(msg.into()) }
-    pub fn argument<S: Into<String>>(msg: S) -> Self { Error::Argument(msg.into()) }
-    pub fn limit<S: Into<String>>(msg: S) -> Self { Error::Limit(msg.into()) }
-    pub fn unsupported<S: Into<String>>(msg: S) -> Self { Error::Unsupported(msg.into()) }
-    pub fn format<S: Into<String>>(msg: S) -> Self { Error::Format(msg.into()) }
-    pub fn syntax<S: Into<String>>(msg: S) -> Self { Error::Syntax(msg.into()) }
-    pub fn pdf<S: Into<String>>(msg: S) -> Self { Error::Pdf(msg.into()) }
-    pub fn encryption<S: Into<String>>(msg: S) -> Self { Error::Encryption(msg.into()) }
-    pub fn font<S: Into<String>>(msg: S) -> Self { Error::Font(msg.into()) }
-    pub fn image<S: Into<String>>(msg: S) -> Self { Error::Image(msg.into()) }
+    pub fn generic<S: Into<String>>(msg: S) -> Self {
+        Error::Generic(msg.into())
+    }
+    pub fn argument<S: Into<String>>(msg: S) -> Self {
+        Error::Argument(msg.into())
+    }
+    pub fn limit<S: Into<String>>(msg: S) -> Self {
+        Error::Limit(msg.into())
+    }
+    pub fn unsupported<S: Into<String>>(msg: S) -> Self {
+        Error::Unsupported(msg.into())
+    }
+    pub fn format<S: Into<String>>(msg: S) -> Self {
+        Error::Format(msg.into())
+    }
+    pub fn syntax<S: Into<String>>(msg: S) -> Self {
+        Error::Syntax(msg.into())
+    }
+    pub fn pdf<S: Into<String>>(msg: S) -> Self {
+        Error::Pdf(msg.into())
+    }
+    pub fn encryption<S: Into<String>>(msg: S) -> Self {
+        Error::Encryption(msg.into())
+    }
+    pub fn font<S: Into<String>>(msg: S) -> Self {
+        Error::Font(msg.into())
+    }
+    pub fn image<S: Into<String>>(msg: S) -> Self {
+        Error::Image(msg.into())
+    }
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -166,4 +186,3 @@ mod tests {
         assert!(returns_err().is_err());
     }
 }
-

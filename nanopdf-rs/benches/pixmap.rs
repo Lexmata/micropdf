@@ -1,6 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use nanopdf::fitz::pixmap::Pixmap;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::colorspace::Colorspace;
+use nanopdf::fitz::pixmap::Pixmap;
 
 fn bench_pixmap_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("pixmap/creation");
@@ -57,29 +57,17 @@ fn bench_pixmap_access(c: &mut Criterion) {
 
     let pixmap = Pixmap::new(Some(Colorspace::device_rgb()), 100, 100, false).unwrap();
 
-    group.bench_function("width", |b| {
-        b.iter(|| black_box(&pixmap).width())
-    });
+    group.bench_function("width", |b| b.iter(|| black_box(&pixmap).width()));
 
-    group.bench_function("height", |b| {
-        b.iter(|| black_box(&pixmap).height())
-    });
+    group.bench_function("height", |b| b.iter(|| black_box(&pixmap).height()));
 
-    group.bench_function("n", |b| {
-        b.iter(|| black_box(&pixmap).n())
-    });
+    group.bench_function("n", |b| b.iter(|| black_box(&pixmap).n()));
 
-    group.bench_function("stride", |b| {
-        b.iter(|| black_box(&pixmap).stride())
-    });
+    group.bench_function("stride", |b| b.iter(|| black_box(&pixmap).stride()));
 
-    group.bench_function("has_alpha", |b| {
-        b.iter(|| black_box(&pixmap).has_alpha())
-    });
+    group.bench_function("has_alpha", |b| b.iter(|| black_box(&pixmap).has_alpha()));
 
-    group.bench_function("samples", |b| {
-        b.iter(|| black_box(&pixmap).samples())
-    });
+    group.bench_function("samples", |b| b.iter(|| black_box(&pixmap).samples()));
 
     group.bench_function("get_pixel", |b| {
         b.iter(|| black_box(&pixmap).get_pixel(black_box(50), black_box(50)))
@@ -100,9 +88,7 @@ fn bench_pixmap_operations(c: &mut Criterion) {
 
     group.bench_function("clone", |b| {
         let pixmap = Pixmap::new(Some(Colorspace::device_rgb()), 100, 100, false).unwrap();
-        b.iter(|| {
-            black_box(&pixmap).clone()
-        })
+        b.iter(|| black_box(&pixmap).clone())
     });
 
     group.finish();
@@ -157,4 +143,3 @@ criterion_group!(
 );
 
 criterion_main!(benches);
-

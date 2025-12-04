@@ -4,26 +4,46 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Name(pub String);
-impl Name { pub fn new(s: &str) -> Self { Self(s.to_string()) } }
-impl fmt::Display for Name { fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "/{}", self.0) } }
+impl Name {
+    pub fn new(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
+impl fmt::Display for Name {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "/{}", self.0)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct PdfString(Vec<u8>);
 impl PdfString {
-    pub fn new(data: Vec<u8>) -> Self { Self(data) }
-    pub fn as_bytes(&self) -> &[u8] { &self.0 }
-    pub fn as_str(&self) -> Option<&str> { std::str::from_utf8(&self.0).ok() }
+    pub fn new(data: Vec<u8>) -> Self {
+        Self(data)
+    }
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.0
+    }
+    pub fn as_str(&self) -> Option<&str> {
+        std::str::from_utf8(&self.0).ok()
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ObjRef { pub num: i32, pub generation: i32 }
-impl ObjRef { pub fn new(num: i32, generation: i32) -> Self { Self { num, generation } } }
+pub struct ObjRef {
+    pub num: i32,
+    pub generation: i32,
+}
+impl ObjRef {
+    pub fn new(num: i32, generation: i32) -> Self {
+        Self { num, generation }
+    }
+}
 
 pub type Dict = HashMap<Name, Object>;
 pub type Array = Vec<Object>;
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub enum Object {
     #[default]
     Null,
@@ -34,23 +54,67 @@ pub enum Object {
     Name(Name),
     Array(Array),
     Dict(Dict),
-    Stream { dict: Dict, data: Vec<u8> },
+    Stream {
+        dict: Dict,
+        data: Vec<u8>,
+    },
     Ref(ObjRef),
 }
 
 impl Object {
-    pub fn is_null(&self) -> bool { matches!(self, Object::Null) }
-    pub fn as_bool(&self) -> Option<bool> { if let Object::Bool(b) = self { Some(*b) } else { None } }
-    pub fn as_int(&self) -> Option<i64> { if let Object::Int(i) = self { Some(*i) } else { None } }
-    pub fn as_real(&self) -> Option<f64> {
-        match self { Object::Real(r) => Some(*r), Object::Int(i) => Some(*i as f64), _ => None }
+    pub fn is_null(&self) -> bool {
+        matches!(self, Object::Null)
     }
-    pub fn as_name(&self) -> Option<&Name> { if let Object::Name(n) = self { Some(n) } else { None } }
-    pub fn as_string(&self) -> Option<&PdfString> { if let Object::String(s) = self { Some(s) } else { None } }
-    pub fn as_array(&self) -> Option<&Array> { if let Object::Array(a) = self { Some(a) } else { None } }
-    pub fn as_dict(&self) -> Option<&Dict> { if let Object::Dict(d) = self { Some(d) } else { None } }
+    pub fn as_bool(&self) -> Option<bool> {
+        if let Object::Bool(b) = self {
+            Some(*b)
+        } else {
+            None
+        }
+    }
+    pub fn as_int(&self) -> Option<i64> {
+        if let Object::Int(i) = self {
+            Some(*i)
+        } else {
+            None
+        }
+    }
+    pub fn as_real(&self) -> Option<f64> {
+        match self {
+            Object::Real(r) => Some(*r),
+            Object::Int(i) => Some(*i as f64),
+            _ => None,
+        }
+    }
+    pub fn as_name(&self) -> Option<&Name> {
+        if let Object::Name(n) = self {
+            Some(n)
+        } else {
+            None
+        }
+    }
+    pub fn as_string(&self) -> Option<&PdfString> {
+        if let Object::String(s) = self {
+            Some(s)
+        } else {
+            None
+        }
+    }
+    pub fn as_array(&self) -> Option<&Array> {
+        if let Object::Array(a) = self {
+            Some(a)
+        } else {
+            None
+        }
+    }
+    pub fn as_dict(&self) -> Option<&Dict> {
+        if let Object::Dict(d) = self {
+            Some(d)
+        } else {
+            None
+        }
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -176,8 +240,8 @@ mod tests {
 
     #[test]
     fn test_object_real() {
-        let obj = Object::Real(3.14);
-        assert_eq!(obj.as_real(), Some(3.14));
+        let obj = Object::Real(std::f64::consts::PI);
+        assert_eq!(obj.as_real(), Some(std::f64::consts::PI));
         assert_eq!(obj.as_int(), None);
     }
 
@@ -216,7 +280,10 @@ mod tests {
     fn test_object_stream() {
         let mut dict = HashMap::new();
         dict.insert(Name::new("Length"), Object::Int(5));
-        let obj = Object::Stream { dict, data: b"Hello".to_vec() };
+        let obj = Object::Stream {
+            dict,
+            data: b"Hello".to_vec(),
+        };
 
         if let Object::Stream { dict, data } = obj {
             assert_eq!(data, b"Hello");
@@ -261,13 +328,12 @@ mod tests {
     #[test]
     fn test_complex_nested_structure() {
         let mut inner_dict = HashMap::new();
-        inner_dict.insert(Name::new("Key"), Object::String(PdfString::new(b"Value".to_vec())));
+        inner_dict.insert(
+            Name::new("Key"),
+            Object::String(PdfString::new(b"Value".to_vec())),
+        );
 
-        let arr = vec![
-            Object::Int(1),
-            Object::Real(2.5),
-            Object::Dict(inner_dict),
-        ];
+        let arr = vec![Object::Int(1), Object::Real(2.5), Object::Dict(inner_dict)];
 
         let mut outer_dict = HashMap::new();
         outer_dict.insert(Name::new("Array"), Object::Array(arr));
@@ -282,4 +348,3 @@ mod tests {
         assert_eq!(inner_arr[1].as_real(), Some(2.5));
     }
 }
-

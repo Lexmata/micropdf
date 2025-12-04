@@ -1,19 +1,17 @@
 //! DCTDecode (JPEG) Filter Implementation
 
-use crate::fitz::error::{Error, Result};
 use super::params::DCTDecodeParams;
+use crate::fitz::error::{Error, Result};
 
 /// Decode JPEG compressed data
 pub fn decode_dct(data: &[u8], _params: Option<&DCTDecodeParams>) -> Result<Vec<u8>> {
     use image::ImageReader;
     use std::io::Cursor;
 
-    let reader = ImageReader::with_format(
-        Cursor::new(data),
-        image::ImageFormat::Jpeg,
-    );
+    let reader = ImageReader::with_format(Cursor::new(data), image::ImageFormat::Jpeg);
 
-    let img = reader.decode()
+    let img = reader
+        .decode()
         .map_err(|e| Error::Generic(format!("DCTDecode failed: {}", e)))?;
 
     Ok(img.into_bytes())
@@ -21,8 +19,8 @@ pub fn decode_dct(data: &[u8], _params: Option<&DCTDecodeParams>) -> Result<Vec<
 
 /// Encode data with JPEG compression
 pub fn encode_dct(data: &[u8], width: u32, height: u32, quality: u8) -> Result<Vec<u8>> {
-    use image::{ImageBuffer, Rgb};
     use image::codecs::jpeg::JpegEncoder;
+    use image::{ImageBuffer, Rgb};
     use std::io::Cursor;
 
     // Assume RGB data
@@ -30,15 +28,12 @@ pub fn encode_dct(data: &[u8], width: u32, height: u32, quality: u8) -> Result<V
         .ok_or_else(|| Error::Generic("Invalid image dimensions".into()))?;
 
     let mut output = Cursor::new(Vec::new());
-    
+
     // Use JpegEncoder to specify quality (1-100)
     let mut encoder = JpegEncoder::new_with_quality(&mut output, quality);
-    encoder.encode(
-        img.as_raw(),
-        width,
-        height,
-        image::ExtendedColorType::Rgb8,
-    ).map_err(|e| Error::Generic(format!("DCTEncode failed: {}", e)))?;
+    encoder
+        .encode(img.as_raw(), width, height, image::ExtendedColorType::Rgb8)
+        .map_err(|e| Error::Generic(format!("DCTEncode failed: {}", e)))?;
 
     Ok(output.into_inner())
 }
@@ -53,10 +48,10 @@ mod tests {
         let width = 2u32;
         let height = 2u32;
         let data: Vec<u8> = vec![
-            255, 0, 0,    // Red pixel
-            0, 255, 0,    // Green pixel
-            0, 0, 255,    // Blue pixel
-            255, 255, 0,  // Yellow pixel
+            255, 0, 0, // Red pixel
+            0, 255, 0, // Green pixel
+            0, 0, 255, // Blue pixel
+            255, 255, 0, // Yellow pixel
         ];
 
         // Encode to JPEG
@@ -100,12 +95,7 @@ mod tests {
         // Create a small valid JPEG
         let width = 2u32;
         let height = 2u32;
-        let data: Vec<u8> = vec![
-            255, 0, 0,
-            0, 255, 0,
-            0, 0, 255,
-            255, 255, 255,
-        ];
+        let data: Vec<u8> = vec![255, 0, 0, 0, 255, 0, 0, 0, 255, 255, 255, 255];
 
         let encoded = encode_dct(&data, width, height, 85).unwrap();
 
@@ -131,4 +121,3 @@ mod tests {
         assert_eq!(&encoded_high[0..2], &[0xFF, 0xD8]);
     }
 }
-

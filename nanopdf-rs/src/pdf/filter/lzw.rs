@@ -1,8 +1,8 @@
 //! LZWDecode Filter Implementation
 
-use crate::fitz::error::{Error, Result};
-use super::params::{LZWDecodeParams, FlateDecodeParams};
+use super::params::{FlateDecodeParams, LZWDecodeParams};
 use super::predictor::apply_predictor_decode;
+use crate::fitz::error::{Error, Result};
 
 /// Decode LZW compressed data
 pub fn decode_lzw(data: &[u8], params: Option<&LZWDecodeParams>) -> Result<Vec<u8>> {
@@ -13,7 +13,8 @@ pub fn decode_lzw(data: &[u8], params: Option<&LZWDecodeParams>) -> Result<Vec<u
         if early_change { 8 } else { 9 },
     );
 
-    let decompressed = decoder.decode(data)
+    let decompressed = decoder
+        .decode(data)
         .map_err(|e| Error::Generic(format!("LZWDecode failed: {:?}", e)))?;
 
     // Apply predictor if specified
@@ -36,7 +37,8 @@ pub fn decode_lzw(data: &[u8], params: Option<&LZWDecodeParams>) -> Result<Vec<u
 /// Encode data with LZW compression
 pub fn encode_lzw(data: &[u8]) -> Result<Vec<u8>> {
     let mut encoder = weezl::encode::Encoder::with_tiff_size_switch(weezl::BitOrder::Msb, 8);
-    encoder.encode(data)
+    encoder
+        .encode(data)
         .map_err(|e| Error::Generic(format!("LZWEncode failed: {:?}", e)))
 }
 
@@ -64,4 +66,3 @@ mod tests {
         assert_eq!(decompressed, empty);
     }
 }
-

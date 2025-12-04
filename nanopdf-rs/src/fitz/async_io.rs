@@ -3,10 +3,10 @@
 //! This module provides asynchronous I/O operations for PDF processing,
 //! enabling non-blocking file operations and concurrent processing.
 
+use bytes::{Bytes, BytesMut};
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt, BufReader};
-use bytes::{Bytes, BytesMut};
 
 use crate::fitz::buffer::Buffer;
 use crate::fitz::error::{Error, Result};
@@ -66,7 +66,9 @@ pub async fn read_file_limited<P: AsRef<Path>>(path: P, max_size: usize) -> Resu
 /// ```
 pub async fn write_file<P: AsRef<Path>>(path: P, buffer: &Buffer) -> Result<()> {
     let mut file = File::create(path).await.map_err(Error::System)?;
-    file.write_all(&buffer.to_vec()).await.map_err(Error::System)?;
+    file.write_all(&buffer.to_vec())
+        .await
+        .map_err(Error::System)?;
     file.flush().await.map_err(Error::System)?;
     Ok(())
 }
@@ -99,7 +101,9 @@ pub async fn file_size<P: AsRef<Path>>(path: P) -> Result<u64> {
 ///     let results = read_files_concurrent(&paths).await;
 /// }
 /// ```
-pub async fn read_files_concurrent<P: AsRef<Path> + Send + Sync>(paths: &[P]) -> Vec<Result<Buffer>> {
+pub async fn read_files_concurrent<P: AsRef<Path> + Send + Sync>(
+    paths: &[P],
+) -> Vec<Result<Buffer>> {
     let futures: Vec<_> = paths
         .iter()
         .map(|path| {
@@ -318,7 +322,9 @@ mod tests {
 
         assert!(!file_exists(&path).await);
 
-        write_file(&path, &Buffer::from_slice(b"test")).await.unwrap();
+        write_file(&path, &Buffer::from_slice(b"test"))
+            .await
+            .unwrap();
 
         assert!(file_exists(&path).await);
     }
@@ -353,15 +359,18 @@ mod tests {
 
     #[tokio::test]
     async fn test_concurrent() {
-        async fn task_1() -> i32 { 1 }
-        async fn task_2() -> i32 { 2 }
-        async fn task_3() -> i32 { 3 }
+        async fn task_1() -> i32 {
+            1
+        }
+        async fn task_2() -> i32 {
+            2
+        }
+        async fn task_3() -> i32 {
+            3
+        }
 
-        let futures: Vec<std::pin::Pin<Box<dyn std::future::Future<Output = i32> + Send>>> = vec![
-            Box::pin(task_1()),
-            Box::pin(task_2()),
-            Box::pin(task_3()),
-        ];
+        let futures: Vec<std::pin::Pin<Box<dyn std::future::Future<Output = i32> + Send>>> =
+            vec![Box::pin(task_1()), Box::pin(task_2()), Box::pin(task_3())];
 
         let results = concurrent(futures).await;
         assert_eq!(results, vec![1, 2, 3]);
@@ -369,23 +378,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_with_timeout_success() {
-        let result = with_timeout(
-            std::time::Duration::from_secs(1),
-            async { Ok::<_, Error>(42) },
-        ).await;
+        let result = with_timeout(std::time::Duration::from_secs(1), async {
+            Ok::<_, Error>(42)
+        })
+        .await;
 
         assert_eq!(result.unwrap(), 42);
     }
 
     #[tokio::test]
     async fn test_with_timeout_failure() {
-        let result = with_timeout(
-            std::time::Duration::from_millis(1),
-            async {
-                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-                Ok::<_, Error>(42)
-            },
-        ).await;
+        let result = with_timeout(std::time::Duration::from_millis(1), async {
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            Ok::<_, Error>(42)
+        })
+        .await;
 
         assert!(result.is_err());
     }
@@ -396,8 +403,12 @@ mod tests {
         let path1 = dir.path().join("file1.txt");
         let path2 = dir.path().join("file2.txt");
 
-        write_file(&path1, &Buffer::from_slice(b"File 1")).await.unwrap();
-        write_file(&path2, &Buffer::from_slice(b"File 2")).await.unwrap();
+        write_file(&path1, &Buffer::from_slice(b"File 1"))
+            .await
+            .unwrap();
+        write_file(&path2, &Buffer::from_slice(b"File 2"))
+            .await
+            .unwrap();
 
         let paths = vec![path1, path2];
         let results = read_files_concurrent(&paths).await;
@@ -481,4 +492,3 @@ mod tests {
         assert_eq!(result, 42);
     }
 }
-

@@ -1,10 +1,10 @@
 //! PDF Object Value Extraction FFI Functions
 
-use std::ffi::{c_char, CString};
-use std::sync::{LazyLock, Mutex};
 use super::super::Handle;
-use super::types::{PdfObjHandle, PdfObjType};
 use super::refcount::with_obj;
+use super::types::{PdfObjHandle, PdfObjType};
+use std::ffi::{CString, c_char};
+use std::sync::{LazyLock, Mutex};
 
 // Static storage for returned name strings
 static NAME_STORAGE: LazyLock<Mutex<Vec<CString>>> = LazyLock::new(|| Mutex::new(Vec::new()));
@@ -114,4 +114,3 @@ pub extern "C" fn pdf_to_real_default(_ctx: Handle, obj: PdfObjHandle, def: f32)
         _ => def,
     })
 }
-

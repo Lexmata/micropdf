@@ -107,14 +107,14 @@ impl ZipArchive {
 
         // Search backwards for EOCD (usually at end, but can have comment)
         for i in (0..self.data.len().saturating_sub(22)).rev() {
-            if self.data.get(i..i+4) == Some(&eocd_sig) {
+            if self.data.get(i..i + 4) == Some(&eocd_sig) {
                 eocd_pos = Some(i);
                 break;
             }
         }
 
-        let eocd_offset = eocd_pos.ok_or_else(||
-            Error::Generic("Not a valid ZIP archive: EOCD not found".into()))?;
+        let eocd_offset = eocd_pos
+            .ok_or_else(|| Error::Generic("Not a valid ZIP archive: EOCD not found".into()))?;
 
         // Read EOCD fields
         if eocd_offset + 22 > self.data.len() {
@@ -137,23 +137,16 @@ impl ZipArchive {
 
             // Check central directory file header signature: 0x02014b50
             let cd_sig = [0x50, 0x4b, 0x01, 0x02];
-            if self.data.get(pos..pos+4) != Some(&cd_sig) {
+            if self.data.get(pos..pos + 4) != Some(&cd_sig) {
                 break;
             }
 
             // Read filename length and extra field length
-            let filename_len = u16::from_le_bytes([
-                self.data[pos + 28],
-                self.data[pos + 29],
-            ]) as usize;
-            let extra_len = u16::from_le_bytes([
-                self.data[pos + 30],
-                self.data[pos + 31],
-            ]) as usize;
-            let comment_len = u16::from_le_bytes([
-                self.data[pos + 32],
-                self.data[pos + 33],
-            ]) as usize;
+            let filename_len =
+                u16::from_le_bytes([self.data[pos + 28], self.data[pos + 29]]) as usize;
+            let extra_len = u16::from_le_bytes([self.data[pos + 30], self.data[pos + 31]]) as usize;
+            let comment_len =
+                u16::from_le_bytes([self.data[pos + 32], self.data[pos + 33]]) as usize;
 
             // Read compressed and uncompressed sizes
             let _compressed_size = u32::from_le_bytes([
@@ -352,10 +345,8 @@ impl DirectoryArchive {
             let is_dir = metadata.is_dir();
             let size = metadata.len();
 
-            self.entries.insert(
-                name.clone(),
-                ArchiveEntry::new(name.clone(), size, is_dir),
-            );
+            self.entries
+                .insert(name.clone(), ArchiveEntry::new(name.clone(), size, is_dir));
 
             if is_dir {
                 self.scan_dir(&path, &name)?;
@@ -524,7 +515,6 @@ impl Archive {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
     use tempfile::TempDir;
 
     #[test]
@@ -560,10 +550,8 @@ mod tests {
         let dir_path = temp_dir.path();
 
         // Create some test files
-        fs::write(dir_path.join("file1.txt"), b"content1")
-            .map_err(|e| Error::System(e))?;
-        fs::write(dir_path.join("file2.txt"), b"content2")
-            .map_err(|e| Error::System(e))?;
+        fs::write(dir_path.join("file1.txt"), b"content1").map_err(Error::System)?;
+        fs::write(dir_path.join("file2.txt"), b"content2").map_err(Error::System)?;
 
         let mut archive = Archive::open_directory(dir_path)?;
         assert_eq!(archive.format(), ArchiveFormat::Directory);
@@ -658,4 +646,3 @@ mod tests {
         assert_eq!(buffer.len(), 11);
     }
 }
-

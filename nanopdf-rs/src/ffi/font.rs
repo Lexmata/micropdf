@@ -7,8 +7,7 @@ use crate::fitz::font::Font;
 use std::sync::LazyLock;
 
 /// Font storage
-pub static FONTS: LazyLock<HandleStore<Font>> =
-    LazyLock::new(HandleStore::default);
+pub static FONTS: LazyLock<HandleStore<Font>> = LazyLock::new(HandleStore::default);
 
 /// Create a new font
 ///
@@ -85,12 +84,10 @@ pub extern "C" fn fz_new_font_from_file(
 
     // Read font file
     match std::fs::read(path_str) {
-        Ok(data) => {
-            match Font::from_data(font_name, &data, index as usize) {
-                Ok(f) => FONTS.insert(f),
-                Err(_) => 0,
-            }
-        }
+        Ok(data) => match Font::from_data(font_name, &data, index as usize) {
+            Ok(f) => FONTS.insert(f),
+            Err(_) => 0,
+        },
         Err(_) => 0,
     }
 }
@@ -212,7 +209,12 @@ pub extern "C" fn fz_advance_glyph(_ctx: Handle, font: Handle, glyph: i32, _wmod
 
 /// Get glyph bounding box
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_bound_glyph(_ctx: Handle, font: Handle, glyph: i32, _transform: super::geometry::fz_matrix) -> super::geometry::fz_rect {
+pub extern "C" fn fz_bound_glyph(
+    _ctx: Handle,
+    font: Handle,
+    glyph: i32,
+    _transform: super::geometry::fz_matrix,
+) -> super::geometry::fz_rect {
     if let Some(f) = FONTS.get(font) {
         if let Ok(guard) = f.lock() {
             let bbox = guard.glyph_bbox(glyph as u16);
@@ -224,7 +226,12 @@ pub extern "C" fn fz_bound_glyph(_ctx: Handle, font: Handle, glyph: i32, _transf
             };
         }
     }
-    super::geometry::fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 }
+    super::geometry::fz_rect {
+        x0: 0.0,
+        y0: 0.0,
+        x1: 0.0,
+        y1: 0.0,
+    }
 }
 
 /// Get font bbox
@@ -241,7 +248,12 @@ pub extern "C" fn fz_font_bbox(_ctx: Handle, font: Handle) -> super::geometry::f
             };
         }
     }
-    super::geometry::fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 }
+    super::geometry::fz_rect {
+        x0: 0.0,
+        y0: 0.0,
+        x1: 0.0,
+        y1: 0.0,
+    }
 }
 
 /// Outline glyph (extract vector path)
@@ -293,7 +305,13 @@ pub extern "C" fn fz_font_descender(_ctx: Handle, font: Handle) -> f32 {
 
 /// Get glyph name
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_glyph_name(_ctx: Handle, _font: Handle, glyph: i32, buf: *mut std::ffi::c_char, size: i32) {
+pub extern "C" fn fz_glyph_name(
+    _ctx: Handle,
+    _font: Handle,
+    glyph: i32,
+    buf: *mut std::ffi::c_char,
+    size: i32,
+) {
     if buf.is_null() || size <= 0 {
         return;
     }
@@ -392,7 +410,12 @@ mod tests {
         let font_handle = fz_new_font(0, c"Arial".as_ptr(), 0, 0, 0);
         let glyph = fz_encode_character(0, font_handle, 65);
 
-        let bbox = fz_bound_glyph(0, font_handle, glyph, super::super::geometry::fz_matrix::identity());
+        let bbox = fz_bound_glyph(
+            0,
+            font_handle,
+            glyph,
+            super::super::geometry::fz_matrix::identity(),
+        );
         // Valid bounding box should have x1 > x0
         assert!(bbox.x1 >= bbox.x0);
 
@@ -427,4 +450,3 @@ mod tests {
         }
     }
 }
-

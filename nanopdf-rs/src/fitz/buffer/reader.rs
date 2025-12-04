@@ -1,8 +1,8 @@
 //! BufferReader for consuming buffer contents
 
+use super::core::Buffer;
 use bytes::Bytes;
 use std::io::{self, Read};
-use super::core::Buffer;
 
 /// A reader for consuming buffer contents.
 pub struct BufferReader {
@@ -53,10 +53,8 @@ impl BufferReader {
     /// Read a 16-bit unsigned integer in big-endian format.
     pub fn read_u16_be(&mut self) -> Option<u16> {
         if self.remaining() >= 2 {
-            let value = u16::from_be_bytes([
-                self.data[self.position],
-                self.data[self.position + 1],
-            ]);
+            let value =
+                u16::from_be_bytes([self.data[self.position], self.data[self.position + 1]]);
             self.position += 2;
             Some(value)
         } else {
@@ -83,10 +81,8 @@ impl BufferReader {
     /// Read a 16-bit unsigned integer in little-endian format.
     pub fn read_u16_le(&mut self) -> Option<u16> {
         if self.remaining() >= 2 {
-            let value = u16::from_le_bytes([
-                self.data[self.position],
-                self.data[self.position + 1],
-            ]);
+            let value =
+                u16::from_le_bytes([self.data[self.position], self.data[self.position + 1]]);
             self.position += 2;
             Some(value)
         } else {
@@ -173,10 +169,8 @@ impl BufferReader {
     /// Read a 16-bit signed integer in big-endian format.
     pub fn read_i16_be(&mut self) -> Option<i16> {
         if self.remaining() >= 2 {
-            let value = i16::from_be_bytes([
-                self.data[self.position],
-                self.data[self.position + 1],
-            ]);
+            let value =
+                i16::from_be_bytes([self.data[self.position], self.data[self.position + 1]]);
             self.position += 2;
             Some(value)
         } else {
@@ -203,10 +197,8 @@ impl BufferReader {
     /// Read a 16-bit signed integer in little-endian format.
     pub fn read_i16_le(&mut self) -> Option<i16> {
         if self.remaining() >= 2 {
-            let value = i16::from_le_bytes([
-                self.data[self.position],
-                self.data[self.position + 1],
-            ]);
+            let value =
+                i16::from_le_bytes([self.data[self.position], self.data[self.position + 1]]);
             self.position += 2;
             Some(value)
         } else {
@@ -368,7 +360,7 @@ mod tests {
         let mut reader = BufferReader::new(buf);
 
         assert_eq!(reader.read_i16_be(), Some(-32768)); // 0x8000
-        assert_eq!(reader.read_i16_be(), Some(32767));  // 0x7FFF
+        assert_eq!(reader.read_i16_be(), Some(32767)); // 0x7FFF
     }
 
     #[test]
@@ -377,7 +369,7 @@ mod tests {
         let mut reader = BufferReader::new(buf);
 
         assert_eq!(reader.read_i32_be(), Some(-2147483648)); // 0x80000000
-        assert_eq!(reader.read_i32_be(), Some(2147483647));  // 0x7FFFFFFF
+        assert_eq!(reader.read_i32_be(), Some(2147483647)); // 0x7FFFFFFF
     }
 
     #[test]
@@ -386,7 +378,7 @@ mod tests {
         let mut reader = BufferReader::new(buf);
 
         assert_eq!(reader.read_i16_le(), Some(-32768)); // 0x8000 (LE)
-        assert_eq!(reader.read_i16_le(), Some(32767));  // 0x7FFF (LE)
+        assert_eq!(reader.read_i16_le(), Some(32767)); // 0x7FFF (LE)
     }
 
     #[test]
@@ -395,7 +387,7 @@ mod tests {
         let mut reader = BufferReader::new(buf);
 
         assert_eq!(reader.read_i32_le(), Some(-2147483648)); // 0x80000000 (LE)
-        assert_eq!(reader.read_i32_le(), Some(2147483647));  // 0x7FFFFFFF (LE)
+        assert_eq!(reader.read_i32_le(), Some(2147483647)); // 0x7FFFFFFF (LE)
     }
 
     #[test]
@@ -494,4 +486,3 @@ mod tests {
         assert_eq!(reader.peek(), None);
     }
 }
-

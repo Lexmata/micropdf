@@ -1,8 +1,8 @@
 //! PDF Object Comparison FFI Functions
 
 use super::super::Handle;
-use super::types::{PdfObjHandle, PdfObjType};
 use super::refcount::with_obj;
+use super::types::{PdfObjHandle, PdfObjType};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_objcmp(_ctx: Handle, a: PdfObjHandle, b: PdfObjHandle) -> i32 {
@@ -32,4 +32,3 @@ pub extern "C" fn pdf_name_eq(_ctx: Handle, a: PdfObjHandle, b: PdfObjHandle) ->
         _ => 0,
     }
 }
-

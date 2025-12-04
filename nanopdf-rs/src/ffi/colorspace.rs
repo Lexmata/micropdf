@@ -27,8 +27,8 @@ pub struct Colorspace {
     pub n: i32,
     pub name: String,
     pub base_cs: ColorspaceHandle,
-    pub lookup: Vec<u8>,      // For indexed colorspaces
-    pub high: i32,            // For indexed colorspaces (max index)
+    pub lookup: Vec<u8>, // For indexed colorspaces
+    pub high: i32,       // For indexed colorspaces (max index)
 }
 
 impl Default for Colorspace {
@@ -135,7 +135,10 @@ pub extern "C" fn fz_device_lab(_ctx: super::Handle) -> ColorspaceHandle {
 
 /// Keep (increment ref) colorspace - device colorspaces are immortal
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_keep_colorspace(_ctx: super::Handle, cs: ColorspaceHandle) -> ColorspaceHandle {
+pub extern "C" fn fz_keep_colorspace(
+    _ctx: super::Handle,
+    cs: ColorspaceHandle,
+) -> ColorspaceHandle {
     cs // Device colorspaces don't need ref counting
 }
 
@@ -204,13 +207,19 @@ pub extern "C" fn fz_colorspace_is_subtractive(_ctx: super::Handle, cs: Colorspa
 
 /// Check if colorspace is device-based (not ICC)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_colorspace_device_n_has_cmyk(_ctx: super::Handle, _cs: ColorspaceHandle) -> i32 {
+pub extern "C" fn fz_colorspace_device_n_has_cmyk(
+    _ctx: super::Handle,
+    _cs: ColorspaceHandle,
+) -> i32 {
     0 // Not implemented yet
 }
 
 /// Check if colorspace device-n has only colorants
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_colorspace_device_n_has_only_cmyk(_ctx: super::Handle, _cs: ColorspaceHandle) -> i32 {
+pub extern "C" fn fz_colorspace_device_n_has_only_cmyk(
+    _ctx: super::Handle,
+    _cs: ColorspaceHandle,
+) -> i32 {
     0 // Not implemented yet
 }
 
@@ -330,7 +339,10 @@ pub extern "C" fn fz_new_icc_colorspace(
 
 /// Get base colorspace of indexed colorspace
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_colorspace_base(_ctx: super::Handle, cs: ColorspaceHandle) -> ColorspaceHandle {
+pub extern "C" fn fz_colorspace_base(
+    _ctx: super::Handle,
+    cs: ColorspaceHandle,
+) -> ColorspaceHandle {
     if cs < CUSTOM_CS_OFFSET {
         return 0; // Device colorspaces have no base
     }
@@ -454,13 +466,20 @@ pub extern "C" fn fz_convert_color(
 
 /// Clone a colorspace (increments reference count)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_clone_colorspace(_ctx: super::Handle, cs: ColorspaceHandle) -> ColorspaceHandle {
+pub extern "C" fn fz_clone_colorspace(
+    _ctx: super::Handle,
+    cs: ColorspaceHandle,
+) -> ColorspaceHandle {
     fz_keep_colorspace(_ctx, cs)
 }
 
 /// Check if two colorspaces are equal
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_colorspace_eq(_ctx: super::Handle, a: ColorspaceHandle, b: ColorspaceHandle) -> i32 {
+pub extern "C" fn fz_colorspace_eq(
+    _ctx: super::Handle,
+    a: ColorspaceHandle,
+    b: ColorspaceHandle,
+) -> i32 {
     if a == b { 1 } else { 0 }
 }
 
@@ -559,18 +578,29 @@ pub extern "C" fn fz_device_grayscale(_ctx: super::Handle) -> ColorspaceHandle {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_colorspace_has_spots(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
     let cs_type = colorspace_type(cs);
-    if cs_type == ColorspaceType::Separation { 1 } else { 0 }
+    if cs_type == ColorspaceType::Separation {
+        1
+    } else {
+        0
+    }
 }
 
 /// Count spot colors in a colorspace
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_colorspace_n_spots(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
-    if fz_colorspace_has_spots(_ctx, cs) != 0 { 1 } else { 0 }
+    if fz_colorspace_has_spots(_ctx, cs) != 0 {
+        1
+    } else {
+        0
+    }
 }
 
 /// Get colorspace name as string (alias)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_colorspace_name_string(_ctx: super::Handle, cs: ColorspaceHandle) -> *const c_char {
+pub extern "C" fn fz_colorspace_name_string(
+    _ctx: super::Handle,
+    cs: ColorspaceHandle,
+) -> *const c_char {
     fz_colorspace_name(_ctx, cs)
 }
 
@@ -634,9 +664,18 @@ mod tests {
 
     #[test]
     fn test_colorspace_type() {
-        assert!(matches!(colorspace_type(FZ_COLORSPACE_GRAY), ColorspaceType::Gray));
-        assert!(matches!(colorspace_type(FZ_COLORSPACE_RGB), ColorspaceType::Rgb));
-        assert!(matches!(colorspace_type(FZ_COLORSPACE_CMYK), ColorspaceType::Cmyk));
+        assert!(matches!(
+            colorspace_type(FZ_COLORSPACE_GRAY),
+            ColorspaceType::Gray
+        ));
+        assert!(matches!(
+            colorspace_type(FZ_COLORSPACE_RGB),
+            ColorspaceType::Rgb
+        ));
+        assert!(matches!(
+            colorspace_type(FZ_COLORSPACE_CMYK),
+            ColorspaceType::Cmyk
+        ));
         assert!(matches!(colorspace_type(99), ColorspaceType::None));
     }
 
@@ -769,7 +808,14 @@ mod tests {
     #[test]
     fn test_convert_color_null_pointers() {
         // Should not panic with null pointers
-        fz_convert_color(0, FZ_COLORSPACE_RGB, std::ptr::null(), FZ_COLORSPACE_GRAY, std::ptr::null_mut(), 0);
+        fz_convert_color(
+            0,
+            FZ_COLORSPACE_RGB,
+            std::ptr::null(),
+            FZ_COLORSPACE_GRAY,
+            std::ptr::null_mut(),
+            0,
+        );
     }
 
     #[test]
@@ -820,10 +866,10 @@ mod tests {
     fn test_new_indexed_colorspace() {
         // Create a simple indexed colorspace with 4 colors
         let lookup = [
-            255, 0, 0,    // Index 0 = Red
-            0, 255, 0,    // Index 1 = Green
-            0, 0, 255,    // Index 2 = Blue
-            255, 255, 0,  // Index 3 = Yellow
+            255, 0, 0, // Index 0 = Red
+            0, 255, 0, // Index 1 = Green
+            0, 0, 255, // Index 2 = Blue
+            255, 255, 0, // Index 3 = Yellow
         ];
 
         let cs = fz_new_indexed_colorspace(0, FZ_COLORSPACE_RGB, 3, lookup.as_ptr());

@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::geometry::{Matrix, Point, Quad, Rect};
 
 fn bench_point_transform(c: &mut Criterion) {
@@ -35,20 +35,14 @@ fn bench_matrix_operations(c: &mut Criterion) {
         b.iter(|| Matrix::scale(black_box(2.0), black_box(2.0)))
     });
 
-    group.bench_function("rotate", |b| {
-        b.iter(|| Matrix::rotate(black_box(45.0)))
-    });
+    group.bench_function("rotate", |b| b.iter(|| Matrix::rotate(black_box(45.0))));
 
     group.bench_function("concat", |b| {
         b.iter(|| black_box(&m1).concat(black_box(&m2)))
     });
 
     group.bench_function("chain_3", |b| {
-        b.iter(|| {
-            black_box(&m1)
-                .concat(black_box(&m2))
-                .concat(black_box(&m3))
-        })
+        b.iter(|| black_box(&m1).concat(black_box(&m2)).concat(black_box(&m3)))
     });
 
     group.finish();
@@ -61,12 +55,17 @@ fn bench_rect_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("rect");
 
     group.bench_function("new", |b| {
-        b.iter(|| Rect::new(black_box(0.0), black_box(0.0), black_box(100.0), black_box(100.0)))
+        b.iter(|| {
+            Rect::new(
+                black_box(0.0),
+                black_box(0.0),
+                black_box(100.0),
+                black_box(100.0),
+            )
+        })
     });
 
-    group.bench_function("union", |b| {
-        b.iter(|| black_box(&r1).union(black_box(&r2)))
-    });
+    group.bench_function("union", |b| b.iter(|| black_box(&r1).union(black_box(&r2))));
 
     group.bench_function("intersect", |b| {
         b.iter(|| black_box(&r1).intersect(black_box(&r2)))
@@ -80,9 +79,7 @@ fn bench_rect_operations(c: &mut Criterion) {
         b.iter(|| (black_box(&r1).width(), black_box(&r1).height()))
     });
 
-    group.bench_function("is_empty", |b| {
-        b.iter(|| black_box(&r1).is_empty())
-    });
+    group.bench_function("is_empty", |b| b.iter(|| black_box(&r1).is_empty()));
 
     group.finish();
 }

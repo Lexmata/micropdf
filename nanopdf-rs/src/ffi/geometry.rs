@@ -55,7 +55,14 @@ impl Default for fz_matrix {
 
 impl fz_matrix {
     pub const fn identity() -> Self {
-        Self { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 }
+        Self {
+            a: 1.0,
+            b: 0.0,
+            c: 0.0,
+            d: 1.0,
+            e: 0.0,
+            f: 0.0,
+        }
     }
 }
 
@@ -76,30 +83,53 @@ pub const FZ_MAX_INF_RECT: i32 = 0x7fffff80;
 // Static constants exposed to C
 // SAFETY: These are constant data with no mutable access, safe for FFI export
 #[unsafe(no_mangle)]
-pub static fz_identity: fz_matrix = fz_matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0 };
+pub static fz_identity: fz_matrix = fz_matrix {
+    a: 1.0,
+    b: 0.0,
+    c: 0.0,
+    d: 1.0,
+    e: 0.0,
+    f: 0.0,
+};
 
 #[unsafe(no_mangle)]
 pub static fz_empty_rect: fz_rect = fz_rect {
-    x0: f32::INFINITY, y0: f32::INFINITY,
-    x1: f32::NEG_INFINITY, y1: f32::NEG_INFINITY,
+    x0: f32::INFINITY,
+    y0: f32::INFINITY,
+    x1: f32::NEG_INFINITY,
+    y1: f32::NEG_INFINITY,
 };
 
 #[unsafe(no_mangle)]
 pub static fz_infinite_rect: fz_rect = fz_rect {
-    x0: FZ_MIN_INF_RECT as f32, y0: FZ_MIN_INF_RECT as f32,
-    x1: FZ_MAX_INF_RECT as f32, y1: FZ_MAX_INF_RECT as f32,
+    x0: FZ_MIN_INF_RECT as f32,
+    y0: FZ_MIN_INF_RECT as f32,
+    x1: FZ_MAX_INF_RECT as f32,
+    y1: FZ_MAX_INF_RECT as f32,
 };
 
 #[unsafe(no_mangle)]
-pub static fz_unit_rect: fz_rect = fz_rect { x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0 };
+pub static fz_unit_rect: fz_rect = fz_rect {
+    x0: 0.0,
+    y0: 0.0,
+    x1: 1.0,
+    y1: 1.0,
+};
 
 #[unsafe(no_mangle)]
-pub static fz_empty_irect: fz_irect = fz_irect { x0: 0, y0: 0, x1: 0, y1: 0 };
+pub static fz_empty_irect: fz_irect = fz_irect {
+    x0: 0,
+    y0: 0,
+    x1: 0,
+    y1: 0,
+};
 
 #[unsafe(no_mangle)]
 pub static fz_infinite_irect: fz_irect = fz_irect {
-    x0: FZ_MIN_INF_RECT, y0: FZ_MIN_INF_RECT,
-    x1: FZ_MAX_INF_RECT, y1: FZ_MAX_INF_RECT,
+    x0: FZ_MIN_INF_RECT,
+    y0: FZ_MIN_INF_RECT,
+    x1: FZ_MAX_INF_RECT,
+    y1: FZ_MAX_INF_RECT,
 };
 
 // ============================================================================
@@ -121,7 +151,14 @@ pub extern "C" fn fz_concat(left: fz_matrix, right: fz_matrix) -> fz_matrix {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_scale(sx: c_float, sy: c_float) -> fz_matrix {
-    fz_matrix { a: sx, b: 0.0, c: 0.0, d: sy, e: 0.0, f: 0.0 }
+    fz_matrix {
+        a: sx,
+        b: 0.0,
+        c: 0.0,
+        d: sy,
+        e: 0.0,
+        f: 0.0,
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -136,7 +173,14 @@ pub extern "C" fn fz_post_scale(m: fz_matrix, sx: c_float, sy: c_float) -> fz_ma
 
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_shear(sx: c_float, sy: c_float) -> fz_matrix {
-    fz_matrix { a: 1.0, b: sy, c: sx, d: 1.0, e: 0.0, f: 0.0 }
+    fz_matrix {
+        a: 1.0,
+        b: sy,
+        c: sx,
+        d: 1.0,
+        e: 0.0,
+        f: 0.0,
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -148,7 +192,14 @@ pub extern "C" fn fz_pre_shear(m: fz_matrix, sx: c_float, sy: c_float) -> fz_mat
 pub extern "C" fn fz_rotate(degrees: c_float) -> fz_matrix {
     let rad = degrees * std::f32::consts::PI / 180.0;
     let (s, c) = rad.sin_cos();
-    fz_matrix { a: c, b: s, c: -s, d: c, e: 0.0, f: 0.0 }
+    fz_matrix {
+        a: c,
+        b: s,
+        c: -s,
+        d: c,
+        e: 0.0,
+        f: 0.0,
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -158,7 +209,14 @@ pub extern "C" fn fz_pre_rotate(m: fz_matrix, degrees: c_float) -> fz_matrix {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_translate(tx: c_float, ty: c_float) -> fz_matrix {
-    fz_matrix { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: tx, f: ty }
+    fz_matrix {
+        a: 1.0,
+        b: 0.0,
+        c: 0.0,
+        d: 1.0,
+        e: tx,
+        f: ty,
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -385,7 +443,10 @@ pub extern "C" fn fz_normalize_vector(p: fz_point) -> fz_point {
     if len < 1e-6 {
         return fz_point { x: 0.0, y: 0.0 };
     }
-    fz_point { x: p.x / len, y: p.y / len }
+    fz_point {
+        x: p.x / len,
+        y: p.y / len,
+    }
 }
 
 // ============================================================================
@@ -579,7 +640,12 @@ mod tests {
 
     #[test]
     fn test_rect_struct() {
-        let r = fz_rect { x0: 1.0, y0: 2.0, x1: 10.0, y1: 20.0 };
+        let r = fz_rect {
+            x0: 1.0,
+            y0: 2.0,
+            x1: 10.0,
+            y1: 20.0,
+        };
         assert_eq!(r.x0, 1.0);
         assert_eq!(r.y0, 2.0);
         assert_eq!(r.x1, 10.0);
@@ -588,7 +654,12 @@ mod tests {
 
     #[test]
     fn test_irect_struct() {
-        let r = fz_irect { x0: 1, y0: 2, x1: 10, y1: 20 };
+        let r = fz_irect {
+            x0: 1,
+            y0: 2,
+            x1: 10,
+            y1: 20,
+        };
         assert_eq!(r.x0, 1);
         assert_eq!(r.y0, 2);
         assert_eq!(r.x1, 10);
@@ -597,7 +668,12 @@ mod tests {
 
     #[test]
     fn test_irect_from_rect() {
-        let r = fz_rect { x0: 0.5, y0: 1.5, x1: 9.5, y1: 19.5 };
+        let r = fz_rect {
+            x0: 0.5,
+            y0: 1.5,
+            x1: 9.5,
+            y1: 19.5,
+        };
         let ir = fz_irect_from_rect(r);
         assert_eq!(ir.x0, 0);
         assert_eq!(ir.y0, 1);
@@ -607,7 +683,12 @@ mod tests {
 
     #[test]
     fn test_round_rect() {
-        let r = fz_rect { x0: 0.2, y0: 1.8, x1: 9.3, y1: 19.7 };
+        let r = fz_rect {
+            x0: 0.2,
+            y0: 1.8,
+            x1: 9.3,
+            y1: 19.7,
+        };
         let ir = fz_round_rect(r);
         // round_rect should round correctly
         assert!(ir.x0 >= 0);
@@ -616,7 +697,12 @@ mod tests {
 
     #[test]
     fn test_rect_from_irect() {
-        let ir = fz_irect { x0: 1, y0: 2, x1: 10, y1: 20 };
+        let ir = fz_irect {
+            x0: 1,
+            y0: 2,
+            x1: 10,
+            y1: 20,
+        };
         let r = fz_rect_from_irect(ir);
         assert_eq!(r.x0, 1.0);
         assert_eq!(r.y0, 2.0);
@@ -638,7 +724,14 @@ mod tests {
 
     #[test]
     fn test_matrix_struct() {
-        let m = fz_matrix { a: 1.0, b: 2.0, c: 3.0, d: 4.0, e: 5.0, f: 6.0 };
+        let m = fz_matrix {
+            a: 1.0,
+            b: 2.0,
+            c: 3.0,
+            d: 4.0,
+            e: 5.0,
+            f: 6.0,
+        };
         assert_eq!(m.a, 1.0);
         assert_eq!(m.b, 2.0);
         assert_eq!(m.c, 3.0);
@@ -799,7 +892,12 @@ mod tests {
     #[test]
     fn test_transform_rect() {
         let m = fz_scale(2.0, 2.0);
-        let r = fz_rect { x0: 0.0, y0: 0.0, x1: 10.0, y1: 10.0 };
+        let r = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 10.0,
+            y1: 10.0,
+        };
         let result = fz_transform_rect(r, m);
         assert_eq!(result.x0, 0.0);
         assert_eq!(result.y0, 0.0);
@@ -819,8 +917,18 @@ mod tests {
     // Rect operations tests
     #[test]
     fn test_rect_operations() {
-        let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-        let r2 = fz_rect { x0: 50.0, y0: 50.0, x1: 150.0, y1: 150.0 };
+        let r1 = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+        let r2 = fz_rect {
+            x0: 50.0,
+            y0: 50.0,
+            x1: 150.0,
+            y1: 150.0,
+        };
 
         let intersection = fz_intersect_rect(r1, r2);
         assert_eq!(intersection.x0, 50.0);
@@ -837,8 +945,18 @@ mod tests {
 
     #[test]
     fn test_intersect_irect() {
-        let r1 = fz_irect { x0: 0, y0: 0, x1: 100, y1: 100 };
-        let r2 = fz_irect { x0: 50, y0: 50, x1: 150, y1: 150 };
+        let r1 = fz_irect {
+            x0: 0,
+            y0: 0,
+            x1: 100,
+            y1: 100,
+        };
+        let r2 = fz_irect {
+            x0: 50,
+            y0: 50,
+            x1: 150,
+            y1: 150,
+        };
         let result = fz_intersect_irect(r1, r2);
         assert_eq!(result.x0, 50);
         assert_eq!(result.y0, 50);
@@ -848,7 +966,12 @@ mod tests {
 
     #[test]
     fn test_expand_rect() {
-        let r = fz_rect { x0: 10.0, y0: 10.0, x1: 20.0, y1: 20.0 };
+        let r = fz_rect {
+            x0: 10.0,
+            y0: 10.0,
+            x1: 20.0,
+            y1: 20.0,
+        };
         let expanded = fz_expand_rect(r, 5.0);
         assert_eq!(expanded.x0, 5.0);
         assert_eq!(expanded.y0, 5.0);
@@ -858,7 +981,12 @@ mod tests {
 
     #[test]
     fn test_expand_irect() {
-        let r = fz_irect { x0: 10, y0: 10, x1: 20, y1: 20 };
+        let r = fz_irect {
+            x0: 10,
+            y0: 10,
+            x1: 20,
+            y1: 20,
+        };
         let expanded = fz_expand_irect(r, 5);
         assert_eq!(expanded.x0, 5);
         assert_eq!(expanded.y0, 5);
@@ -868,7 +996,12 @@ mod tests {
 
     #[test]
     fn test_include_point_in_rect() {
-        let r = fz_rect { x0: 10.0, y0: 10.0, x1: 20.0, y1: 20.0 };
+        let r = fz_rect {
+            x0: 10.0,
+            y0: 10.0,
+            x1: 20.0,
+            y1: 20.0,
+        };
         let p = fz_point { x: 0.0, y: 30.0 };
         let result = fz_include_point_in_rect(r, p);
         assert_eq!(result.x0, 0.0);
@@ -879,7 +1012,12 @@ mod tests {
 
     #[test]
     fn test_translate_rect() {
-        let r = fz_rect { x0: 0.0, y0: 0.0, x1: 10.0, y1: 10.0 };
+        let r = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 10.0,
+            y1: 10.0,
+        };
         let result = fz_translate_rect(r, 5.0, 5.0);
         assert_eq!(result.x0, 5.0);
         assert_eq!(result.y0, 5.0);
@@ -889,7 +1027,12 @@ mod tests {
 
     #[test]
     fn test_translate_irect() {
-        let r = fz_irect { x0: 0, y0: 0, x1: 10, y1: 10 };
+        let r = fz_irect {
+            x0: 0,
+            y0: 0,
+            x1: 10,
+            y1: 10,
+        };
         let result = fz_translate_irect(r, 5, 5);
         assert_eq!(result.x0, 5);
         assert_eq!(result.y0, 5);
@@ -899,9 +1042,24 @@ mod tests {
 
     #[test]
     fn test_contains_rect() {
-        let outer = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-        let inner = fz_rect { x0: 10.0, y0: 10.0, x1: 50.0, y1: 50.0 };
-        let outside = fz_rect { x0: 200.0, y0: 200.0, x1: 300.0, y1: 300.0 };
+        let outer = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+        let inner = fz_rect {
+            x0: 10.0,
+            y0: 10.0,
+            x1: 50.0,
+            y1: 50.0,
+        };
+        let outside = fz_rect {
+            x0: 200.0,
+            y0: 200.0,
+            x1: 300.0,
+            y1: 300.0,
+        };
 
         assert_eq!(fz_contains_rect(outer, inner), 1);
         assert_eq!(fz_contains_rect(outer, outside), 0);
@@ -909,9 +1067,24 @@ mod tests {
 
     #[test]
     fn test_overlaps_rect() {
-        let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 50.0, y1: 50.0 };
-        let r2 = fz_rect { x0: 25.0, y0: 25.0, x1: 75.0, y1: 75.0 };
-        let r3 = fz_rect { x0: 100.0, y0: 100.0, x1: 150.0, y1: 150.0 };
+        let r1 = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 50.0,
+            y1: 50.0,
+        };
+        let r2 = fz_rect {
+            x0: 25.0,
+            y0: 25.0,
+            x1: 75.0,
+            y1: 75.0,
+        };
+        let r3 = fz_rect {
+            x0: 100.0,
+            y0: 100.0,
+            x1: 150.0,
+            y1: 150.0,
+        };
 
         assert_eq!(fz_overlaps_rect(r1, r2), 1);
         assert_eq!(fz_overlaps_rect(r1, r3), 0);
@@ -920,7 +1093,12 @@ mod tests {
     // Quad tests
     #[test]
     fn test_quad_from_rect() {
-        let r = fz_rect { x0: 0.0, y0: 0.0, x1: 10.0, y1: 20.0 };
+        let r = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 10.0,
+            y1: 20.0,
+        };
         let q = fz_quad_from_rect(r);
         assert_eq!(q.ul.x, 0.0);
         assert_eq!(q.ul.y, 0.0);
@@ -966,7 +1144,12 @@ mod tests {
     // Point inside tests
     #[test]
     fn test_is_point_inside_rect() {
-        let r = fz_rect { x0: 0.0, y0: 0.0, x1: 10.0, y1: 10.0 };
+        let r = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 10.0,
+            y1: 10.0,
+        };
         let inside = fz_point { x: 5.0, y: 5.0 };
         let outside = fz_point { x: 15.0, y: 15.0 };
         assert_eq!(fz_is_point_inside_rect(inside, r), 1);
@@ -975,7 +1158,12 @@ mod tests {
 
     #[test]
     fn test_is_point_inside_irect() {
-        let r = fz_irect { x0: 0, y0: 0, x1: 10, y1: 10 };
+        let r = fz_irect {
+            x0: 0,
+            y0: 0,
+            x1: 10,
+            y1: 10,
+        };
         assert_eq!(fz_is_point_inside_irect(5, 5, r), 1);
         assert_eq!(fz_is_point_inside_irect(15, 15, r), 0);
     }

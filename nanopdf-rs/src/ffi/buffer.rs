@@ -1,7 +1,7 @@
 //! C FFI for buffer - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
 
-use super::{Handle, BUFFERS};
+use super::{BUFFERS, Handle};
 use std::ffi::{c_char, c_int, c_void};
 
 /// Internal buffer state
@@ -110,15 +110,13 @@ pub extern "C" fn fz_drop_buffer(_ctx: Handle, buf: Handle) {
 /// because the buffer may be moved or reallocated. For safe access,
 /// use fz_buffer_len and copy the data.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_buffer_storage(
-    _ctx: Handle,
-    buf: Handle,
-    datap: *mut *mut u8,
-) -> usize {
+pub extern "C" fn fz_buffer_storage(_ctx: Handle, buf: Handle, datap: *mut *mut u8) -> usize {
     let Some(buffer) = BUFFERS.get(buf) else {
         if !datap.is_null() {
             // SAFETY: Caller guarantees datap is valid if non-null
-            unsafe { *datap = std::ptr::null_mut(); }
+            unsafe {
+                *datap = std::ptr::null_mut();
+            }
         }
         return 0;
     };
@@ -129,7 +127,9 @@ pub extern "C" fn fz_buffer_storage(
     if !datap.is_null() {
         // We can't safely return a pointer to internal data
         // because the buffer may be reallocated
-        unsafe { *datap = std::ptr::null_mut(); }
+        unsafe {
+            *datap = std::ptr::null_mut();
+        }
     }
 
     len
@@ -193,12 +193,7 @@ pub extern "C" fn fz_clear_buffer(_ctx: Handle, buf: Handle) {
 /// # Safety
 /// Caller must ensure `data` points to valid memory of at least `len` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_append_data(
-    _ctx: Handle,
-    buf: Handle,
-    data: *const c_void,
-    len: usize,
-) {
+pub extern "C" fn fz_append_data(_ctx: Handle, buf: Handle, data: *const c_void, len: usize) {
     if data.is_null() || len == 0 {
         return;
     }
@@ -256,11 +251,7 @@ pub extern "C" fn fz_terminate_buffer(_ctx: Handle, buf: Handle) {
 /// # Safety
 /// Caller must ensure `digest` points to valid writable memory of 16 bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_md5_buffer(
-    _ctx: Handle,
-    buf: Handle,
-    digest: *mut [u8; 16],
-) {
+pub extern "C" fn fz_md5_buffer(_ctx: Handle, buf: Handle, digest: *mut [u8; 16]) {
     if digest.is_null() {
         return;
     }
@@ -371,9 +362,9 @@ impl Default for BitBuffer {
     }
 }
 
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use std::sync::Mutex;
-use std::collections::HashMap;
 
 /// Global bit buffer state for each buffer handle
 static BIT_BUFFERS: LazyLock<Mutex<HashMap<Handle, BitBuffer>>> =
@@ -392,7 +383,11 @@ pub extern "C" fn fz_append_bits(_ctx: Handle, buf: Handle, value: i32, count: i
                 let bit_buf = bit_map.entry(buf).or_insert_with(BitBuffer::new);
 
                 // Mask to get only the requested bits
-                let mask = if count == 32 { u32::MAX } else { (1u32 << count) - 1 };
+                let mask = if count == 32 {
+                    u32::MAX
+                } else {
+                    (1u32 << count) - 1
+                };
                 let bits = (value as u32) & mask;
 
                 // Add bits to accumulator
@@ -516,11 +511,7 @@ pub extern "C" fn fz_append_buffer(_ctx: Handle, buf: Handle, src: Handle) {
 /// Caller must ensure `data` points to valid memory of at least `size` bytes.
 /// The data will be copied into the buffer (no actual ownership transfer).
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_buffer_from_data(
-    _ctx: Handle,
-    data: *mut u8,
-    size: usize,
-) -> Handle {
+pub extern "C" fn fz_new_buffer_from_data(_ctx: Handle, data: *mut u8, size: usize) -> Handle {
     if data.is_null() || size == 0 {
         return BUFFERS.insert(Buffer::new(0));
     }
@@ -537,12 +528,7 @@ pub extern "C" fn fz_new_buffer_from_data(
 /// # Safety
 /// Caller must ensure buffer handle is valid.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_slice_buffer(
-    _ctx: Handle,
-    buf: Handle,
-    offset: usize,
-    len: usize,
-) -> Handle {
+pub extern "C" fn fz_slice_buffer(_ctx: Handle, buf: Handle, offset: usize, len: usize) -> Handle {
     if let Some(buffer) = BUFFERS.get(buf) {
         if let Ok(guard) = buffer.lock() {
             let data = guard.data();
@@ -593,7 +579,8 @@ pub extern "C" fn fz_append_base64(
             let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
 
             // Simple base64 encoding
-            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            const BASE64_CHARS: &[u8] =
+                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
             let mut line_len = 0;
             let mut i = 0;
@@ -624,7 +611,9 @@ pub extern "C" fn fz_append_base64(
 
                 if i + 1 < size {
                     let b2 = data_slice[i + 1];
-                    guard.append_byte(BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize]);
+                    guard.append_byte(
+                        BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize],
+                    );
                     guard.append_byte(BASE64_CHARS[((b2 & 0x0F) << 2) as usize]);
                     guard.append_byte(b'=');
                 } else {
@@ -668,12 +657,7 @@ pub extern "C" fn fz_append_float(_ctx: Handle, buf: Handle, value: f32, digits:
 /// # Safety
 /// Caller must ensure `data` points to valid memory of at least `size` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_append_hex(
-    _ctx: Handle,
-    buf: Handle,
-    data: *const u8,
-    size: usize,
-) {
+pub extern "C" fn fz_append_hex(_ctx: Handle, buf: Handle, data: *const u8, size: usize) {
     if data.is_null() || size == 0 {
         return;
     }
@@ -720,7 +704,13 @@ pub extern "C" fn fz_buffer_eq(_ctx: Handle, buf1: Handle, buf2: Handle) -> i32 
     };
 
     match (data1, data2) {
-        (Some(d1), Some(d2)) => if d1 == d2 { 1 } else { 0 },
+        (Some(d1), Some(d2)) => {
+            if d1 == d2 {
+                1
+            } else {
+                0
+            }
+        }
         _ => 0,
     }
 }
@@ -855,7 +845,7 @@ mod tests {
     fn test_buffer_append_multiple() {
         let handle = fz_new_buffer(0, 0);
         for i in 0..100 {
-            fz_append_byte(0, handle, i as i32);
+            fz_append_byte(0, handle, i);
         }
         assert_eq!(fz_buffer_len(0, handle), 100);
         fz_drop_buffer(0, handle);

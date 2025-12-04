@@ -86,7 +86,10 @@ impl StreamSource for MemorySource {
             SeekFrom::Current(offset) => self.position as i64 + offset,
         };
         if new_pos < 0 {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Seek before start"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Seek before start",
+            ));
         }
         self.position = (new_pos as usize).min(self.data.len());
         Ok(self.position as u64)
@@ -148,10 +151,7 @@ impl Stream {
     /// Open a stream from a `Bytes` instance (zero-copy).
     pub fn open_bytes(data: Bytes) -> Self {
         Self {
-            inner: Box::new(MemorySource {
-                data,
-                position: 0,
-            }),
+            inner: Box::new(MemorySource { data, position: 0 }),
             buffer: BytesMut::with_capacity(STREAM_BUFFER_SIZE),
             rp: 0,
             wp: 0,
@@ -263,7 +263,8 @@ impl Stream {
             let buffered = self.wp - self.rp;
             if buffered > 0 {
                 let to_copy = buffered.min(buf.len() - total);
-                buf[total..total + to_copy].copy_from_slice(&self.buffer[self.rp..self.rp + to_copy]);
+                buf[total..total + to_copy]
+                    .copy_from_slice(&self.buffer[self.rp..self.rp + to_copy]);
                 self.rp += to_copy;
                 total += to_copy;
             } else if self.fill_buffer()? == 0 {
@@ -440,15 +441,14 @@ impl std::fmt::Debug for Stream {
 #[cfg(feature = "async")]
 pub mod async_stream {
     use super::*;
-    use bytes::Bytes;
+    use bytes::{Bytes, BytesMut};
     use tokio::fs::File as AsyncFile;
-    use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt, BufReader as AsyncBufReader};
-    use std::pin::Pin;
-    use std::task::{Context, Poll};
+    use tokio::io::{AsyncReadExt, AsyncSeekExt, BufReader as AsyncBufReader};
 
     /// Async stream for non-blocking I/O.
     pub struct AsyncStream {
         inner: AsyncStreamInner,
+        #[allow(dead_code)]
         buffer: BytesMut,
         pos: u64,
         eof: bool,
@@ -464,7 +464,10 @@ pub mod async_stream {
         pub async fn open_file<P: AsRef<Path>>(path: P) -> Result<Self> {
             let file = AsyncFile::open(path).await.map_err(Error::System)?;
             Ok(Self {
-                inner: AsyncStreamInner::File(AsyncBufReader::with_capacity(STREAM_BUFFER_SIZE, file)),
+                inner: AsyncStreamInner::File(AsyncBufReader::with_capacity(
+                    STREAM_BUFFER_SIZE,
+                    file,
+                )),
                 buffer: BytesMut::with_capacity(STREAM_BUFFER_SIZE),
                 pos: 0,
                 eof: false,
@@ -487,10 +490,7 @@ pub mod async_stream {
         /// Open from Bytes (zero-copy).
         pub fn open_bytes(data: Bytes) -> Self {
             Self {
-                inner: AsyncStreamInner::Memory {
-                    data,
-                    position: 0,
-                },
+                inner: AsyncStreamInner::Memory { data, position: 0 },
                 buffer: BytesMut::with_capacity(STREAM_BUFFER_SIZE),
                 pos: 0,
                 eof: false,

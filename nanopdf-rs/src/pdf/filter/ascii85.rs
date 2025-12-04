@@ -30,7 +30,10 @@ pub fn decode_ascii85(data: &[u8]) -> Result<Vec<u8>> {
 
         // Regular ASCII85 character
         if !(b'!'..=b'u').contains(&byte) {
-            return Err(Error::Generic(format!("Invalid ASCII85 character: {}", byte)));
+            return Err(Error::Generic(format!(
+                "Invalid ASCII85 character: {}",
+                byte
+            )));
         }
 
         group = group * 85 + (byte - b'!') as u32;
@@ -136,4 +139,3 @@ mod tests {
         assert_eq!(decoded, empty);
     }
 }
-

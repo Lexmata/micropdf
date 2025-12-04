@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::stream::Stream;
 use std::path::Path;
 
@@ -9,17 +9,12 @@ fn bench_stream_creation(c: &mut Criterion) {
     let test_path = Path::new("Cargo.toml");
 
     group.bench_function("open_file", |b| {
-        b.iter(|| {
-            Stream::open_file(black_box(test_path)).ok()
-        })
+        b.iter(|| Stream::open_file(black_box(test_path)).ok())
     });
 
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_stream_creation,
-);
+criterion_group!(benches, bench_stream_creation,);
 
 criterion_main!(benches);

@@ -10,12 +10,13 @@
 extern "C" {
 #endif
 
+#include "mupdf/pdf/annot.h"
 #include "mupdf/pdf/document.h"
-#include "mupdf/pdf/object.h"
+#include "mupdf/pdf/form.h"
+#include "mupdf/pdf/pdf_object.h"
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* MUPDF_PDF_H */
-
