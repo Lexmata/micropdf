@@ -300,6 +300,222 @@ pub extern "C" fn fz_reset_output(_ctx: Handle, out: Handle) {
     }
 }
 
+/// Write i64 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_int64_be(_ctx: Handle, out: Handle, x: i64) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_i64_be(x);
+        }
+    }
+}
+
+/// Write i64 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_int64_le(_ctx: Handle, out: Handle, x: i64) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_i64_le(x);
+        }
+    }
+}
+
+/// Write u64 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_uint64_be(_ctx: Handle, out: Handle, x: u64) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_u64_be(x);
+        }
+    }
+}
+
+/// Write u64 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_uint64_le(_ctx: Handle, out: Handle, x: u64) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_u64_le(x);
+        }
+    }
+}
+
+/// Write float big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_float_be(_ctx: Handle, out: Handle, x: f32) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_f32_be(x);
+        }
+    }
+}
+
+/// Write float little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_float_le(_ctx: Handle, out: Handle, x: f32) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.write_f32_le(x);
+        }
+    }
+}
+
+/// Write a Unicode rune (codepoint) as UTF-8
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_rune(_ctx: Handle, out: Handle, rune: i32) {
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            if let Some(ch) = char::from_u32(rune as u32) {
+                let mut utf8_buf = [0u8; 4];
+                let utf8_str = ch.encode_utf8(&mut utf8_buf);
+                let _ = guard.write_string(utf8_str);
+            }
+        }
+    }
+}
+
+/// Write base64 encoded data
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_base64(
+    _ctx: Handle,
+    out: Handle,
+    data: *const u8,
+    size: usize,
+    newline: i32,
+) {
+    if data.is_null() || size == 0 {
+        return;
+    }
+
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            // SAFETY: Caller guarantees data points to valid memory of size bytes
+            let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+            
+            // Simple base64 encoding
+            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            let mut col = 0;
+            
+            for chunk in data_slice.chunks(3) {
+                let b1 = chunk[0];
+                let b2 = chunk.get(1).copied().unwrap_or(0);
+                let b3 = chunk.get(2).copied().unwrap_or(0);
+                
+                let _ = guard.write_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+                let _ = guard.write_byte(BASE64_CHARS[(((b1 << 4) | (b2 >> 4)) & 0x3F) as usize]);
+                
+                if chunk.len() > 1 {
+                    let _ = guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
+                } else {
+                    let _ = guard.write_byte(b'=');
+                }
+                
+                if chunk.len() > 2 {
+                    let _ = guard.write_byte(BASE64_CHARS[(b3 & 0x3F) as usize]);
+                } else {
+                    let _ = guard.write_byte(b'=');
+                }
+                
+                col += 4;
+                if newline > 0 && col >= newline {
+                    let _ = guard.write_byte(b'\n');
+                    col = 0;
+                }
+            }
+        }
+    }
+}
+
+/// Write base64 URL-safe encoded data
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_base64_uri(
+    _ctx: Handle,
+    out: Handle,
+    data: *const u8,
+    size: usize,
+) {
+    if data.is_null() || size == 0 {
+        return;
+    }
+
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            // SAFETY: Caller guarantees data points to valid memory of size bytes
+            let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+            
+            // URL-safe base64 encoding (- and _ instead of + and /)
+            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+            
+            for chunk in data_slice.chunks(3) {
+                let b1 = chunk[0];
+                let b2 = chunk.get(1).copied().unwrap_or(0);
+                let b3 = chunk.get(2).copied().unwrap_or(0);
+                
+                let _ = guard.write_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+                let _ = guard.write_byte(BASE64_CHARS[(((b1 << 4) | (b2 >> 4)) & 0x3F) as usize]);
+                
+                if chunk.len() > 1 {
+                    let _ = guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
+                }
+                
+                if chunk.len() > 2 {
+                    let _ = guard.write_byte(BASE64_CHARS[(b3 & 0x3F) as usize]);
+                }
+            }
+        }
+    }
+}
+
+/// Write bits to output (for compressed data)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_bits(
+    _ctx: Handle,
+    out: Handle,
+    value: u32,
+    count: i32,
+) {
+    if count <= 0 || count > 32 {
+        return;
+    }
+
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            // Write bits most significant first
+            let mut val = value;
+            let mut bits_left = count;
+            
+            while bits_left >= 8 {
+                bits_left -= 8;
+                let byte = ((val >> bits_left) & 0xFF) as u8;
+                let _ = guard.write_byte(byte);
+            }
+            
+            if bits_left > 0 {
+                let byte = ((val & ((1 << bits_left) - 1)) << (8 - bits_left)) as u8;
+                let _ = guard.write_byte(byte);
+            }
+        }
+    }
+}
+
+/// Sync bits (flush partial byte)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_write_bits_sync(_ctx: Handle, out: Handle) {
+    // In our simplified implementation, bits are already synced
+    // This is a no-op for compatibility
+    if let Some(output_arc) = OUTPUTS.get(out) {
+        if let Ok(mut guard) = output_arc.lock() {
+            let _ = guard.flush();
+        }
+    }
+}
+
 // POSIX-style whence constants for fz_seek_output
 pub const SEEK_SET: i32 = 0;
 pub const SEEK_CUR: i32 = 1;
@@ -479,6 +695,121 @@ mod tests {
         assert_eq!(SEEK_SET, 0);
         assert_eq!(SEEK_CUR, 1);
         assert_eq!(SEEK_END, 2);
+    }
+
+    #[test]
+    fn test_output_write_int64() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        fz_write_int64_be(ctx, out, 0x0123456789ABCDEF_i64);
+        fz_write_uint64_le(ctx, out, 0xFEDCBA9876543210_u64);
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read(path).unwrap();
+        assert_eq!(content.len(), 16); // 8 + 8 bytes
+    }
+
+    #[test]
+    fn test_output_write_float() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        fz_write_float_be(ctx, out, 3.14159);
+        fz_write_float_le(ctx, out, 2.71828);
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read(path).unwrap();
+        assert_eq!(content.len(), 8); // 4 + 4 bytes
+    }
+
+    #[test]
+    fn test_output_write_rune() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        fz_write_rune(ctx, out, 0x1F600); // 😀 emoji
+        fz_write_rune(ctx, out, 0x41); // 'A'
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read_to_string(path).unwrap();
+        assert_eq!(content, "😀A");
+    }
+
+    #[test]
+    fn test_output_write_base64() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        let data = b"Hello";
+        fz_write_base64(ctx, out, data.as_ptr(), data.len(), 0);
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read_to_string(path).unwrap();
+        assert_eq!(content, "SGVsbG8=");
+    }
+
+    #[test]
+    fn test_output_write_base64_uri() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        let data = b"Test";
+        fz_write_base64_uri(ctx, out, data.as_ptr(), data.len());
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read_to_string(path).unwrap();
+        assert!(content.contains("VGVzdA")); // URL-safe base64 for "Test"
+    }
+
+    #[test]
+    fn test_output_write_bits() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let path = temp_file.path();
+        let c_path = CString::new(path.to_str().unwrap()).unwrap();
+
+        let ctx = 0;
+        let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
+
+        fz_write_bits(ctx, out, 0xFF, 8); // 8 bits = 1 byte
+        fz_write_bits_sync(ctx, out);
+
+        fz_close_output(ctx, out);
+        fz_drop_output(ctx, out);
+
+        let content = std::fs::read(path).unwrap();
+        assert_eq!(content.len(), 1);
+        assert_eq!(content[0], 0xFF);
     }
 }
 
