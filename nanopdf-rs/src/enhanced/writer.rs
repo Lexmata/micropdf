@@ -3,7 +3,7 @@
 //! Complete implementation for creating new PDFs with pages and content.
 
 use super::error::{EnhancedError, Result};
-use crate::pdf::object::{Array, Dict, Name, Object, ObjRef};
+use crate::pdf::object::{Array, Dict, Name, ObjRef, Object};
 use std::fs::File;
 use std::io::{BufWriter, Seek, Write};
 
@@ -38,15 +38,17 @@ impl PdfWriter {
     /// Add a blank page with specified dimensions
     pub fn add_blank_page(&mut self, width: f32, height: f32) -> Result<()> {
         if width <= 0.0 || height <= 0.0 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Invalid page dimensions: {}x{}", width, height)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Invalid page dimensions: {}x{}",
+                width, height
+            )));
         }
 
         if width > 14400.0 || height > 14400.0 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Page dimensions too large: {}x{} (max 14400)", width, height)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Page dimensions too large: {}x{} (max 14400)",
+                width, height
+            )));
         }
 
         // Create page content stream (empty for blank page)
@@ -75,14 +77,20 @@ impl PdfWriter {
 
         // Resources (empty for now)
         let mut resources = Dict::new();
-        resources.insert(Name::new("ProcSet"), Object::Array(vec![
-            Object::Name(Name::new("PDF")),
-            Object::Name(Name::new("Text")),
-        ]));
+        resources.insert(
+            Name::new("ProcSet"),
+            Object::Array(vec![
+                Object::Name(Name::new("PDF")),
+                Object::Name(Name::new("Text")),
+            ]),
+        );
         page_dict.insert(Name::new("Resources"), Object::Dict(resources));
 
         // Contents reference
-        page_dict.insert(Name::new("Contents"), Object::Ref(ObjRef::new(content_ref as i32, 0)));
+        page_dict.insert(
+            Name::new("Contents"),
+            Object::Ref(ObjRef::new(content_ref as i32, 0)),
+        );
 
         // We'll set Parent later when creating Pages tree
         let page_obj_num = self.add_object(Object::Dict(page_dict));
@@ -94,9 +102,10 @@ impl PdfWriter {
     /// Add a page with content
     pub fn add_page_with_content(&mut self, width: f32, height: f32, content: &str) -> Result<()> {
         if width <= 0.0 || height <= 0.0 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Invalid page dimensions: {}x{}", width, height)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Invalid page dimensions: {}x{}",
+                width, height
+            )));
         }
 
         // Create content stream
@@ -123,12 +132,18 @@ impl PdfWriter {
         page_dict.insert(Name::new("MediaBox"), media_box);
 
         let mut resources = Dict::new();
-        resources.insert(Name::new("ProcSet"), Object::Array(vec![
-            Object::Name(Name::new("PDF")),
-            Object::Name(Name::new("Text")),
-        ]));
+        resources.insert(
+            Name::new("ProcSet"),
+            Object::Array(vec![
+                Object::Name(Name::new("PDF")),
+                Object::Name(Name::new("Text")),
+            ]),
+        );
         page_dict.insert(Name::new("Resources"), Object::Dict(resources));
-        page_dict.insert(Name::new("Contents"), Object::Ref(ObjRef::new(content_ref as i32, 0)));
+        page_dict.insert(
+            Name::new("Contents"),
+            Object::Ref(ObjRef::new(content_ref as i32, 0)),
+        );
 
         let page_obj_num = self.add_object(Object::Dict(page_dict));
         self.pages.push(page_obj_num);
@@ -145,7 +160,7 @@ impl PdfWriter {
     pub fn save(&self, path: &str) -> Result<()> {
         if self.pages.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "Cannot save PDF with no pages".into()
+                "Cannot save PDF with no pages".into(),
             ));
         }
 
@@ -160,7 +175,9 @@ impl PdfWriter {
         let mut offsets = vec![0usize; self.objects.len()];
 
         // Create Pages tree
-        let pages_kids: Array = self.pages.iter()
+        let pages_kids: Array = self
+            .pages
+            .iter()
             .map(|&obj_num| Object::Ref(ObjRef::new(obj_num as i32, 0)))
             .collect();
 
@@ -239,7 +256,13 @@ impl PdfWriter {
     }
 
     /// Write an indirect object
-    fn write_indirect_object<W: Write>(&self, writer: &mut W, obj_num: usize, generation: usize, obj: &Object) -> Result<()> {
+    fn write_indirect_object<W: Write>(
+        &self,
+        writer: &mut W,
+        obj_num: usize,
+        generation: usize,
+        obj: &Object,
+    ) -> Result<()> {
         writer.write_all(format!("{} {} obj\n", obj_num, generation).as_bytes())?;
         self.write_object(writer, obj)?;
         writer.write_all(b"\nendobj\n")?;
@@ -254,7 +277,10 @@ impl PdfWriter {
             Object::Bool(b) => writer.write_all(if *b { b"true" } else { b"false" })?,
             Object::Int(i) => writer.write_all(i.to_string().as_bytes())?,
             Object::Real(r) => {
-                let s = format!("{:.6}", r).trim_end_matches('0').trim_end_matches('.').to_string();
+                let s = format!("{:.6}", r)
+                    .trim_end_matches('0')
+                    .trim_end_matches('.')
+                    .to_string();
                 writer.write_all(s.as_bytes())?;
             }
             Object::String(s) => {
@@ -305,7 +331,9 @@ impl PdfWriter {
                 writer.write_all(data)?;
                 writer.write_all(b"\nendstream")?;
             }
-            Object::Ref(r) => writer.write_all(format!("{} {} R", r.num, r.generation).as_bytes())?,
+            Object::Ref(r) => {
+                writer.write_all(format!("{} {} R", r.num, r.generation).as_bytes())?
+            }
         }
         Ok(())
     }
@@ -380,8 +408,7 @@ mod tests {
         let mut writer = PdfWriter::new();
         writer.add_blank_page(612.0, 792.0)?;
 
-        let temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         writer.save(temp.path().to_str().unwrap())?;
 
         // Verify file was created and starts with %PDF
@@ -399,8 +426,7 @@ mod tests {
         writer.add_blank_page(612.0, 792.0)?;
         writer.add_blank_page(612.0, 792.0)?;
 
-        let temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         writer.save(temp.path().to_str().unwrap())?;
 
         let data = std::fs::read(temp.path())?;
@@ -423,8 +449,7 @@ mod tests {
         let content = "BT /F1 12 Tf 100 700 Td (Test) Tj ET";
         writer.add_page_with_content(612.0, 792.0, content)?;
 
-        let temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         writer.save(temp.path().to_str().unwrap())?;
 
         let data = std::fs::read(temp.path())?;

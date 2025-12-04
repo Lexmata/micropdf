@@ -48,4 +48,3 @@ fn generate_pkg_config(template: &str, output: &Path, version: &str, prefix: &st
 
     println!("Generated: {}", output.display());
 }
-

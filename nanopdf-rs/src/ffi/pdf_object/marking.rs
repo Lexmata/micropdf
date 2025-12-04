@@ -1,8 +1,8 @@
 //! PDF Object Marking, Dirty Tracking, and Parent Management FFI Functions
 
 use super::super::Handle;
-use super::types::PdfObjHandle;
 use super::refcount::{with_obj, with_obj_mut};
+use super::types::PdfObjHandle;
 
 // ============================================================================
 // PDF Object Marking
@@ -72,4 +72,3 @@ pub extern "C" fn pdf_obj_parent_num(_ctx: Handle, obj: PdfObjHandle) -> i32 {
 pub extern "C" fn pdf_obj_refs(_ctx: Handle, obj: PdfObjHandle) -> i32 {
     with_obj(obj, 0, |o| o.refs)
 }
-

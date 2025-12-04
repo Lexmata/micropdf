@@ -16,7 +16,7 @@ fn fixture_path(name: &str) -> PathBuf {
 
 /// Read a fixture file as bytes
 fn read_fixture(name: &str) -> Vec<u8> {
-    std::fs::read(fixture_path(name)).expect(&format!("Failed to read fixture: {}", name))
+    std::fs::read(fixture_path(name)).unwrap_or_else(|_| panic!("Failed to read fixture: {}", name))
 }
 
 mod pdf_header {
@@ -50,7 +50,9 @@ mod pdf_structure {
     }
 
     fn count_pattern(data: &[u8], pattern: &[u8]) -> usize {
-        data.windows(pattern.len()).filter(|w| *w == pattern).count()
+        data.windows(pattern.len())
+            .filter(|w| *w == pattern)
+            .count()
     }
 
     #[test]
@@ -260,7 +262,11 @@ mod pdf_geometry {
     fn test_all_pdfs_have_mediabox() {
         for fixture in ["minimal.pdf", "multipage.pdf", "comprehensive_test.pdf"] {
             let data = read_fixture(fixture);
-            assert!(find_pattern(&data, b"/MediaBox"), "Missing MediaBox in {}", fixture);
+            assert!(
+                find_pattern(&data, b"/MediaBox"),
+                "Missing MediaBox in {}",
+                fixture
+            );
         }
     }
 
@@ -279,9 +285,9 @@ mod pdf_geometry {
 }
 
 mod ffi_integration {
-    use nanopdf::ffi::geometry::*;
     use nanopdf::ffi::buffer::*;
     use nanopdf::ffi::context::*;
+    use nanopdf::ffi::geometry::*;
 
     #[test]
     fn test_ffi_context_lifecycle() {
@@ -335,8 +341,18 @@ mod ffi_integration {
 
     #[test]
     fn test_ffi_rect_operations() {
-        let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-        let r2 = fz_rect { x0: 50.0, y0: 50.0, x1: 150.0, y1: 150.0 };
+        let r1 = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
+        let r2 = fz_rect {
+            x0: 50.0,
+            y0: 50.0,
+            x1: 150.0,
+            y1: 150.0,
+        };
 
         // Test intersection
         let intersection = fz_intersect_rect(r1, r2);
@@ -353,13 +369,29 @@ mod ffi_integration {
         assert_eq!(union.y1, 150.0);
 
         // Test contains
-        assert_eq!(fz_contains_rect(r1, fz_rect { x0: 10.0, y0: 10.0, x1: 50.0, y1: 50.0 }), 1);
+        assert_eq!(
+            fz_contains_rect(
+                r1,
+                fz_rect {
+                    x0: 10.0,
+                    y0: 10.0,
+                    x1: 50.0,
+                    y1: 50.0
+                }
+            ),
+            1
+        );
         assert_eq!(fz_contains_rect(r1, r2), 0);
     }
 
     #[test]
     fn test_ffi_quad_operations() {
-        let rect = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
+        let rect = fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 100.0,
+            y1: 100.0,
+        };
         let quad = fz_quad_from_rect(rect);
 
         assert_eq!(quad.ul.x, 0.0);
@@ -412,8 +444,8 @@ mod colorspace_integration {
 }
 
 mod pixmap_integration {
-    use nanopdf::ffi::pixmap::*;
     use nanopdf::ffi::colorspace::*;
+    use nanopdf::ffi::pixmap::*;
 
     #[test]
     fn test_pixmap_creation_and_manipulation() {
@@ -442,7 +474,12 @@ mod pixmap_integration {
         use nanopdf::ffi::geometry::fz_irect;
 
         let rgb = fz_device_rgb(0);
-        let bbox = fz_irect { x0: 10, y0: 20, x1: 110, y1: 120 };
+        let bbox = fz_irect {
+            x0: 10,
+            y0: 20,
+            x1: 110,
+            y1: 120,
+        };
         let pix = fz_new_pixmap_with_bbox(0, rgb, bbox, 0, 0);
 
         assert_eq!(fz_pixmap_x(0, pix), 10);
@@ -455,8 +492,8 @@ mod pixmap_integration {
 }
 
 mod stream_integration {
-    use nanopdf::ffi::stream::*;
     use nanopdf::ffi::context::*;
+    use nanopdf::ffi::stream::*;
 
     #[test]
     fn test_stream_from_memory() {
@@ -489,4 +526,3 @@ mod stream_integration {
         }
     }
 }
-

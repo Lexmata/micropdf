@@ -18,7 +18,9 @@ pub fn decode_run_length(data: &[u8]) -> Result<Vec<u8>> {
             // Copy next (length_byte + 1) bytes literally
             let count = length_byte as usize + 1;
             if i + count > data.len() {
-                return Err(Error::Generic("RunLengthDecode: unexpected end of data".into()));
+                return Err(Error::Generic(
+                    "RunLengthDecode: unexpected end of data".into(),
+                ));
             }
             result.extend_from_slice(&data[i..i + count]);
             i += count;
@@ -26,7 +28,9 @@ pub fn decode_run_length(data: &[u8]) -> Result<Vec<u8>> {
             // Repeat next byte (257 - length_byte) times
             let count = 257 - length_byte as usize;
             if i >= data.len() {
-                return Err(Error::Generic("RunLengthDecode: unexpected end of data".into()));
+                return Err(Error::Generic(
+                    "RunLengthDecode: unexpected end of data".into(),
+                ));
             }
             let byte = data[i];
             i += 1;
@@ -119,4 +123,3 @@ mod tests {
         assert_eq!(decoded, original);
     }
 }
-

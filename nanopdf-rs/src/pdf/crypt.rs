@@ -34,10 +34,10 @@ impl EncryptionAlgorithm {
     /// Get key length in bytes
     pub fn key_length(&self) -> usize {
         match self {
-            Self::Rc4_40 => 5,      // 40 bits = 5 bytes
-            Self::Rc4_128 => 16,    // 128 bits = 16 bytes
-            Self::Aes128 => 16,     // 128 bits = 16 bytes
-            Self::Aes256 => 32,     // 256 bits = 32 bytes
+            Self::Rc4_40 => 5,   // 40 bits = 5 bytes
+            Self::Rc4_128 => 16, // 128 bits = 16 bytes
+            Self::Aes128 => 16,  // 128 bits = 16 bytes
+            Self::Aes256 => 32,  // 256 bits = 32 bytes
             _ => 0,
         }
     }
@@ -278,11 +278,9 @@ impl Crypt {
             .map_err(|e| Error::Generic(format!("AES key/IV error: {:?}", e)))?;
 
         let mut result = vec![0u8; padded.len()];
-        cipher.encrypt_padded_b2b_mut::<aes::cipher::block_padding::NoPadding>(
-            &padded,
-            &mut result,
-        )
-        .map_err(|e| Error::Generic(format!("AES encryption error: {:?}", e)))?;
+        cipher
+            .encrypt_padded_b2b_mut::<aes::cipher::block_padding::NoPadding>(&padded, &mut result)
+            .map_err(|e| Error::Generic(format!("AES encryption error: {:?}", e)))?;
 
         // Prepend IV
         let mut output = iv.to_vec();
@@ -305,11 +303,9 @@ impl Crypt {
             .map_err(|e| Error::Generic(format!("AES key/IV error: {:?}", e)))?;
 
         let mut result = vec![0u8; encrypted.len()];
-        cipher.decrypt_padded_b2b_mut::<aes::cipher::block_padding::Pkcs7>(
-            encrypted,
-            &mut result,
-        )
-        .map_err(|e| Error::Generic(format!("AES decryption error: {:?}", e)))?;
+        cipher
+            .decrypt_padded_b2b_mut::<aes::cipher::block_padding::Pkcs7>(encrypted, &mut result)
+            .map_err(|e| Error::Generic(format!("AES decryption error: {:?}", e)))?;
 
         Ok(result)
     }
@@ -326,11 +322,9 @@ impl Crypt {
             .map_err(|e| Error::Generic(format!("AES key/IV error: {:?}", e)))?;
 
         let mut result = vec![0u8; padded.len()];
-        cipher.encrypt_padded_b2b_mut::<aes::cipher::block_padding::NoPadding>(
-            &padded,
-            &mut result,
-        )
-        .map_err(|e| Error::Generic(format!("AES encryption error: {:?}", e)))?;
+        cipher
+            .encrypt_padded_b2b_mut::<aes::cipher::block_padding::NoPadding>(&padded, &mut result)
+            .map_err(|e| Error::Generic(format!("AES encryption error: {:?}", e)))?;
 
         let mut output = iv.to_vec();
         output.extend(result);
@@ -350,11 +344,9 @@ impl Crypt {
             .map_err(|e| Error::Generic(format!("AES key/IV error: {:?}", e)))?;
 
         let mut result = vec![0u8; encrypted.len()];
-        cipher.decrypt_padded_b2b_mut::<aes::cipher::block_padding::Pkcs7>(
-            encrypted,
-            &mut result,
-        )
-        .map_err(|e| Error::Generic(format!("AES decryption error: {:?}", e)))?;
+        cipher
+            .decrypt_padded_b2b_mut::<aes::cipher::block_padding::Pkcs7>(encrypted, &mut result)
+            .map_err(|e| Error::Generic(format!("AES decryption error: {:?}", e)))?;
 
         Ok(result)
     }
@@ -373,7 +365,9 @@ impl Crypt {
             }
             EncryptionAlgorithm::Aes128 => self.encrypt_aes128(data, &obj_key),
             EncryptionAlgorithm::Aes256 => self.encrypt_aes256(data, &obj_key),
-            _ => Err(Error::Generic("Unsupported encryption algorithm".to_string())),
+            _ => Err(Error::Generic(
+                "Unsupported encryption algorithm".to_string(),
+            )),
         }
     }
 
@@ -391,7 +385,9 @@ impl Crypt {
             }
             EncryptionAlgorithm::Aes128 => self.decrypt_aes128(data, &obj_key),
             EncryptionAlgorithm::Aes256 => self.decrypt_aes256(data, &obj_key),
-            _ => Err(Error::Generic("Unsupported encryption algorithm".to_string())),
+            _ => Err(Error::Generic(
+                "Unsupported encryption algorithm".to_string(),
+            )),
         }
     }
 
@@ -572,7 +568,7 @@ mod tests {
 
     #[test]
     fn test_method_names() {
-        assert_eq!(EncryptionAlgorithm::None.is_rc4(), false);
+        assert!(!EncryptionAlgorithm::None.is_rc4());
 
         let doc_id = vec![1, 2, 3, 4, 5, 6, 7, 8];
         let crypt = Crypt::new(

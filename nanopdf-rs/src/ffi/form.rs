@@ -3,17 +3,15 @@
 //! Provides FFI bindings for PDF interactive forms (AcroForms).
 
 use super::{Handle, HandleStore};
-use crate::pdf::form::{Form, FormField, FieldFlags, WidgetType, ChoiceOption, TextFormat};
+use crate::pdf::form::{ChoiceOption, FieldFlags, Form, FormField, TextFormat, WidgetType};
 use std::ffi::{CStr, c_char};
 use std::sync::LazyLock;
 
 /// Form storage
-pub static FORMS: LazyLock<HandleStore<Form>> =
-    LazyLock::new(HandleStore::default);
+pub static FORMS: LazyLock<HandleStore<Form>> = LazyLock::new(HandleStore::default);
 
 /// Form field storage (widgets)
-pub static FORM_FIELDS: LazyLock<HandleStore<FormField>> =
-    LazyLock::new(HandleStore::default);
+pub static FORM_FIELDS: LazyLock<HandleStore<FormField>> = LazyLock::new(HandleStore::default);
 
 // ============================================================================
 // Form Access
@@ -62,7 +60,8 @@ pub extern "C" fn pdf_first_widget(_ctx: Handle, page: Handle) -> Handle {
 pub extern "C" fn pdf_next_widget(_ctx: Handle, widget: Handle) -> Handle {
     // Find the page this widget belongs to by searching all loaded pages
     if FORM_FIELDS.get(widget).is_some() {
-        for page_handle in 1..10000 { // Reasonable page limit
+        for page_handle in 1..10000 {
+            // Reasonable page limit
             if let Some(p) = super::document::PAGES.get(page_handle) {
                 if let Ok(guard) = p.lock() {
                     if guard.widgets.contains(&widget) {
@@ -763,11 +762,7 @@ pub extern "C" fn pdf_set_field_border_width(_ctx: Handle, field: Handle, width:
 
 /// Get field border color (RGB)
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_field_border_color(
-    _ctx: Handle,
-    field: Handle,
-    color: *mut f32,
-) {
+pub extern "C" fn pdf_field_border_color(_ctx: Handle, field: Handle, color: *mut f32) {
     if color.is_null() {
         return;
     }
@@ -785,11 +780,7 @@ pub extern "C" fn pdf_field_border_color(
 
 /// Set field border color (RGB)
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_set_field_border_color(
-    _ctx: Handle,
-    field: Handle,
-    color: *const f32,
-) {
+pub extern "C" fn pdf_set_field_border_color(_ctx: Handle, field: Handle, color: *const f32) {
     if color.is_null() {
         return;
     }
@@ -797,11 +788,7 @@ pub extern "C" fn pdf_set_field_border_color(
     if let Some(f) = FORM_FIELDS.get(field) {
         if let Ok(mut guard) = f.lock() {
             unsafe {
-                guard.border_color = [
-                    *color.offset(0),
-                    *color.offset(1),
-                    *color.offset(2),
-                ];
+                guard.border_color = [*color.offset(0), *color.offset(1), *color.offset(2)];
             }
         }
     }
@@ -827,11 +814,7 @@ pub extern "C" fn pdf_field_bg_color(_ctx: Handle, field: Handle, color: *mut f3
 
 /// Set field background color (RGB)
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_set_field_bg_color(
-    _ctx: Handle,
-    field: Handle,
-    color: *const f32,
-) {
+pub extern "C" fn pdf_set_field_bg_color(_ctx: Handle, field: Handle, color: *const f32) {
     if color.is_null() {
         return;
     }
@@ -839,11 +822,7 @@ pub extern "C" fn pdf_set_field_bg_color(
     if let Some(f) = FORM_FIELDS.get(field) {
         if let Ok(mut guard) = f.lock() {
             unsafe {
-                guard.bg_color = [
-                    *color.offset(0),
-                    *color.offset(1),
-                    *color.offset(2),
-                ];
+                guard.bg_color = [*color.offset(0), *color.offset(1), *color.offset(2)];
             }
         }
     }
@@ -976,7 +955,11 @@ pub extern "C" fn pdf_remove_field_choice(_ctx: Handle, field: Handle, idx: i32)
 /// Check if field is valid
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_field_is_valid(_ctx: Handle, field: Handle) -> i32 {
-    if FORM_FIELDS.get(field).is_some() { 1 } else { 0 }
+    if FORM_FIELDS.get(field).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Clone a field (create a copy with new handle)
@@ -1082,4 +1065,3 @@ mod tests {
         pdf_drop_form(0, form);
     }
 }
-

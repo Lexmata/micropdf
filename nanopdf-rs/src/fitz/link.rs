@@ -196,9 +196,7 @@ impl LinkList {
 
     /// Find link at a given point
     pub fn link_at_point(&self, x: f32, y: f32) -> Option<&Link> {
-        self.links.iter().find(|link| {
-            link.rect.contains(x, y)
-        })
+        self.links.iter().find(|link| link.rect.contains(x, y))
     }
 }
 
@@ -355,4 +353,3 @@ mod tests {
         assert_ne!(LinkDestType::Fit, LinkDestType::XYZ);
     }
 }
-

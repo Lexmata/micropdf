@@ -3,8 +3,8 @@
 //! Cookies provide a way to communicate between the application and the document
 //! processing routines, allowing for cancellation and progress reporting.
 
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 
 /// Cookie for tracking progress and handling cancellation
 #[derive(Clone)]
@@ -231,4 +231,3 @@ mod tests {
         assert_eq!(cookie.progress_percent(), 0.0); // Still 0 because max is 0
     }
 }
-

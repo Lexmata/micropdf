@@ -20,10 +20,7 @@ pub static ARCHIVES: LazyLock<HandleStore<Archive>> = LazyLock::new(HandleStore:
 /// # Returns
 /// Handle to the archive, or 0 on error
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_open_archive(
-    _ctx: Handle,
-    path: *const c_char,
-) -> Handle {
+pub extern "C" fn fz_open_archive(_ctx: Handle, path: *const c_char) -> Handle {
     if path.is_null() {
         return 0;
     }
@@ -96,10 +93,7 @@ pub extern "C" fn fz_drop_archive(_ctx: Handle, archive: Handle) {
 /// # Returns
 /// Number of entries, or -1 on error
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_count_archive_entries(
-    _ctx: Handle,
-    archive: Handle,
-) -> i32 {
+pub extern "C" fn fz_count_archive_entries(_ctx: Handle, archive: Handle) -> i32 {
     if let Some(a) = ARCHIVES.get(archive) {
         if let Ok(guard) = a.lock() {
             if let Ok(count) = guard.count_entries() {
@@ -139,11 +133,7 @@ pub extern "C" fn fz_list_archive_entry(
                 let copy_len = name_bytes.len().min((bufsize - 1) as usize);
 
                 unsafe {
-                    std::ptr::copy_nonoverlapping(
-                        name_bytes.as_ptr(),
-                        buf as *mut u8,
-                        copy_len,
-                    );
+                    std::ptr::copy_nonoverlapping(name_bytes.as_ptr(), buf as *mut u8, copy_len);
                     *buf.add(copy_len) = 0; // Null terminate
                 }
 
@@ -163,11 +153,7 @@ pub extern "C" fn fz_list_archive_entry(
 /// # Returns
 /// 1 if entry exists, 0 otherwise
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_has_archive_entry(
-    _ctx: Handle,
-    archive: Handle,
-    name: *const c_char,
-) -> i32 {
+pub extern "C" fn fz_has_archive_entry(_ctx: Handle, archive: Handle, name: *const c_char) -> i32 {
     if name.is_null() {
         return 0;
     }
@@ -226,10 +212,7 @@ pub extern "C" fn fz_read_archive_entry(
 /// # Returns
 /// Format code: 0=unknown, 1=zip, 2=tar, 3=directory
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_archive_format(
-    _ctx: Handle,
-    archive: Handle,
-) -> i32 {
+pub extern "C" fn fz_archive_format(_ctx: Handle, archive: Handle) -> i32 {
     if let Some(a) = ARCHIVES.get(archive) {
         if let Ok(guard) = a.lock() {
             return match guard.format() {
@@ -271,11 +254,7 @@ pub extern "C" fn fz_archive_entry_names(
             let copy_len = name_bytes.len().min((bufsize - 1) as usize);
 
             unsafe {
-                std::ptr::copy_nonoverlapping(
-                    name_bytes.as_ptr(),
-                    buf as *mut u8,
-                    copy_len,
-                );
+                std::ptr::copy_nonoverlapping(name_bytes.as_ptr(), buf as *mut u8, copy_len);
                 *buf.add(copy_len) = 0; // Null terminate
             }
 
@@ -288,7 +267,11 @@ pub extern "C" fn fz_archive_entry_names(
 /// Check if an archive is valid
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_archive_is_valid(_ctx: Handle, archive: Handle) -> i32 {
-    if ARCHIVES.get(archive).is_some() { 1 } else { 0 }
+    if ARCHIVES.get(archive).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Clone an archive (increase ref count)
@@ -299,11 +282,7 @@ pub extern "C" fn fz_clone_archive(_ctx: Handle, archive: Handle) -> Handle {
 
 /// Get archive entry size
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_archive_entry_size(
-    _ctx: Handle,
-    archive: Handle,
-    name: *const c_char,
-) -> i32 {
+pub extern "C" fn fz_archive_entry_size(_ctx: Handle, archive: Handle, name: *const c_char) -> i32 {
     if name.is_null() {
         return -1;
     }
@@ -435,7 +414,7 @@ mod tests {
     #[test]
     fn test_open_archive_with_buffer() {
         // Create simple test data (not a valid archive, but tests the API)
-        let data = vec![0u8; 100];
+        let data = [0u8; 100];
         let archive = fz_open_archive_with_buffer(0, data.as_ptr(), data.len());
         // Should return 0 since data is not a valid archive
         assert_eq!(archive, 0);
@@ -481,4 +460,3 @@ mod tests {
         cleanup_test_dir(&test_dir);
     }
 }
-

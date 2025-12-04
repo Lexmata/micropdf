@@ -1,7 +1,7 @@
 //! C FFI for stream - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
 
-use super::{Handle, STREAMS, BUFFERS};
+use super::{BUFFERS, Handle, STREAMS};
 use std::ffi::c_char;
 
 /// Internal stream state
@@ -69,8 +69,8 @@ impl Stream {
 
     pub fn seek(&mut self, offset: i64, whence: i32) {
         let new_pos = match whence {
-            0 => offset as usize, // SEEK_SET
-            1 => (self.position as i64 + offset) as usize, // SEEK_CUR
+            0 => offset as usize,                            // SEEK_SET
+            1 => (self.position as i64 + offset) as usize,   // SEEK_CUR
             2 => (self.data.len() as i64 + offset) as usize, // SEEK_END
             _ => self.position,
         };
@@ -133,11 +133,7 @@ pub extern "C" fn fz_open_file(_ctx: Handle, filename: *const c_char) -> Handle 
 /// # Safety
 /// Caller must ensure `data` points to valid memory of at least `len` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_open_memory(
-    _ctx: Handle,
-    data: *const u8,
-    len: usize,
-) -> Handle {
+pub extern "C" fn fz_open_memory(_ctx: Handle, data: *const u8, len: usize) -> Handle {
     if data.is_null() || len == 0 {
         return STREAMS.insert(Stream::new());
     }
@@ -163,12 +159,7 @@ pub extern "C" fn fz_open_buffer(_ctx: Handle, buf: Handle) -> Handle {
 /// # Safety
 /// Caller must ensure `data` points to writable memory of at least `len` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_read(
-    _ctx: Handle,
-    stm: Handle,
-    data: *mut u8,
-    len: usize,
-) -> usize {
+pub extern "C" fn fz_read(_ctx: Handle, stm: Handle, data: *mut u8, len: usize) -> usize {
     if data.is_null() || len == 0 {
         return 0;
     }
@@ -417,7 +408,8 @@ pub extern "C" fn fz_read_line(
                     if byte == b'\n' {
                         break;
                     }
-                    if byte != b'\r' { // Skip carriage returns
+                    if byte != b'\r' {
+                        // Skip carriage returns
                         result.push(byte);
                         count += 1;
                     }

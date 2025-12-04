@@ -1,19 +1,13 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use nanopdf::fitz::colorspace::Colorspace;
 use nanopdf::fitz::image::Image;
 use nanopdf::fitz::pixmap::Pixmap;
-use nanopdf::fitz::colorspace::Colorspace;
 
 fn bench_image_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("image/creation");
 
     group.bench_function("new_simple", |b| {
-        b.iter(|| {
-            Image::new(
-                black_box(100),
-                black_box(100),
-                black_box(None),
-            )
-        })
+        b.iter(|| Image::new(black_box(100), black_box(100), black_box(None)))
     });
 
     group.bench_function("new_with_pixmap", |b| {
@@ -35,21 +29,13 @@ fn bench_image_properties(c: &mut Criterion) {
 
     let img = Image::new(100, 100, None);
 
-    group.bench_function("width", |b| {
-        b.iter(|| black_box(&img).width())
-    });
+    group.bench_function("width", |b| b.iter(|| black_box(&img).width()));
 
-    group.bench_function("height", |b| {
-        b.iter(|| black_box(&img).height())
-    });
+    group.bench_function("height", |b| b.iter(|| black_box(&img).height()));
 
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_image_creation,
-    bench_image_properties,
-);
+criterion_group!(benches, bench_image_creation, bench_image_properties,);
 
 criterion_main!(benches);

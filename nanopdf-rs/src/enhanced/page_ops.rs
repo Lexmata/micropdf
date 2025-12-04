@@ -52,9 +52,10 @@ impl PdfMerger {
 
         // Verify it's a PDF
         if !data.starts_with(b"%PDF-") {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Not a valid PDF file: {}", path)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Not a valid PDF file: {}",
+                path
+            )));
         }
 
         // Parse PDF to extract pages
@@ -87,9 +88,10 @@ impl PdfMerger {
         // Read and validate PDF
         let data = fs::read(path)?;
         if !data.starts_with(b"%PDF-") {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Not a valid PDF file: {}", path)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Not a valid PDF file: {}",
+                path
+            )));
         }
 
         let total_pages = self.estimate_page_count(&data)?;
@@ -97,10 +99,10 @@ impl PdfMerger {
         // Validate page numbers
         for &page_num in pages {
             if page_num >= total_pages {
-                return Err(EnhancedError::InvalidParameter(
-                    format!("Page {} does not exist in {} (has {} pages)",
-                           page_num, path, total_pages)
-                ));
+                return Err(EnhancedError::InvalidParameter(format!(
+                    "Page {} does not exist in {} (has {} pages)",
+                    page_num, path, total_pages
+                )));
             }
         }
 
@@ -122,7 +124,7 @@ impl PdfMerger {
     pub fn save(&self, path: &str) -> Result<()> {
         if self.page_count == 0 {
             return Err(EnhancedError::InvalidParameter(
-                "Cannot save PDF with no pages".into()
+                "Cannot save PDF with no pages".into(),
             ));
         }
 
@@ -142,7 +144,9 @@ impl PdfMerger {
                 // Look for /Count in nearby lines
                 if let Some(count_pos) = line.find("/Count") {
                     let after_count = &line[count_pos + 6..];
-                    if let Some(num_end) = after_count.find(|c: char| !c.is_ascii_digit() && c != ' ') {
+                    if let Some(num_end) =
+                        after_count.find(|c: char| !c.is_ascii_digit() && c != ' ')
+                    {
                         if let Ok(count) = after_count[..num_end].trim().parse::<usize>() {
                             max_count = max_count.max(count);
                         }
@@ -178,7 +182,7 @@ pub fn split_pdf(input_path: &str, output_dir: &str) -> Result<Vec<String>> {
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
@@ -216,7 +220,12 @@ pub fn split_pdf(input_path: &str, output_dir: &str) -> Result<Vec<String>> {
 }
 
 /// Crop a page to specified rectangle
-pub fn crop_page(input_path: &str, _page_num: usize, crop_box: Rect, output_path: &str) -> Result<()> {
+pub fn crop_page(
+    input_path: &str,
+    _page_num: usize,
+    crop_box: Rect,
+    output_path: &str,
+) -> Result<()> {
     // Verify input exists
     if !Path::new(input_path).exists() {
         return Err(EnhancedError::Io(std::io::Error::new(
@@ -228,7 +237,7 @@ pub fn crop_page(input_path: &str, _page_num: usize, crop_box: Rect, output_path
     // Validate crop box
     if crop_box.x1 <= crop_box.x0 || crop_box.y1 <= crop_box.y0 {
         return Err(EnhancedError::InvalidParameter(
-            "Invalid crop box dimensions".into()
+            "Invalid crop box dimensions".into(),
         ));
     }
 
@@ -236,7 +245,7 @@ pub fn crop_page(input_path: &str, _page_num: usize, crop_box: Rect, output_path
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
@@ -262,16 +271,20 @@ pub fn rotate_pages(input_path: &str, rotation: i32, output_path: &str) -> Resul
 
     // Validate rotation
     if rotation % 90 != 0 {
-        return Err(EnhancedError::InvalidParameter(
-            format!("Rotation must be multiple of 90 degrees, got {}", rotation)
-        ));
+        return Err(EnhancedError::InvalidParameter(format!(
+            "Rotation must be multiple of 90 degrees, got {}",
+            rotation
+        )));
     }
 
     let normalized_rotation = rotation.rem_euclid(360);
-    if normalized_rotation != 0 && normalized_rotation != 90 &&
-       normalized_rotation != 180 && normalized_rotation != 270 {
+    if normalized_rotation != 0
+        && normalized_rotation != 90
+        && normalized_rotation != 180
+        && normalized_rotation != 270
+    {
         return Err(EnhancedError::InvalidParameter(
-            "Rotation must be 0, 90, 180, or 270 degrees".into()
+            "Rotation must be 0, 90, 180, or 270 degrees".into(),
         ));
     }
 
@@ -279,7 +292,7 @@ pub fn rotate_pages(input_path: &str, rotation: i32, output_path: &str) -> Resul
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
@@ -301,7 +314,7 @@ pub fn reorder_pages(input_path: &str, page_order: &[usize], output_path: &str) 
 
     if page_order.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Page order cannot be empty".into()
+            "Page order cannot be empty".into(),
         ));
     }
 
@@ -309,7 +322,7 @@ pub fn reorder_pages(input_path: &str, page_order: &[usize], output_path: &str) 
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
@@ -326,12 +339,11 @@ pub fn reorder_pages(input_path: &str, page_order: &[usize], output_path: &str) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::{NamedTempFile, TempDir};
     use std::io::Write;
+    use tempfile::{NamedTempFile, TempDir};
 
     fn create_test_pdf() -> Result<NamedTempFile> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         // Create a minimal valid PDF
         let pdf_content = b"%PDF-1.4\n\
@@ -397,8 +409,8 @@ mod tests {
     #[test]
     fn test_merger_save_with_pages() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let mut merger = PdfMerger::new();
         merger.append(temp_input.path().to_str().unwrap())?;
@@ -419,12 +431,11 @@ mod tests {
     #[test]
     fn test_split_pdf_valid() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_dir = TempDir::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_dir = TempDir::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let files = split_pdf(
             temp_input.path().to_str().unwrap(),
-            temp_dir.path().to_str().unwrap()
+            temp_dir.path().to_str().unwrap(),
         )?;
 
         assert!(!files.is_empty());
@@ -436,17 +447,22 @@ mod tests {
     #[test]
     fn test_crop_page_invalid_box() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         // Invalid crop box (x1 <= x0)
-        let crop_box = Rect { x0: 100.0, y0: 100.0, x1: 100.0, y1: 200.0 };
+        let crop_box = Rect {
+            x0: 100.0,
+            y0: 100.0,
+            x1: 100.0,
+            y1: 200.0,
+        };
 
         let result = crop_page(
             temp_input.path().to_str().unwrap(),
             0,
             crop_box,
-            temp_output.path().to_str().unwrap()
+            temp_output.path().to_str().unwrap(),
         );
 
         assert!(result.is_err());
@@ -456,16 +472,21 @@ mod tests {
     #[test]
     fn test_crop_page_valid() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
-        let crop_box = Rect { x0: 0.0, y0: 0.0, x1: 400.0, y1: 600.0 };
+        let crop_box = Rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 400.0,
+            y1: 600.0,
+        };
 
         crop_page(
             temp_input.path().to_str().unwrap(),
             0,
             crop_box,
-            temp_output.path().to_str().unwrap()
+            temp_output.path().to_str().unwrap(),
         )?;
 
         assert!(temp_output.path().exists());
@@ -475,13 +496,13 @@ mod tests {
     #[test]
     fn test_rotate_pages_invalid_rotation() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let result = rotate_pages(
             temp_input.path().to_str().unwrap(),
             45, // Invalid: not multiple of 90
-            temp_output.path().to_str().unwrap()
+            temp_output.path().to_str().unwrap(),
         );
 
         assert!(result.is_err());
@@ -491,13 +512,13 @@ mod tests {
     #[test]
     fn test_rotate_pages_valid() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         rotate_pages(
             temp_input.path().to_str().unwrap(),
             90,
-            temp_output.path().to_str().unwrap()
+            temp_output.path().to_str().unwrap(),
         )?;
 
         assert!(temp_output.path().exists());
@@ -507,13 +528,13 @@ mod tests {
     #[test]
     fn test_reorder_pages() -> Result<()> {
         let temp_input = create_test_pdf()?;
-        let temp_output = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_output =
+            NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         reorder_pages(
             temp_input.path().to_str().unwrap(),
             &[0, 2, 1],
-            temp_output.path().to_str().unwrap()
+            temp_output.path().to_str().unwrap(),
         )?;
 
         assert!(temp_output.path().exists());

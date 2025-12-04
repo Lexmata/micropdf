@@ -1,17 +1,18 @@
 //! FlateDecode (zlib/deflate) Filter Implementation
 
-use std::io::Read;
-use flate2::read::{ZlibDecoder, ZlibEncoder};
-use flate2::Compression;
-use crate::fitz::error::{Error, Result};
 use super::params::FlateDecodeParams;
 use super::predictor::apply_predictor_decode;
+use crate::fitz::error::{Error, Result};
+use flate2::Compression;
+use flate2::read::{ZlibDecoder, ZlibEncoder};
+use std::io::Read;
 
 /// Decode FlateDecode (zlib/deflate) compressed data
 pub fn decode_flate(data: &[u8], params: Option<&FlateDecodeParams>) -> Result<Vec<u8>> {
     let mut decoder = ZlibDecoder::new(data);
     let mut decompressed = Vec::new();
-    decoder.read_to_end(&mut decompressed)
+    decoder
+        .read_to_end(&mut decompressed)
         .map_err(|e| Error::Generic(format!("FlateDecode failed: {}", e)))?;
 
     // Apply predictor if specified
@@ -35,7 +36,8 @@ pub fn encode_flate(data: &[u8], level: u32) -> Result<Vec<u8>> {
 
     let mut encoder = ZlibEncoder::new(data, compression);
     let mut compressed = Vec::new();
-    encoder.read_to_end(&mut compressed)
+    encoder
+        .read_to_end(&mut compressed)
         .map_err(|e| Error::Generic(format!("FlateDecode encode failed: {}", e)))?;
 
     Ok(compressed)
@@ -82,4 +84,3 @@ mod tests {
         }
     }
 }
-

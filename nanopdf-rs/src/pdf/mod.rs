@@ -1,19 +1,18 @@
 //! PDF-specific parsing and document handling
 
-pub mod object;
-pub mod lexer;
-pub mod parser;
-pub mod xref;
-pub mod document;
-pub mod crypt;
-pub mod page;
-pub mod font;
+pub mod annot;
 pub mod cmap;
 pub mod colorspace;
-pub mod image;
-pub mod annot;
-pub mod form;
+pub mod crypt;
+pub mod document;
 pub mod filter;
+pub mod font;
+pub mod form;
+pub mod image;
 pub mod interpret;
+pub mod lexer;
+pub mod object;
+pub mod page;
+pub mod parser;
 pub mod write;
-
+pub mod xref;

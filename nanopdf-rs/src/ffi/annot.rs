@@ -3,12 +3,11 @@
 //! Provides FFI bindings for PDF annotation operations.
 
 use super::{Handle, HandleStore};
-use crate::pdf::annot::{Annotation, AnnotType, AnnotFlags};
+use crate::pdf::annot::{AnnotFlags, AnnotType, Annotation};
 use std::sync::LazyLock;
 
 /// Annotation storage
-pub static ANNOTATIONS: LazyLock<HandleStore<Annotation>> =
-    LazyLock::new(HandleStore::default);
+pub static ANNOTATIONS: LazyLock<HandleStore<Annotation>> = LazyLock::new(HandleStore::default);
 
 // ============================================================================
 // Annotation Creation
@@ -16,11 +15,7 @@ pub static ANNOTATIONS: LazyLock<HandleStore<Annotation>> =
 
 /// Create a new annotation
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_create_annot(
-    _ctx: Handle,
-    _page: Handle,
-    annot_type: i32,
-) -> Handle {
+pub extern "C" fn pdf_create_annot(_ctx: Handle, _page: Handle, annot_type: i32) -> Handle {
     let atype = match annot_type {
         0 => AnnotType::Text,
         1 => AnnotType::Link,
@@ -105,7 +100,8 @@ pub extern "C" fn pdf_first_annot(_ctx: Handle, page: Handle) -> Handle {
 pub extern "C" fn pdf_next_annot(_ctx: Handle, annot: Handle) -> Handle {
     // Find the page this annotation belongs to by searching all loaded pages
     if ANNOTATIONS.get(annot).is_some() {
-        for page_handle in 1..10000 { // Reasonable page limit
+        for page_handle in 1..10000 {
+            // Reasonable page limit
             if let Some(p) = super::document::PAGES.get(page_handle) {
                 if let Ok(guard) = p.lock() {
                     if guard.annotations.contains(&annot) {
@@ -225,7 +221,11 @@ pub extern "C" fn pdf_annot_contents(
 /// # Safety
 /// Caller must ensure text is a valid null-terminated C string
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_set_annot_contents(_ctx: Handle, annot: Handle, text: *const std::ffi::c_char) {
+pub extern "C" fn pdf_set_annot_contents(
+    _ctx: Handle,
+    annot: Handle,
+    text: *const std::ffi::c_char,
+) {
     if text.is_null() {
         return;
     }
@@ -331,11 +331,7 @@ pub extern "C" fn pdf_set_annot_color(_ctx: Handle, annot: Handle, n: i32, color
     if let Some(a) = ANNOTATIONS.get(annot) {
         if let Ok(mut guard) = a.lock() {
             unsafe {
-                let c = [
-                    *color.add(0),
-                    *color.add(1),
-                    *color.add(2),
-                ];
+                let c = [*color.add(0), *color.add(1), *color.add(2)];
                 guard.set_color(Some(c));
             }
         }
@@ -347,7 +343,12 @@ pub extern "C" fn pdf_set_annot_color(_ctx: Handle, annot: Handle, n: i32, color
 /// # Safety
 /// Caller must ensure color array points to valid memory for n floats
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_annot_interior_color(_ctx: Handle, annot: Handle, n: *mut i32, color: *mut f32) {
+pub extern "C" fn pdf_annot_interior_color(
+    _ctx: Handle,
+    annot: Handle,
+    n: *mut i32,
+    color: *mut f32,
+) {
     if n.is_null() || color.is_null() {
         return;
     }
@@ -370,7 +371,12 @@ pub extern "C" fn pdf_annot_interior_color(_ctx: Handle, annot: Handle, n: *mut 
 /// # Safety
 /// Caller must ensure color array points to valid memory with n floats
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_set_annot_interior_color(_ctx: Handle, annot: Handle, n: i32, color: *const f32) {
+pub extern "C" fn pdf_set_annot_interior_color(
+    _ctx: Handle,
+    annot: Handle,
+    n: i32,
+    color: *const f32,
+) {
     if color.is_null() || !(0..=4).contains(&n) {
         return;
     }
@@ -501,7 +507,11 @@ pub extern "C" fn pdf_update_annot(_ctx: Handle, annot: Handle) -> i32 {
 /// Check if an annotation is valid
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_annot_is_valid(_ctx: Handle, annot: Handle) -> i32 {
-    if ANNOTATIONS.get(annot).is_some() { 1 } else { 0 }
+    if ANNOTATIONS.get(annot).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 /// Clone an annotation (create new copy)
@@ -649,4 +659,3 @@ mod tests {
         pdf_drop_annot(0, cloned);
     }
 }
-

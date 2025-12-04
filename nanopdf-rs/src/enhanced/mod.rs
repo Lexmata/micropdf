@@ -14,15 +14,15 @@
 //! - **Attachments**: Embed and extract files
 //! - **Metadata**: Enhanced metadata support
 
-pub mod writer;
-pub mod page_ops;
+pub mod attachments;
+pub mod bookmarks;
 pub mod content;
 pub mod drawing;
-pub mod optimization;
-pub mod bookmarks;
-pub mod attachments;
-pub mod metadata;
 pub mod error;
+pub mod metadata;
+pub mod optimization;
+pub mod page_ops;
+pub mod writer;
 
 pub use error::{EnhancedError, Result};
 
@@ -45,7 +45,8 @@ mod tests {
 
     #[test]
     fn test_version() {
-        assert!(!VERSION.is_empty());
+        // VERSION is always non-empty at compile-time (env!("CARGO_PKG_VERSION"))
+        // Just verify it's a valid version string format (contains a dot)
+        assert!(VERSION.contains('.'));
     }
 }
-

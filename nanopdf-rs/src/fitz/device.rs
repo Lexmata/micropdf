@@ -204,11 +204,29 @@ pub struct NullDevice;
 
 impl Device for NullDevice {
     fn fill_path(&mut self, _: &Path, _: bool, _: &Matrix, _: &Colorspace, _: &[f32], _: f32) {}
-    fn stroke_path(&mut self, _: &Path, _: &StrokeState, _: &Matrix, _: &Colorspace, _: &[f32], _: f32) {}
+    fn stroke_path(
+        &mut self,
+        _: &Path,
+        _: &StrokeState,
+        _: &Matrix,
+        _: &Colorspace,
+        _: &[f32],
+        _: f32,
+    ) {
+    }
     fn clip_path(&mut self, _: &Path, _: bool, _: &Matrix, _: Rect) {}
     fn clip_stroke_path(&mut self, _: &Path, _: &StrokeState, _: &Matrix, _: Rect) {}
     fn fill_text(&mut self, _: &Text, _: &Matrix, _: &Colorspace, _: &[f32], _: f32) {}
-    fn stroke_text(&mut self, _: &Text, _: &StrokeState, _: &Matrix, _: &Colorspace, _: &[f32], _: f32) {}
+    fn stroke_text(
+        &mut self,
+        _: &Text,
+        _: &StrokeState,
+        _: &Matrix,
+        _: &Colorspace,
+        _: &[f32],
+        _: f32,
+    ) {
+    }
     fn clip_text(&mut self, _: &Text, _: &Matrix, _: Rect) {}
     fn clip_stroke_text(&mut self, _: &Text, _: &StrokeState, _: &Matrix, _: Rect) {}
     fn ignore_text(&mut self, _: &Text, _: &Matrix) {}
@@ -218,9 +236,20 @@ impl Device for NullDevice {
     fn pop_clip(&mut self) {}
     fn begin_mask(&mut self, _: Rect, _: bool, _: &Colorspace, _: &[f32]) {}
     fn end_mask(&mut self) {}
-    fn begin_group(&mut self, _: Rect, _: Option<&Colorspace>, _: bool, _: bool, _: BlendMode, _: f32) {}
+    fn begin_group(
+        &mut self,
+        _: Rect,
+        _: Option<&Colorspace>,
+        _: bool,
+        _: bool,
+        _: BlendMode,
+        _: f32,
+    ) {
+    }
     fn end_group(&mut self) {}
-    fn begin_tile(&mut self, _: Rect, _: Rect, _: f32, _: f32, _: &Matrix) -> i32 { 0 }
+    fn begin_tile(&mut self, _: Rect, _: Rect, _: f32, _: f32, _: &Matrix) -> i32 {
+        0
+    }
     fn end_tile(&mut self) {}
 }
 
@@ -231,9 +260,7 @@ pub struct BBoxDevice {
 
 impl BBoxDevice {
     pub fn new() -> Self {
-        Self {
-            bbox: Rect::EMPTY,
-        }
+        Self { bbox: Rect::EMPTY }
     }
 
     pub fn bbox(&self) -> Rect {
@@ -257,7 +284,15 @@ impl Device for BBoxDevice {
         self.expand_bbox(bbox);
     }
 
-    fn stroke_path(&mut self, path: &Path, _stroke: &StrokeState, ctm: &Matrix, _: &Colorspace, _: &[f32], _: f32) {
+    fn stroke_path(
+        &mut self,
+        path: &Path,
+        _stroke: &StrokeState,
+        ctm: &Matrix,
+        _: &Colorspace,
+        _: &[f32],
+        _: f32,
+    ) {
         // For now, just use path bounds (should expand by stroke width)
         let bbox = path.bounds().transform(ctm);
         self.expand_bbox(bbox);
@@ -272,7 +307,15 @@ impl Device for BBoxDevice {
         self.expand_bbox(bbox);
     }
 
-    fn stroke_text(&mut self, text: &Text, stroke: &StrokeState, ctm: &Matrix, _: &Colorspace, _: &[f32], _: f32) {
+    fn stroke_text(
+        &mut self,
+        text: &Text,
+        stroke: &StrokeState,
+        ctm: &Matrix,
+        _: &Colorspace,
+        _: &[f32],
+        _: f32,
+    ) {
         let bbox = text.bounds(Some(stroke), ctm);
         self.expand_bbox(bbox);
     }
@@ -302,11 +345,22 @@ impl Device for BBoxDevice {
 
     fn end_mask(&mut self) {}
 
-    fn begin_group(&mut self, _: Rect, _: Option<&Colorspace>, _: bool, _: bool, _: BlendMode, _: f32) {}
+    fn begin_group(
+        &mut self,
+        _: Rect,
+        _: Option<&Colorspace>,
+        _: bool,
+        _: bool,
+        _: BlendMode,
+        _: f32,
+    ) {
+    }
 
     fn end_group(&mut self) {}
 
-    fn begin_tile(&mut self, _: Rect, _: Rect, _: f32, _: f32, _: &Matrix) -> i32 { 0 }
+    fn begin_tile(&mut self, _: Rect, _: Rect, _: f32, _: f32, _: &Matrix) -> i32 {
+        0
+    }
 
     fn end_tile(&mut self) {}
 }
@@ -333,43 +387,91 @@ impl Default for TraceDevice {
 }
 
 impl Device for TraceDevice {
-    fn fill_path(&mut self, _: &Path, even_odd: bool, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
-        self.log(&format!("fill_path even_odd={} ctm={:?} color={:?} alpha={}", even_odd, ctm, color, alpha));
+    fn fill_path(
+        &mut self,
+        _: &Path,
+        even_odd: bool,
+        ctm: &Matrix,
+        _: &Colorspace,
+        color: &[f32],
+        alpha: f32,
+    ) {
+        self.log(&format!(
+            "fill_path even_odd={} ctm={:?} color={:?} alpha={}",
+            even_odd, ctm, color, alpha
+        ));
     }
 
-    fn stroke_path(&mut self, _: &Path, stroke: &StrokeState, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
-        self.log(&format!("stroke_path width={} ctm={:?} color={:?} alpha={}", stroke.linewidth, ctm, color, alpha));
+    fn stroke_path(
+        &mut self,
+        _: &Path,
+        stroke: &StrokeState,
+        ctm: &Matrix,
+        _: &Colorspace,
+        color: &[f32],
+        alpha: f32,
+    ) {
+        self.log(&format!(
+            "stroke_path width={} ctm={:?} color={:?} alpha={}",
+            stroke.linewidth, ctm, color, alpha
+        ));
     }
 
     fn clip_path(&mut self, _: &Path, even_odd: bool, ctm: &Matrix, scissor: Rect) {
-        self.log(&format!("clip_path even_odd={} ctm={:?} scissor={:?}", even_odd, ctm, scissor));
+        self.log(&format!(
+            "clip_path even_odd={} ctm={:?} scissor={:?}",
+            even_odd, ctm, scissor
+        ));
         self.indent += 1;
     }
 
     fn clip_stroke_path(&mut self, _: &Path, _: &StrokeState, ctm: &Matrix, scissor: Rect) {
-        self.log(&format!("clip_stroke_path ctm={:?} scissor={:?}", ctm, scissor));
+        self.log(&format!(
+            "clip_stroke_path ctm={:?} scissor={:?}",
+            ctm, scissor
+        ));
         self.indent += 1;
     }
 
     fn fill_text(&mut self, text: &Text, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
         let content = text.text_content();
-        self.log(&format!("fill_text '{}' ctm={:?} color={:?} alpha={}", content, ctm, color, alpha));
+        self.log(&format!(
+            "fill_text '{}' ctm={:?} color={:?} alpha={}",
+            content, ctm, color, alpha
+        ));
     }
 
-    fn stroke_text(&mut self, text: &Text, stroke: &StrokeState, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
+    fn stroke_text(
+        &mut self,
+        text: &Text,
+        stroke: &StrokeState,
+        ctm: &Matrix,
+        _: &Colorspace,
+        color: &[f32],
+        alpha: f32,
+    ) {
         let content = text.text_content();
-        self.log(&format!("stroke_text '{}' width={} ctm={:?} color={:?} alpha={}", content, stroke.linewidth, ctm, color, alpha));
+        self.log(&format!(
+            "stroke_text '{}' width={} ctm={:?} color={:?} alpha={}",
+            content, stroke.linewidth, ctm, color, alpha
+        ));
     }
 
     fn clip_text(&mut self, text: &Text, ctm: &Matrix, scissor: Rect) {
         let content = text.text_content();
-        self.log(&format!("clip_text '{}' ctm={:?} scissor={:?}", content, ctm, scissor));
+        self.log(&format!(
+            "clip_text '{}' ctm={:?} scissor={:?}",
+            content, ctm, scissor
+        ));
         self.indent += 1;
     }
 
     fn clip_stroke_text(&mut self, text: &Text, _: &StrokeState, ctm: &Matrix, scissor: Rect) {
         let content = text.text_content();
-        self.log(&format!("clip_stroke_text '{}' ctm={:?} scissor={:?}", content, ctm, scissor));
+        self.log(&format!(
+            "clip_stroke_text '{}' ctm={:?} scissor={:?}",
+            content, ctm, scissor
+        ));
         self.indent += 1;
     }
 
@@ -382,12 +484,25 @@ impl Device for TraceDevice {
         self.log(&format!("fill_image ctm={:?} alpha={}", ctm, alpha));
     }
 
-    fn fill_image_mask(&mut self, _: &Image, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
-        self.log(&format!("fill_image_mask ctm={:?} color={:?} alpha={}", ctm, color, alpha));
+    fn fill_image_mask(
+        &mut self,
+        _: &Image,
+        ctm: &Matrix,
+        _: &Colorspace,
+        color: &[f32],
+        alpha: f32,
+    ) {
+        self.log(&format!(
+            "fill_image_mask ctm={:?} color={:?} alpha={}",
+            ctm, color, alpha
+        ));
     }
 
     fn clip_image_mask(&mut self, _: &Image, ctm: &Matrix, scissor: Rect) {
-        self.log(&format!("clip_image_mask ctm={:?} scissor={:?}", ctm, scissor));
+        self.log(&format!(
+            "clip_image_mask ctm={:?} scissor={:?}",
+            ctm, scissor
+        ));
         self.indent += 1;
     }
 
@@ -399,7 +514,10 @@ impl Device for TraceDevice {
     }
 
     fn begin_mask(&mut self, area: Rect, luminosity: bool, _: &Colorspace, _: &[f32]) {
-        self.log(&format!("begin_mask area={:?} luminosity={}", area, luminosity));
+        self.log(&format!(
+            "begin_mask area={:?} luminosity={}",
+            area, luminosity
+        ));
         self.indent += 1;
     }
 
@@ -410,8 +528,19 @@ impl Device for TraceDevice {
         self.log("end_mask");
     }
 
-    fn begin_group(&mut self, area: Rect, _: Option<&Colorspace>, isolated: bool, knockout: bool, blendmode: BlendMode, alpha: f32) {
-        self.log(&format!("begin_group area={:?} isolated={} knockout={} blend={:?} alpha={}", area, isolated, knockout, blendmode, alpha));
+    fn begin_group(
+        &mut self,
+        area: Rect,
+        _: Option<&Colorspace>,
+        isolated: bool,
+        knockout: bool,
+        blendmode: BlendMode,
+        alpha: f32,
+    ) {
+        self.log(&format!(
+            "begin_group area={:?} isolated={} knockout={} blend={:?} alpha={}",
+            area, isolated, knockout, blendmode, alpha
+        ));
         self.indent += 1;
     }
 
@@ -423,7 +552,10 @@ impl Device for TraceDevice {
     }
 
     fn begin_tile(&mut self, area: Rect, view: Rect, xstep: f32, ystep: f32, ctm: &Matrix) -> i32 {
-        self.log(&format!("begin_tile area={:?} view={:?} step=({},{}) ctm={:?}", area, view, xstep, ystep, ctm));
+        self.log(&format!(
+            "begin_tile area={:?} view={:?} step=({},{}) ctm={:?}",
+            area, view, xstep, ystep, ctm
+        ));
         self.indent += 1;
         0
     }
@@ -622,7 +754,10 @@ mod tests {
     fn test_container_type() {
         let clip = ContainerType::Clip;
         let mask = ContainerType::Mask { luminosity: true };
-        let group = ContainerType::Group { isolated: true, knockout: false };
+        let group = ContainerType::Group {
+            isolated: true,
+            knockout: false,
+        };
         let tile = ContainerType::Tile;
 
         // Just ensure they can be created

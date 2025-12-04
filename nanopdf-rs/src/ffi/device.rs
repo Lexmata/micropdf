@@ -3,12 +3,12 @@
 //! Provides FFI bindings for the device abstraction layer.
 
 use super::{Handle, HandleStore, PIXMAPS};
-use crate::fitz::device::{Device, BBoxDevice, TraceDevice, NullDevice};
+use crate::fitz::colorspace::Colorspace as FitzColorspace;
+use crate::fitz::device::{BBoxDevice, Device, NullDevice, TraceDevice};
 use crate::fitz::display_list::ListDevice;
 use crate::fitz::geometry::{Matrix, Rect};
-use crate::fitz::colorspace::Colorspace as FitzColorspace;
-use std::sync::{LazyLock, Mutex};
 use std::collections::HashMap;
+use std::sync::{LazyLock, Mutex};
 
 /// Device storage
 pub static DEVICES: LazyLock<HandleStore<Box<dyn Device + Send + Sync>>> =
@@ -20,16 +20,18 @@ static DEVICE_HINTS: LazyLock<Mutex<HashMap<Handle, i32>>> =
 
 /// Convert FFI colorspace to Fitz colorspace
 fn get_fitz_colorspace(handle: Handle) -> Option<FitzColorspace> {
-    super::colorspace::COLORSPACES.get(handle).and_then(|cs_arc| {
-        cs_arc.lock().ok().map(|cs_guard| {
-            match cs_guard.cs_type {
-                super::colorspace::ColorspaceType::Gray => FitzColorspace::device_gray(),
-                super::colorspace::ColorspaceType::Rgb => FitzColorspace::device_rgb(),
-                super::colorspace::ColorspaceType::Cmyk => FitzColorspace::device_cmyk(),
-                _ => FitzColorspace::device_rgb(), // Default fallback
-            }
+    super::colorspace::COLORSPACES
+        .get(handle)
+        .and_then(|cs_arc| {
+            cs_arc.lock().ok().map(|cs_guard| {
+                match cs_guard.cs_type {
+                    super::colorspace::ColorspaceType::Gray => FitzColorspace::device_gray(),
+                    super::colorspace::ColorspaceType::Rgb => FitzColorspace::device_rgb(),
+                    super::colorspace::ColorspaceType::Cmyk => FitzColorspace::device_cmyk(),
+                    _ => FitzColorspace::device_rgb(), // Default fallback
+                }
+            })
         })
-    })
 }
 
 /// Create a new draw device for rendering to a pixmap
@@ -121,8 +123,12 @@ pub extern "C" fn fz_begin_tile(
             let area_rect = Rect::new(area.x0, area.y0, area.x1, area.y1);
             let view_rect = Rect::new(view.x0, view.y0, view.x1, view.y1);
             let matrix = Matrix::new(
-                transform.a, transform.b, transform.c,
-                transform.d, transform.e, transform.f
+                transform.a,
+                transform.b,
+                transform.c,
+                transform.d,
+                transform.e,
+                transform.f,
             );
 
             return guard.begin_tile(area_rect, view_rect, xstep, ystep, &matrix);
@@ -166,8 +172,12 @@ pub extern "C" fn fz_fill_path(
             if let Some(p) = super::path::PATHS.get(path) {
                 if let Ok(path_guard) = p.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Get colorspace
@@ -224,8 +234,12 @@ pub extern "C" fn fz_stroke_path(
                     if let Some(s) = super::path::STROKE_STATES.get(stroke) {
                         if let Ok(stroke_guard) = s.lock() {
                             let matrix = Matrix::new(
-                                transform.a, transform.b, transform.c,
-                                transform.d, transform.e, transform.f
+                                transform.a,
+                                transform.b,
+                                transform.c,
+                                transform.d,
+                                transform.e,
+                                transform.f,
                             );
 
                             // Get colorspace
@@ -273,8 +287,12 @@ pub extern "C" fn fz_clip_path(
             if let Some(p) = super::path::PATHS.get(path) {
                 if let Ok(path_guard) = p.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Use infinite scissor rect for now
@@ -304,14 +322,18 @@ pub extern "C" fn fz_clip_stroke_path(
                 if let Ok(path_guard) = p.lock() {
                     if let Some(s) = super::path::STROKE_STATES.get(stroke) {
                         if let Ok(stroke_guard) = s.lock() {
-                        let matrix = Matrix::new(
-                            transform.a, transform.b, transform.c,
-                            transform.d, transform.e, transform.f
-                        );
+                            let matrix = Matrix::new(
+                                transform.a,
+                                transform.b,
+                                transform.c,
+                                transform.d,
+                                transform.e,
+                                transform.f,
+                            );
 
-                        // Use infinite scissor rect for now
-                        let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
-                        guard.clip_stroke_path(&path_guard, &stroke_guard, &matrix, scissor);
+                            // Use infinite scissor rect for now
+                            let scissor = Rect::new(-1e6, -1e6, 1e6, 1e6);
+                            guard.clip_stroke_path(&path_guard, &stroke_guard, &matrix, scissor);
                         }
                     }
                 }
@@ -343,8 +365,12 @@ pub extern "C" fn fz_fill_text(
             if let Some(t) = super::text::TEXTS.get(text) {
                 if let Ok(text_guard) = t.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Get colorspace
@@ -392,8 +418,12 @@ pub extern "C" fn fz_stroke_text(
                     if let Some(s) = super::path::STROKE_STATES.get(stroke) {
                         if let Ok(stroke_guard) = s.lock() {
                             let matrix = Matrix::new(
-                                transform.a, transform.b, transform.c,
-                                transform.d, transform.e, transform.f
+                                transform.a,
+                                transform.b,
+                                transform.c,
+                                transform.d,
+                                transform.e,
+                                transform.f,
                             );
 
                             // Get colorspace
@@ -440,8 +470,12 @@ pub extern "C" fn fz_clip_text(
             if let Some(t) = super::text::TEXTS.get(text) {
                 if let Ok(text_guard) = t.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Use infinite scissor rect for now
@@ -472,8 +506,12 @@ pub extern "C" fn fz_clip_stroke_text(
                     if let Some(s) = super::path::STROKE_STATES.get(stroke) {
                         if let Ok(stroke_guard) = s.lock() {
                             let matrix = Matrix::new(
-                                transform.a, transform.b, transform.c,
-                                transform.d, transform.e, transform.f
+                                transform.a,
+                                transform.b,
+                                transform.c,
+                                transform.d,
+                                transform.e,
+                                transform.f,
                             );
 
                             // Use infinite scissor rect for now
@@ -503,8 +541,12 @@ pub extern "C" fn fz_ignore_text(
             if let Some(t) = super::text::TEXTS.get(text) {
                 if let Ok(text_guard) = t.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     guard.ignore_text(&text_guard, &matrix);
@@ -531,8 +573,12 @@ pub extern "C" fn fz_fill_image(
             if let Some(img) = super::image::IMAGES.get(image) {
                 if let Ok(img_guard) = img.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     guard.fill_image(&img_guard, &matrix, alpha);
@@ -565,8 +611,12 @@ pub extern "C" fn fz_fill_image_mask(
             if let Some(img) = super::image::IMAGES.get(image) {
                 if let Ok(img_guard) = img.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Get colorspace
@@ -580,13 +630,7 @@ pub extern "C" fn fz_fill_image_mask(
                             }
                         }
 
-                        guard.fill_image_mask(
-                            &img_guard,
-                            &matrix,
-                            &cs,
-                            &color_vec,
-                            alpha,
-                        );
+                        guard.fill_image_mask(&img_guard, &matrix, &cs, &color_vec, alpha);
                     }
                 }
             }
@@ -610,8 +654,12 @@ pub extern "C" fn fz_clip_image_mask(
             if let Some(img) = super::image::IMAGES.get(image) {
                 if let Ok(img_guard) = img.lock() {
                     let matrix = Matrix::new(
-                        transform.a, transform.b, transform.c,
-                        transform.d, transform.e, transform.f
+                        transform.a,
+                        transform.b,
+                        transform.c,
+                        transform.d,
+                        transform.e,
+                        transform.f,
                     );
 
                     // Use infinite scissor rect for now
@@ -794,7 +842,10 @@ mod tests {
     #[test]
     fn test_new_bbox_device() {
         let mut rect = super::super::geometry::fz_rect {
-            x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0,
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
         };
         let dev_handle = fz_new_bbox_device(0, &mut rect as *mut _);
         assert_ne!(dev_handle, 0);
@@ -847,4 +898,3 @@ mod tests {
         fz_drop_device(0, dev_handle);
     }
 }
-

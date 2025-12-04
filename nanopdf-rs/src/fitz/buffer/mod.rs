@@ -16,4 +16,3 @@ pub use writer::parallel;
 
 #[cfg(feature = "async")]
 pub use writer::async_ops;
-

@@ -1,8 +1,8 @@
 //! PDF Object Utility Functions (Geometry, Key Access, etc.)
 
 use super::super::Handle;
-use super::types::{PdfObj, PdfObjHandle, PdfObjType, PDF_OBJECTS};
 use super::refcount::with_obj;
+use super::types::{PDF_OBJECTS, PdfObj, PdfObjHandle, PdfObjType};
 
 // ============================================================================
 // PDF Geometry Object Creation
@@ -21,7 +21,14 @@ pub extern "C" fn pdf_new_point(_ctx: Handle, _doc: Handle, x: f32, y: f32) -> P
 
 /// Create a PDF array representing a rect [x0, y0, x1, y1]
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_new_rect(_ctx: Handle, _doc: Handle, x0: f32, y0: f32, x1: f32, y1: f32) -> PdfObjHandle {
+pub extern "C" fn pdf_new_rect(
+    _ctx: Handle,
+    _doc: Handle,
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+) -> PdfObjHandle {
     let mut arr = PdfObj::new_array(4);
     if let PdfObjType::Array(ref mut a) = arr.obj_type {
         a.push(PdfObj::new_real(x0 as f64));
@@ -34,7 +41,16 @@ pub extern "C" fn pdf_new_rect(_ctx: Handle, _doc: Handle, x0: f32, y0: f32, x1:
 
 /// Create a PDF array representing a matrix [a, b, c, d, e, f]
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_new_matrix(_ctx: Handle, _doc: Handle, a: f32, b: f32, c: f32, d: f32, e: f32, f: f32) -> PdfObjHandle {
+pub extern "C" fn pdf_new_matrix(
+    _ctx: Handle,
+    _doc: Handle,
+    a: f32,
+    b: f32,
+    c: f32,
+    d: f32,
+    e: f32,
+    f: f32,
+) -> PdfObjHandle {
     let mut arr = PdfObj::new_array(6);
     if let PdfObjType::Array(ref mut arr_vec) = arr.obj_type {
         arr_vec.push(PdfObj::new_real(a as f64));
@@ -49,7 +65,16 @@ pub extern "C" fn pdf_new_matrix(_ctx: Handle, _doc: Handle, a: f32, b: f32, c: 
 
 /// Create a PDF date string from components
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_new_date(_ctx: Handle, _doc: Handle, year: i32, month: i32, day: i32, hour: i32, minute: i32, second: i32) -> PdfObjHandle {
+pub extern "C" fn pdf_new_date(
+    _ctx: Handle,
+    _doc: Handle,
+    year: i32,
+    month: i32,
+    day: i32,
+    hour: i32,
+    minute: i32,
+    second: i32,
+) -> PdfObjHandle {
     // PDF date format: D:YYYYMMDDHHmmSS
     let date_str = format!(
         "D:{:04}{:02}{:02}{:02}{:02}{:02}",
@@ -119,7 +144,11 @@ pub extern "C" fn pdf_dict_get_val(_ctx: Handle, dict: PdfObjHandle, index: i32)
 /// # Returns
 /// Handle to the resolved object, or same handle if not indirect
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_resolve_indirect(_ctx: Handle, _doc: Handle, obj: PdfObjHandle) -> PdfObjHandle {
+pub extern "C" fn pdf_resolve_indirect(
+    _ctx: Handle,
+    _doc: Handle,
+    obj: PdfObjHandle,
+) -> PdfObjHandle {
     // In our simplified implementation, we don't have true indirect references
     // that point to other objects in the storage. Instead, we return the object itself.
     // A full implementation would look up the object number in the document's xref table.
@@ -153,7 +182,12 @@ pub extern "C" fn pdf_resolve_indirect(_ctx: Handle, _doc: Handle, obj: PdfObjHa
 /// # Returns
 /// Handle to the loaded object, or 0 if not found
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_load_object(_ctx: Handle, _doc: Handle, num: i32, generation: i32) -> PdfObjHandle {
+pub extern "C" fn pdf_load_object(
+    _ctx: Handle,
+    _doc: Handle,
+    num: i32,
+    generation: i32,
+) -> PdfObjHandle {
     // Note: PDF indirect object resolution requires:
     // 1. Access to document's xref table
     // 2. File stream access for seeking/reading
@@ -179,8 +213,7 @@ pub extern "C" fn pdf_obj_is_resolved(_ctx: Handle, _doc: Handle, obj: PdfObjHan
     with_obj(obj, 0, |o| {
         match o.obj_type {
             PdfObjType::Indirect { .. } => 0, // Not resolved, still just a reference
-            _ => 1, // Resolved to actual object
+            _ => 1,                           // Resolved to actual object
         }
     })
 }
-

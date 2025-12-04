@@ -1,8 +1,8 @@
 //! BufferWriter for accumulating data into a buffer
 
+use super::core::Buffer;
 use bytes::{BufMut, Bytes, BytesMut};
 use std::io::{self, Write};
-use super::core::Buffer;
 
 /// A writer that accumulates data into a buffer.
 pub struct BufferWriter {
@@ -118,10 +118,7 @@ pub mod parallel {
         F: Fn(&[u8]) -> Vec<u8> + Sync + Send,
     {
         let data = buffer.to_vec();
-        let chunks: Vec<Vec<u8>> = data
-            .par_chunks(chunk_size)
-            .map(f)
-            .collect();
+        let chunks: Vec<Vec<u8>> = data.par_chunks(chunk_size).map(f).collect();
 
         let total_len: usize = chunks.iter().map(|c| c.len()).sum();
         let mut result = BytesMut::with_capacity(total_len);
@@ -136,10 +133,10 @@ pub mod parallel {
 #[cfg(feature = "async")]
 pub mod async_ops {
     use super::*;
-    use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+    use crate::fitz::error::{Error, Result};
     use std::pin::Pin;
     use std::task::{Context, Poll};
-    use crate::fitz::error::{Error, Result};
+    use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
     /// Read a buffer from an async reader.
     pub async fn read_buffer<R: AsyncRead + Unpin>(
@@ -168,7 +165,10 @@ pub mod async_ops {
         writer: &mut W,
         buffer: &Buffer,
     ) -> Result<()> {
-        writer.write_all(&buffer.to_vec()).await.map_err(Error::System)
+        writer
+            .write_all(&buffer.to_vec())
+            .await
+            .map_err(Error::System)
     }
 
     /// Async buffer reader.

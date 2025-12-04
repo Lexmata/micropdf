@@ -1,26 +1,18 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use nanopdf::pdf::object::{Name, Object, ObjRef, PdfString};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use nanopdf::pdf::object::{Name, ObjRef, Object, PdfString};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
 fn bench_object_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("pdf/object/create");
 
-    group.bench_function("null", |b| {
-        b.iter(|| Object::Null)
-    });
+    group.bench_function("null", |b| b.iter(|| Object::Null));
 
-    group.bench_function("bool", |b| {
-        b.iter(|| Object::Bool(black_box(true)))
-    });
+    group.bench_function("bool", |b| b.iter(|| Object::Bool(black_box(true))));
 
-    group.bench_function("int", |b| {
-        b.iter(|| Object::Int(black_box(42)))
-    });
+    group.bench_function("int", |b| b.iter(|| Object::Int(black_box(42))));
 
-    group.bench_function("real", |b| {
-        b.iter(|| Object::Real(black_box(PI)))
-    });
+    group.bench_function("real", |b| b.iter(|| Object::Real(black_box(PI))));
 
     group.bench_function("name", |b| {
         b.iter(|| Object::Name(Name::new(black_box("Type"))))
@@ -44,9 +36,7 @@ fn bench_name_operations(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("pdf/name");
 
-    group.bench_function("new", |b| {
-        b.iter(|| Name::new(black_box("FontDescriptor")))
-    });
+    group.bench_function("new", |b| b.iter(|| Name::new(black_box("FontDescriptor"))));
 
     group.bench_function("eq_same", |b| {
         b.iter(|| black_box(&name1) == black_box(&name2))
@@ -56,9 +46,7 @@ fn bench_name_operations(c: &mut Criterion) {
         b.iter(|| black_box(&name1) == black_box(&name3))
     });
 
-    group.bench_function("to_string", |b| {
-        b.iter(|| black_box(&name1).to_string())
-    });
+    group.bench_function("to_string", |b| b.iter(|| black_box(&name1).to_string()));
 
     group.finish();
 }
@@ -72,9 +60,7 @@ fn bench_string_operations(c: &mut Criterion) {
         b.iter(|| PdfString::new(black_box(b"Test string content".to_vec())))
     });
 
-    group.bench_function("as_bytes", |b| {
-        b.iter(|| black_box(&literal).as_bytes())
-    });
+    group.bench_function("as_bytes", |b| b.iter(|| black_box(&literal).as_bytes()));
 
     group.finish();
 }
@@ -86,23 +72,11 @@ fn bench_array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("pdf/array");
 
     group.bench_function("create_10", |b| {
-        b.iter(|| {
-            Object::Array(
-                (0..10)
-                    .map(|i| Object::Int(black_box(i)))
-                    .collect()
-            )
-        })
+        b.iter(|| Object::Array((0..10).map(|i| Object::Int(black_box(i))).collect()))
     });
 
     group.bench_function("create_1000", |b| {
-        b.iter(|| {
-            Object::Array(
-                (0..1000)
-                    .map(|i| Object::Int(black_box(i)))
-                    .collect()
-            )
-        })
+        b.iter(|| Object::Array((0..1000).map(|i| Object::Int(black_box(i))).collect()))
     });
 
     group.bench_function("access_10", |b| {
@@ -137,9 +111,15 @@ fn bench_dict_operations(c: &mut Criterion) {
     let mut small_dict: HashMap<Name, Object> = HashMap::new();
     small_dict.insert(Name::new("Type"), Object::Name(Name::new("Page")));
     small_dict.insert(Name::new("Parent"), Object::Ref(ObjRef::new(1, 0)));
-    small_dict.insert(Name::new("MediaBox"), Object::Array(vec![
-        Object::Int(0), Object::Int(0), Object::Int(612), Object::Int(792)
-    ]));
+    small_dict.insert(
+        Name::new("MediaBox"),
+        Object::Array(vec![
+            Object::Int(0),
+            Object::Int(0),
+            Object::Int(612),
+            Object::Int(792),
+        ]),
+    );
 
     group.bench_function("create_small", |b| {
         b.iter(|| {
@@ -166,13 +146,10 @@ fn bench_dict_operations(c: &mut Criterion) {
         b.iter_batched(
             HashMap::new,
             |mut dict: HashMap<Name, Object>| {
-                dict.insert(
-                    Name::new(black_box("NewKey")),
-                    Object::Int(black_box(42))
-                );
+                dict.insert(Name::new(black_box("NewKey")), Object::Int(black_box(42)));
                 dict
             },
-            criterion::BatchSize::SmallInput
+            criterion::BatchSize::SmallInput,
         )
     });
 

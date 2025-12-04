@@ -1,9 +1,9 @@
 //! Filter Chain Implementation
 
-use crate::fitz::error::{Error, Result};
 use super::FilterType;
 use super::params::CCITTFaxDecodeParams;
 use super::*;
+use crate::fitz::error::{Error, Result};
 
 /// A chain of filters to apply
 #[derive(Debug, Clone)]
@@ -13,7 +13,9 @@ pub struct FilterChain {
 
 impl FilterChain {
     pub fn new() -> Self {
-        Self { filters: Vec::new() }
+        Self {
+            filters: Vec::new(),
+        }
     }
 
     pub fn add(&mut self, filter: FilterType) {
@@ -29,7 +31,9 @@ impl FilterChain {
                 FilterType::ASCII85Decode => decode_ascii85(&data)?,
                 FilterType::ASCIIHexDecode => decode_ascii_hex(&data)?,
                 FilterType::RunLengthDecode => decode_run_length(&data)?,
-                FilterType::CCITTFaxDecode => decode_ccitt_fax(&data, &CCITTFaxDecodeParams::default())?,
+                FilterType::CCITTFaxDecode => {
+                    decode_ccitt_fax(&data, &CCITTFaxDecodeParams::default())?
+                }
                 FilterType::DCTDecode => decode_dct(&data, None)?,
                 FilterType::JPXDecode => decode_jpx(&data)?,
                 FilterType::JBIG2Decode => decode_jbig2(&data, None)?,
@@ -116,7 +120,7 @@ mod tests {
         let encoded = chain.encode(original.to_vec()).unwrap();
 
         // Should be compressed
-        assert!(encoded.len() > 0);
+        assert!(!encoded.is_empty());
 
         // Decode it back
         let decoded = chain.decode(encoded).unwrap();
@@ -245,4 +249,3 @@ mod tests {
         assert_eq!(cloned.filters.len(), chain.filters.len());
     }
 }
-

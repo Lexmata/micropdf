@@ -47,10 +47,7 @@ where
     F: Fn(&[u8]) -> Vec<u8> + Sync + Send,
 {
     let data = buffer.to_vec();
-    let chunks: Vec<Vec<u8>> = data
-        .par_chunks(chunk_size)
-        .map(f)
-        .collect();
+    let chunks: Vec<Vec<u8>> = data.par_chunks(chunk_size).map(f).collect();
 
     let total_len: usize = chunks.iter().map(|c| c.len()).sum();
     let mut result = Vec::with_capacity(total_len);
@@ -190,9 +187,7 @@ mod tests {
     fn test_parallel_transform() {
         let buffer = Buffer::from_slice(&[1, 2, 3, 4, 5, 6, 7, 8]);
 
-        let result = parallel_transform(&buffer, 2, |chunk| {
-            chunk.iter().map(|b| b * 2).collect()
-        });
+        let result = parallel_transform(&buffer, 2, |chunk| chunk.iter().map(|b| b * 2).collect());
 
         assert_eq!(result.to_vec(), vec![2, 4, 6, 8, 10, 12, 14, 16]);
     }
@@ -242,10 +237,7 @@ mod tests {
 
     #[test]
     fn test_process_buffers_result() {
-        let buffers = vec![
-            Buffer::from_slice(&[1, 2, 3]),
-            Buffer::from_slice(&[4, 5]),
-        ];
+        let buffers = vec![Buffer::from_slice(&[1, 2, 3]), Buffer::from_slice(&[4, 5])];
 
         let results: Vec<Result<usize>> = process_buffers_result(&buffers, |b| Ok(b.len()));
 
@@ -337,4 +329,3 @@ mod tests {
         assert_eq!(sum, 0);
     }
 }
-

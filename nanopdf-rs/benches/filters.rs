@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::pdf::filter::*;
 
 fn bench_flate_filter(c: &mut Criterion) {
@@ -8,17 +8,13 @@ fn bench_flate_filter(c: &mut Criterion) {
         let data = vec![42u8; *size]; // Compressible pattern
 
         group.bench_with_input(BenchmarkId::new("encode", size), size, |b, _| {
-            b.iter(|| {
-                encode_flate(black_box(&data), black_box(6)).ok()
-            })
+            b.iter(|| encode_flate(black_box(&data), black_box(6)).ok())
         });
 
         let compressed = encode_flate(&data, 6).unwrap();
 
         group.bench_with_input(BenchmarkId::new("decode", size), size, |b, _| {
-            b.iter(|| {
-                decode_flate(black_box(&compressed), black_box(None)).ok()
-            })
+            b.iter(|| decode_flate(black_box(&compressed), black_box(None)).ok())
         });
     }
 
@@ -32,17 +28,13 @@ fn bench_ascii85_filter(c: &mut Criterion) {
         let data = vec![42u8; *size];
 
         group.bench_with_input(BenchmarkId::new("encode", size), size, |b, _| {
-            b.iter(|| {
-                encode_ascii85(black_box(&data)).ok()
-            })
+            b.iter(|| encode_ascii85(black_box(&data)).ok())
         });
 
         let encoded = encode_ascii85(&data).unwrap();
 
         group.bench_with_input(BenchmarkId::new("decode", size), size, |b, _| {
-            b.iter(|| {
-                decode_ascii85(black_box(&encoded)).ok()
-            })
+            b.iter(|| decode_ascii85(black_box(&encoded)).ok())
         });
     }
 
@@ -56,17 +48,13 @@ fn bench_asciihex_filter(c: &mut Criterion) {
         let data = vec![42u8; *size];
 
         group.bench_with_input(BenchmarkId::new("encode", size), size, |b, _| {
-            b.iter(|| {
-                encode_ascii_hex(black_box(&data)).ok()
-            })
+            b.iter(|| encode_ascii_hex(black_box(&data)).ok())
         });
 
         let encoded = encode_ascii_hex(&data).unwrap();
 
         group.bench_with_input(BenchmarkId::new("decode", size), size, |b, _| {
-            b.iter(|| {
-                decode_ascii_hex(black_box(&encoded)).ok()
-            })
+            b.iter(|| decode_ascii_hex(black_box(&encoded)).ok())
         });
     }
 
@@ -80,17 +68,13 @@ fn bench_runlength_filter(c: &mut Criterion) {
         let data = vec![42u8; *size]; // Highly compressible run
 
         group.bench_with_input(BenchmarkId::new("encode", size), size, |b, _| {
-            b.iter(|| {
-                encode_run_length(black_box(&data)).ok()
-            })
+            b.iter(|| encode_run_length(black_box(&data)).ok())
         });
 
         let encoded = encode_run_length(&data).unwrap();
 
         group.bench_with_input(BenchmarkId::new("decode", size), size, |b, _| {
-            b.iter(|| {
-                decode_run_length(black_box(&encoded)).ok()
-            })
+            b.iter(|| decode_run_length(black_box(&encoded)).ok())
         });
     }
 
@@ -104,17 +88,13 @@ fn bench_lzw_filter(c: &mut Criterion) {
         let data = vec![42u8; *size];
 
         group.bench_with_input(BenchmarkId::new("encode", size), size, |b, _| {
-            b.iter(|| {
-                encode_lzw(black_box(&data)).ok()
-            })
+            b.iter(|| encode_lzw(black_box(&data)).ok())
         });
 
         let encoded = encode_lzw(&data).unwrap();
 
         group.bench_with_input(BenchmarkId::new("decode", size), size, |b, _| {
-            b.iter(|| {
-                decode_lzw(black_box(&encoded), black_box(None)).ok()
-            })
+            b.iter(|| decode_lzw(black_box(&encoded), black_box(None)).ok())
         });
     }
 

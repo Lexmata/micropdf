@@ -419,9 +419,7 @@ impl Font {
 
     /// Measure string width
     pub fn measure_string(&self, text: &str) -> f32 {
-        text.chars()
-            .map(|ch| self.char_advance(ch as u32))
-            .sum()
+        text.chars().map(|ch| self.char_advance(ch as u32)).sum()
     }
 
     /// Get encoding

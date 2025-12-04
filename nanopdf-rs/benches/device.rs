@@ -1,19 +1,15 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use nanopdf::fitz::device::{Device, BBoxDevice, TraceDevice};
-use nanopdf::fitz::path::Path;
-use nanopdf::fitz::geometry::{Point, Matrix};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use nanopdf::fitz::colorspace::Colorspace;
+use nanopdf::fitz::device::{BBoxDevice, Device, TraceDevice};
+use nanopdf::fitz::geometry::{Matrix, Point};
+use nanopdf::fitz::path::Path;
 
 fn bench_device_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("device/creation");
 
-    group.bench_function("bbox", |b| {
-        b.iter(BBoxDevice::new)
-    });
+    group.bench_function("bbox", |b| b.iter(BBoxDevice::new));
 
-    group.bench_function("trace", |b| {
-        b.iter(TraceDevice::new)
-    });
+    group.bench_function("trace", |b| b.iter(TraceDevice::new));
 
     group.finish();
 }
@@ -63,10 +59,6 @@ fn bench_device_path_operations(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_device_creation,
-    bench_device_path_operations,
-);
+criterion_group!(benches, bench_device_creation, bench_device_path_operations,);
 
 criterion_main!(benches);

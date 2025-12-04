@@ -7,33 +7,36 @@
 // and all pointer dereferences are wrapped in unsafe blocks after null checks
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
-pub mod geometry;
-pub mod context;
-pub mod buffer;
-pub mod stream;
-pub mod output;
-pub mod colorspace;
-pub mod pixmap;
-pub mod document;
-pub mod pdf_object;
-pub mod device;
-pub mod path;
-pub mod text;
-pub mod font;
-pub mod image;
 pub mod annot;
-pub mod form;
-pub mod display_list;
-pub mod link;
 pub mod archive;
+pub mod buffer;
+pub mod colorspace;
+pub mod context;
 pub mod cookie;
+pub mod device;
+pub mod display_list;
+pub mod document;
 pub mod enhanced;
+pub mod font;
+pub mod form;
+pub mod geometry;
+pub mod image;
+pub mod link;
+pub mod output;
+pub mod path;
+pub mod pdf_object;
+pub mod pixmap;
+pub mod stream;
+pub mod text;
 
 // Safe helper functions for common FFI patterns
 mod safe_helpers;
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}};
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicU64, Ordering},
+};
 
 /// Global handle manager for safe FFI resource management
 static HANDLE_COUNTER: AtomicU64 = AtomicU64::new(1);

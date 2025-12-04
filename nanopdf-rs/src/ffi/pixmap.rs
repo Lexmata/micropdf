@@ -1,9 +1,9 @@
 //! C FFI for pixmap - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
 
-use super::{Handle, PIXMAPS};
-use super::geometry::fz_irect;
 use super::colorspace::{ColorspaceHandle, FZ_COLORSPACE_RGB};
+use super::geometry::fz_irect;
+use super::{Handle, PIXMAPS};
 
 /// Internal pixmap state
 pub struct Pixmap {
@@ -11,7 +11,7 @@ pub struct Pixmap {
     y: i32,
     width: i32,
     height: i32,
-    n: i32,        // Number of components
+    n: i32, // Number of components
     alpha: bool,
     stride: i32,
     samples: Vec<u8>,
@@ -66,9 +66,13 @@ impl Pixmap {
     }
 
     pub fn get_sample(&self, x: i32, y: i32, component: i32) -> Option<u8> {
-        if x < self.x || x >= self.x + self.width ||
-           y < self.y || y >= self.y + self.height ||
-           component < 0 || component >= self.n {
+        if x < self.x
+            || x >= self.x + self.width
+            || y < self.y
+            || y >= self.y + self.height
+            || component < 0
+            || component >= self.n
+        {
             return None;
         }
         let local_x = x - self.x;
@@ -78,9 +82,13 @@ impl Pixmap {
     }
 
     pub fn set_sample(&mut self, x: i32, y: i32, component: i32, value: u8) {
-        if x < self.x || x >= self.x + self.width ||
-           y < self.y || y >= self.y + self.height ||
-           component < 0 || component >= self.n {
+        if x < self.x
+            || x >= self.x + self.width
+            || y < self.y
+            || y >= self.y + self.height
+            || component < 0
+            || component >= self.n
+        {
             return;
         }
         let local_x = x - self.x;
@@ -242,7 +250,12 @@ pub extern "C" fn fz_pixmap_bbox(_ctx: Handle, pix: Handle) -> fz_irect {
             };
         }
     }
-    fz_irect { x0: 0, y0: 0, x1: 0, y1: 0 }
+    fz_irect {
+        x0: 0,
+        y0: 0,
+        x1: 0,
+        y1: 0,
+    }
 }
 
 /// Get pixmap colorspace
@@ -389,7 +402,7 @@ pub extern "C" fn fz_convert_pixmap(
     _ctx: Handle,
     pix: Handle,
     cs: ColorspaceHandle,
-    _prf: Handle,    // Color profile (not implemented)
+    _prf: Handle, // Color profile (not implemented)
     _default_cs: Handle,
     _color_params: Handle,
     keep_alpha: i32,
@@ -604,10 +617,14 @@ pub extern "C" fn fz_set_pixmap_resolution(_ctx: Handle, _pix: Handle, _xres: i3
 pub extern "C" fn fz_pixmap_resolution(_ctx: Handle, _pix: Handle, xres: *mut i32, yres: *mut i32) {
     // Return default 72 dpi
     if !xres.is_null() {
-        unsafe { *xres = 72; }
+        unsafe {
+            *xres = 72;
+        }
     }
     if !yres.is_null() {
-        unsafe { *yres = 72; }
+        unsafe {
+            *yres = 72;
+        }
     }
 }
 
@@ -619,12 +636,7 @@ pub extern "C" fn fz_pixmap_is_valid(_ctx: Handle, pix: Handle) -> i32 {
 
 /// Scale pixmap to new dimensions
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_scale_pixmap(
-    _ctx: Handle,
-    pix: Handle,
-    xscale: f32,
-    yscale: f32,
-) -> Handle {
+pub extern "C" fn fz_scale_pixmap(_ctx: Handle, pix: Handle, xscale: f32, yscale: f32) -> Handle {
     if let Some(p) = PIXMAPS.get(pix) {
         if let Ok(guard) = p.lock() {
             let new_width = ((guard.width as f32) * xscale) as i32;
@@ -682,8 +694,8 @@ pub extern "C" fn fz_set_pixmap_yres(_ctx: Handle, _pix: Handle, _yres: i32) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::colorspace::FZ_COLORSPACE_GRAY;
+    use super::*;
 
     #[test]
     fn test_pixmap_create() {
@@ -832,7 +844,7 @@ mod tests {
 
         // Value should be roughly the same
         let sample = fz_get_pixmap_sample(0, handle, 0, 0, 0);
-        assert!(sample >= 125 && sample <= 131);
+        assert!((125..=131).contains(&sample));
 
         fz_drop_pixmap(0, handle);
     }

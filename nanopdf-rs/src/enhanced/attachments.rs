@@ -82,20 +82,20 @@ pub fn add_attachment(pdf_path: &str, attachment: &Attachment) -> Result<()> {
     // Validate attachment
     if attachment.filename.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Attachment filename cannot be empty".into()
+            "Attachment filename cannot be empty".into(),
         ));
     }
 
     if attachment.data.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Attachment data cannot be empty".into()
+            "Attachment data cannot be empty".into(),
         ));
     }
 
     // Validate filename doesn't contain path separators
     if attachment.filename.contains('/') || attachment.filename.contains('\\') {
         return Err(EnhancedError::InvalidParameter(
-            "Attachment filename cannot contain path separators".into()
+            "Attachment filename cannot contain path separators".into(),
         ));
     }
 
@@ -121,7 +121,7 @@ pub fn remove_attachment(pdf_path: &str, filename: &str) -> Result<()> {
 
     if filename.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Filename cannot be empty".into()
+            "Filename cannot be empty".into(),
         ));
     }
 
@@ -166,7 +166,7 @@ pub fn extract_attachment(pdf_path: &str, filename: &str) -> Result<Vec<u8>> {
 
     if filename.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Filename cannot be empty".into()
+            "Filename cannot be empty".into(),
         ));
     }
 
@@ -186,16 +186,18 @@ pub fn extract_attachment(pdf_path: &str, filename: &str) -> Result<Vec<u8>> {
 /// Extract attachment to file
 pub fn extract_attachment_to_file(pdf_path: &str, filename: &str, output_path: &str) -> Result<()> {
     let data = extract_attachment(pdf_path, filename)?;
-    fs::write(output_path, data)
-        .map_err(EnhancedError::Io)?;
+    fs::write(output_path, data).map_err(EnhancedError::Io)?;
     Ok(())
 }
 
 /// Add attachment from file
-pub fn add_attachment_from_file(pdf_path: &str, file_path: &str, description: Option<String>) -> Result<()> {
+pub fn add_attachment_from_file(
+    pdf_path: &str,
+    file_path: &str,
+    description: Option<String>,
+) -> Result<()> {
     // Read file
-    let data = fs::read(file_path)
-        .map_err(EnhancedError::Io)?;
+    let data = fs::read(file_path).map_err(EnhancedError::Io)?;
 
     // Get filename from path
     let filename = Path::new(file_path)
@@ -230,16 +232,18 @@ mod tests {
 
     #[test]
     fn test_attachment_with_mime_type() {
-        let attachment = Attachment::new("document.txt", vec![])
-            .with_mime_type("text/plain");
+        let attachment = Attachment::new("document.txt", vec![]).with_mime_type("text/plain");
         assert_eq!(attachment.mime_type, Some("text/plain".to_string()));
     }
 
     #[test]
     fn test_attachment_with_description() {
-        let attachment = Attachment::new("document.txt", vec![])
-            .with_description("Important document");
-        assert_eq!(attachment.description, Some("Important document".to_string()));
+        let attachment =
+            Attachment::new("document.txt", vec![]).with_description("Important document");
+        assert_eq!(
+            attachment.description,
+            Some("Important document".to_string())
+        );
     }
 
     #[test]
@@ -277,8 +281,7 @@ mod tests {
 
     #[test]
     fn test_add_attachment_empty_filename() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -292,8 +295,7 @@ mod tests {
 
     #[test]
     fn test_add_attachment_empty_data() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -307,8 +309,7 @@ mod tests {
 
     #[test]
     fn test_add_attachment_path_separator() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -322,8 +323,7 @@ mod tests {
 
     #[test]
     fn test_add_attachment_valid() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -349,8 +349,7 @@ mod tests {
 
     #[test]
     fn test_list_attachments_empty() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -369,8 +368,7 @@ mod tests {
 
     #[test]
     fn test_extract_attachment_not_found() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 

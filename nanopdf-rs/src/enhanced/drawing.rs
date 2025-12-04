@@ -2,9 +2,9 @@
 //!
 //! Provides a high-level API for drawing shapes, lines, and text directly on PDF pages.
 
-use crate::fitz::geometry::{Point, Matrix};
-use crate::fitz::path::Path;
 use super::error::{EnhancedError, Result};
+use crate::fitz::geometry::{Matrix, Point};
+use crate::fitz::path::Path;
 
 /// Color representation (RGBA)
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -75,7 +75,9 @@ impl Color {
                     .map_err(|_| EnhancedError::InvalidParameter("Invalid hex color".into()))?;
                 Ok(Self::from_u8(r, g, b, a))
             }
-            _ => Err(EnhancedError::InvalidParameter("Hex color must be #RRGGBB or #RRGGBBAA".into()))
+            _ => Err(EnhancedError::InvalidParameter(
+                "Hex color must be #RRGGBB or #RRGGBBAA".into(),
+            )),
         }
     }
 
@@ -92,15 +94,60 @@ impl Color {
 
 // Common colors
 impl Color {
-    pub const BLACK: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const WHITE: Color = Color { r: 1.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const RED: Color = Color { r: 1.0, g: 0.0, b: 0.0, a: 1.0 };
-    pub const GREEN: Color = Color { r: 0.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const BLUE: Color = Color { r: 0.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const YELLOW: Color = Color { r: 1.0, g: 1.0, b: 0.0, a: 1.0 };
-    pub const CYAN: Color = Color { r: 0.0, g: 1.0, b: 1.0, a: 1.0 };
-    pub const MAGENTA: Color = Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 };
-    pub const TRANSPARENT: Color = Color { r: 0.0, g: 0.0, b: 0.0, a: 0.0 };
+    pub const BLACK: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const WHITE: Color = Color {
+        r: 1.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const RED: Color = Color {
+        r: 1.0,
+        g: 0.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const GREEN: Color = Color {
+        r: 0.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const BLUE: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const YELLOW: Color = Color {
+        r: 1.0,
+        g: 1.0,
+        b: 0.0,
+        a: 1.0,
+    };
+    pub const CYAN: Color = Color {
+        r: 0.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const MAGENTA: Color = Color {
+        r: 1.0,
+        g: 0.0,
+        b: 1.0,
+        a: 1.0,
+    };
+    pub const TRANSPARENT: Color = Color {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 0.0,
+    };
 }
 
 /// Line cap style
@@ -354,7 +401,9 @@ impl DrawingContext {
     /// Draw a polygon (outline)
     pub fn draw_polygon(&mut self, points: &[Point]) -> Result<()> {
         if points.is_empty() {
-            return Err(EnhancedError::InvalidParameter("Polygon must have at least one point".into()));
+            return Err(EnhancedError::InvalidParameter(
+                "Polygon must have at least one point".into(),
+            ));
         }
 
         let mut path = Path::new();
@@ -369,7 +418,9 @@ impl DrawingContext {
     /// Fill a polygon
     pub fn fill_polygon(&mut self, points: &[Point]) -> Result<()> {
         if points.is_empty() {
-            return Err(EnhancedError::InvalidParameter("Polygon must have at least one point".into()));
+            return Err(EnhancedError::InvalidParameter(
+                "Polygon must have at least one point".into(),
+            ));
         }
 
         let mut path = Path::new();
@@ -384,7 +435,9 @@ impl DrawingContext {
     /// Draw a polyline (not closed)
     pub fn draw_polyline(&mut self, points: &[Point]) -> Result<()> {
         if points.is_empty() {
-            return Err(EnhancedError::InvalidParameter("Polyline must have at least one point".into()));
+            return Err(EnhancedError::InvalidParameter(
+                "Polyline must have at least one point".into(),
+            ));
         }
 
         let mut path = Path::new();
@@ -396,23 +449,51 @@ impl DrawingContext {
     }
 
     /// Draw a rounded rectangle
-    pub fn draw_rounded_rectangle(&mut self, x: f32, y: f32, width: f32, height: f32, radius: f32) -> Result<()> {
+    pub fn draw_rounded_rectangle(
+        &mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        radius: f32,
+    ) -> Result<()> {
         let path = self.create_rounded_rect_path(x, y, width, height, radius);
         self.stroke_path(&path)
     }
 
     /// Fill a rounded rectangle
-    pub fn fill_rounded_rectangle(&mut self, x: f32, y: f32, width: f32, height: f32, radius: f32) -> Result<()> {
+    pub fn fill_rounded_rectangle(
+        &mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        radius: f32,
+    ) -> Result<()> {
         let path = self.create_rounded_rect_path(x, y, width, height, radius);
         self.fill_path(&path)
     }
 
     /// Draw a Bezier curve
     #[allow(clippy::too_many_arguments)]
-    pub fn draw_bezier(&mut self, x1: f32, y1: f32, cx1: f32, cy1: f32, cx2: f32, cy2: f32, x2: f32, y2: f32) -> Result<()> {
+    pub fn draw_bezier(
+        &mut self,
+        x1: f32,
+        y1: f32,
+        cx1: f32,
+        cy1: f32,
+        cx2: f32,
+        cy2: f32,
+        x2: f32,
+        y2: f32,
+    ) -> Result<()> {
         let mut path = Path::new();
         path.move_to(Point::new(x1, y1));
-        path.curve_to(Point::new(cx1, cy1), Point::new(cx2, cy2), Point::new(x2, y2));
+        path.curve_to(
+            Point::new(cx1, cy1),
+            Point::new(cx2, cy2),
+            Point::new(x2, y2),
+        );
         self.stroke_path(&path)
     }
 
@@ -467,7 +548,14 @@ impl DrawingContext {
     }
 
     /// Create a rounded rectangle path
-    fn create_rounded_rect_path(&self, x: f32, y: f32, width: f32, height: f32, radius: f32) -> Path {
+    fn create_rounded_rect_path(
+        &self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+        radius: f32,
+    ) -> Path {
         let r = radius.min(width / 2.0).min(height / 2.0);
         const KAPPA: f32 = 0.552_284_8;
         let k = r * KAPPA;
@@ -579,9 +667,10 @@ impl PdfDrawing {
 
         // For now, just validate the page index
         if page_index > 10000 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Page index {} is too large", page_index)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Page index {} is too large",
+                page_index
+            )));
         }
 
         // Reset the drawing context
@@ -614,7 +703,7 @@ impl PdfDrawing {
         // Validate the path
         if pdf_path.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "PDF path cannot be empty".into()
+                "PDF path cannot be empty".into(),
             ));
         }
 
@@ -630,7 +719,7 @@ impl PdfDrawing {
         let data = std::fs::read(pdf_path)?;
         if !data.starts_with(b"%PDF-") {
             return Err(EnhancedError::InvalidParameter(
-                "Not a valid PDF file".into()
+                "Not a valid PDF file".into(),
             ));
         }
 
@@ -679,7 +768,7 @@ mod tests {
     fn test_color_from_hex() {
         let color = Color::from_hex("#FF8000").unwrap();
         assert_eq!(color.r, 1.0);
-        assert!((color.g - 0.5019607843137255).abs() < 0.01);
+        assert!((color.g - 0.501_960_8).abs() < 0.01);
         assert_eq!(color.b, 0.0);
         assert_eq!(color.a, 1.0);
     }
@@ -749,8 +838,7 @@ mod tests {
     #[test]
     fn test_drawing_context_set_colors() {
         let mut ctx = DrawingContext::new();
-        ctx.set_stroke_color(Color::RED)
-           .set_fill_color(Color::BLUE);
+        ctx.set_stroke_color(Color::RED).set_fill_color(Color::BLUE);
         assert_eq!(ctx.stroke_color, Color::RED);
         assert_eq!(ctx.fill_color, Color::BLUE);
     }
@@ -817,4 +905,3 @@ mod tests {
         assert_eq!(drawing.context.stroke_color, Color::BLACK);
     }
 }
-

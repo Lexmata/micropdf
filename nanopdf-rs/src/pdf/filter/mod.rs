@@ -4,32 +4,32 @@
 //! Supports the complete set of PDF filters as defined in PDF 1.7 specification.
 
 // Module declarations
-pub mod params;
-pub mod flate;
-pub mod lzw;
 pub mod ascii85;
 pub mod asciihex;
-pub mod runlength;
 pub mod ccitt;
-pub mod dct;
-pub mod jpx;
-pub mod jbig2;
-pub mod predictor;
 pub mod chain;
+pub mod dct;
+pub mod flate;
+pub mod jbig2;
+pub mod jpx;
+pub mod lzw;
+pub mod params;
+pub mod predictor;
+pub mod runlength;
 
 // Re-exports
-pub use params::*;
-pub use flate::*;
-pub use lzw::*;
 pub use ascii85::*;
 pub use asciihex::*;
-pub use runlength::*;
 pub use ccitt::*;
-pub use dct::*;
-pub use jpx::*;
-pub use jbig2::*;
-pub use predictor::*;
 pub use chain::*;
+pub use dct::*;
+pub use flate::*;
+pub use jbig2::*;
+pub use jpx::*;
+pub use lzw::*;
+pub use params::*;
+pub use predictor::*;
+pub use runlength::*;
 
 /// PDF Filter types as defined in PDF specification
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -97,7 +97,10 @@ mod tests {
 
     #[test]
     fn test_filter_type_from_name() {
-        assert_eq!(FilterType::from_name("FlateDecode"), Some(FilterType::FlateDecode));
+        assert_eq!(
+            FilterType::from_name("FlateDecode"),
+            Some(FilterType::FlateDecode)
+        );
         assert_eq!(FilterType::from_name("Fl"), Some(FilterType::FlateDecode));
         assert_eq!(FilterType::from_name("LZW"), Some(FilterType::LZWDecode));
         assert_eq!(FilterType::from_name("Invalid"), None);
@@ -110,4 +113,3 @@ mod tests {
         assert_eq!(FilterType::ASCII85Decode.to_name(), "ASCII85Decode");
     }
 }
-

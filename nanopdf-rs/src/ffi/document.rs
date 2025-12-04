@@ -1,7 +1,7 @@
 //! C FFI for document - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
 
-use super::{Handle, HandleStore, DOCUMENTS, STREAMS};
+use super::{DOCUMENTS, Handle, HandleStore, STREAMS};
 use std::ffi::{c_char, c_float};
 use std::sync::LazyLock;
 
@@ -15,9 +15,9 @@ pub static OUTLINES: LazyLock<HandleStore<Outline>> = LazyLock::new(HandleStore:
 pub struct Page {
     pub doc_handle: Handle,
     pub page_num: i32,
-    pub bounds: [f32; 4], // x0, y0, x1, y1
+    pub bounds: [f32; 4],         // x0, y0, x1, y1
     pub annotations: Vec<Handle>, // List of annotation handles on this page
-    pub widgets: Vec<Handle>, // List of form field widget handles on this page
+    pub widgets: Vec<Handle>,     // List of form field widget handles on this page
 }
 
 impl Page {
@@ -97,7 +97,6 @@ pub struct OutlineItem {
 pub struct Outline {
     pub items: Vec<OutlineItem>,
 }
-
 
 /// Internal document state
 pub struct Document {
@@ -283,22 +282,14 @@ pub extern "C" fn fz_page_number_from_location(
     chapter: i32,
     page: i32,
 ) -> i32 {
-    if chapter == 0 {
-        page
-    } else {
-        -1
-    }
+    if chapter == 0 { page } else { -1 }
 }
 
 /// Check document permission
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_has_permission(_ctx: Handle, doc: Handle, _permission: i32) -> i32 {
     // For now, allow all permissions if document is open
-    if DOCUMENTS.get(doc).is_some() {
-        1
-    } else {
-        0
-    }
+    if DOCUMENTS.get(doc).is_some() { 1 } else { 0 }
 }
 
 // Permission flags
@@ -351,7 +342,12 @@ pub extern "C" fn fz_load_page(_ctx: Handle, doc: Handle, page_num: i32) -> Hand
 
 /// Load page by location (chapter, page)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_load_chapter_page(_ctx: Handle, doc: Handle, chapter: i32, page: i32) -> Handle {
+pub extern "C" fn fz_load_chapter_page(
+    _ctx: Handle,
+    doc: Handle,
+    chapter: i32,
+    page: i32,
+) -> Handle {
     if chapter != 0 {
         return 0; // PDF only has chapter 0
     }
@@ -393,7 +389,11 @@ pub extern "C" fn fz_bound_page(_ctx: Handle, page: Handle) -> super::geometry::
 
 /// Get page bounds with specified box type
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_bound_page_box(_ctx: Handle, page: Handle, _box_type: i32) -> super::geometry::fz_rect {
+pub extern "C" fn fz_bound_page_box(
+    _ctx: Handle,
+    page: Handle,
+    _box_type: i32,
+) -> super::geometry::fz_rect {
     fz_bound_page(_ctx, page)
 }
 
@@ -606,10 +606,14 @@ pub extern "C" fn fz_resolve_link(
         Some(n) => {
             // Set coordinates to top-left of page
             if !xp.is_null() {
-                unsafe { *xp = 0.0; }
+                unsafe {
+                    *xp = 0.0;
+                }
             }
             if !yp.is_null() {
-                unsafe { *yp = 0.0; }
+                unsafe {
+                    *yp = 0.0;
+                }
             }
             n
         }
@@ -760,9 +764,9 @@ pub extern "C" fn fz_clone_document(_ctx: Handle, doc: Handle) -> Handle {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::STREAMS;
     use super::super::stream::Stream;
+    use super::*;
 
     #[test]
     fn test_document_handle() {
@@ -1119,11 +1123,23 @@ mod tests {
     #[test]
     fn test_resolve_link_invalid() {
         // Null URI
-        let result1 = fz_resolve_link(0, 0, std::ptr::null(), std::ptr::null_mut(), std::ptr::null_mut());
+        let result1 = fz_resolve_link(
+            0,
+            0,
+            std::ptr::null(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        );
         assert_eq!(result1, -1);
 
         // Invalid doc
-        let result2 = fz_resolve_link(0, 0, c"#page=1".as_ptr(), std::ptr::null_mut(), std::ptr::null_mut());
+        let result2 = fz_resolve_link(
+            0,
+            0,
+            c"#page=1".as_ptr(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        );
         assert_eq!(result2, -1);
     }
 
@@ -1133,7 +1149,13 @@ mod tests {
         let doc = Document::new(pdf_data.to_vec());
         let doc_handle = DOCUMENTS.insert(doc);
 
-        let result = fz_resolve_link(0, doc_handle, c"invalid".as_ptr(), std::ptr::null_mut(), std::ptr::null_mut());
+        let result = fz_resolve_link(
+            0,
+            doc_handle,
+            c"invalid".as_ptr(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        );
         assert_eq!(result, -1);
 
         fz_drop_document(0, doc_handle);
@@ -1156,4 +1178,3 @@ mod tests {
         assert!(result.is_null());
     }
 }
-

@@ -1,8 +1,8 @@
 //! PDF Object Copy Operations FFI Functions
 
 use super::super::Handle;
-use super::types::{PdfObj, PdfObjHandle, PdfObjType, PDF_OBJECTS};
 use super::refcount::with_obj;
+use super::types::{PDF_OBJECTS, PdfObj, PdfObjHandle, PdfObjType};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_copy_array(_ctx: Handle, _doc: Handle, array: PdfObjHandle) -> PdfObjHandle {
@@ -54,25 +54,21 @@ fn deep_copy_obj_inner(obj: &PdfObj) -> PdfObj {
         PdfObjType::Real(r) => PdfObjType::Real(*r),
         PdfObjType::Name(s) => PdfObjType::Name(s.clone()),
         PdfObjType::String(s) => PdfObjType::String(s.clone()),
-        PdfObjType::Array(arr) => {
-            PdfObjType::Array(arr.iter().map(deep_copy_obj_inner).collect())
-        }
-        PdfObjType::Dict(entries) => {
-            PdfObjType::Dict(
-                entries.iter()
-                    .map(|(k, v)| (k.clone(), deep_copy_obj_inner(v)))
-                    .collect()
-            )
-        }
-        PdfObjType::Indirect { num, generation } => {
-            PdfObjType::Indirect { num: *num, generation: *generation }
-        }
-        PdfObjType::Stream { dict, data } => {
-            PdfObjType::Stream {
-                dict: Box::new(deep_copy_obj_inner(dict)),
-                data: data.clone(),
-            }
-        }
+        PdfObjType::Array(arr) => PdfObjType::Array(arr.iter().map(deep_copy_obj_inner).collect()),
+        PdfObjType::Dict(entries) => PdfObjType::Dict(
+            entries
+                .iter()
+                .map(|(k, v)| (k.clone(), deep_copy_obj_inner(v)))
+                .collect(),
+        ),
+        PdfObjType::Indirect { num, generation } => PdfObjType::Indirect {
+            num: *num,
+            generation: *generation,
+        },
+        PdfObjType::Stream { dict, data } => PdfObjType::Stream {
+            dict: Box::new(deep_copy_obj_inner(dict)),
+            data: data.clone(),
+        },
     };
 
     PdfObj {
@@ -93,4 +89,3 @@ pub extern "C" fn pdf_deep_copy_obj(_ctx: Handle, _doc: Handle, obj: PdfObjHandl
         None => 0,
     }
 }
-

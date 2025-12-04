@@ -12,11 +12,11 @@ use std::sync::Arc;
 #[repr(u16)]
 pub enum TextLanguage {
     Unset = 0,
-    Ur = 572,      // FZ_LANG_TAG2('u','r')
-    Urd = 15444,   // FZ_LANG_TAG3('u','r','d')
-    Ko = 299,      // FZ_LANG_TAG2('k','o')
-    Ja = 271,      // FZ_LANG_TAG2('j','a')
-    Zh = 703,      // FZ_LANG_TAG2('z','h')
+    Ur = 572,       // FZ_LANG_TAG2('u','r')
+    Urd = 15444,    // FZ_LANG_TAG3('u','r','d')
+    Ko = 299,       // FZ_LANG_TAG2('k','o')
+    Ja = 271,       // FZ_LANG_TAG2('j','a')
+    Zh = 703,       // FZ_LANG_TAG2('z','h')
     ZhHans = 18982, // FZ_LANG_TAG3('z','h','s')
     ZhHant = 19009, // FZ_LANG_TAG3('z','h','t')
 }
@@ -383,12 +383,7 @@ impl Text {
     }
 
     /// Measure a UTF-8 string without adding it
-    pub fn measure_string(
-        _font: &Font,
-        trm: Matrix,
-        s: &str,
-        wmode: bool,
-    ) -> Matrix {
+    pub fn measure_string(_font: &Font, trm: Matrix, s: &str, wmode: bool) -> Matrix {
         let mut result_trm = trm;
 
         for _ch in s.chars() {

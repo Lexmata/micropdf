@@ -2,7 +2,7 @@
 //! Safe Rust implementation using handle-based resource management
 
 use super::{Handle, HandleStore};
-use crate::fitz::output::{Output, MemoryOutput};
+use crate::fitz::output::{MemoryOutput, Output};
 use std::ffi::{c_char, c_void};
 use std::sync::LazyLock;
 
@@ -10,7 +10,8 @@ use std::sync::LazyLock;
 pub static OUTPUTS: LazyLock<HandleStore<Output>> = LazyLock::new(HandleStore::default);
 
 /// Memory output storage (separate since it has different methods)
-pub static MEMORY_OUTPUTS: LazyLock<HandleStore<MemoryOutput>> = LazyLock::new(HandleStore::default);
+pub static MEMORY_OUTPUTS: LazyLock<HandleStore<MemoryOutput>> =
+    LazyLock::new(HandleStore::default);
 
 /// Create a new output to a file
 ///
@@ -72,12 +73,7 @@ pub extern "C" fn fz_drop_output(_ctx: Handle, out: Handle) {
 /// # Safety
 /// Caller must ensure `data` points to valid memory of at least `size` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_write_data(
-    _ctx: Handle,
-    out: Handle,
-    data: *const c_void,
-    size: usize,
-) {
+pub extern "C" fn fz_write_data(_ctx: Handle, out: Handle, data: *const c_void, size: usize) {
     if data.is_null() || size == 0 {
         return;
     }
@@ -396,7 +392,8 @@ pub extern "C" fn fz_write_base64(
             let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
 
             // Simple base64 encoding
-            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+            const BASE64_CHARS: &[u8] =
+                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
             let mut col = 0;
 
             for chunk in data_slice.chunks(3) {
@@ -408,7 +405,8 @@ pub extern "C" fn fz_write_base64(
                 let _ = guard.write_byte(BASE64_CHARS[(((b1 << 4) | (b2 >> 4)) & 0x3F) as usize]);
 
                 if chunk.len() > 1 {
-                    let _ = guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
+                    let _ =
+                        guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
                 } else {
                     let _ = guard.write_byte(b'=');
                 }
@@ -434,12 +432,7 @@ pub extern "C" fn fz_write_base64(
 /// # Safety
 /// Caller must ensure `data` points to valid memory of at least `size` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_write_base64_uri(
-    _ctx: Handle,
-    out: Handle,
-    data: *const u8,
-    size: usize,
-) {
+pub extern "C" fn fz_write_base64_uri(_ctx: Handle, out: Handle, data: *const u8, size: usize) {
     if data.is_null() || size == 0 {
         return;
     }
@@ -450,7 +443,8 @@ pub extern "C" fn fz_write_base64_uri(
             let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
 
             // URL-safe base64 encoding (- and _ instead of + and /)
-            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+            const BASE64_CHARS: &[u8] =
+                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
             for chunk in data_slice.chunks(3) {
                 let b1 = chunk[0];
@@ -461,7 +455,8 @@ pub extern "C" fn fz_write_base64_uri(
                 let _ = guard.write_byte(BASE64_CHARS[(((b1 << 4) | (b2 >> 4)) & 0x3F) as usize]);
 
                 if chunk.len() > 1 {
-                    let _ = guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
+                    let _ =
+                        guard.write_byte(BASE64_CHARS[(((b2 << 2) | (b3 >> 6)) & 0x3F) as usize]);
                 }
 
                 if chunk.len() > 2 {
@@ -474,12 +469,7 @@ pub extern "C" fn fz_write_base64_uri(
 
 /// Write bits to output (for compressed data)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_write_bits(
-    _ctx: Handle,
-    out: Handle,
-    value: u32,
-    count: i32,
-) {
+pub extern "C" fn fz_write_bits(_ctx: Handle, out: Handle, value: u32, count: i32) {
     if count <= 0 || count > 32 {
         return;
     }
@@ -725,8 +715,8 @@ mod tests {
         let ctx = 0;
         let out = fz_new_output_with_path(ctx, c_path.as_ptr(), 0);
 
-        fz_write_float_be(ctx, out, 3.14159);
-        fz_write_float_le(ctx, out, 2.71828);
+        fz_write_float_be(ctx, out, std::f32::consts::PI);
+        fz_write_float_le(ctx, out, std::f32::consts::E);
 
         fz_close_output(ctx, out);
         fz_drop_output(ctx, out);
@@ -812,4 +802,3 @@ mod tests {
         assert_eq!(content[0], 0xFF);
     }
 }
-

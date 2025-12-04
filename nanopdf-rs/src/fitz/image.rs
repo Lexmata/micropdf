@@ -118,9 +118,7 @@ impl Image {
         data: Vec<u8>,
     ) -> Result<Self> {
         if width <= 0 || height <= 0 {
-            return Err(Error::Argument(
-                "Image dimensions must be positive".into(),
-            ));
+            return Err(Error::Argument("Image dimensions must be positive".into()));
         }
 
         let n = colorspace.n();
@@ -161,15 +159,10 @@ impl Image {
         data: Vec<u8>,
     ) -> Result<Self> {
         if width <= 0 || height <= 0 {
-            return Err(Error::Argument(
-                "Image dimensions must be positive".into(),
-            ));
+            return Err(Error::Argument("Image dimensions must be positive".into()));
         }
 
-        let n = colorspace
-            .as_ref()
-            .map(|cs| cs.n())
-            .unwrap_or(1);
+        let n = colorspace.as_ref().map(|cs| cs.n()).unwrap_or(1);
 
         Ok(Self {
             width,
@@ -191,9 +184,7 @@ impl Image {
     /// Create an image mask (stencil)
     pub fn from_mask(width: i32, height: i32, data: Vec<u8>) -> Result<Self> {
         if width <= 0 || height <= 0 {
-            return Err(Error::Argument(
-                "Image dimensions must be positive".into(),
-            ));
+            return Err(Error::Argument("Image dimensions must be positive".into()));
         }
 
         Ok(Self {
@@ -314,9 +305,9 @@ impl Image {
 
                 let mut decoder = ZlibDecoder::new(&self.data[..]);
                 let mut decoded = Vec::new();
-                decoder.read_to_end(&mut decoded).map_err(|e| {
-                    Error::Generic(format!("Flate decode failed: {}", e))
-                })?;
+                decoder
+                    .read_to_end(&mut decoded)
+                    .map_err(|e| Error::Generic(format!("Flate decode failed: {}", e)))?;
                 decoded
             }
             ImageFormat::Jpeg => {
@@ -332,7 +323,7 @@ impl Image {
                 decode_jbig2(&self.data, None)?
             }
             ImageFormat::Ccitt => {
-                use crate::pdf::filter::{decode_ccitt_fax, CCITTFaxDecodeParams};
+                use crate::pdf::filter::{CCITTFaxDecodeParams, decode_ccitt_fax};
                 // Use default CCITT parameters - caller should provide proper params
                 let params = CCITTFaxDecodeParams::default();
                 decode_ccitt_fax(&self.data, &params)?
@@ -441,11 +432,7 @@ impl Image {
     }
 
     /// Get scaled pixmap
-    pub fn get_scaled_pixmap(
-        &mut self,
-        ctm: &Matrix,
-        subarea: Option<IRect>,
-    ) -> Result<Pixmap> {
+    pub fn get_scaled_pixmap(&mut self, ctm: &Matrix, subarea: Option<IRect>) -> Result<Pixmap> {
         // Calculate target dimensions from CTM
         let scale_x = (ctm.a * ctm.a + ctm.b * ctm.b).sqrt();
         let scale_y = (ctm.c * ctm.c + ctm.d * ctm.d).sqrt();
@@ -468,13 +455,11 @@ impl Image {
 
         // Perform actual image scaling
         use image::{ImageBuffer, RgbaImage, imageops::FilterType};
-        
+
         // Convert pixmap to image buffer (assuming RGBA format)
-        let img: RgbaImage = ImageBuffer::from_raw(
-            width as u32,
-            height as u32,
-            base_pixmap.samples().to_vec(),
-        ).ok_or_else(|| Error::Generic("Failed to create image buffer".into()))?;
+        let img: RgbaImage =
+            ImageBuffer::from_raw(width as u32, height as u32, base_pixmap.samples().to_vec())
+                .ok_or_else(|| Error::Generic("Failed to create image buffer".into()))?;
 
         // Resize image
         let scaled_img = image::imageops::resize(
@@ -541,7 +526,8 @@ impl Image {
             .with_guessed_format()
             .map_err(|e| Error::Generic(format!("Failed to detect image format: {}", e)))?;
 
-        let img = reader.decode()
+        let img = reader
+            .decode()
             .map_err(|e| Error::Generic(format!("Failed to decode image: {}", e)))?;
 
         // Convert to RGBA
@@ -619,8 +605,8 @@ mod tests {
         let cs = Colorspace::device_rgb();
         let data = vec![1, 2, 3, 4, 5]; // Compressed data
 
-        let img = Image::from_compressed(width, height, 8, Some(cs), ImageFormat::Flate, data)
-            .unwrap();
+        let img =
+            Image::from_compressed(width, height, 8, Some(cs), ImageFormat::Flate, data).unwrap();
 
         assert_eq!(img.width(), width);
         assert_eq!(img.height(), height);
@@ -695,8 +681,7 @@ mod tests {
     #[test]
     fn test_image_data() {
         let data = vec![1, 2, 3, 4, 5];
-        let img = Image::from_compressed(10, 10, 8, None, ImageFormat::Raw, data.clone())
-            .unwrap();
+        let img = Image::from_compressed(10, 10, 8, None, ImageFormat::Raw, data.clone()).unwrap();
 
         assert_eq!(img.data(), &data[..]);
     }
@@ -723,8 +708,8 @@ mod tests {
         let raw_img = Image::new(10, 10, None);
         assert!(!raw_img.is_compressed());
 
-        let comp_img = Image::from_compressed(10, 10, 8, None, ImageFormat::Flate, vec![1, 2, 3])
-            .unwrap();
+        let comp_img =
+            Image::from_compressed(10, 10, 8, None, ImageFormat::Flate, vec![1, 2, 3]).unwrap();
         assert!(comp_img.is_compressed());
     }
 }

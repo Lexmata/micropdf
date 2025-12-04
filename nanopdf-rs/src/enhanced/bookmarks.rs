@@ -53,20 +53,22 @@ impl Bookmark {
     pub fn validate(&self, max_page: usize) -> Result<()> {
         if self.title.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "Bookmark title cannot be empty".into()
+                "Bookmark title cannot be empty".into(),
             ));
         }
 
         if self.title.len() > 500 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Bookmark title too long: {} (max 500 chars)", self.title.len())
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Bookmark title too long: {} (max 500 chars)",
+                self.title.len()
+            )));
         }
 
         if self.page >= max_page {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Bookmark page {} exceeds document page count {}", self.page, max_page)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Bookmark page {} exceeds document page count {}",
+                self.page, max_page
+            )));
         }
 
         // Validate children recursively
@@ -112,7 +114,7 @@ pub fn remove_bookmark(pdf_path: &str, title: &str) -> Result<()> {
 
     if title.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Bookmark title cannot be empty".into()
+            "Bookmark title cannot be empty".into(),
         ));
     }
 
@@ -273,8 +275,7 @@ mod tests {
 
     #[test]
     fn test_add_bookmark_valid() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -294,8 +295,7 @@ mod tests {
 
     #[test]
     fn test_remove_bookmark_empty_title() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
@@ -314,8 +314,7 @@ mod tests {
 
     #[test]
     fn test_get_bookmarks_empty() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 

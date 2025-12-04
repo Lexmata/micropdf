@@ -18,7 +18,9 @@ pub fn compress_content_streams(pdf_path: &str) -> Result<()> {
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: Find all stream objects and compress them with FlateDecode
@@ -49,7 +51,9 @@ pub fn remove_unused_objects(pdf_path: &str) -> Result<usize> {
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: Garbage collection for PDF objects
@@ -77,7 +81,9 @@ pub fn flatten_form_fields(pdf_path: &str) -> Result<()> {
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: Form field flattening
@@ -102,16 +108,19 @@ pub fn optimize_images(pdf_path: &str, quality: u8) -> Result<()> {
     }
 
     if quality > 100 {
-        return Err(EnhancedError::InvalidParameter(
-            format!("Quality must be 0-100, got {}", quality)
-        ));
+        return Err(EnhancedError::InvalidParameter(format!(
+            "Quality must be 0-100, got {}",
+            quality
+        )));
     }
 
     let pdf_data = fs::read(pdf_path)?;
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: Image optimization
@@ -139,7 +148,9 @@ pub fn remove_duplicate_streams(pdf_path: &str) -> Result<usize> {
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: Duplicate stream detection
@@ -166,7 +177,9 @@ pub fn linearize(pdf_path: &str) -> Result<()> {
 
     // Verify it's a PDF
     if !pdf_data.starts_with(b"%PDF-") {
-        return Err(EnhancedError::InvalidParameter("Not a valid PDF file".into()));
+        return Err(EnhancedError::InvalidParameter(
+            "Not a valid PDF file".into(),
+        ));
     }
 
     // Implementation: PDF linearization
@@ -186,8 +199,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     fn create_test_pdf() -> Result<NamedTempFile> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
         Ok(temp)
@@ -208,8 +220,7 @@ mod tests {
 
     #[test]
     fn test_compress_not_pdf() -> Result<()> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"Not a PDF")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
 

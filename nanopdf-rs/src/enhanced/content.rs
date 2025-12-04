@@ -78,7 +78,12 @@ impl Watermark {
              ET\n\
              Q\n",
             self.font_size,
-            cos_theta, sin_theta, -sin_theta, cos_theta, self.x, self.y,
+            cos_theta,
+            sin_theta,
+            -sin_theta,
+            cos_theta,
+            self.x,
+            self.y,
             self.escape_text(&self.text)
         )
     }
@@ -103,21 +108,22 @@ impl Watermark {
         // Validate parameters
         if self.text.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "Watermark text cannot be empty".into()
+                "Watermark text cannot be empty".into(),
             ));
         }
 
         if self.font_size <= 0.0 || self.font_size > 1000.0 {
-            return Err(EnhancedError::InvalidParameter(
-                format!("Invalid font size: {} (must be 0-1000)", self.font_size)
-            ));
+            return Err(EnhancedError::InvalidParameter(format!(
+                "Invalid font size: {} (must be 0-1000)",
+                self.font_size
+            )));
         }
 
         // Read input PDF
         let data = fs::read(input_path)?;
         if !data.starts_with(b"%PDF-") {
             return Err(EnhancedError::InvalidParameter(
-                "Not a valid PDF file".into()
+                "Not a valid PDF file".into(),
             ));
         }
 
@@ -137,7 +143,12 @@ impl Watermark {
     }
 
     /// Apply watermark to specific pages
-    pub fn apply_to_pages(&self, input_path: &str, output_path: &str, pages: &[usize]) -> Result<()> {
+    pub fn apply_to_pages(
+        &self,
+        input_path: &str,
+        output_path: &str,
+        pages: &[usize],
+    ) -> Result<()> {
         // Verify input exists
         if !Path::new(input_path).exists() {
             return Err(EnhancedError::Io(std::io::Error::new(
@@ -148,14 +159,14 @@ impl Watermark {
 
         if pages.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "Pages list cannot be empty".into()
+                "Pages list cannot be empty".into(),
             ));
         }
 
         // Validate parameters
         if self.text.is_empty() {
             return Err(EnhancedError::InvalidParameter(
-                "Watermark text cannot be empty".into()
+                "Watermark text cannot be empty".into(),
             ));
         }
 
@@ -163,7 +174,7 @@ impl Watermark {
         let data = fs::read(input_path)?;
         if !data.starts_with(b"%PDF-") {
             return Err(EnhancedError::InvalidParameter(
-                "Not a valid PDF file".into()
+                "Not a valid PDF file".into(),
             ));
         }
 
@@ -200,26 +211,28 @@ pub fn add_text(
 
     if text.is_empty() {
         return Err(EnhancedError::InvalidParameter(
-            "Text cannot be empty".into()
+            "Text cannot be empty".into(),
         ));
     }
 
     if font_size <= 0.0 || font_size > 1000.0 {
-        return Err(EnhancedError::InvalidParameter(
-            format!("Invalid font size: {}", font_size)
-        ));
+        return Err(EnhancedError::InvalidParameter(format!(
+            "Invalid font size: {}",
+            font_size
+        )));
     }
 
     // Read input PDF
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
     // Generate text content stream
-    let escaped_text = text.replace('\\', "\\\\")
+    let escaped_text = text
+        .replace('\\', "\\\\")
         .replace('(', "\\(")
         .replace(')', "\\)");
 
@@ -266,16 +279,17 @@ pub fn add_image(
 
     // Validate dimensions
     if width <= 0.0 || height <= 0.0 {
-        return Err(EnhancedError::InvalidParameter(
-            format!("Invalid image dimensions: {}x{}", width, height)
-        ));
+        return Err(EnhancedError::InvalidParameter(format!(
+            "Invalid image dimensions: {}x{}",
+            width, height
+        )));
     }
 
     // Read input PDF
     let data = fs::read(input_path)?;
     if !data.starts_with(b"%PDF-") {
         return Err(EnhancedError::InvalidParameter(
-            "Not a valid PDF file".into()
+            "Not a valid PDF file".into(),
         ));
     }
 
@@ -286,10 +300,7 @@ pub fn add_image(
     // 4. Write modified PDF
 
     // For now, create a placeholder
-    let content = format!(
-        "q\n{} 0 0 {} {} {} cm\n/Im1 Do\nQ\n",
-        width, height, x, y
-    );
+    let content = format!("q\n{} 0 0 {} {} {} cm\n/Im1 Do\nQ\n", width, height, x, y);
 
     let mut writer = PdfWriter::new();
     writer.add_page_with_content(612.0, 792.0, &content)?;
@@ -305,8 +316,7 @@ mod tests {
     use tempfile::NamedTempFile;
 
     fn create_test_pdf() -> Result<NamedTempFile> {
-        let mut temp = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let mut temp = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
         temp.write_all(b"%PDF-1.4\n")
             .map_err(|e| EnhancedError::Generic(e.to_string()))?;
         Ok(temp)
@@ -378,23 +388,19 @@ mod tests {
         let wm = Watermark::new("DRAFT");
         let temp_out = NamedTempFile::new().unwrap();
 
-        let result = wm.apply(
-            "/nonexistent/file.pdf",
-            temp_out.path().to_str().unwrap()
-        );
+        let result = wm.apply("/nonexistent/file.pdf", temp_out.path().to_str().unwrap());
         assert!(result.is_err());
     }
 
     #[test]
     fn test_watermark_apply_empty_text() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let wm = Watermark::new("");
         let result = wm.apply(
             temp_in.path().to_str().unwrap(),
-            temp_out.path().to_str().unwrap()
+            temp_out.path().to_str().unwrap(),
         );
 
         assert!(result.is_err());
@@ -404,13 +410,12 @@ mod tests {
     #[test]
     fn test_watermark_apply_invalid_font_size() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let wm = Watermark::new("TEST").with_font_size(0.0);
         let result = wm.apply(
             temp_in.path().to_str().unwrap(),
-            temp_out.path().to_str().unwrap()
+            temp_out.path().to_str().unwrap(),
         );
 
         assert!(result.is_err());
@@ -420,8 +425,7 @@ mod tests {
     #[test]
     fn test_watermark_apply_valid() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let wm = Watermark::new("DRAFT")
             .with_position(300.0, 400.0)
@@ -430,7 +434,7 @@ mod tests {
 
         wm.apply(
             temp_in.path().to_str().unwrap(),
-            temp_out.path().to_str().unwrap()
+            temp_out.path().to_str().unwrap(),
         )?;
 
         // Verify output exists and is a PDF
@@ -443,14 +447,13 @@ mod tests {
     #[test]
     fn test_watermark_apply_to_pages() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let wm = Watermark::new("DRAFT");
         wm.apply_to_pages(
             temp_in.path().to_str().unwrap(),
             temp_out.path().to_str().unwrap(),
-            &[0, 2, 4]
+            &[0, 2, 4],
         )?;
 
         assert!(temp_out.path().exists());
@@ -460,8 +463,7 @@ mod tests {
     #[test]
     fn test_add_text_valid() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         add_text(
             temp_in.path().to_str().unwrap(),
@@ -470,7 +472,7 @@ mod tests {
             "Hello World",
             100.0,
             700.0,
-            12.0
+            12.0,
         )?;
 
         let data = fs::read(temp_out.path())?;
@@ -483,8 +485,7 @@ mod tests {
     #[test]
     fn test_add_text_empty() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let result = add_text(
             temp_in.path().to_str().unwrap(),
@@ -493,7 +494,7 @@ mod tests {
             "",
             100.0,
             700.0,
-            12.0
+            12.0,
         );
 
         assert!(result.is_err());
@@ -503,8 +504,7 @@ mod tests {
     #[test]
     fn test_add_image_nonexistent_image() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let result = add_image(
             temp_in.path().to_str().unwrap(),
@@ -514,7 +514,7 @@ mod tests {
             100.0,
             600.0,
             200.0,
-            150.0
+            150.0,
         );
 
         assert!(result.is_err());
@@ -524,10 +524,8 @@ mod tests {
     #[test]
     fn test_add_image_invalid_dimensions() -> Result<()> {
         let temp_in = create_test_pdf()?;
-        let temp_out = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
-        let temp_img = NamedTempFile::new()
-            .map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_out = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
+        let temp_img = NamedTempFile::new().map_err(|e| EnhancedError::Generic(e.to_string()))?;
 
         let result = add_image(
             temp_in.path().to_str().unwrap(),
@@ -536,8 +534,8 @@ mod tests {
             temp_img.path().to_str().unwrap(),
             100.0,
             600.0,
-            0.0,  // Invalid width
-            150.0
+            0.0, // Invalid width
+            150.0,
         );
 
         assert!(result.is_err());

@@ -21,10 +21,9 @@
 //! inspired by pypdf and other Python PDF libraries. This includes document
 //! creation, advanced page manipulation, watermarking, optimization, and more.
 
+pub mod enhanced;
+pub mod ffi;
 pub mod fitz;
 pub mod pdf;
-pub mod ffi;
-pub mod enhanced;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-

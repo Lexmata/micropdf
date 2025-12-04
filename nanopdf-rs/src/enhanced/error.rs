@@ -72,7 +72,7 @@ mod tests {
         let enhanced_err: EnhancedError = io_err.into();
 
         match enhanced_err {
-            EnhancedError::Io(_) => {},
+            EnhancedError::Io(_) => {}
             _ => panic!("Expected Io error"),
         }
     }

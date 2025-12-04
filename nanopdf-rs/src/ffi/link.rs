@@ -7,8 +7,8 @@ use std::os::raw::c_char;
 use std::sync::LazyLock;
 
 use super::{Handle, HandleStore};
-use crate::fitz::link::{Link, LinkList};
 use crate::fitz::geometry::Rect;
+use crate::fitz::link::{Link, LinkList};
 
 /// Global storage for links
 pub static LINKS: LazyLock<HandleStore<Link>> = LazyLock::new(HandleStore::new);
@@ -73,10 +73,7 @@ pub extern "C" fn fz_drop_link(_ctx: Handle, link: Handle) {
 /// # Returns
 /// Rectangle struct
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_link_rect(
-    _ctx: Handle,
-    link: Handle,
-) -> super::geometry::fz_rect {
+pub extern "C" fn fz_link_rect(_ctx: Handle, link: Handle) -> super::geometry::fz_rect {
     if let Some(l) = LINKS.get(link) {
         if let Ok(guard) = l.lock() {
             return super::geometry::fz_rect {
@@ -105,12 +102,7 @@ pub extern "C" fn fz_link_rect(
 /// # Returns
 /// Number of bytes written (excluding null terminator)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_link_uri(
-    _ctx: Handle,
-    link: Handle,
-    buf: *mut c_char,
-    bufsize: i32,
-) -> i32 {
+pub extern "C" fn fz_link_uri(_ctx: Handle, link: Handle, buf: *mut c_char, bufsize: i32) -> i32 {
     if buf.is_null() || bufsize <= 0 {
         return 0;
     }
@@ -121,11 +113,7 @@ pub extern "C" fn fz_link_uri(
             let copy_len = uri_bytes.len().min((bufsize - 1) as usize);
 
             unsafe {
-                std::ptr::copy_nonoverlapping(
-                    uri_bytes.as_ptr(),
-                    buf as *mut u8,
-                    copy_len,
-                );
+                std::ptr::copy_nonoverlapping(uri_bytes.as_ptr(), buf as *mut u8, copy_len);
                 *buf.add(copy_len) = 0; // Null terminate
             }
 
@@ -211,11 +199,7 @@ pub extern "C" fn fz_drop_link_list(_ctx: Handle, list: Handle) {
 /// * `list` - Handle to the link list
 /// * `link` - Handle to the link to add
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_link_list_add(
-    _ctx: Handle,
-    list: Handle,
-    link: Handle,
-) {
+pub extern "C" fn fz_link_list_add(_ctx: Handle, list: Handle, link: Handle) {
     if let Some(list_arc) = LINK_LISTS.get(list) {
         if let Some(link_arc) = LINKS.get(link) {
             if let (Ok(mut list_guard), Ok(link_guard)) = (list_arc.lock(), link_arc.lock()) {
@@ -252,12 +236,7 @@ pub extern "C" fn fz_link_list_count(_ctx: Handle, list: Handle) -> i32 {
 /// # Returns
 /// Handle to the link at that point, or 0 if none found
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_link_list_find_at_point(
-    _ctx: Handle,
-    list: Handle,
-    x: f32,
-    y: f32,
-) -> Handle {
+pub extern "C" fn fz_link_list_find_at_point(_ctx: Handle, list: Handle, x: f32, y: f32) -> Handle {
     if let Some(l) = LINK_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
             if let Some(link) = guard.link_at_point(x, y) {
@@ -602,4 +581,3 @@ mod tests {
         fz_drop_link_list(0, list);
     }
 }
-

@@ -1,8 +1,8 @@
 //! PDF Object Creation FFI Functions
 
-use std::ffi::{c_char, CStr};
 use super::super::Handle;
-use super::types::{PdfObj, PdfObjHandle, PDF_OBJECTS};
+use super::types::{PDF_OBJECTS, PdfObj, PdfObjHandle};
+use std::ffi::{CStr, c_char};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_new_null(_ctx: Handle) -> PdfObjHandle {
@@ -29,9 +29,7 @@ pub extern "C" fn pdf_new_name(_ctx: Handle, str: *const c_char) -> PdfObjHandle
     if str.is_null() {
         return PDF_OBJECTS.insert(PdfObj::new_name(""));
     }
-    let name = unsafe { CStr::from_ptr(str) }
-        .to_str()
-        .unwrap_or("");
+    let name = unsafe { CStr::from_ptr(str) }.to_str().unwrap_or("");
     PDF_OBJECTS.insert(PdfObj::new_name(name))
 }
 
@@ -49,14 +47,17 @@ pub extern "C" fn pdf_new_text_string(_ctx: Handle, s: *const c_char) -> PdfObjH
     if s.is_null() {
         return PDF_OBJECTS.insert(PdfObj::new_string(&[]));
     }
-    let text = unsafe { CStr::from_ptr(s) }
-        .to_str()
-        .unwrap_or("");
+    let text = unsafe { CStr::from_ptr(s) }.to_str().unwrap_or("");
     PDF_OBJECTS.insert(PdfObj::new_string(text.as_bytes()))
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_new_indirect(_ctx: Handle, _doc: Handle, num: i32, generation: i32) -> PdfObjHandle {
+pub extern "C" fn pdf_new_indirect(
+    _ctx: Handle,
+    _doc: Handle,
+    num: i32,
+    generation: i32,
+) -> PdfObjHandle {
     PDF_OBJECTS.insert(PdfObj::new_indirect(num, generation))
 }
 
@@ -69,4 +70,3 @@ pub extern "C" fn pdf_new_array(_ctx: Handle, _doc: Handle, initialcap: i32) -> 
 pub extern "C" fn pdf_new_dict(_ctx: Handle, _doc: Handle, initialcap: i32) -> PdfObjHandle {
     PDF_OBJECTS.insert(PdfObj::new_dict(initialcap.max(0) as usize))
 }
-

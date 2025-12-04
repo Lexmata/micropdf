@@ -50,8 +50,16 @@ pub fn encode_ascii_hex(data: &[u8]) -> Result<Vec<u8>> {
         let high = (byte >> 4) & 0x0F;
         let low = byte & 0x0F;
 
-        result.push(if high < 10 { b'0' + high } else { b'A' + high - 10 });
-        result.push(if low < 10 { b'0' + low } else { b'A' + low - 10 });
+        result.push(if high < 10 {
+            b'0' + high
+        } else {
+            b'A' + high - 10
+        });
+        result.push(if low < 10 {
+            b'0' + low
+        } else {
+            b'A' + low - 10
+        });
     }
 
     result.push(b'>');
@@ -91,4 +99,3 @@ mod tests {
         assert_eq!(decoded, &[0xF0]);
     }
 }
-
