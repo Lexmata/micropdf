@@ -95,8 +95,7 @@ typedef int32_t pdf_form_field;
 #endif /* NANOPDF_H */
 "#;
 
-    fs::write("include/nanopdf.h", nanopdf_header)
-        .expect("Failed to write nanopdf.h");
+    fs::write("include/nanopdf.h", nanopdf_header).expect("Failed to write nanopdf.h");
     println!("Generated: include/nanopdf.h");
 
     // Generate mupdf-ffi.h - MuPDF compatibility header
@@ -117,8 +116,7 @@ typedef int32_t pdf_form_field;
 #endif /* MUPDF_FFI_H */
 "#;
 
-    fs::write("include/mupdf-ffi.h", mupdf_ffi_header)
-        .expect("Failed to write mupdf-ffi.h");
+    fs::write("include/mupdf-ffi.h", mupdf_ffi_header).expect("Failed to write mupdf-ffi.h");
     println!("Generated: include/mupdf-ffi.h");
 }
 
