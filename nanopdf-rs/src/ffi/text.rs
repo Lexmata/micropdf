@@ -237,6 +237,7 @@ pub extern "C" fn fz_clear_text(_ctx: Handle, text: Handle) {
 mod tests {
     use super::*;
     use crate::fitz::font::Font;
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_new_text() {
@@ -266,9 +267,11 @@ mod tests {
     fn test_bound_text() {
         let text_handle = fz_new_text(0);
         let bounds = fz_bound_text(0, text_handle, 0, super::super::geometry::fz_matrix::identity());
-        // Empty text should have zero bounds
-        assert_eq!(bounds.x0, 0.0);
-        assert_eq!(bounds.y0, 0.0);
+        // Empty text should return Rect::EMPTY (infinite bounds)
+        assert_eq!(bounds.x0, f32::INFINITY);
+        assert_eq!(bounds.y0, f32::INFINITY);
+        assert_eq!(bounds.x1, f32::NEG_INFINITY);
+        assert_eq!(bounds.y1, f32::NEG_INFINITY);
         fz_drop_text(0, text_handle);
     }
 
@@ -317,7 +320,7 @@ mod tests {
     fn test_show_string() {
         // Create a font first
         let font = Font::new("Test");
-        let font_handle = super::font::FONTS.insert(Arc::new(Mutex::new(font)));
+        let font_handle = super::super::font::FONTS.insert(font);
 
         let text_handle = fz_new_text(0);
         fz_show_string(
@@ -330,7 +333,7 @@ mod tests {
         );
 
         fz_drop_text(0, text_handle);
-        super::font::FONTS.remove(font_handle);
+        super::super::font::FONTS.remove(font_handle);
     }
 }
 

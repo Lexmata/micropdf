@@ -291,13 +291,14 @@ pub extern "C" fn fz_new_image_from_buffer(_ctx: Handle, buffer: Handle) -> Hand
 mod tests {
     use super::*;
     use crate::fitz::colorspace::Colorspace;
+    use crate::fitz::pixmap::Pixmap;
 
     #[test]
     fn test_new_image_from_pixmap() {
-        // Create a pixmap first
-        let cs = Some(Colorspace::device_rgb());
-        let pixmap = Pixmap::new(cs, 10, 10, true).unwrap();
-        let pixmap_handle = PIXMAPS.insert(Arc::new(Mutex::new(pixmap)));
+        // Create a pixmap first using FFI colorspace
+        let cs_handle = super::super::colorspace::fz_device_rgb(0);
+        let pixmap = super::super::pixmap::Pixmap::new(cs_handle, 10, 10, true);
+        let pixmap_handle = PIXMAPS.insert(pixmap);
 
         let image_handle = fz_new_image_from_pixmap(0, pixmap_handle, 0);
         assert_ne!(image_handle, 0);
@@ -349,7 +350,7 @@ mod tests {
         let cs_handle = fz_image_colorspace(0, image_handle);
         assert_ne!(cs_handle, 0);
 
-        super::colorspace::COLORSPACES.remove(cs_handle);
+        super::super::colorspace::COLORSPACES.remove(cs_handle);
         fz_drop_image(0, image_handle);
     }
 

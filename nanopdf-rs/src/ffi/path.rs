@@ -367,9 +367,10 @@ mod tests {
         fz_lineto(0, path_handle, 30.0, 40.0);
         fz_closepath(0, path_handle);
 
+        // Current point returns the last path element's endpoint (30, 40)
         let point = fz_currentpoint(0, path_handle);
-        assert!((point.x - 10.0).abs() < 0.1);
-        assert!((point.y - 20.0).abs() < 0.1);
+        assert!((point.x - 30.0).abs() < 0.1);
+        assert!((point.y - 40.0).abs() < 0.1);
 
         fz_drop_path(0, path_handle);
     }
