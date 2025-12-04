@@ -59,7 +59,7 @@ pub extern "C" fn fz_open_archive_with_buffer(
     unsafe {
         let data_slice = std::slice::from_raw_parts(data, size);
         let data_vec = data_slice.to_vec();
-        
+
         if let Ok(archive) = Archive::from_buffer(data_vec) {
             return ARCHIVES.insert(archive);
         }
@@ -282,11 +282,11 @@ mod tests {
     // Helper to create a test directory with unique name
     fn create_test_dir() -> PathBuf {
         use std::time::{SystemTime, UNIX_EPOCH};
-        
+
         let base_dir = std::env::temp_dir();
         // Ensure temp dir exists
         let _ = fs::create_dir_all(&base_dir);
-        
+
         // Use timestamp and thread ID for uniqueness
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -295,13 +295,13 @@ mod tests {
         let thread_id = std::thread::current().id();
         let dir_name = format!("nanopdf_test_archive_{}_{:?}", timestamp, thread_id);
         let dir = base_dir.join(dir_name);
-        
+
         fs::create_dir_all(&dir).unwrap();
-        
+
         // Create test files
         fs::write(dir.join("file1.txt"), b"Hello, World!").unwrap();
         fs::write(dir.join("file2.txt"), b"Test data").unwrap();
-        
+
         dir
     }
 
@@ -314,13 +314,13 @@ mod tests {
         let test_dir = create_test_dir();
         let path_str = test_dir.to_str().unwrap();
         let path_cstr = std::ffi::CString::new(path_str).unwrap();
-        
+
         let archive = fz_open_archive(0, path_cstr.as_ptr());
         assert_ne!(archive, 0);
-        
+
         let format = fz_archive_format(0, archive);
         assert_eq!(format, 3); // Directory format
-        
+
         fz_drop_archive(0, archive);
         cleanup_test_dir(&test_dir);
     }
@@ -330,20 +330,20 @@ mod tests {
         let test_dir = create_test_dir();
         let path_str = test_dir.to_str().unwrap();
         let path_cstr = std::ffi::CString::new(path_str).unwrap();
-        
+
         let archive = fz_open_archive(0, path_cstr.as_ptr());
         assert_ne!(archive, 0);
-        
+
         // Check for existing file
         let file_name = std::ffi::CString::new("file1.txt").unwrap();
         let has_entry = fz_has_archive_entry(0, archive, file_name.as_ptr());
         assert_eq!(has_entry, 1);
-        
+
         // Check for non-existing file
         let missing_file = std::ffi::CString::new("nonexistent.txt").unwrap();
         let has_missing = fz_has_archive_entry(0, archive, missing_file.as_ptr());
         assert_eq!(has_missing, 0);
-        
+
         fz_drop_archive(0, archive);
         cleanup_test_dir(&test_dir);
     }
@@ -353,19 +353,19 @@ mod tests {
         let test_dir = create_test_dir();
         let path_str = test_dir.to_str().unwrap();
         let path_cstr = std::ffi::CString::new(path_str).unwrap();
-        
+
         let archive = fz_open_archive(0, path_cstr.as_ptr());
         assert_ne!(archive, 0);
-        
+
         // Read file
         let file_name = std::ffi::CString::new("file1.txt").unwrap();
         let buffer_handle = fz_read_archive_entry(0, archive, file_name.as_ptr());
         assert_ne!(buffer_handle, 0);
-        
+
         // Get buffer size
         let size = super::super::buffer::fz_buffer_storage(0, buffer_handle, std::ptr::null_mut());
         assert_eq!(size, 13); // "Hello, World!" length
-        
+
         // Clean up
         super::super::buffer::fz_drop_buffer(0, buffer_handle);
         fz_drop_archive(0, archive);
@@ -411,18 +411,18 @@ mod tests {
         let test_dir = create_test_dir();
         let path_str = test_dir.to_str().unwrap();
         let path_cstr = std::ffi::CString::new(path_str).unwrap();
-        
+
         let archive = fz_open_archive(0, path_cstr.as_ptr());
         assert_ne!(archive, 0);
-        
+
         let mut buf = [0i8; 1024];
         let len = fz_archive_entry_names(0, archive, buf.as_mut_ptr(), 1024);
         assert!(len > 0);
-        
+
         // Verify we got some names
         let names = unsafe { CStr::from_ptr(buf.as_ptr()) }.to_str().unwrap();
         assert!(names.contains("file1.txt") || names.contains("file2.txt"));
-        
+
         fz_drop_archive(0, archive);
         cleanup_test_dir(&test_dir);
     }

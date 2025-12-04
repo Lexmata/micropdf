@@ -26,6 +26,7 @@ pub mod form;
 pub mod display_list;
 pub mod link;
 pub mod archive;
+pub mod cookie;
 pub mod enhanced;
 
 // Safe helper functions for common FFI patterns
