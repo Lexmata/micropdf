@@ -448,6 +448,54 @@ impl Font {
     pub fn is_embedded(&self) -> bool {
         self.font_data.is_some()
     }
+
+    /// Create font from font data
+    pub fn from_data(name: &str, data: &[u8], _index: usize) -> Result<Self> {
+        if data.is_empty() {
+            return Err(Error::Argument("Empty font data".into()));
+        }
+
+        let mut font = Font::new(name);
+        font.set_font_data(data.to_vec());
+        
+        // Try to infer font type from data
+        // This is a stub - real implementation would parse font file
+        font.font_type = FontType::TrueType;
+        
+        Ok(font)
+    }
+
+    /// Encode a Unicode character to glyph ID
+    pub fn encode_character(&self, unicode: u32) -> u16 {
+        self.charmap.lookup(unicode).unwrap_or(0)
+    }
+
+    /// Get glyph bounding box
+    pub fn glyph_bbox(&self, gid: u16) -> crate::fitz::geometry::Rect {
+        // Stub implementation - would need actual font parsing
+        crate::fitz::geometry::Rect::new(
+            0.0,
+            self.metrics.descender,
+            self.glyph_advance(gid),
+            self.metrics.ascender,
+        )
+    }
+
+    /// Get font bounding box
+    pub fn bbox(&self) -> crate::fitz::geometry::Rect {
+        crate::fitz::geometry::Rect::new(
+            0.0,
+            self.metrics.descender,
+            1000.0, // em-square width
+            self.metrics.ascender,
+        )
+    }
+
+    /// Get glyph outline path (stub)
+    pub fn outline_glyph(&self, _gid: u16) -> crate::fitz::path::Path {
+        // Stub implementation - would need actual glyph outline extraction
+        crate::fitz::path::Path::new()
+    }
 }
 
 impl std::fmt::Debug for Font {

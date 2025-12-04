@@ -124,20 +124,27 @@ pub extern "C" fn fz_bound_text(
 ) -> super::geometry::fz_rect {
     if let Some(t) = TEXTS.get(text) {
         if let Ok(guard) = t.lock() {
-            let bounds = guard.bounds();
-
-            // If transform is provided, apply it
             let matrix = Matrix::new(
                 transform.a, transform.b, transform.c,
                 transform.d, transform.e, transform.f
             );
-            let transformed = bounds.transform(&matrix);
+
+            // Get stroke state if provided
+            let stroke_opt = if stroke != 0 {
+                super::path::STROKE_STATES.get(stroke)
+                    .and_then(|s| s.lock().ok())
+                    .map(|s| s.clone())
+            } else {
+                None
+            };
+
+            let bounds = guard.bounds(stroke_opt.as_ref(), &matrix);
 
             return super::geometry::fz_rect {
-                x0: transformed.x0,
-                y0: transformed.y0,
-                x1: transformed.x1,
-                y1: transformed.y1,
+                x0: bounds.x0,
+                y0: bounds.y0,
+                x1: bounds.x1,
+                y1: bounds.y1,
             };
         }
     }
@@ -183,7 +190,8 @@ pub extern "C" fn fz_set_text_language(_ctx: Handle, text: Handle, lang: *const 
     if let Some(lang_str) = safe_helpers::c_str_to_str(lang) {
         if let Some(t) = TEXTS.get(text) {
             if let Ok(mut guard) = t.lock() {
-                guard.set_language(lang_str);
+                let language = crate::fitz::text::TextLanguage::from_string(lang_str);
+                guard.set_language(language);
             }
         }
     }

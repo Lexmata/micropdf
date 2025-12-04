@@ -450,6 +450,23 @@ impl Text {
     pub fn clear(&mut self) {
         self.spans.clear();
     }
+
+    /// Get the number of spans (alias for len())
+    pub fn span_count(&self) -> usize {
+        self.spans.len()
+    }
+
+    /// Get the total number of items across all spans
+    pub fn item_count(&self) -> usize {
+        self.spans.iter().map(|span| span.len()).sum()
+    }
+
+    /// Set language for all spans
+    pub fn set_language(&mut self, language: TextLanguage) {
+        for span in &mut self.spans {
+            span.language = language;
+        }
+    }
 }
 
 impl Default for Text {

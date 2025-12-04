@@ -1,6 +1,6 @@
 # FFI Architecture Issues
 
-**Date**: December 4, 2025  
+**Date**: December 4, 2025
 **Status**: 🔴 Critical - Requires Architecture Refactoring
 
 ## Executive Summary
@@ -31,7 +31,7 @@ This creates incompatibility when FFI functions try to call fitz methods.
 // FFI has: Arc<Mutex<Font>>
 let f = FONTS.get(font_handle); // returns Arc<Mutex<Font>>
 
-// But fitz needs: Arc<Font>  
+// But fitz needs: Arc<Font>
 guard.show_glyph(Arc<Font>, ...); // ❌ Type mismatch
 ```
 
@@ -83,9 +83,9 @@ guard.show_glyph(Arc<Font>, ...); // ❌ Type mismatch
 **Example**:
 ```rust
 // Before
-fn show_glyph(&mut self, font: Arc<Font>, ...) 
+fn show_glyph(&mut self, font: Arc<Font>, ...)
 
-// After  
+// After
 fn show_glyph(&mut self, font: &Font, ...)
 
 // FFI can now do:
@@ -186,6 +186,6 @@ This would take ~2-3 hours but leaves the codebase in a "compiles but broken" st
 
 ---
 
-**Author**: AI Assistant  
+**Author**: AI Assistant
 **Last Updated**: December 4, 2025
 

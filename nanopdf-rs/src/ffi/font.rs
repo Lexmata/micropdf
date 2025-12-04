@@ -159,7 +159,7 @@ pub extern "C" fn fz_font_is_serif(_ctx: Handle, font: Handle) -> i32 {
 pub extern "C" fn fz_font_is_monospaced(_ctx: Handle, font: Handle) -> i32 {
     if let Some(f) = FONTS.get(font) {
         if let Ok(guard) = f.lock() {
-            return i32::from(guard.is_monospaced());
+            return i32::from(guard.is_monospace());
         }
     }
     0
@@ -170,7 +170,7 @@ pub extern "C" fn fz_font_is_monospaced(_ctx: Handle, font: Handle) -> i32 {
 pub extern "C" fn fz_encode_character(_ctx: Handle, font: Handle, unicode: i32) -> i32 {
     if let Some(f) = FONTS.get(font) {
         if let Ok(guard) = f.lock() {
-            return guard.encode_character(unicode);
+            return guard.encode_character(unicode as u32) as i32;
         }
     }
     0
@@ -188,12 +188,12 @@ pub extern "C" fn fz_encode_character_with_fallback(
 ) -> i32 {
     if let Some(f) = FONTS.get(font) {
         if let Ok(guard) = f.lock() {
-            let glyph = guard.encode_character(unicode);
+            let glyph = guard.encode_character(unicode as u32);
 
             // Set output font to same font
             safe_helpers::write_ptr(font, out_font);
 
-            return glyph;
+            return glyph as i32;
         }
     }
     0

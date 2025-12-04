@@ -476,6 +476,54 @@ impl Image {
         }
         size
     }
+
+    /// Get X resolution (DPI)
+    pub fn xres(&self) -> i32 {
+        self.xres
+    }
+
+    /// Get Y resolution (DPI)
+    pub fn yres(&self) -> i32 {
+        self.yres
+    }
+
+    /// Check if this image is a mask
+    pub fn is_mask(&self) -> bool {
+        self.mask_type != MaskType::None || self.n == 1 && self.bpc == 1
+    }
+
+    /// Create image from compressed data (stub for now - needs proper image decoding)
+    pub fn from_data(data: &[u8]) -> Result<Self> {
+        // Simple stub: assume it's raw data for a small image
+        // Real implementation would detect format and decode
+        if data.is_empty() {
+            return Err(Error::Argument("Empty image data".into()));
+        }
+
+        // Try to infer basic properties (this is a placeholder)
+        let width = ((data.len() as f32).sqrt()) as i32;
+        let height = if width > 0 { data.len() as i32 / width } else { 0 };
+
+        if width <= 0 || height <= 0 {
+            return Err(Error::Argument("Cannot infer image dimensions".into()));
+        }
+
+        Ok(Self {
+            width,
+            height,
+            bpc: 8,
+            n: 3,
+            colorspace: Some(Colorspace::device_rgb()),
+            data: data.to_vec(),
+            format: ImageFormat::Raw,
+            mask_type: MaskType::None,
+            mask: None,
+            xres: 96,
+            yres: 96,
+            interpolate: true,
+            pixmap: None,
+        })
+    }
 }
 
 #[cfg(test)]

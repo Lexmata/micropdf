@@ -34,6 +34,11 @@ impl Buffer {
         &self.data
     }
 
+    /// Alias for data() - get immutable slice of buffer
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+
     pub fn data_mut(&mut self) -> &mut Vec<u8> {
         &mut self.data
     }
