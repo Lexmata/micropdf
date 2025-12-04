@@ -147,31 +147,51 @@ impl ChoiceOption {
 #[derive(Clone)]
 pub struct FormField {
     /// Field name (fully qualified)
-    name: String,
+    pub name: String,
     /// Field type
-    field_type: WidgetType,
+    pub field_type: WidgetType,
     /// Field flags
-    flags: FieldFlags,
+    pub flags: FieldFlags,
     /// Field value
-    value: String,
+    pub value: String,
     /// Default value
-    default_value: Option<String>,
+    pub default_value: String,
     /// Field rectangle
-    rect: Rect,
+    pub rect: Rect,
     /// Maximum text length (for text fields)
-    max_len: Option<usize>,
+    pub max_len: Option<usize>,
     /// Text format (for text fields)
-    text_format: TextFormat,
+    pub text_format: TextFormat,
     /// Choice options (for combo/list boxes)
-    options: Vec<ChoiceOption>,
+    pub options: Vec<ChoiceOption>,
     /// Selected options indices (for multi-select)
-    selected: Vec<usize>,
+    pub selected: Vec<usize>,
     /// Tooltip/alternate description
-    tooltip: Option<String>,
+    pub tooltip: Option<String>,
     /// Widget annotation
-    widget: Option<Annotation>,
+    pub widget: Option<Annotation>,
     /// Custom properties
-    properties: HashMap<String, String>,
+    pub properties: HashMap<String, String>,
+    /// Border width
+    pub border_width: f32,
+    /// Border color (RGB)
+    pub border_color: [f32; 3],
+    /// Background color (RGB)
+    pub bg_color: [f32; 3],
+    /// Font size
+    pub font_size: f32,
+    /// Text alignment (0=left, 1=center, 2=right)
+    pub alignment: i32,
+    /// Is combo box (vs list box)
+    pub is_combo: bool,
+    /// Is editable (for choice fields)
+    pub editable: bool,
+    /// Allows multiple selection (for choice fields)
+    pub multi_select: bool,
+    /// Selected index (for single-select choice fields)
+    pub selected_index: i32,
+    /// Choice options (simpler representation for FFI)
+    pub choices: Vec<(String, String)>,
 }
 
 impl FormField {
@@ -182,7 +202,7 @@ impl FormField {
             field_type,
             flags: FieldFlags::default(),
             value: String::new(),
-            default_value: None,
+            default_value: String::new(),
             rect,
             max_len: None,
             text_format: TextFormat::None,
@@ -191,6 +211,16 @@ impl FormField {
             tooltip: None,
             widget: None,
             properties: HashMap::new(),
+            border_width: 1.0,
+            border_color: [0.0, 0.0, 0.0],
+            bg_color: [1.0, 1.0, 1.0],
+            font_size: 12.0,
+            alignment: 0,
+            is_combo: false,
+            editable: false,
+            multi_select: false,
+            selected_index: -1,
+            choices: Vec::new(),
         }
     }
 
@@ -384,19 +414,19 @@ impl FormField {
     }
 
     /// Get default value
-    pub fn default_value(&self) -> Option<&str> {
-        self.default_value.as_deref()
+    pub fn default_value(&self) -> &str {
+        &self.default_value
     }
 
     /// Set default value
-    pub fn set_default_value(&mut self, value: Option<String>) {
+    pub fn set_default_value(&mut self, value: String) {
         self.default_value = value;
     }
 
     /// Reset to default value
     pub fn reset(&mut self) {
-        if let Some(ref default) = self.default_value {
-            self.value = default.clone();
+        if !self.default_value.is_empty() {
+            self.value = self.default_value.clone();
         } else {
             self.value.clear();
             self.selected.clear();
@@ -732,7 +762,7 @@ mod tests {
     fn test_form_reset() {
         let mut form = Form::new();
         let mut field = FormField::text_field("name".to_string(), Rect::EMPTY, None);
-        field.set_default_value(Some("Default".to_string()));
+        field.set_default_value("Default".to_string());
         field.set_value("Changed".to_string()).unwrap();
         form.add_field(field);
 

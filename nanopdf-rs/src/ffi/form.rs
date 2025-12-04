@@ -4,6 +4,7 @@
 
 use super::{Handle, HandleStore};
 use crate::pdf::form::{Form, FormField, FieldFlags, WidgetType, ChoiceOption, TextFormat};
+use std::ffi::{CStr, c_char};
 use std::sync::LazyLock;
 
 /// Form storage
@@ -663,6 +664,314 @@ pub extern "C" fn pdf_validate_form(_ctx: Handle, form: Handle) -> i32 {
     if let Some(f) = FORMS.get(form) {
         if let Ok(guard) = f.lock() {
             return guard.validate().is_ok() as i32;
+        }
+    }
+    0
+}
+
+/// Delete a form field
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_delete_field(_ctx: Handle, _form: Handle, field: Handle) -> i32 {
+    FORM_FIELDS.remove(field);
+    1
+}
+
+/// Get field default value
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_default_value(
+    _ctx: Handle,
+    field: Handle,
+    buf: *mut c_char,
+    buf_size: i32,
+) -> i32 {
+    if buf.is_null() || buf_size <= 0 {
+        return 0;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            let default_val = &guard.default_value;
+            let bytes = default_val.as_bytes();
+            let len = (bytes.len() as i32).min(buf_size - 1);
+            
+            unsafe {
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), buf as *mut u8, len as usize);
+                *buf.offset(len as isize) = 0;
+            }
+            return len;
+        }
+    }
+    0
+}
+
+/// Set field default value
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_default_value(
+    _ctx: Handle,
+    field: Handle,
+    value: *const c_char,
+) -> i32 {
+    if value.is_null() {
+        return 0;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            if let Ok(val_str) = unsafe { CStr::from_ptr(value).to_str() } {
+                guard.default_value = val_str.to_string();
+                return 1;
+            }
+        }
+    }
+    0
+}
+
+/// Get field border width
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_border_width(_ctx: Handle, field: Handle) -> f32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.border_width;
+        }
+    }
+    1.0
+}
+
+/// Set field border width
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_border_width(_ctx: Handle, field: Handle, width: f32) {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            guard.border_width = width.max(0.0);
+        }
+    }
+}
+
+/// Get field border color (RGB)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_border_color(
+    _ctx: Handle,
+    field: Handle,
+    color: *mut f32,
+) {
+    if color.is_null() {
+        return;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            unsafe {
+                *color.offset(0) = guard.border_color[0];
+                *color.offset(1) = guard.border_color[1];
+                *color.offset(2) = guard.border_color[2];
+            }
+        }
+    }
+}
+
+/// Set field border color (RGB)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_border_color(
+    _ctx: Handle,
+    field: Handle,
+    color: *const f32,
+) {
+    if color.is_null() {
+        return;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            unsafe {
+                guard.border_color = [
+                    *color.offset(0),
+                    *color.offset(1),
+                    *color.offset(2),
+                ];
+            }
+        }
+    }
+}
+
+/// Get field background color (RGB)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_bg_color(_ctx: Handle, field: Handle, color: *mut f32) {
+    if color.is_null() {
+        return;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            unsafe {
+                *color.offset(0) = guard.bg_color[0];
+                *color.offset(1) = guard.bg_color[1];
+                *color.offset(2) = guard.bg_color[2];
+            }
+        }
+    }
+}
+
+/// Set field background color (RGB)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_bg_color(
+    _ctx: Handle,
+    field: Handle,
+    color: *const f32,
+) {
+    if color.is_null() {
+        return;
+    }
+
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            unsafe {
+                guard.bg_color = [
+                    *color.offset(0),
+                    *color.offset(1),
+                    *color.offset(2),
+                ];
+            }
+        }
+    }
+}
+
+/// Get field font size
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_font_size(_ctx: Handle, field: Handle) -> f32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.font_size;
+        }
+    }
+    12.0
+}
+
+/// Set field font size
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_font_size(_ctx: Handle, field: Handle, size: f32) {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            guard.font_size = size.max(1.0);
+        }
+    }
+}
+
+/// Get field alignment (0=left, 1=center, 2=right)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_alignment(_ctx: Handle, field: Handle) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.alignment;
+        }
+    }
+    0
+}
+
+/// Set field alignment (0=left, 1=center, 2=right)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_alignment(_ctx: Handle, field: Handle, align: i32) {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            guard.alignment = align.clamp(0, 2);
+        }
+    }
+}
+
+/// Check if field is combo (vs list)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_is_combo(_ctx: Handle, field: Handle) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.is_combo as i32;
+        }
+    }
+    0
+}
+
+/// Check if choice allows edit
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_is_edit(_ctx: Handle, field: Handle) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.editable as i32;
+        }
+    }
+    0
+}
+
+/// Check if choice allows multiple selection
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_is_multiselect(_ctx: Handle, field: Handle) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.multi_select as i32;
+        }
+    }
+    0
+}
+
+/// Get selected choice index
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_selected_index(_ctx: Handle, field: Handle) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            return guard.selected_index;
+        }
+    }
+    -1
+}
+
+/// Set selected choice index
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_field_selected_index(_ctx: Handle, field: Handle, idx: i32) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            if idx >= 0 && (idx as usize) < guard.choices.len() {
+                guard.selected_index = idx;
+                return 1;
+            }
+        }
+    }
+    0
+}
+
+/// Clear all choice selections
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_clear_selection(_ctx: Handle, field: Handle) {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            guard.selected_index = -1;
+        }
+    }
+}
+
+/// Remove a choice option by index
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_remove_field_choice(_ctx: Handle, field: Handle, idx: i32) -> i32 {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(mut guard) = f.lock() {
+            if idx >= 0 && (idx as usize) < guard.choices.len() {
+                guard.choices.remove(idx as usize);
+                return 1;
+            }
+        }
+    }
+    0
+}
+
+/// Check if field is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_field_is_valid(_ctx: Handle, field: Handle) -> i32 {
+    if FORM_FIELDS.get(field).is_some() { 1 } else { 0 }
+}
+
+/// Clone a field (create a copy with new handle)
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_clone_field(_ctx: Handle, field: Handle) -> Handle {
+    if let Some(f) = FORM_FIELDS.get(field) {
+        if let Ok(guard) = f.lock() {
+            let cloned = guard.clone();
+            return FORM_FIELDS.insert(cloned);
         }
     }
     0
