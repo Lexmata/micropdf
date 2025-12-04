@@ -194,6 +194,22 @@ impl Path {
         self.elements.clear();
     }
 
+    /// Get the current point (last point in path)
+    pub fn current_point(&self) -> Option<Point> {
+        // Iterate backwards to find the last point
+        for element in self.elements.iter().rev() {
+            match element {
+                PathElement::MoveTo(p) |
+                PathElement::LineTo(p) => return Some(*p),
+                PathElement::QuadTo(_, p2) => return Some(*p2),
+                PathElement::CurveTo(_, _, p3) => return Some(*p3),
+                PathElement::Rect(r) => return Some(Point::new(r.x1, r.y1)),
+                PathElement::Close => continue,
+            }
+        }
+        None
+    }
+
     /// Clone the path
     pub fn clone_path(&self) -> Self {
         Self {

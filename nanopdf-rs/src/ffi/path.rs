@@ -123,7 +123,7 @@ pub extern "C" fn fz_rectto(_ctx: Handle, path: Handle, x0: f32, y0: f32, x1: f3
     if let Some(p) = PATHS.get(path) {
         if let Ok(mut guard) = p.lock() {
             let rect = Rect::new(x0, y0, x1, y1);
-            guard.add_rect(rect);
+            guard.rect(rect);
         }
     }
 }
@@ -159,7 +159,7 @@ pub extern "C" fn fz_transform_path(_ctx: Handle, path: Handle, transform: super
                 transform.a, transform.b, transform.c,
                 transform.d, transform.e, transform.f
             );
-            guard.transform(matrix);
+            guard.transform(|p| p.transform(&matrix));
         }
     }
 }
