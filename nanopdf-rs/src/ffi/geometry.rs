@@ -432,6 +432,130 @@ pub extern "C" fn fz_is_point_inside_irect(x: i32, y: i32, r: fz_irect) -> i32 {
     i32::from(x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1)
 }
 
+/// Check if a rect is empty
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_is_empty_rect(r: fz_rect) -> i32 {
+    i32::from(r.x0 >= r.x1 || r.y0 >= r.y1)
+}
+
+/// Check if an irect is empty
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_is_empty_irect(r: fz_irect) -> i32 {
+    i32::from(r.x0 >= r.x1 || r.y0 >= r.y1)
+}
+
+/// Check if a rect is infinite
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_is_infinite_rect(r: fz_rect) -> i32 {
+    i32::from(r.x0 == FZ_MIN_INF_RECT as f32 && r.x1 == FZ_MAX_INF_RECT as f32)
+}
+
+/// Check if an irect is infinite
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_is_infinite_irect(r: fz_irect) -> i32 {
+    i32::from(r.x0 == FZ_MIN_INF_RECT && r.x1 == FZ_MAX_INF_RECT)
+}
+
+/// Get width of a rect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rect_width(r: fz_rect) -> c_float {
+    if r.x1 > r.x0 { r.x1 - r.x0 } else { 0.0 }
+}
+
+/// Get height of a rect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rect_height(r: fz_rect) -> c_float {
+    if r.y1 > r.y0 { r.y1 - r.y0 } else { 0.0 }
+}
+
+/// Get area of a rect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rect_area(r: fz_rect) -> c_float {
+    fz_rect_width(r) * fz_rect_height(r)
+}
+
+/// Get width of an irect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_irect_width(r: fz_irect) -> i32 {
+    if r.x1 > r.x0 { r.x1 - r.x0 } else { 0 }
+}
+
+/// Get height of an irect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_irect_height(r: fz_irect) -> i32 {
+    if r.y1 > r.y0 { r.y1 - r.y0 } else { 0 }
+}
+
+/// Get area of an irect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_irect_area(r: fz_irect) -> i32 {
+    fz_irect_width(r) * fz_irect_height(r)
+}
+
+/// Get center point of a rect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rect_center(r: fz_rect) -> fz_point {
+    fz_point {
+        x: (r.x0 + r.x1) / 2.0,
+        y: (r.y0 + r.y1) / 2.0,
+    }
+}
+
+/// Check if two rects are equal
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rect_eq(a: fz_rect, b: fz_rect) -> i32 {
+    i32::from(a == b)
+}
+
+/// Check if two irect are equal
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_irect_eq(a: fz_irect, b: fz_irect) -> i32 {
+    i32::from(a == b)
+}
+
+/// Post-translate a matrix
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_post_translate(m: fz_matrix, tx: c_float, ty: c_float) -> fz_matrix {
+    fz_concat(m, fz_translate(tx, ty))
+}
+
+/// Post-rotate a matrix
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_post_rotate(m: fz_matrix, degrees: c_float) -> fz_matrix {
+    fz_concat(m, fz_rotate(degrees))
+}
+
+/// Calculate matrix determinant
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_matrix_determinant(m: fz_matrix) -> c_float {
+    m.a * m.d - m.b * m.c
+}
+
+/// Check if matrix is singular (non-invertible)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_matrix_is_singular(m: fz_matrix) -> i32 {
+    let det = fz_matrix_determinant(m);
+    i32::from(det.abs() < 1e-10)
+}
+
+/// Create a point
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_make_point(x: c_float, y: c_float) -> fz_point {
+    fz_point { x, y }
+}
+
+/// Create a rect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_make_rect(x0: c_float, y0: c_float, x1: c_float, y1: c_float) -> fz_rect {
+    fz_rect { x0, y0, x1, y1 }
+}
+
+/// Create an irect
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_make_irect(x0: i32, y0: i32, x1: i32, y1: i32) -> fz_irect {
+    fz_irect { x0, y0, x1, y1 }
+}
+
 // ============================================================================
 // Version
 // ============================================================================

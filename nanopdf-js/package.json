@@ -47,7 +47,7 @@
   "bugs": {
     "url": "https://github.com/lexmata/nanopdf/issues"
   },
-  "homepage": "https://github.com/lexmata/nanopdf#readme",
+  "homepage": "https://lexmata.github.io/nanopdf/",
   "engines": {
     "node": ">=18.0.0"
   },

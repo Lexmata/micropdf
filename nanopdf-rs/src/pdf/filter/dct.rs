@@ -22,6 +22,7 @@ pub fn decode_dct(data: &[u8], _params: Option<&DCTDecodeParams>) -> Result<Vec<
 /// Encode data with JPEG compression
 pub fn encode_dct(data: &[u8], width: u32, height: u32, quality: u8) -> Result<Vec<u8>> {
     use image::{ImageBuffer, Rgb};
+    use image::codecs::jpeg::JpegEncoder;
     use std::io::Cursor;
 
     // Assume RGB data
@@ -29,10 +30,15 @@ pub fn encode_dct(data: &[u8], width: u32, height: u32, quality: u8) -> Result<V
         .ok_or_else(|| Error::Generic("Invalid image dimensions".into()))?;
 
     let mut output = Cursor::new(Vec::new());
-    img.write_to(&mut output, image::ImageFormat::Jpeg)
-        .map_err(|e| Error::Generic(format!("DCTEncode failed: {}", e)))?;
-
-    let _ = quality; // TODO: Use quality parameter
+    
+    // Use JpegEncoder to specify quality (1-100)
+    let mut encoder = JpegEncoder::new_with_quality(&mut output, quality);
+    encoder.encode(
+        img.as_raw(),
+        width,
+        height,
+        image::ExtendedColorType::Rgb8,
+    ).map_err(|e| Error::Generic(format!("DCTEncode failed: {}", e)))?;
 
     Ok(output.into_inner())
 }

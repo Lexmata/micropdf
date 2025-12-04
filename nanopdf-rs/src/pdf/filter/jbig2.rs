@@ -11,9 +11,15 @@ pub fn decode_jbig2(data: &[u8], _params: Option<&JBIG2DecodeParams>) -> Result<
 
     #[cfg(feature = "jbig2")]
     {
-        // If jbig2dec crate is available, use it
-        // This is a placeholder for actual implementation
-        unimplemented!("JBIG2 decoder not yet implemented");
+        // JBIG2 is a complex bi-level image compression format
+        // A full implementation would require integrating with a JBIG2 library
+        // Since we don't have a pure Rust JBIG2 decoder available yet,
+        // we return an error explaining this limitation
+        Err(Error::Unsupported(
+            "JBIG2 decoding requires external library integration. \
+             This format is rarely used in modern PDFs. \
+             Consider using FlateDecode or DCTDecode instead.".into()
+        ))
     }
 
     #[cfg(not(feature = "jbig2"))]

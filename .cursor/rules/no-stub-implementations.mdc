@@ -1,0 +1,424 @@
+---
+alwaysApply: true
+---
+
+# NO STUB IMPLEMENTATIONS - ZERO TOLERANCE POLICY
+
+**CRITICAL REQUIREMENT**: Every single line of committed code must be fully functional. No exceptions.
+
+## Absolute Rule
+
+**ALL CODE MUST BE COMPLETE AND WORKING**
+
+This means:
+- ✅ Every function performs its actual stated operation
+- ✅ All algorithms are real, not placeholders
+- ✅ All data structures contain real data, not dummies
+- ✅ Every operation produces real results
+- ❌ ZERO validation-only implementations
+- ❌ ZERO "TODO" or "FIXME" comments
+- ❌ ZERO `unimplemented!()` or `todo!()` macros
+- ❌ ZERO functions that return success without doing work
+- ❌ ZERO hiding incomplete code in private functions
+
+**This applies to PUBLIC and PRIVATE functions equally.**
+
+## Rationale
+
+1. **Code Quality**: Stubs create technical debt and confusion about what works
+2. **Testing**: Incomplete code cannot be properly tested
+3. **Reliability**: Users expect all public APIs to be functional
+4. **Maintainability**: Stubs are often forgotten and left incomplete
+5. **Professionalism**: Production code should not contain placeholders
+
+## What Counts as "Fully Implemented"
+
+A function is ONLY considered fully implemented if:
+
+1. ✅ It performs the ACTUAL operation its name/docs describe
+2. ✅ It uses real algorithms and data structures, not placeholders
+3. ✅ It handles all specified inputs correctly
+4. ✅ It returns meaningful results
+5. ✅ It has proper error handling for edge cases
+6. ✅ It integrates with other modules as designed
+
+A function is NOT fully implemented if it:
+
+1. ❌ Only validates inputs without doing the work
+2. ❌ Returns success without performing operations
+3. ❌ Has comments saying "TODO", "FIXME", "In a full implementation"
+4. ❌ Contains `unimplemented!()`, `todo!()`, or similar macros
+5. ❌ Returns dummy/fake data instead of real results
+6. ❌ Just copies input to output without actual processing
+
+## Prohibited Patterns
+
+### ❌ ABSOLUTELY FORBIDDEN
+
+```rust
+// BAD: Stub implementation with NotImplemented error
+pub fn add_watermark(&self, text: &str) -> Result<()> {
+    Err(EnhancedError::NotImplemented("add_watermark".into()))
+}
+
+// BAD: TODO placeholder
+pub fn compress_pdf(&self) -> Result<()> {
+    // TODO: Implement compression
+    unimplemented!()
+}
+
+// BAD: Panic placeholder
+pub fn merge_pdfs(&self, files: &[&str]) -> Result<()> {
+    todo!("Implement PDF merging")
+}
+
+// BAD: Only validates without doing work
+pub fn save(&self, path: &str) -> Result<()> {
+    if path.is_empty() {
+        return Err(Error::Invalid("path"));
+    }
+    // Full implementation would write the file...
+    Ok(())
+}
+
+// BAD: Fake implementation that just validates
+pub fn optimize_images(&self) -> Result<()> {
+    // Verify PDF exists
+    if !self.path.exists() {
+        return Err(Error::NotFound);
+    }
+    // "In a full implementation, this would optimize images"
+    Ok(())
+}
+
+// BAD: Returns dummy data
+pub fn get_page_count(&self) -> usize {
+    0 // Always returns 0, not actually implemented
+}
+
+// BAD: Just copies input without processing
+pub fn compress(&self, data: &[u8]) -> Vec<u8> {
+    data.to_vec() // Doesn't actually compress!
+}
+
+// BAD: Private stub (still forbidden!)
+fn internal_helper(&self) -> Result<()> {
+    todo!("implement later")
+}
+```
+
+### ✅ DO THIS INSTEAD
+
+```rust
+// GOOD: Fully implemented function
+pub fn add_watermark(&self, text: &str, x: f32, y: f32) -> Result<()> {
+    let content_stream = self.create_watermark_stream(text)?;
+    self.add_to_page_content(content_stream)?;
+    self.mark_modified()?;
+    Ok(())
+}
+
+// GOOD: Complete implementation with all logic
+pub fn compress_pdf(&self) -> Result<()> {
+    for stream in self.get_content_streams()? {
+        let compressed = flate_encode(&stream.data)?;
+        stream.replace_data(compressed)?;
+        stream.set_filter("FlateDecode")?;
+    }
+    self.rebuild_xref()?;
+    Ok(())
+}
+
+// GOOD: Full merging implementation
+pub fn merge_pdfs(&self, files: &[&str]) -> Result<()> {
+    for file_path in files {
+        let source = PdfDocument::open(file_path)?;
+        for page_idx in 0..source.page_count() {
+            let page = source.load_page(page_idx)?;
+            self.append_page(page)?;
+        }
+    }
+    Ok(())
+}
+```
+
+## No Exceptions for Incomplete Work
+
+**CRITICAL**: There are NO EXCEPTIONS for incomplete implementations in committed code.
+
+### What This Means
+
+1. **No Private Stubs**: Making a function private does NOT excuse it from being fully implemented
+2. **No Hidden Stubs**: Moving incomplete code to internal modules is NOT acceptable
+3. **No Feature Flag Stubs**: Even behind feature flags, all code must be complete
+4. **No Comments Explaining Incompleteness**: Comments like "TODO", "FIXME", "In a full implementation" are prohibited
+
+### If a Feature is Too Complex
+
+If you encounter a feature that is genuinely too complex to implement:
+
+**Option 1: Break It Down**
+```rust
+// Instead of one stub function, implement it piece by piece
+pub fn complex_operation(&self) -> Result<()> {
+    self.step_one()?;
+    self.step_two()?;
+    self.step_three()?;
+    Ok(())
+}
+
+// Each step is FULLY implemented
+fn step_one(&self) -> Result<()> {
+    // Complete implementation here
+    Ok(())
+}
+```
+
+**Option 2: Don't Add the Function**
+```rust
+// Don't add functions you can't implement
+// Wait until you CAN implement them fully
+```
+
+**Option 3: WIP Branch Only**
+
+Work on a separate WIP branch that NEVER gets merged until ALL functions are complete.
+
+## Implementation Checklist
+
+Before committing any function, verify:
+
+- ✅ All logic paths are implemented
+- ✅ Error handling is complete
+- ✅ Edge cases are handled
+- ✅ Tests exist and pass
+- ✅ No `todo!()`, `unimplemented!()`, or panic calls
+- ✅ No `NotImplemented` error returns
+- ✅ Documentation is complete
+- ✅ Function does what its name/docs claim
+
+## Enforcement
+
+### Code Review
+
+Reviewers should reject PRs containing:
+- `todo!()`
+- `unimplemented!()`
+- `NotImplemented` errors
+- Functions that don't match their documentation
+- Empty or fake implementations
+
+### CI Checks
+
+Consider adding:
+
+```bash
+# Check for stub patterns
+git grep -n "todo!()" src/
+git grep -n "unimplemented!()" src/
+git grep -n "NotImplemented" src/
+```
+
+### Testing
+
+All public functions must have tests that:
+- Call the function successfully
+- Verify the function's claimed behavior
+- Test error conditions
+- Don't just check that stubs exist
+
+## Migration Strategy
+
+For existing stub code:
+
+1. **Audit**: Identify all stub implementations
+2. **Prioritize**: Rank by user impact and dependencies
+3. **Implement**: Complete implementations one by one
+4. **Test**: Add comprehensive tests
+5. **Document**: Update documentation if behavior differs from stubs
+6. **Remove**: Delete the old stub code
+
+## Error Messages
+
+When a feature truly cannot be implemented yet, be explicit:
+
+```rust
+// BAD: Implies it will be implemented
+return Err(Error::NotImplemented("feature".into()));
+
+// GOOD: Make it clear why
+return Err(Error::Unsupported(
+    "This feature requires external library XYZ which is not yet integrated".into()
+));
+```
+
+## Documentation
+
+If a feature is planned but not implemented:
+
+```rust
+// BAD: Document non-existent feature
+/// Compresses the PDF using advanced algorithms
+pub fn compress() -> Result<()> {
+    Err(Error::NotImplemented("compress".into()))
+}
+
+// GOOD: Don't expose it at all, or mark clearly
+#[doc(hidden)]
+/// **⚠️ NOT YET IMPLEMENTED**
+///
+/// This feature is planned for v2.0
+pub(crate) fn compress() -> Result<()> {
+    Err(Error::Unsupported(
+        "PDF compression planned for v2.0".into()
+    ))
+}
+```
+
+## Module-Level Policy
+
+When creating a new module:
+
+**Option A: Implement Fully Before Exposing**
+
+```rust
+// Private module during development
+mod watermark {
+    // Work in progress...
+}
+
+// Only make public when complete
+pub mod watermark {
+    // All functions fully implemented
+}
+```
+
+**Option B: Incremental Public API**
+
+```rust
+pub mod watermark {
+    // Only expose what's complete
+    pub fn add_text_watermark() -> Result<()> {
+        // Fully implemented
+    }
+
+    // Keep incomplete parts private
+    fn add_image_watermark() -> Result<()> {
+        // TODO: Complete before making public
+    }
+}
+```
+
+## Examples of Complete Implementation
+
+### Example 1: Drawing Rectangle
+
+```rust
+pub fn draw_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32) -> Result<()> {
+    // Create path
+    let mut path = Path::new();
+    path.move_to(Point::new(x, y));
+    path.line_to(Point::new(x + w, y));
+    path.line_to(Point::new(x + w, y + h));
+    path.line_to(Point::new(x, y + h));
+    path.close();
+
+    // Build content stream
+    let mut stream = Vec::new();
+    stream.extend(format!("{} {} {} {} re\n", x, y, w, h).as_bytes());
+    stream.extend(b"S\n"); // Stroke
+
+    // Apply to current page
+    self.append_to_content_stream(&stream)?;
+
+    Ok(())
+}
+```
+
+### Example 2: Color with Opacity
+
+```rust
+pub fn set_color_with_opacity(&mut self, r: f32, g: f32, b: f32, a: f32) -> Result<()> {
+    // Validate inputs
+    if ![r, g, b, a].iter().all(|v| *v >= 0.0 && *v <= 1.0) {
+        return Err(Error::InvalidParameter(
+            "Color components must be between 0.0 and 1.0".into()
+        ));
+    }
+
+    // Set color
+    self.current_color = Color::new(r, g, b, a);
+
+    // Generate PDF operator
+    let color_op = format!("{} {} {} rg\n", r, g, b);
+    self.append_to_content_stream(color_op.as_bytes())?;
+
+    // Handle opacity if not fully opaque
+    if a < 1.0 {
+        let gs_name = self.add_graphics_state_with_opacity(a)?;
+        let gs_op = format!("/{} gs\n", gs_name);
+        self.append_to_content_stream(gs_op.as_bytes())?;
+    }
+
+    Ok(())
+}
+```
+
+## Enforcement
+
+### Mandatory Requirements
+
+**EVERY function in committed code must:**
+
+1. Actually perform its stated operation
+2. Work correctly with real data
+3. Be testable and tested
+4. Have zero placeholder comments
+5. Use real algorithms, not validation-only code
+
+### Code Review Checklist
+
+Reviewers MUST reject code containing:
+- ❌ `todo!()` or `unimplemented!()` macros
+- ❌ Functions that only validate inputs
+- ❌ Comments mentioning "TODO", "FIXME", "full implementation", "would", "should"
+- ❌ Dummy return values
+- ❌ Success returns without actual work
+- ❌ Any incomplete functionality, public OR private
+
+### Automated Checks
+
+CI/CD should fail on:
+```bash
+# Detect stub patterns
+git grep -n "todo!()" src/
+git grep -n "unimplemented!()" src/
+git grep -n "full implementation" src/
+git grep -n "TODO:" src/
+git grep -n "FIXME:" src/
+```
+
+## Summary
+
+**ABSOLUTE RULE**: Every function—public, private, or internal—must be FULLY FUNCTIONAL before commit.
+
+**NO EXCEPTIONS**: Private functions, feature-flagged code, and internal helpers must ALL be complete.
+
+**ZERO TOLERANCE**: A single stub, TODO, or incomplete function blocks the entire PR.
+
+**ENFORCEMENT**: MAXIMUM - Stubs are treated as critical bugs and block all merges.
+
+---
+
+**What This Means For AI Assistants:**
+
+When asked to implement a feature:
+1. **DO**: Implement it completely using actual algorithms and data structures
+2. **DO**: Break complex features into smaller fully-implemented pieces
+3. **DO**: Use existing codebase infrastructure to build real functionality
+4. **DON'T**: Add validation-only code that claims to be complete
+5. **DON'T**: Use phrases like "In a full implementation" or "This would"
+6. **DON'T**: Return success without doing the actual work
+7. **DON'T**: Hide stubs by making them private
+
+**If you cannot fully implement something**: Tell the user honestly instead of creating stubs.

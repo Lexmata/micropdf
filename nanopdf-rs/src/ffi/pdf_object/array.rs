@@ -137,7 +137,6 @@ pub extern "C" fn pdf_array_push_name(_ctx: Handle, array: PdfObjHandle, name: *
         return;
     }
 
-    #[allow(unsafe_code)]
     let name_str = unsafe { CStr::from_ptr(name) }
         .to_str()
         .unwrap_or("");
@@ -156,7 +155,6 @@ pub extern "C" fn pdf_array_push_string(_ctx: Handle, array: PdfObjHandle, str: 
         return;
     }
 
-    #[allow(unsafe_code)]
     let data = unsafe { std::slice::from_raw_parts(str as *const u8, len) };
 
     with_obj_mut(array, (), |arr| {

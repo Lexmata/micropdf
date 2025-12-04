@@ -3,7 +3,6 @@
 use bytes::{BufMut, Bytes, BytesMut};
 use std::io::{self, Write};
 use super::core::Buffer;
-use crate::fitz::error::{Error, Result};
 
 /// A writer that accumulates data into a buffer.
 pub struct BufferWriter {

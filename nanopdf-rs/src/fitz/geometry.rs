@@ -48,6 +48,37 @@ impl Rect {
         self.x0 = self.x0.min(p.x); self.y0 = self.y0.min(p.y);
         self.x1 = self.x1.max(p.x); self.y1 = self.y1.max(p.y);
     }
+
+    /// Expand rectangle by a given amount in all directions
+    pub fn expand(&self, amount: f32) -> Rect {
+        Rect {
+            x0: self.x0 - amount,
+            y0: self.y0 - amount,
+            x1: self.x1 + amount,
+            y1: self.y1 + amount,
+        }
+    }
+
+    /// Transform rectangle by a matrix
+    pub fn transform(&self, m: &Matrix) -> Rect {
+        if self.is_empty() {
+            return *self;
+        }
+
+        // Transform all four corners
+        let p0 = Point::new(self.x0, self.y0).transform(m);
+        let p1 = Point::new(self.x1, self.y0).transform(m);
+        let p2 = Point::new(self.x0, self.y1).transform(m);
+        let p3 = Point::new(self.x1, self.y1).transform(m);
+
+        // Find bounding box
+        let mut result = Rect::EMPTY;
+        result.include_point(p0);
+        result.include_point(p1);
+        result.include_point(p2);
+        result.include_point(p3);
+        result
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

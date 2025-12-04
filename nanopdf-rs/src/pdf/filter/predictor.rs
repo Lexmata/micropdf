@@ -348,7 +348,7 @@ mod tests {
         // Empty row should be skipped
         let data = vec![];
         let result = apply_png_predictor_decode(&data, 3, 1).unwrap();
-        assert_eq!(result, vec![]);
+        assert_eq!(result, Vec::<u8>::new());
     }
 
     #[test]

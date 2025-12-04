@@ -90,6 +90,16 @@ impl Pixmap {
             *sample = value;
         }
     }
+
+    /// Get width
+    pub fn w(&self) -> i32 {
+        self.width
+    }
+
+    /// Get height
+    pub fn h(&self) -> i32 {
+        self.height
+    }
 }
 
 /// Create a new pixmap
@@ -594,13 +604,80 @@ pub extern "C" fn fz_set_pixmap_resolution(_ctx: Handle, _pix: Handle, _xres: i3
 pub extern "C" fn fz_pixmap_resolution(_ctx: Handle, _pix: Handle, xres: *mut i32, yres: *mut i32) {
     // Return default 72 dpi
     if !xres.is_null() {
-        #[allow(unsafe_code)]
         unsafe { *xres = 72; }
     }
     if !yres.is_null() {
-        #[allow(unsafe_code)]
         unsafe { *yres = 72; }
     }
+}
+
+/// Check if pixmap is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_is_valid(_ctx: Handle, pix: Handle) -> i32 {
+    if PIXMAPS.get(pix).is_some() { 1 } else { 0 }
+}
+
+/// Scale pixmap to new dimensions
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_scale_pixmap(
+    _ctx: Handle,
+    pix: Handle,
+    xscale: f32,
+    yscale: f32,
+) -> Handle {
+    if let Some(p) = PIXMAPS.get(pix) {
+        if let Ok(guard) = p.lock() {
+            let new_width = ((guard.width as f32) * xscale) as i32;
+            let new_height = ((guard.height as f32) * yscale) as i32;
+            
+            if new_width <= 0 || new_height <= 0 {
+                return 0;
+            }
+            
+            let mut scaled = Pixmap::new(guard.colorspace, new_width, new_height, guard.alpha);
+            
+            // Simple nearest-neighbor scaling
+            for y in 0..new_height {
+                for x in 0..new_width {
+                    let src_x = ((x as f32) / xscale) as i32;
+                    let src_y = ((y as f32) / yscale) as i32;
+                    
+                    for c in 0..guard.n {
+                        if let Some(value) = guard.get_sample(src_x, src_y, c as i32) {
+                            scaled.set_sample(x, y, c as i32, value);
+                        }
+                    }
+                }
+            }
+            
+            return PIXMAPS.insert(scaled);
+        }
+    }
+    0
+}
+
+/// Get X resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_xres(_ctx: Handle, _pix: Handle) -> i32 {
+    72 // Default DPI
+}
+
+/// Get Y resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_yres(_ctx: Handle, _pix: Handle) -> i32 {
+    72 // Default DPI
+}
+
+/// Set X resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_set_pixmap_xres(_ctx: Handle, _pix: Handle, _xres: i32) {
+    // No-op in our implementation
+}
+
+/// Set Y resolution
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_set_pixmap_yres(_ctx: Handle, _pix: Handle, _yres: i32) {
+    // No-op in our implementation
 }
 
 #[cfg(test)]

@@ -34,6 +34,11 @@ impl Buffer {
         &self.data
     }
 
+    /// Alias for data() - get immutable slice of buffer
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+
     pub fn data_mut(&mut self) -> &mut Vec<u8> {
         &mut self.data
     }
@@ -82,7 +87,6 @@ pub extern "C" fn fz_new_buffer_from_copied_data(
     }
 
     // SAFETY: Caller guarantees data points to valid memory of `size` bytes
-    #[allow(unsafe_code)]
     let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
 
     BUFFERS.insert(Buffer::from_data(data_slice))
@@ -114,7 +118,6 @@ pub extern "C" fn fz_buffer_storage(
     let Some(buffer) = BUFFERS.get(buf) else {
         if !datap.is_null() {
             // SAFETY: Caller guarantees datap is valid if non-null
-            #[allow(unsafe_code)]
             unsafe { *datap = std::ptr::null_mut(); }
         }
         return 0;
@@ -126,7 +129,6 @@ pub extern "C" fn fz_buffer_storage(
     if !datap.is_null() {
         // We can't safely return a pointer to internal data
         // because the buffer may be reallocated
-        #[allow(unsafe_code)]
         unsafe { *datap = std::ptr::null_mut(); }
     }
 
@@ -204,7 +206,6 @@ pub extern "C" fn fz_append_data(
     if let Some(buffer) = BUFFERS.get(buf) {
         if let Ok(mut guard) = buffer.lock() {
             // SAFETY: Caller guarantees data points to valid memory of `len` bytes
-            #[allow(unsafe_code)]
             let slice = unsafe { std::slice::from_raw_parts(data as *const u8, len) };
             guard.append(slice);
         }
@@ -224,7 +225,6 @@ pub extern "C" fn fz_append_string(_ctx: Handle, buf: Handle, data: *const c_cha
     if let Some(buffer) = BUFFERS.get(buf) {
         if let Ok(mut guard) = buffer.lock() {
             // SAFETY: Caller guarantees data is a valid null-terminated C string
-            #[allow(unsafe_code)]
             let c_str = unsafe { std::ffi::CStr::from_ptr(data) };
             guard.append(c_str.to_bytes());
         }
@@ -273,7 +273,6 @@ pub extern "C" fn fz_md5_buffer(
             let result = hasher.finalize();
 
             // SAFETY: Caller guarantees digest points to valid writable [u8; 16]
-            #[allow(unsafe_code)]
             unsafe {
                 (*digest).copy_from_slice(&result);
             }
@@ -453,7 +452,6 @@ pub extern "C" fn fz_append_pdf_string(_ctx: Handle, buf: Handle, str: *const c_
     }
 
     // SAFETY: Caller guarantees str is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(str) };
     let bytes = c_str.to_bytes();
 
@@ -512,13 +510,252 @@ pub extern "C" fn fz_append_buffer(_ctx: Handle, buf: Handle, src: Handle) {
     }
 }
 
-// Note: Some functions that return raw pointers to internal data
-// cannot be implemented safely. They would require:
-// 1. A stable buffer address (Box::leak or similar)
-// 2. Unsafe blocks to convert to raw pointers
+/// Create a buffer from data with transfer of ownership
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+/// The data will be copied into the buffer (no actual ownership transfer).
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_from_data(
+    _ctx: Handle,
+    data: *mut u8,
+    size: usize,
+) -> Handle {
+    if data.is_null() || size == 0 {
+        return BUFFERS.insert(Buffer::new(0));
+    }
+
+    // SAFETY: Caller guarantees data points to valid memory of `size` bytes
+    let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+
+    // Copy the data to maintain safety (no actual ownership transfer in Rust FFI)
+    BUFFERS.insert(Buffer::from_data(data_slice))
+}
+
+/// Create a slice/view of a buffer
+///
+/// # Safety
+/// Caller must ensure buffer handle is valid.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_slice_buffer(
+    _ctx: Handle,
+    buf: Handle,
+    offset: usize,
+    len: usize,
+) -> Handle {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(guard) = buffer.lock() {
+            let data = guard.data();
+            if offset < data.len() {
+                let end = (offset + len).min(data.len());
+                let slice = &data[offset..end];
+                return BUFFERS.insert(Buffer::from_data(slice));
+            }
+        }
+    }
+    0
+}
+
+/// Append a Unicode rune (codepoint) to buffer as UTF-8
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_rune(_ctx: Handle, buf: Handle, rune: i32) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            // Convert Unicode codepoint to char and encode as UTF-8
+            if let Some(ch) = char::from_u32(rune as u32) {
+                let mut utf8_buf = [0u8; 4];
+                let utf8_str = ch.encode_utf8(&mut utf8_buf);
+                guard.append(utf8_str.as_bytes());
+            }
+        }
+    }
+}
+
+/// Append base64 encoded data to buffer
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_base64(
+    _ctx: Handle,
+    buf: Handle,
+    data: *const u8,
+    size: usize,
+    newline: i32,
+) {
+    if data.is_null() || size == 0 {
+        return;
+    }
+
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            // SAFETY: Caller guarantees data points to valid memory
+            let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+
+            // Simple base64 encoding
+            const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+            let mut line_len = 0;
+            let mut i = 0;
+
+            while i + 2 < size {
+                let b1 = data_slice[i];
+                let b2 = data_slice[i + 1];
+                let b3 = data_slice[i + 2];
+
+                guard.append_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+                guard.append_byte(BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize]);
+                guard.append_byte(BASE64_CHARS[(((b2 & 0x0F) << 2) | ((b3 >> 6) & 0x03)) as usize]);
+                guard.append_byte(BASE64_CHARS[(b3 & 0x3F) as usize]);
+
+                line_len += 4;
+                if newline != 0 && line_len >= 76 {
+                    guard.append_byte(b'\n');
+                    line_len = 0;
+                }
+
+                i += 3;
+            }
+
+            // Handle remaining bytes
+            if i < size {
+                let b1 = data_slice[i];
+                guard.append_byte(BASE64_CHARS[((b1 >> 2) & 0x3F) as usize]);
+
+                if i + 1 < size {
+                    let b2 = data_slice[i + 1];
+                    guard.append_byte(BASE64_CHARS[(((b1 & 0x03) << 4) | ((b2 >> 4) & 0x0F)) as usize]);
+                    guard.append_byte(BASE64_CHARS[((b2 & 0x0F) << 2) as usize]);
+                    guard.append_byte(b'=');
+                } else {
+                    guard.append_byte(BASE64_CHARS[((b1 & 0x03) << 4) as usize]);
+                    guard.append_byte(b'=');
+                    guard.append_byte(b'=');
+                }
+            }
+        }
+    }
+}
+
+/// Append an integer formatted as string
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_int(_ctx: Handle, buf: Handle, value: i64) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            let s = format!("{}", value);
+            guard.append(s.as_bytes());
+        }
+    }
+}
+
+/// Append float formatted as string
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_float(_ctx: Handle, buf: Handle, value: f32, digits: i32) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            let s = if digits > 0 {
+                format!("{:.prec$}", value, prec = digits as usize)
+            } else {
+                format!("{}", value)
+            };
+            guard.append(s.as_bytes());
+        }
+    }
+}
+
+/// Append hexadecimal encoded data
+///
+/// # Safety
+/// Caller must ensure `data` points to valid memory of at least `size` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_append_hex(
+    _ctx: Handle,
+    buf: Handle,
+    data: *const u8,
+    size: usize,
+) {
+    if data.is_null() || size == 0 {
+        return;
+    }
+
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            // SAFETY: Caller guarantees data points to valid memory of size bytes
+            let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
+
+            const HEX_CHARS: &[u8] = b"0123456789abcdef";
+            for &byte in data_slice {
+                guard.append_byte(HEX_CHARS[(byte >> 4) as usize]);
+                guard.append_byte(HEX_CHARS[(byte & 0x0F) as usize]);
+            }
+        }
+    }
+}
+
+/// Compare two buffers for equality
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_eq(_ctx: Handle, buf1: Handle, buf2: Handle) -> i32 {
+    if buf1 == buf2 {
+        return 1;
+    }
+
+    let data1 = if let Some(b) = BUFFERS.get(buf1) {
+        if let Ok(guard) = b.lock() {
+            Some(guard.data().to_vec())
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    let data2 = if let Some(b) = BUFFERS.get(buf2) {
+        if let Ok(guard) = b.lock() {
+            Some(guard.data().to_vec())
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    match (data1, data2) {
+        (Some(d1), Some(d2)) => if d1 == d2 { 1 } else { 0 },
+        _ => 0,
+    }
+}
+
+/// Get buffer storage capacity
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_capacity(_ctx: Handle, buf: Handle) -> usize {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            return guard.data_mut().capacity();
+        }
+    }
+    0
+}
+
+/// Extract data from buffer as new buffer (move semantics)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_extract(_ctx: Handle, buf: Handle) -> Handle {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            let data = guard.data().to_vec();
+            guard.clear();
+            return BUFFERS.insert(Buffer::from_data(&data));
+        }
+    }
+    0
+}
+
+// Note: fz_append_printf is not implemented due to variadic function complexity
+// in Rust FFI. Users should format strings in their own code and use fz_append_string.
 //
-// For a fully safe API, consider returning handles or using
-// callback-based APIs instead.
+// Note: Functions returning raw pointers to internal mutable data (like fz_buffer_data)
+// cannot be safely implemented without additional infrastructure due to Rust's
+// borrowing rules and the handle-based architecture. Use fz_string_from_buffer for
+// read-only access, or work with buffer copies via fz_buffer_extract.
 
 #[cfg(test)]
 mod tests {

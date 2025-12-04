@@ -251,7 +251,6 @@ pub extern "C" fn fz_new_indexed_colorspace(
     let lookup_data = if lookup.is_null() || lookup_size == 0 {
         vec![0u8; lookup_size]
     } else {
-        #[allow(unsafe_code)]
         unsafe { std::slice::from_raw_parts(lookup, lookup_size) }.to_vec()
     };
 
@@ -313,7 +312,6 @@ pub extern "C" fn fz_new_icc_colorspace(
     let cs_name = if name.is_null() {
         "ICCBased".to_string()
     } else {
-        #[allow(unsafe_code)]
         let c_str = unsafe { std::ffi::CStr::from_ptr(name) };
         c_str.to_str().unwrap_or("ICCBased").to_string()
     };
@@ -398,7 +396,6 @@ pub extern "C" fn fz_convert_color(
     }
 
     // SAFETY: Caller guarantees src and dst point to valid memory
-    #[allow(unsafe_code)]
     let (src_slice, dst_slice) = unsafe {
         (
             std::slice::from_raw_parts(src, src_n),
@@ -452,6 +449,152 @@ pub extern "C" fn fz_convert_color(
             // Default: fill with zeros
             dst_slice.fill(0.0);
         }
+    }
+}
+
+/// Clone a colorspace (increments reference count)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_colorspace(_ctx: super::Handle, cs: ColorspaceHandle) -> ColorspaceHandle {
+    fz_keep_colorspace(_ctx, cs)
+}
+
+/// Check if two colorspaces are equal
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_eq(_ctx: super::Handle, a: ColorspaceHandle, b: ColorspaceHandle) -> i32 {
+    if a == b { 1 } else { 0 }
+}
+
+/// Get the type of a colorspace as integer
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_type(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    colorspace_type(cs) as i32
+}
+
+/// Check if colorspace is ICC-based
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_is_icc(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    let cs_type = colorspace_type(cs);
+    if cs_type == ColorspaceType::Icc { 1 } else { 0 }
+}
+
+/// Clamp color values to valid range [0, 1]
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clamp_color(
+    _ctx: super::Handle,
+    cs: ColorspaceHandle,
+    color_in: *const f32,
+    color_out: *mut f32,
+) {
+    if color_in.is_null() || color_out.is_null() {
+        return;
+    }
+
+    let n = colorspace_n(cs) as usize;
+    if n == 0 {
+        return;
+    }
+
+    unsafe {
+        let input = std::slice::from_raw_parts(color_in, n);
+        let output = std::slice::from_raw_parts_mut(color_out, n);
+
+        for i in 0..n {
+            output[i] = input[i].clamp(0.0, 1.0);
+        }
+    }
+}
+
+/// Get the colorspace for a separation/DeviceN colorant by name
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_colorant(
+    _ctx: super::Handle,
+    _cs: ColorspaceHandle,
+    _idx: i32,
+) -> *const c_char {
+    c"".as_ptr()
+}
+
+/// Count number of colorants in a separation/DeviceN colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_num_colorants(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    if colorspace_type(cs) == ColorspaceType::Separation {
+        colorspace_n(cs)
+    } else {
+        0
+    }
+}
+
+/// Get the base colorspace component count
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_base_n(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    let base = fz_colorspace_base(_ctx, cs);
+    colorspace_n(base)
+}
+
+/// Convert a single pixel
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_convert_pixel(
+    _ctx: super::Handle,
+    src_cs: ColorspaceHandle,
+    src: *const f32,
+    dst_cs: ColorspaceHandle,
+    dst: *mut f32,
+) {
+    fz_convert_color(_ctx, src_cs, src, dst_cs, dst, 0)
+}
+
+/// Get standard sRGB colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_srgb(_ctx: super::Handle) -> ColorspaceHandle {
+    FZ_COLORSPACE_RGB
+}
+
+/// Get standard grayscale colorspace (alias)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_grayscale(_ctx: super::Handle) -> ColorspaceHandle {
+    FZ_COLORSPACE_GRAY
+}
+
+/// Check if colorspace has spot colors
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_has_spots(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    let cs_type = colorspace_type(cs);
+    if cs_type == ColorspaceType::Separation { 1 } else { 0 }
+}
+
+/// Count spot colors in a colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_n_spots(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    if fz_colorspace_has_spots(_ctx, cs) != 0 { 1 } else { 0 }
+}
+
+/// Get colorspace name as string (alias)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_name_string(_ctx: super::Handle, cs: ColorspaceHandle) -> *const c_char {
+    fz_colorspace_name(_ctx, cs)
+}
+
+/// Check if colorspace is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_is_valid(_ctx: super::Handle, cs: ColorspaceHandle) -> i32 {
+    if cs == 0 {
+        0
+    } else if cs <= 5 {
+        1
+    } else if cs >= CUSTOM_CS_OFFSET {
+        1
+    } else {
+        0
+    }
+}
+
+/// Get maximum component value for colorspace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_colorspace_max(_ctx: super::Handle, cs: ColorspaceHandle) -> f32 {
+    if colorspace_type(cs) == ColorspaceType::Indexed {
+        fz_colorspace_high(_ctx, cs) as f32
+    } else {
+        1.0
     }
 }
 

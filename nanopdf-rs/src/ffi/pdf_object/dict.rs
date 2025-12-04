@@ -24,7 +24,6 @@ pub extern "C" fn pdf_dict_puts(
         return;
     }
 
-    #[allow(unsafe_code)]
     let key_str = unsafe { CStr::from_ptr(key) }
         .to_str()
         .unwrap_or("")
@@ -52,7 +51,6 @@ pub extern "C" fn pdf_dict_dels(_ctx: Handle, dict: PdfObjHandle, key: *const c_
         return;
     }
 
-    #[allow(unsafe_code)]
     let key_str = unsafe { CStr::from_ptr(key) }
         .to_str()
         .unwrap_or("")
@@ -184,7 +182,6 @@ pub extern "C" fn pdf_dict_gets(_ctx: Handle, dict: PdfObjHandle, key: *const c_
         return 0;
     }
 
-    #[allow(unsafe_code)]
     let key_str = unsafe { CStr::from_ptr(key) }
         .to_str()
         .unwrap_or("")
@@ -249,7 +246,6 @@ pub extern "C" fn pdf_dict_put_name(_ctx: Handle, dict: PdfObjHandle, key: PdfOb
         None => return,
     };
 
-    #[allow(unsafe_code)]
     let name_str = unsafe { CStr::from_ptr(name) }
         .to_str()
         .unwrap_or("");
@@ -282,7 +278,6 @@ pub extern "C" fn pdf_dict_put_string(_ctx: Handle, dict: PdfObjHandle, key: Pdf
     let data = if str.is_null() || len == 0 {
         Vec::new()
     } else {
-        #[allow(unsafe_code)]
         unsafe { std::slice::from_raw_parts(str as *const u8, len) }.to_vec()
     };
 

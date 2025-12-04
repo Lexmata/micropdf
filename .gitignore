@@ -1,7 +1,8 @@
-./target/
+target/
 dist/
 node_modules/
 *.log
 .DS_Store
 
-./mupdf/
+# MuPDF source directory (cloned submodule for reference)
+mupdf/

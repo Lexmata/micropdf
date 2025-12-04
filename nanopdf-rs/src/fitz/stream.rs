@@ -5,11 +5,10 @@
 
 use crate::fitz::buffer::Buffer;
 use crate::fitz::error::{Error, Result};
-use bytes::{Buf, Bytes, BytesMut};
+use bytes::{Bytes, BytesMut};
 use std::fs::File;
 use std::io::{self, BufReader, Read, Seek, SeekFrom};
 use std::path::Path;
-use std::sync::Arc;
 
 /// A buffered stream for reading PDF data.
 pub struct Stream {

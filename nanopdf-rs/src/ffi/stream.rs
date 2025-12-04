@@ -116,7 +116,6 @@ pub extern "C" fn fz_open_file(_ctx: Handle, filename: *const c_char) -> Handle 
     }
 
     // SAFETY: Caller guarantees filename is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(filename) };
     let path = match c_str.to_str() {
         Ok(s) => s,
@@ -144,7 +143,6 @@ pub extern "C" fn fz_open_memory(
     }
 
     // SAFETY: Caller guarantees data points to valid memory of `len` bytes
-    #[allow(unsafe_code)]
     let slice = unsafe { std::slice::from_raw_parts(data, len) };
     STREAMS.insert(Stream::from_memory(slice.to_vec()))
 }
@@ -178,7 +176,6 @@ pub extern "C" fn fz_read(
     if let Some(stream) = STREAMS.get(stm) {
         if let Ok(mut guard) = stream.lock() {
             // SAFETY: Caller guarantees data points to writable memory of `len` bytes
-            #[allow(unsafe_code)]
             let buf = unsafe { std::slice::from_raw_parts_mut(data, len) };
             return guard.read(buf);
         }
@@ -283,6 +280,210 @@ pub extern "C" fn fz_read_uint32_le(_ctx: Handle, stm: Handle) -> u32 {
     } else {
         0
     }
+}
+
+/// Read i16 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int16(_ctx: Handle, stm: Handle) -> i16 {
+    let mut buf = [0u8; 2];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 2) == 2 {
+        i16::from_be_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read i16 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int16_le(_ctx: Handle, stm: Handle) -> i16 {
+    let mut buf = [0u8; 2];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 2) == 2 {
+        i16::from_le_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read i32 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int32(_ctx: Handle, stm: Handle) -> i32 {
+    let mut buf = [0u8; 4];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 4) == 4 {
+        i32::from_be_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read i32 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int32_le(_ctx: Handle, stm: Handle) -> i32 {
+    let mut buf = [0u8; 4];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 4) == 4 {
+        i32::from_le_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read i64 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int64(_ctx: Handle, stm: Handle) -> i64 {
+    let mut buf = [0u8; 8];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 8) == 8 {
+        i64::from_be_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read i64 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_int64_le(_ctx: Handle, stm: Handle) -> i64 {
+    let mut buf = [0u8; 8];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 8) == 8 {
+        i64::from_le_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read u64 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_uint64(_ctx: Handle, stm: Handle) -> u64 {
+    let mut buf = [0u8; 8];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 8) == 8 {
+        u64::from_be_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read u64 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_uint64_le(_ctx: Handle, stm: Handle) -> u64 {
+    let mut buf = [0u8; 8];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 8) == 8 {
+        u64::from_le_bytes(buf)
+    } else {
+        0
+    }
+}
+
+/// Read f32 big-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_float(_ctx: Handle, stm: Handle) -> f32 {
+    let mut buf = [0u8; 4];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 4) == 4 {
+        f32::from_be_bytes(buf)
+    } else {
+        0.0
+    }
+}
+
+/// Read f32 little-endian
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_float_le(_ctx: Handle, stm: Handle) -> f32 {
+    let mut buf = [0u8; 4];
+    if fz_read(_ctx, stm, buf.as_mut_ptr(), 4) == 4 {
+        f32::from_le_bytes(buf)
+    } else {
+        0.0
+    }
+}
+
+/// Read a line of text (up to newline or EOF)
+///
+/// # Safety
+/// Caller must ensure `buf` points to valid writable memory of at least `max` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_line(
+    _ctx: Handle,
+    stm: Handle,
+    buf: *mut c_char,
+    max: usize,
+) -> *mut c_char {
+    if buf.is_null() || max == 0 {
+        return std::ptr::null_mut();
+    }
+
+    if let Some(stream) = STREAMS.get(stm) {
+        if let Ok(mut guard) = stream.lock() {
+            let mut count = 0;
+            let mut result: Vec<u8> = Vec::new();
+
+            while count < max - 1 {
+                if let Some(byte) = guard.read_byte() {
+                    if byte == b'\n' {
+                        break;
+                    }
+                    if byte != b'\r' { // Skip carriage returns
+                        result.push(byte);
+                        count += 1;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            if !result.is_empty() || count > 0 {
+                // SAFETY: Caller guarantees buf points to valid memory of max bytes
+                let dest = unsafe { std::slice::from_raw_parts_mut(buf as *mut u8, max) };
+                let to_copy = result.len().min(max - 1);
+                dest[..to_copy].copy_from_slice(&result[..to_copy]);
+                dest[to_copy] = 0; // Null terminate
+                return buf;
+            }
+        }
+    }
+    std::ptr::null_mut()
+}
+
+/// Unread a byte (push back)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_unread_byte(_ctx: Handle, stm: Handle) {
+    if let Some(stream) = STREAMS.get(stm) {
+        if let Ok(mut guard) = stream.lock() {
+            if guard.position > 0 {
+                guard.position -= 1;
+                guard.eof = false;
+            }
+        }
+    }
+}
+
+/// Skip whitespace
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_skip_space(_ctx: Handle, stm: Handle) {
+    if let Some(stream) = STREAMS.get(stm) {
+        if let Ok(mut guard) = stream.lock() {
+            while let Some(byte) = guard.peek_byte() {
+                if byte.is_ascii_whitespace() {
+                    guard.read_byte();
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/// Read all remaining data into buffer
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_read_all(_ctx: Handle, stm: Handle) -> Handle {
+    use super::BUFFERS;
+    use super::buffer::Buffer;
+
+    if let Some(stream) = STREAMS.get(stm) {
+        if let Ok(mut guard) = stream.lock() {
+            let remaining = &guard.data[guard.position..];
+            let buffer = Buffer::from_data(remaining);
+            guard.position = guard.data.len();
+            guard.eof = true;
+            return BUFFERS.insert(buffer);
+        }
+    }
+    0
 }
 
 #[cfg(test)]
