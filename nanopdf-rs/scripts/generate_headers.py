@@ -244,7 +244,7 @@ extern "C" {{
 def generate_enhanced_header(module_name: str, functions: List[Dict]) -> str:
     """Generate a C header file for the enhanced (NanoPDF-specific) module."""
     guard = f'NANOPDF_{module_name.upper()}_H'
-    
+
     header = f"""// NanoPDF - Enhanced/Extended Functions
 // Auto-generated from Rust FFI - DO NOT EDIT MANUALLY
 // Module: {module_name}
@@ -268,11 +268,11 @@ extern "C" {{
 // ============================================================================
 
 """
-    
+
     # Add function declarations
     for func in sorted(functions, key=lambda f: f['name']):
         header += func['declaration'] + '\n'
-    
+
     header += f"""
 #ifdef __cplusplus
 }}
@@ -280,7 +280,7 @@ extern "C" {{
 
 #endif /* {guard} */
 """
-    
+
     return header
 
 def main():
