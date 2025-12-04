@@ -209,7 +209,7 @@ impl TextSpan {
     }
 
     /// Extract text content as string
-    pub fn to_string(&self) -> String {
+    pub fn text_content(&self) -> String {
         self.items
             .iter()
             .filter(|item| item.ucs >= 0)
@@ -437,10 +437,10 @@ impl Text {
     }
 
     /// Extract all text content as a single string
-    pub fn to_string(&self) -> String {
+    pub fn text_content(&self) -> String {
         self.spans
             .iter()
-            .map(|span| span.to_string())
+            .map(|span| span.text_content())
             .collect::<Vec<_>>()
             .join("")
     }
@@ -554,7 +554,7 @@ mod tests {
         span.add_glyph(TextItem::new(0.0, 0.0, 1, 72)); // 'H'
         span.add_glyph(TextItem::new(10.0, 0.0, 2, 105)); // 'i'
 
-        assert_eq!(span.to_string(), "Hi");
+        assert_eq!(span.text_content(), "Hi");
     }
 
     #[test]
@@ -622,7 +622,7 @@ mod tests {
             TextLanguage::Unset,
         );
 
-        let content = text.to_string();
+        let content = text.text_content();
         assert_eq!(content, "Hello");
     }
 

@@ -186,14 +186,14 @@ impl Crypt {
         hasher.update(&self.owner_password);
 
         // Step 4: Add permissions (little-endian)
-        hasher.update(&self.permissions.to_le_bytes());
+        hasher.update(self.permissions.to_le_bytes());
 
         // Step 5: Add document ID
         hasher.update(&self.document_id);
 
         // Step 6: If not encrypting metadata (revision 4+), add 0xFFFFFFFF
         if self.revision >= 4 && !self.encrypt_metadata {
-            hasher.update(&[0xFF, 0xFF, 0xFF, 0xFF]);
+            hasher.update([0xFF, 0xFF, 0xFF, 0xFF]);
         }
 
         let mut key = hasher.finalize().to_vec();

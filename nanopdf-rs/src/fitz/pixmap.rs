@@ -8,6 +8,7 @@ use std::sync::Arc;
 pub struct Pixmap { inner: Arc<PixmapInner> }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 struct PixmapInner {
     x: i32, y: i32, w: i32, h: i32, n: u8, alpha: u8,
     stride: usize, colorspace: Option<Colorspace>, samples: Vec<u8>,

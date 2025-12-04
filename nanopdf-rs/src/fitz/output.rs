@@ -107,7 +107,7 @@ impl Output {
     }
 
     /// Write a formatted string
-    pub fn write_printf(&mut self, fmt: &str, args: std::fmt::Arguments) -> Result<()> {
+    pub fn write_printf(&mut self, _fmt: &str, args: std::fmt::Arguments) -> Result<()> {
         use std::fmt::Write as FmtWrite;
         let mut s = String::new();
         s.write_fmt(args).map_err(|e| Error::Generic(e.to_string()))?;
@@ -262,7 +262,7 @@ impl Write for FileOutput {
 }
 
 impl OutputWriter for FileOutput {
-    fn seek(&mut self, offset: i64, whence: SeekFrom) -> Result<u64> {
+    fn seek(&mut self, _offset: i64, whence: SeekFrom) -> Result<u64> {
         use std::io::Seek;
         self.file
             .seek(whence.into())
@@ -304,6 +304,7 @@ impl BufferOutput {
         }
     }
 
+    #[allow(dead_code)]
     fn to_buffer(&self) -> Buffer {
         Buffer::from_data(self.data.clone())
     }
@@ -338,7 +339,7 @@ impl Write for BufferOutput {
 }
 
 impl OutputWriter for BufferOutput {
-    fn seek(&mut self, offset: i64, whence: SeekFrom) -> Result<u64> {
+    fn seek(&mut self, _offset: i64, whence: SeekFrom) -> Result<u64> {
         let new_pos = match whence {
             SeekFrom::Start(n) => n as i64,
             SeekFrom::Current(n) => self.position as i64 + n,
@@ -437,7 +438,7 @@ impl Write for MemoryOutput {
 }
 
 impl OutputWriter for MemoryOutput {
-    fn seek(&mut self, offset: i64, whence: SeekFrom) -> Result<u64> {
+    fn seek(&mut self, _offset: i64, whence: SeekFrom) -> Result<u64> {
         let new_pos = match whence {
             SeekFrom::Start(n) => n as i64,
             SeekFrom::Current(n) => self.position as i64 + n,

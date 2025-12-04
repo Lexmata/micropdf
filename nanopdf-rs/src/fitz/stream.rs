@@ -34,6 +34,10 @@ pub trait StreamSource: Send + Sync {
     fn tell(&mut self) -> io::Result<u64>;
     /// Get total length if known.
     fn len(&self) -> Option<u64>;
+    /// Check if stream is empty (if length is known).
+    fn is_empty(&self) -> Option<bool> {
+        self.len().map(|l| l == 0)
+    }
 }
 
 /// File-based stream source.

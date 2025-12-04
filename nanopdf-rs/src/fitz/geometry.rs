@@ -1,7 +1,5 @@
 //! Geometry primitives - Point, Rect, Matrix, Quad
 
-use std::f32::{INFINITY, NEG_INFINITY};
-
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Point { pub x: f32, pub y: f32 }
 
@@ -20,15 +18,15 @@ impl Point {
 pub struct Rect { pub x0: f32, pub y0: f32, pub x1: f32, pub y1: f32 }
 
 impl Rect {
-    pub const EMPTY: Rect = Rect { x0: INFINITY, y0: INFINITY, x1: NEG_INFINITY, y1: NEG_INFINITY };
-    pub const INFINITE: Rect = Rect { x0: NEG_INFINITY, y0: NEG_INFINITY, x1: INFINITY, y1: INFINITY };
+    pub const EMPTY: Rect = Rect { x0: f32::INFINITY, y0: f32::INFINITY, x1: f32::NEG_INFINITY, y1: f32::NEG_INFINITY };
+    pub const INFINITE: Rect = Rect { x0: f32::NEG_INFINITY, y0: f32::NEG_INFINITY, x1: f32::INFINITY, y1: f32::INFINITY };
     pub const UNIT: Rect = Rect { x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0 };
 
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> Self { Self { x0, y0, x1, y1 } }
     pub fn width(&self) -> f32 { self.x1 - self.x0 }
     pub fn height(&self) -> f32 { self.y1 - self.y0 }
     pub fn is_empty(&self) -> bool { self.x0 >= self.x1 || self.y0 >= self.y1 }
-    pub fn is_infinite(&self) -> bool { self.x0 == NEG_INFINITY }
+    pub fn is_infinite(&self) -> bool { self.x0 == f32::NEG_INFINITY }
     pub fn contains(&self, x: f32, y: f32) -> bool {
         x >= self.x0 && x < self.x1 && y >= self.y0 && y < self.y1
     }

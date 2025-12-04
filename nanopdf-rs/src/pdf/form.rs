@@ -64,6 +64,7 @@ pub enum TextFormat {
 
 /// Field flags (bitfield)
 #[derive(Debug, Clone, Copy)]
+#[derive(Default)]
 pub struct FieldFlags(u32);
 
 impl FieldFlags {
@@ -115,11 +116,6 @@ impl FieldFlags {
     }
 }
 
-impl Default for FieldFlags {
-    fn default() -> Self {
-        Self(0)
-    }
-}
 
 /// Choice option (for combo boxes and list boxes)
 #[derive(Debug, Clone)]
@@ -239,7 +235,7 @@ impl FormField {
     }
 
     /// Create a radio button
-    pub fn radio_button(name: String, rect: Rect, group: &str, value: &str) -> Self {
+    pub fn radio_button(name: String, rect: Rect, _group: &str, value: &str) -> Self {
         let mut field = Self::new(name, WidgetType::RadioButton, rect);
         field.value = value.to_string();
         field.flags.set(FieldFlags::RADIO);
@@ -334,10 +330,8 @@ impl FormField {
             }
             WidgetType::ComboBox | WidgetType::ListBox => {
                 // Validate against options
-                if !self.options.iter().any(|opt| opt.value == value) {
-                    if !self.flags.has(FieldFlags::EDIT) {
-                        return Err(Error::Argument("Invalid choice value".into()));
-                    }
+                if !self.options.iter().any(|opt| opt.value == value) && !self.flags.has(FieldFlags::EDIT) {
+                    return Err(Error::Argument("Invalid choice value".into()));
                 }
                 self.value = value;
             }

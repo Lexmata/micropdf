@@ -516,7 +516,7 @@ pub extern "C" fn fz_set_aa_level(ctx: Handle, bits: c_int) {
         if let Ok(mut settings) = CONTEXT_SETTINGS.lock() {
             settings.entry(ctx)
                 .or_insert_with(ContextSettings::default)
-                .aa_level = bits.max(0).min(8); // Clamp to 0-8 bits
+                .aa_level = bits.clamp(0, 8); // Clamp to 0-8 bits
         }
     }
 }

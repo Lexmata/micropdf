@@ -267,7 +267,7 @@ pub fn rotate_pages(input_path: &str, rotation: i32, output_path: &str) -> Resul
         ));
     }
 
-    let normalized_rotation = ((rotation % 360) + 360) % 360;
+    let normalized_rotation = rotation.rem_euclid(360);
     if normalized_rotation != 0 && normalized_rotation != 90 &&
        normalized_rotation != 180 && normalized_rotation != 270 {
         return Err(EnhancedError::InvalidParameter(

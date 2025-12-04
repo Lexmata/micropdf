@@ -80,7 +80,7 @@ pub extern "C" fn np_add_watermark(
         return -1;
     }
 
-    if font_size <= 0.0 || opacity < 0.0 || opacity > 1.0 {
+    if font_size <= 0.0 || !(0.0..=1.0).contains(&opacity) {
         return -1;
     }
 
@@ -133,11 +133,11 @@ pub extern "C" fn np_draw_line(
     alpha: f32,
     line_width: f32,
 ) -> i32 {
-    if r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0 {
+    if !(0.0..=1.0).contains(&r) || !(0.0..=1.0).contains(&g) || !(0.0..=1.0).contains(&b) {
         return -1;
     }
 
-    if alpha < 0.0 || alpha > 1.0 {
+    if !(0.0..=1.0).contains(&alpha) {
         return -1;
     }
 
@@ -168,11 +168,11 @@ pub extern "C" fn np_draw_rectangle(
         return -1;
     }
 
-    if r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0 {
+    if !(0.0..=1.0).contains(&r) || !(0.0..=1.0).contains(&g) || !(0.0..=1.0).contains(&b) {
         return -1;
     }
 
-    if alpha < 0.0 || alpha > 1.0 {
+    if !(0.0..=1.0).contains(&alpha) {
         return -1;
     }
 
@@ -198,11 +198,11 @@ pub extern "C" fn np_draw_circle(
         return -1;
     }
 
-    if r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0 {
+    if !(0.0..=1.0).contains(&r) || !(0.0..=1.0).contains(&g) || !(0.0..=1.0).contains(&b) {
         return -1;
     }
 
-    if alpha < 0.0 || alpha > 1.0 {
+    if !(0.0..=1.0).contains(&alpha) {
         return -1;
     }
 

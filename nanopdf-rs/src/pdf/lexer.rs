@@ -259,7 +259,7 @@ impl<'a> Lexer<'a> {
                             b'\\' => buf.buffer.push('\\'),
                             b'0'..=b'7' => {
                                 // Octal escape
-                                let mut octal = (next - b'0') as u8;
+                                let mut octal = next - b'0';
                                 if !self.is_eof() && (b'0'..=b'7').contains(&self.data[self.pos]) {
                                     octal = octal * 8 + (self.data[self.pos] - b'0');
                                     self.pos += 1;
@@ -304,7 +304,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn lex_number(&mut self, buf: &mut LexBuf) -> Result<Token> {
-        let start = self.pos;
+        let _start = self.pos;
         let mut is_real = false;
 
         // Optional sign

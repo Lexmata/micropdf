@@ -352,29 +352,29 @@ impl Device for TraceDevice {
     }
 
     fn fill_text(&mut self, text: &Text, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
-        let content = text.to_string();
+        let content = text.text_content();
         self.log(&format!("fill_text '{}' ctm={:?} color={:?} alpha={}", content, ctm, color, alpha));
     }
 
     fn stroke_text(&mut self, text: &Text, stroke: &StrokeState, ctm: &Matrix, _: &Colorspace, color: &[f32], alpha: f32) {
-        let content = text.to_string();
+        let content = text.text_content();
         self.log(&format!("stroke_text '{}' width={} ctm={:?} color={:?} alpha={}", content, stroke.linewidth, ctm, color, alpha));
     }
 
     fn clip_text(&mut self, text: &Text, ctm: &Matrix, scissor: Rect) {
-        let content = text.to_string();
+        let content = text.text_content();
         self.log(&format!("clip_text '{}' ctm={:?} scissor={:?}", content, ctm, scissor));
         self.indent += 1;
     }
 
     fn clip_stroke_text(&mut self, text: &Text, _: &StrokeState, ctm: &Matrix, scissor: Rect) {
-        let content = text.to_string();
+        let content = text.text_content();
         self.log(&format!("clip_stroke_text '{}' ctm={:?} scissor={:?}", content, ctm, scissor));
         self.indent += 1;
     }
 
     fn ignore_text(&mut self, text: &Text, ctm: &Matrix) {
-        let content = text.to_string();
+        let content = text.text_content();
         self.log(&format!("ignore_text '{}' ctm={:?}", content, ctm));
     }
 

@@ -4,7 +4,7 @@
 
 use super::{Handle, HandleStore, PIXMAPS, BUFFERS};
 use crate::fitz::image::Image;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::LazyLock;
 
 /// Image storage
 pub static IMAGES: LazyLock<HandleStore<Image>> =
@@ -89,7 +89,7 @@ pub extern "C" fn fz_drop_image(_ctx: Handle, image: Handle) {
 pub extern "C" fn fz_image_w(_ctx: Handle, image: Handle) -> i32 {
     if let Some(img) = IMAGES.get(image) {
         if let Ok(guard) = img.lock() {
-            return guard.width() as i32;
+            return guard.width();
         }
     }
     0
@@ -100,7 +100,7 @@ pub extern "C" fn fz_image_w(_ctx: Handle, image: Handle) -> i32 {
 pub extern "C" fn fz_image_h(_ctx: Handle, image: Handle) -> i32 {
     if let Some(img) = IMAGES.get(image) {
         if let Ok(guard) = img.lock() {
-            return guard.height() as i32;
+            return guard.height();
         }
     }
     0
@@ -170,10 +170,10 @@ pub extern "C" fn fz_get_pixmap_from_image(
 
             // Set output dimensions
             if !w.is_null() {
-                unsafe { *w = img_w as i32; }
+                unsafe { *w = img_w; }
             }
             if !h.is_null() {
-                unsafe { *h = img_h as i32; }
+                unsafe { *h = img_h; }
             }
 
             // Create pixmap using FFI Pixmap type
@@ -181,7 +181,7 @@ pub extern "C" fn fz_get_pixmap_from_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
-            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w as i32, img_h as i32, true);
+            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
     }
@@ -206,7 +206,7 @@ pub extern "C" fn fz_decode_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
-            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w as i32, img_h as i32, true);
+            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
     }

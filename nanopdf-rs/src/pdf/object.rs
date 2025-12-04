@@ -23,7 +23,9 @@ pub type Dict = HashMap<Name, Object>;
 pub type Array = Vec<Object>;
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub enum Object {
+    #[default]
     Null,
     Bool(bool),
     Int(i64),
@@ -49,7 +51,6 @@ impl Object {
     pub fn as_dict(&self) -> Option<&Dict> { if let Object::Dict(d) = self { Some(d) } else { None } }
 }
 
-impl Default for Object { fn default() -> Self { Object::Null } }
 
 #[cfg(test)]
 mod tests {

@@ -207,7 +207,7 @@ pub extern "C" fn fz_clone_display_list(
 ) -> Handle {
     if let Some(l) = DISPLAY_LISTS.get(list) {
         if let Ok(guard) = l.lock() {
-            let cloned = DisplayList::new(guard.mediabox().clone());
+            let cloned = DisplayList::new(guard.mediabox());
             return DISPLAY_LISTS.insert(cloned);
         }
     }

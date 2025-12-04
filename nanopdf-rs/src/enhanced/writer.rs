@@ -180,23 +180,23 @@ impl PdfWriter {
         let catalog_obj_num = pages_obj_num + 1;
 
         // Write objects (skip object 0)
-        for i in 1..self.objects.len() {
-            offsets[i] = writer.stream_position().map(|p| p as usize)?;
+        for (idx, offset) in offsets.iter_mut().enumerate().skip(1) {
+            *offset = writer.stream_position().map(|p| p as usize)?;
 
             // Add Parent reference to page objects
-            let obj = if self.pages.contains(&i) {
-                if let Object::Dict(ref mut dict) = self.objects[i].clone() {
+            let obj = if self.pages.contains(&idx) {
+                if let Object::Dict(ref mut dict) = self.objects[idx].clone() {
                     let mut page_dict = dict.clone();
                     page_dict.insert(Name::new("Parent"), Object::Ref(pages_ref));
                     Object::Dict(page_dict)
                 } else {
-                    self.objects[i].clone()
+                    self.objects[idx].clone()
                 }
             } else {
-                self.objects[i].clone()
+                self.objects[idx].clone()
             };
 
-            self.write_indirect_object(&mut writer, i, 0, &obj)?;
+            self.write_indirect_object(&mut writer, idx, 0, &obj)?;
         }
 
         // Write Pages object
@@ -216,8 +216,8 @@ impl PdfWriter {
         writer.write_all(b"0000000000 65535 f \n")?;
 
         // Regular objects
-        for i in 1..self.objects.len() {
-            writer.write_all(format!("{:010} 00000 n \n", offsets[i]).as_bytes())?;
+        for offset in offsets.iter().skip(1) {
+            writer.write_all(format!("{:010} 00000 n \n", offset).as_bytes())?;
         }
 
         // Pages and Catalog
@@ -267,7 +267,7 @@ impl PdfWriter {
                         b'\n' => writer.write_all(b"\\n")?,
                         b'\r' => writer.write_all(b"\\r")?,
                         b'\t' => writer.write_all(b"\\t")?,
-                        _ if byte >= 32 && byte <= 126 => writer.write_all(&[byte])?,
+                        _ if (32..=126).contains(&byte) => writer.write_all(&[byte])?,
                         _ => writer.write_all(format!("\\{:03o}", byte).as_bytes())?,
                     }
                 }

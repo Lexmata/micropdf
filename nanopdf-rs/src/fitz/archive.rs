@@ -99,12 +99,12 @@ impl ZipArchive {
     fn parse(&mut self) -> Result<()> {
         // Parse ZIP central directory
         // ZIP file format: Local file headers → Central directory → End of central directory
-        
+
         // Find End of Central Directory Record (EOCD)
         // EOCD signature: 0x06054b50
         let eocd_sig = [0x50, 0x4b, 0x05, 0x06];
         let mut eocd_pos = None;
-        
+
         // Search backwards for EOCD (usually at end, but can have comment)
         for i in (0..self.data.len().saturating_sub(22)).rev() {
             if self.data.get(i..i+4) == Some(&eocd_sig) {
@@ -112,35 +112,35 @@ impl ZipArchive {
                 break;
             }
         }
-        
-        let eocd_offset = eocd_pos.ok_or_else(|| 
+
+        let eocd_offset = eocd_pos.ok_or_else(||
             Error::Generic("Not a valid ZIP archive: EOCD not found".into()))?;
-        
+
         // Read EOCD fields
         if eocd_offset + 22 > self.data.len() {
             return Err(Error::Generic("Truncated ZIP archive".into()));
         }
-        
+
         let eocd = &self.data[eocd_offset..];
-        
+
         // Extract central directory info
         let cd_entries = u16::from_le_bytes([eocd[10], eocd[11]]) as usize;
-        let cd_size = u32::from_le_bytes([eocd[12], eocd[13], eocd[14], eocd[15]]) as usize;
+        let _cd_size = u32::from_le_bytes([eocd[12], eocd[13], eocd[14], eocd[15]]) as usize;
         let cd_offset = u32::from_le_bytes([eocd[16], eocd[17], eocd[18], eocd[19]]) as usize;
-        
+
         // Parse central directory entries
         let mut pos = cd_offset;
         for _ in 0..cd_entries {
             if pos + 46 > self.data.len() {
                 break; // Truncated archive
             }
-            
+
             // Check central directory file header signature: 0x02014b50
             let cd_sig = [0x50, 0x4b, 0x01, 0x02];
             if self.data.get(pos..pos+4) != Some(&cd_sig) {
                 break;
             }
-            
+
             // Read filename length and extra field length
             let filename_len = u16::from_le_bytes([
                 self.data[pos + 28],
@@ -154,9 +154,9 @@ impl ZipArchive {
                 self.data[pos + 32],
                 self.data[pos + 33],
             ]) as usize;
-            
+
             // Read compressed and uncompressed sizes
-            let compressed_size = u32::from_le_bytes([
+            let _compressed_size = u32::from_le_bytes([
                 self.data[pos + 20],
                 self.data[pos + 21],
                 self.data[pos + 22],
@@ -168,7 +168,7 @@ impl ZipArchive {
                 self.data[pos + 26],
                 self.data[pos + 27],
             ]) as usize;
-            
+
             // Read local file header offset
             let local_offset = u32::from_le_bytes([
                 self.data[pos + 42],
@@ -176,12 +176,12 @@ impl ZipArchive {
                 self.data[pos + 44],
                 self.data[pos + 45],
             ]) as usize;
-            
+
             // Extract filename
             if pos + 46 + filename_len > self.data.len() {
                 break;
             }
-            
+
             let filename_bytes = &self.data[pos + 46..pos + 46 + filename_len];
             if let Ok(filename) = std::str::from_utf8(filename_bytes) {
                 let entry = ArchiveEntry {
@@ -190,15 +190,15 @@ impl ZipArchive {
                     offset: local_offset as u64,
                     is_dir: filename.ends_with('/'),
                 };
-                
+
                 self.entry_order.push(filename.to_string());
                 self.entries.insert(filename.to_string(), entry);
             }
-            
+
             // Move to next entry
             pos += 46 + filename_len + extra_len + comment_len;
         }
-        
+
         Ok(())
     }
 }
@@ -239,6 +239,7 @@ impl ArchiveReader for ZipArchive {
 }
 
 /// TAR archive reader
+#[allow(dead_code)]
 struct TarArchive {
     entries: HashMap<String, ArchiveEntry>,
     entry_order: Vec<String>,
@@ -331,8 +332,8 @@ impl DirectoryArchive {
     }
 
     fn scan_dir(&mut self, dir: &Path, prefix: &str) -> Result<()> {
-        for entry in fs::read_dir(dir).map_err(|e| Error::System(e))? {
-            let entry = entry.map_err(|e| Error::System(e))?;
+        for entry in fs::read_dir(dir).map_err(Error::System)? {
+            let entry = entry.map_err(Error::System)?;
             let path = entry.path();
             let name = if prefix.is_empty() {
                 path.file_name()
@@ -347,7 +348,7 @@ impl DirectoryArchive {
                 )
             };
 
-            let metadata = entry.metadata().map_err(|e| Error::System(e))?;
+            let metadata = entry.metadata().map_err(Error::System)?;
             let is_dir = metadata.is_dir();
             let size = metadata.len();
 
@@ -392,7 +393,7 @@ impl ArchiveReader for DirectoryArchive {
             return Err(Error::Argument(format!("Entry not found: {}", name)));
         }
 
-        fs::read(&entry_path).map_err(|e| Error::System(e))
+        fs::read(&entry_path).map_err(Error::System)
     }
 
     fn entry_names(&self) -> Vec<&str> {
@@ -416,7 +417,7 @@ impl Archive {
         }
 
         // Read file data
-        let data = fs::read(path).map_err(|e| Error::System(e))?;
+        let data = fs::read(path).map_err(Error::System)?;
 
         // Detect format
         let format = Self::detect_format(&data);

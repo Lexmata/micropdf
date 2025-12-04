@@ -355,7 +355,7 @@ pub extern "C" fn fz_cookie_progress_remaining(_ctx: Handle, cookie: Handle) -> 
 pub extern "C" fn fz_clone_cookie(_ctx: Handle, cookie: Handle) -> Handle {
     if let Some(c) = COOKIES.get(cookie) {
         if let Ok(guard) = c.lock() {
-            let mut new_cookie = Cookie::new();
+            let new_cookie = Cookie::new();
             new_cookie.set_progress(guard.progress());
             new_cookie.set_progress_max(guard.progress_max());
             new_cookie.set_error(guard.errors());

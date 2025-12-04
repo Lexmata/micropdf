@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use nanopdf::pdf::object::{Name, Object, ObjRef, PdfString};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 fn bench_object_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("pdf/object/create");
@@ -18,7 +19,7 @@ fn bench_object_creation(c: &mut Criterion) {
     });
 
     group.bench_function("real", |b| {
-        b.iter(|| Object::Real(black_box(3.14159)))
+        b.iter(|| Object::Real(black_box(PI)))
     });
 
     group.bench_function("name", |b| {
@@ -79,8 +80,8 @@ fn bench_string_operations(c: &mut Criterion) {
 }
 
 fn bench_array_operations(c: &mut Criterion) {
-    let small_array: Vec<Object> = (0..10).map(|i| Object::Int(i)).collect();
-    let large_array: Vec<Object> = (0..1000).map(|i| Object::Int(i)).collect();
+    let small_array: Vec<Object> = (0..10).map(Object::Int).collect();
+    let large_array: Vec<Object> = (0..1000).map(Object::Int).collect();
 
     let mut group = c.benchmark_group("pdf/array");
 
@@ -163,7 +164,7 @@ fn bench_dict_operations(c: &mut Criterion) {
 
     group.bench_function("insert", |b| {
         b.iter_batched(
-            || HashMap::new(),
+            HashMap::new,
             |mut dict: HashMap<Name, Object>| {
                 dict.insert(
                     Name::new(black_box("NewKey")),
@@ -183,7 +184,7 @@ fn bench_object_type_checks(c: &mut Criterion) {
         Object::Null,
         Object::Bool(true),
         Object::Int(42),
-        Object::Real(3.14),
+        Object::Real(PI),
         Object::Name(Name::new("Test")),
         Object::String(PdfString::new(b"Hello".to_vec())),
         Object::Array(vec![Object::Int(1), Object::Int(2)]),
