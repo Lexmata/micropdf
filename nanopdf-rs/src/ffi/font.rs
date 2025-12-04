@@ -338,7 +338,7 @@ mod tests {
         let font_handle = fz_new_font(0, c"Arial".as_ptr(), 0, 0, 0);
         let glyph = fz_encode_character(0, font_handle, 65);
 
-        let bbox = fz_bound_glyph(0, font_handle, glyph, super::super::geometry::fz_matrix::IDENTITY);
+        let bbox = fz_bound_glyph(0, font_handle, glyph, super::super::geometry::fz_matrix::identity());
         // Valid bounding box should have x1 > x0
         assert!(bbox.x1 >= bbox.x0);
 
