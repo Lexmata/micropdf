@@ -2,7 +2,7 @@
 //! Safe Rust implementation using handle-based resource management
 
 use super::{Handle, HandleStore, DOCUMENTS, STREAMS};
-use std::ffi::c_char;
+use std::ffi::{c_char, c_float};
 use std::sync::LazyLock;
 
 /// Page storage
@@ -55,6 +55,7 @@ pub struct Document {
     needs_password: bool,
     authenticated: bool,
     password: Option<String>,
+    pub format: String,
 }
 
 impl Document {
@@ -62,6 +63,15 @@ impl Document {
         // Basic PDF detection and page count estimation
         // In a real implementation, this would parse the PDF structure
         let page_count = Self::estimate_page_count(&data);
+        
+        // Detect format from magic bytes
+        let format = if data.starts_with(b"%PDF-") {
+            "PDF".to_string()
+        } else if data.starts_with(b"<?xml") {
+            "XML".to_string()
+        } else {
+            "Unknown".to_string()
+        };
 
         Self {
             data,
@@ -69,6 +79,7 @@ impl Document {
             needs_password: false,
             authenticated: true,
             password: None,
+            format,
         }
     }
 
@@ -527,6 +538,95 @@ pub extern "C" fn fz_make_location_uri(
     }
 
     buf
+}
+
+/// Get document format name
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_document_format(
+    _ctx: Handle,
+    doc: Handle,
+    buf: *mut c_char,
+    size: i32,
+) -> i32 {
+    if buf.is_null() || size <= 0 {
+        return 0;
+    }
+
+    if let Some(d) = DOCUMENTS.get(doc) {
+        if let Ok(guard) = d.lock() {
+            let format = &guard.format;
+            let bytes = format.as_bytes();
+            let copy_len = (bytes.len()).min((size - 1) as usize);
+
+            unsafe {
+                std::ptr::copy_nonoverlapping(bytes.as_ptr(), buf as *mut u8, copy_len);
+                *buf.add(copy_len) = 0;
+            }
+            return copy_len as i32;
+        }
+    }
+    0
+}
+
+/// Check if document is reflowable
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_is_document_reflowable(_ctx: Handle, _doc: Handle) -> i32 {
+    0
+}
+
+/// Layout document for given dimensions
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_layout_document(
+    _ctx: Handle,
+    _doc: Handle,
+    _w: c_float,
+    _h: c_float,
+    _em: c_float,
+) {
+    // Placeholder - document layout would be implemented here
+}
+
+/// Get page label
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_page_label(
+    _ctx: Handle,
+    doc: Handle,
+    page_num: i32,
+    buf: *mut c_char,
+    size: i32,
+) -> i32 {
+    if buf.is_null() || size <= 0 {
+        return 0;
+    }
+
+    if let Some(d) = DOCUMENTS.get(doc) {
+        if let Ok(guard) = d.lock() {
+            if page_num >= 0 && page_num < guard.page_count {
+                let label = format!("Page {}", page_num + 1);
+                let bytes = label.as_bytes();
+                let copy_len = (bytes.len()).min((size - 1) as usize);
+
+                unsafe {
+                    std::ptr::copy_nonoverlapping(bytes.as_ptr(), buf as *mut u8, copy_len);
+                    *buf.add(copy_len) = 0;
+                }
+                return copy_len as i32;
+            }
+        }
+    }
+    0
+}
+
+/// Check if document is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_document_is_valid(_ctx: Handle, doc: Handle) -> i32 {
+    if DOCUMENTS.get(doc).is_some() { 1 } else { 0 }
+}
+
+/// Clone a document (increase ref count)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_document(_ctx: Handle, doc: Handle) -> Handle {
+    fz_keep_document(_ctx, doc)
 }
 
 #[cfg(test)]
