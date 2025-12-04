@@ -22,6 +22,7 @@ pub mod text;
 pub mod font;
 pub mod image;
 pub mod annot;
+pub mod form;
 pub mod enhanced;
 
 // Safe helper functions for common FFI patterns

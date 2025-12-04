@@ -473,44 +473,44 @@ mod tests {
     #[test]
     fn test_annot_contents() {
         use std::ffi::CString;
-        
+
         let annot = pdf_create_annot(0, 0, 0);
-        
+
         let text = CString::new("Test annotation").unwrap();
         pdf_set_annot_contents(0, annot, text.as_ptr());
-        
+
         let mut buf = [0i8; 256];
         let len = pdf_annot_contents(0, annot, buf.as_mut_ptr(), 256);
         assert!(len > 0);
-        
+
         pdf_drop_annot(0, annot);
     }
 
     #[test]
     fn test_annot_border_width() {
         let annot = pdf_create_annot(0, 0, 4); // Square
-        
+
         pdf_set_annot_border_width(0, annot, 2.5);
         let width = pdf_annot_border_width(0, annot);
         assert_eq!(width, 2.5);
-        
+
         pdf_drop_annot(0, annot);
     }
 
     #[test]
     fn test_annot_color() {
         let annot = pdf_create_annot(0, 0, 8); // Highlight
-        
+
         let color = [1.0f32, 0.0, 0.0]; // Red
         pdf_set_annot_color(0, annot, 3, color.as_ptr());
-        
+
         let mut n = 0i32;
         let mut retrieved = [0.0f32; 4];
         pdf_annot_color(0, annot, &mut n, retrieved.as_mut_ptr());
-        
+
         assert_eq!(n, 3);
         assert_eq!(retrieved[0], 1.0);
-        
+
         pdf_drop_annot(0, annot);
     }
 }
