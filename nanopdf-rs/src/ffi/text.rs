@@ -233,6 +233,30 @@ pub extern "C" fn fz_clear_text(_ctx: Handle, text: Handle) {
     }
 }
 
+/// Check if text is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_text_is_valid(_ctx: Handle, text: Handle) -> i32 {
+    if TEXTS.get(text).is_some() { 1 } else { 0 }
+}
+
+/// Check if text is empty
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_text_is_empty(_ctx: Handle, text: Handle) -> i32 {
+    if let Some(t) = TEXTS.get(text) {
+        if let Ok(guard) = t.lock() {
+            return if guard.item_count() == 0 { 1 } else { 0 };
+        }
+    }
+    1
+}
+
+/// Walk through text items (simplified iterator)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_text_walk(_ctx: Handle, text: Handle, _callback: *const std::ffi::c_void, _arg: *mut std::ffi::c_void) -> i32 {
+    // Placeholder - full text walking would require more complex callback handling
+    if TEXTS.get(text).is_some() { 1 } else { 0 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
