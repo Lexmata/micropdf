@@ -83,6 +83,11 @@ impl Cookie {
         self.errors.fetch_add(1, Ordering::Relaxed);
     }
 
+    /// Set error count directly
+    pub fn set_error(&self, count: i32) {
+        self.errors.store(count, Ordering::Relaxed);
+    }
+
     /// Check if operation was incomplete
     pub fn is_incomplete(&self) -> bool {
         self.incomplete.load(Ordering::Relaxed)

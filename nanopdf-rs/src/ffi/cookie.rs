@@ -20,6 +20,18 @@ pub extern "C" fn fz_new_cookie(_ctx: Handle) -> Handle {
     COOKIES.insert(cookie)
 }
 
+/// Keep a reference to a cookie (increment ref count)
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+///
+/// # Returns
+/// The same cookie handle
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_keep_cookie(_ctx: Handle, cookie: Handle) -> Handle {
+    cookie
+}
+
 /// Drop a cookie
 ///
 /// # Arguments
@@ -236,6 +248,137 @@ pub extern "C" fn fz_cookie_reset(_ctx: Handle, cookie: Handle) {
             guard.reset();
         }
     }
+}
+
+/// Set error count directly
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+/// * `count` - Error count to set
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_set_errors(_ctx: Handle, cookie: Handle, count: i32) {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            guard.set_error(count);
+        }
+    }
+}
+
+/// Check if cookie has any errors
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+///
+/// # Returns
+/// 1 if errors > 0, 0 otherwise
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_has_errors(_ctx: Handle, cookie: Handle) -> i32 {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            return if guard.errors() > 0 { 1 } else { 0 };
+        }
+    }
+    0
+}
+
+/// Get progress as float (0.0-1.0)
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+///
+/// # Returns
+/// Progress as float between 0.0 and 1.0
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_progress_float(_ctx: Handle, cookie: Handle) -> f32 {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            let prog = guard.progress();
+            let max = guard.progress_max();
+            if max > 0 {
+                return prog as f32 / max as f32;
+            }
+        }
+    }
+    0.0
+}
+
+/// Check if operation is complete
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+///
+/// # Returns
+/// 1 if complete (progress >= progress_max), 0 otherwise
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_is_complete(_ctx: Handle, cookie: Handle) -> i32 {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            let prog = guard.progress();
+            let max = guard.progress_max();
+            if max > 0 && prog >= max {
+                return 1;
+            }
+        }
+    }
+    0
+}
+
+/// Get remaining progress
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie
+///
+/// # Returns
+/// Remaining progress (progress_max - progress), or 0 if unknown
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_progress_remaining(_ctx: Handle, cookie: Handle) -> i32 {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            let prog = guard.progress();
+            let max = guard.progress_max();
+            if max > prog {
+                return max - prog;
+            }
+        }
+    }
+    0
+}
+
+/// Clone a cookie (creates a new cookie with same state)
+///
+/// # Arguments
+/// * `cookie` - Handle to the cookie to clone
+///
+/// # Returns
+/// Handle to the new cookie
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_cookie(_ctx: Handle, cookie: Handle) -> Handle {
+    if let Some(c) = COOKIES.get(cookie) {
+        if let Ok(guard) = c.lock() {
+            let mut new_cookie = Cookie::new();
+            new_cookie.set_progress(guard.progress());
+            new_cookie.set_progress_max(guard.progress_max());
+            new_cookie.set_error(guard.errors());
+            new_cookie.set_incomplete(guard.is_incomplete());
+            if guard.should_abort() {
+                new_cookie.abort();
+            }
+            return COOKIES.insert(new_cookie);
+        }
+    }
+    0
+}
+
+/// Check if cookie is valid
+///
+/// # Arguments
+/// * `cookie` - Handle to check
+///
+/// # Returns
+/// 1 if valid, 0 otherwise
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_cookie_is_valid(_ctx: Handle, cookie: Handle) -> i32 {
+    if COOKIES.get(cookie).is_some() { 1 } else { 0 }
 }
 
 #[cfg(test)]
