@@ -51,7 +51,7 @@ jobs:
       - name: Run benchmarks
         working-directory: nanopdf-rs
         run: |
-          cargo bench --all-features -- --noplot --save-baseline main 2>&1 | tee benchmark-output.txt
+          cargo bench --all-features -- --save-baseline main 2>&1 | tee benchmark-output.txt
 
       - name: Parse benchmark results
         id: bench
@@ -101,6 +101,142 @@ jobs:
           fail-on-alert: false
           # Store benchmark history
           benchmark-data-dir-path: dev/bench
+          # Save Criterion HTML reports
+          external-data-json-path: nanopdf-rs/criterion-report.json
+
+      - name: Prepare Criterion HTML reports for GitHub Pages
+        run: |
+          # Create directory for criterion reports
+          mkdir -p gh-pages-criterion
+          
+          # Copy criterion HTML reports
+          if [ -d "nanopdf-rs/target/criterion" ]; then
+            cp -r nanopdf-rs/target/criterion gh-pages-criterion/
+            
+            # Create index page for criterion reports
+            cat > gh-pages-criterion/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>NanoPDF Benchmarks - Criterion Reports</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+              }
+              h1 { color: #333; }
+              .nav {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+              }
+              .nav a {
+                display: inline-block;
+                margin: 5px 10px;
+                padding: 10px 20px;
+                background: #0066cc;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+              }
+              .nav a:hover { background: #0052a3; }
+              .benchmarks {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 20px;
+              }
+              .benchmark {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              .benchmark h3 { margin-top: 0; color: #0066cc; }
+              .benchmark a { color: #0066cc; text-decoration: none; }
+              .benchmark a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1>🚀 NanoPDF Performance Benchmarks</h1>
+            
+            <div class="nav">
+              <h2>📊 Quick Links</h2>
+              <a href="../dev/bench/">Historical Trends</a>
+              <a href="criterion/report/index.html">Full Criterion Report</a>
+              <a href="https://github.com/Lexmata/nanopdf">GitHub Repository</a>
+            </div>
+            
+            <h2>📦 Benchmark Suites</h2>
+            <div class="benchmarks">
+              <div class="benchmark">
+                <h3>🎨 Core Graphics</h3>
+                <ul>
+                  <li><a href="criterion/geometry/report/index.html">Geometry</a> - Matrix, Point, Rect, Quad</li>
+                  <li><a href="criterion/path/report/index.html">Path</a> - Path operations</li>
+                  <li><a href="criterion/device/report/index.html">Device</a> - Device operations</li>
+                  <li><a href="criterion/pixmap/report/index.html">Pixmap</a> - Pixel operations</li>
+                </ul>
+              </div>
+              
+              <div class="benchmark">
+                <h3>📝 Text & Fonts</h3>
+                <ul>
+                  <li><a href="criterion/font/report/index.html">Font</a> - Font operations</li>
+                  <li><a href="criterion/text/report/index.html">Text</a> - Text layout & rendering</li>
+                </ul>
+              </div>
+              
+              <div class="benchmark">
+                <h3>🖼️ Images & Colors</h3>
+                <ul>
+                  <li><a href="criterion/image/report/index.html">Image</a> - Image processing</li>
+                  <li><a href="criterion/colorspace/report/index.html">Colorspace</a> - Color conversions</li>
+                </ul>
+              </div>
+              
+              <div class="benchmark">
+                <h3>💾 I/O & Streams</h3>
+                <ul>
+                  <li><a href="criterion/buffer/report/index.html">Buffer</a> - Buffer operations</li>
+                  <li><a href="criterion/stream/report/index.html">Stream</a> - Stream I/O</li>
+                  <li><a href="criterion/output/report/index.html">Output</a> - Output streams</li>
+                </ul>
+              </div>
+              
+              <div class="benchmark">
+                <h3>📄 PDF Features</h3>
+                <ul>
+                  <li><a href="criterion/pdf_objects/report/index.html">PDF Objects</a> - Object operations</li>
+                  <li><a href="criterion/filters/report/index.html">Filters</a> - Encode/decode</li>
+                  <li><a href="criterion/archive/report/index.html">Archive</a> - ZIP/TAR parsing</li>
+                </ul>
+              </div>
+            </div>
+            
+            <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+              <p>Last updated: $(date)</p>
+              <p>Commit: ${{ github.sha }}</p>
+            </footer>
+          </body>
+          </html>
+          EOF
+          fi
+
+      - name: Deploy Criterion reports to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages-criterion
+          destination_dir: criterion-reports
+          keep_files: false
 
       - name: Upload benchmark artifacts
         uses: actions/upload-artifact@v4
@@ -147,14 +283,14 @@ jobs:
 
       - name: Run base benchmarks
         working-directory: nanopdf-rs
-        run: cargo bench --all-features -- --noplot --save-baseline base
+        run: cargo bench --all-features -- --save-baseline base
 
       - name: Checkout PR branch
         run: git checkout ${{ github.head_ref }}
 
       - name: Run PR benchmarks
         working-directory: nanopdf-rs
-        run: cargo bench --all-features -- --noplot --save-baseline pr
+        run: cargo bench --all-features -- --save-baseline pr
 
       - name: Compare benchmarks
         working-directory: nanopdf-rs
