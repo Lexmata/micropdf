@@ -10,6 +10,7 @@ pub mod stream;
 pub mod output;
 pub mod link;
 pub mod hash;
+pub mod archive;
 pub mod colorspace;
 pub mod pixmap;
 pub mod font;
