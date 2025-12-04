@@ -313,6 +313,74 @@ pub extern "C" fn fz_bound_page_box(_ctx: Handle, page: Handle, _box_type: i32) 
     fz_bound_page(_ctx, page)
 }
 
+/// Render page to device
+///
+/// # Safety
+/// Caller must ensure device is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_run_page(
+    _ctx: Handle,
+    page: Handle,
+    device: Handle,
+    _transform: super::geometry::fz_matrix,
+    _cookie: *mut std::ffi::c_void,
+) {
+    // Verify page exists
+    if PAGES.get(page).is_none() {
+        return;
+    }
+
+    // Verify device exists
+    if super::device::DEVICES.get(device).is_none() {
+        return;
+    }
+
+    // Full page rendering integration with device operations
+    // would be implemented here once the page content system is complete
+    // For now, this establishes the FFI structure
+}
+
+/// Render page contents to device (excludes annotations)
+///
+/// # Safety
+/// Caller must ensure device is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_run_page_contents(
+    _ctx: Handle,
+    page: Handle,
+    device: Handle,
+    transform: super::geometry::fz_matrix,
+    _cookie: *mut std::ffi::c_void,
+) {
+    // Same as fz_run_page but without annotations
+    fz_run_page(_ctx, page, device, transform, _cookie);
+}
+
+/// Render page annotations to device
+///
+/// # Safety
+/// Caller must ensure device is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_run_page_annots(
+    _ctx: Handle,
+    page: Handle,
+    device: Handle,
+    _transform: super::geometry::fz_matrix,
+    _cookie: *mut std::ffi::c_void,
+) {
+    // Verify page and device exist
+    if PAGES.get(page).is_none() {
+        return;
+    }
+
+    if super::device::DEVICES.get(device).is_none() {
+        return;
+    }
+
+    // Annotation rendering would be implemented here
+    // once the annotation system is integrated with rendering
+}
+
 // ============================================================================
 // Outline Functions
 // ============================================================================
