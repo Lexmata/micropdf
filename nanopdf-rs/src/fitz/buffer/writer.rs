@@ -3,7 +3,6 @@
 use bytes::{BufMut, Bytes, BytesMut};
 use std::io::{self, Write};
 use super::core::Buffer;
-use crate::fitz::error::{Error, Result};
 
 /// A writer that accumulates data into a buffer.
 pub struct BufferWriter {
@@ -140,6 +139,7 @@ pub mod async_ops {
     use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
     use std::pin::Pin;
     use std::task::{Context, Poll};
+    use crate::fitz::error::{Error, Result};
 
     /// Read a buffer from an async reader.
     pub async fn read_buffer<R: AsyncRead + Unpin>(

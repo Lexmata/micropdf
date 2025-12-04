@@ -237,6 +237,7 @@ pub fn add_text(
 }
 
 /// Add image to PDF page
+#[allow(clippy::too_many_arguments)]
 pub fn add_image(
     input_path: &str,
     output_path: &str,

@@ -408,6 +408,7 @@ impl DrawingContext {
     }
 
     /// Draw a Bezier curve
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_bezier(&mut self, x1: f32, y1: f32, cx1: f32, cy1: f32, cx2: f32, cy2: f32, x2: f32, y2: f32) -> Result<()> {
         let mut path = Path::new();
         path.move_to(Point::new(x1, y1));
