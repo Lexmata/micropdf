@@ -594,11 +594,9 @@ pub extern "C" fn fz_set_pixmap_resolution(_ctx: Handle, _pix: Handle, _xres: i3
 pub extern "C" fn fz_pixmap_resolution(_ctx: Handle, _pix: Handle, xres: *mut i32, yres: *mut i32) {
     // Return default 72 dpi
     if !xres.is_null() {
-        #[allow(unsafe_code)]
         unsafe { *xres = 72; }
     }
     if !yres.is_null() {
-        #[allow(unsafe_code)]
         unsafe { *yres = 72; }
     }
 }

@@ -155,7 +155,6 @@ pub unsafe extern "C" fn fz_throw(ctx: Handle, errcode: c_int, fmt: *const c_cha
     }
 
     // SAFETY: Caller guarantees fmt is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let message = unsafe {
         if let Ok(c_str) = CStr::from_ptr(fmt).to_str() {
             c_str.to_string()
@@ -171,7 +170,6 @@ pub unsafe extern "C" fn fz_throw(ctx: Handle, errcode: c_int, fmt: *const c_cha
             // Call error callback if set
             if let Some(callback) = guard.error_callback {
                 let msg_cstr = std::ffi::CString::new(message).unwrap_or_default();
-                #[allow(unsafe_code)]
                 unsafe {
                     callback(guard.user_data, errcode, msg_cstr.as_ptr());
                 }
@@ -190,7 +188,6 @@ pub extern "C" fn fz_rethrow(ctx: Handle) {
                 // Error already set, just call callback if present
                 if let Some(callback) = guard.error_callback {
                     let msg_cstr = std::ffi::CString::new(message).unwrap_or_default();
-                    #[allow(unsafe_code)]
                     unsafe {
                         callback(guard.user_data, code, msg_cstr.as_ptr());
                     }
@@ -256,14 +253,12 @@ pub unsafe extern "C" fn fz_warn(ctx: Handle, fmt: *const c_char) {
     if let Some(context) = CONTEXTS.get(ctx) {
         if let Ok(guard) = context.lock() {
             if let Some(callback) = guard.warn_callback {
-                #[allow(unsafe_code)]
                 unsafe {
                     callback(guard.user_data, fmt);
                 }
             } else {
                 // Default: print to stderr
                 // SAFETY: Caller guarantees fmt is a valid null-terminated C string
-                #[allow(unsafe_code)]
                 unsafe {
                     if let Ok(c_str) = CStr::from_ptr(fmt).to_str() {
                         eprintln!("warning: {}", c_str);
@@ -336,7 +331,6 @@ pub extern "C" fn fz_convert_error(ctx: Handle, code: *mut c_int) -> *const c_ch
         if let Ok(guard) = context.lock() {
             let (err_code, message) = guard.get_error();
             if !code.is_null() {
-                #[allow(unsafe_code)]
                 unsafe {
                     *code = err_code;
                 }
@@ -354,7 +348,6 @@ pub extern "C" fn fz_convert_error(ctx: Handle, code: *mut c_int) -> *const c_ch
     }
 
     if !code.is_null() {
-        #[allow(unsafe_code)]
         unsafe {
             *code = FzErrorType::Generic as c_int;
         }
@@ -371,7 +364,6 @@ pub extern "C" fn fz_report_error(ctx: Handle) {
             if code != FzErrorType::None as c_int {
                 if let Some(callback) = guard.error_callback {
                     let msg_cstr = std::ffi::CString::new(message).unwrap_or_default();
-                    #[allow(unsafe_code)]
                     unsafe {
                         callback(guard.user_data, code, msg_cstr.as_ptr());
                     }

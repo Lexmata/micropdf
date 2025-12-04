@@ -251,7 +251,6 @@ pub extern "C" fn fz_new_indexed_colorspace(
     let lookup_data = if lookup.is_null() || lookup_size == 0 {
         vec![0u8; lookup_size]
     } else {
-        #[allow(unsafe_code)]
         unsafe { std::slice::from_raw_parts(lookup, lookup_size) }.to_vec()
     };
 
@@ -313,7 +312,6 @@ pub extern "C" fn fz_new_icc_colorspace(
     let cs_name = if name.is_null() {
         "ICCBased".to_string()
     } else {
-        #[allow(unsafe_code)]
         let c_str = unsafe { std::ffi::CStr::from_ptr(name) };
         c_str.to_str().unwrap_or("ICCBased").to_string()
     };
@@ -398,7 +396,6 @@ pub extern "C" fn fz_convert_color(
     }
 
     // SAFETY: Caller guarantees src and dst point to valid memory
-    #[allow(unsafe_code)]
     let (src_slice, dst_slice) = unsafe {
         (
             std::slice::from_raw_parts(src, src_n),

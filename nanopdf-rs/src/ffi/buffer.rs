@@ -82,7 +82,6 @@ pub extern "C" fn fz_new_buffer_from_copied_data(
     }
 
     // SAFETY: Caller guarantees data points to valid memory of `size` bytes
-    #[allow(unsafe_code)]
     let data_slice = unsafe { std::slice::from_raw_parts(data, size) };
 
     BUFFERS.insert(Buffer::from_data(data_slice))
@@ -114,7 +113,6 @@ pub extern "C" fn fz_buffer_storage(
     let Some(buffer) = BUFFERS.get(buf) else {
         if !datap.is_null() {
             // SAFETY: Caller guarantees datap is valid if non-null
-            #[allow(unsafe_code)]
             unsafe { *datap = std::ptr::null_mut(); }
         }
         return 0;
@@ -126,7 +124,6 @@ pub extern "C" fn fz_buffer_storage(
     if !datap.is_null() {
         // We can't safely return a pointer to internal data
         // because the buffer may be reallocated
-        #[allow(unsafe_code)]
         unsafe { *datap = std::ptr::null_mut(); }
     }
 
@@ -204,7 +201,6 @@ pub extern "C" fn fz_append_data(
     if let Some(buffer) = BUFFERS.get(buf) {
         if let Ok(mut guard) = buffer.lock() {
             // SAFETY: Caller guarantees data points to valid memory of `len` bytes
-            #[allow(unsafe_code)]
             let slice = unsafe { std::slice::from_raw_parts(data as *const u8, len) };
             guard.append(slice);
         }
@@ -224,7 +220,6 @@ pub extern "C" fn fz_append_string(_ctx: Handle, buf: Handle, data: *const c_cha
     if let Some(buffer) = BUFFERS.get(buf) {
         if let Ok(mut guard) = buffer.lock() {
             // SAFETY: Caller guarantees data is a valid null-terminated C string
-            #[allow(unsafe_code)]
             let c_str = unsafe { std::ffi::CStr::from_ptr(data) };
             guard.append(c_str.to_bytes());
         }
@@ -273,7 +268,6 @@ pub extern "C" fn fz_md5_buffer(
             let result = hasher.finalize();
 
             // SAFETY: Caller guarantees digest points to valid writable [u8; 16]
-            #[allow(unsafe_code)]
             unsafe {
                 (*digest).copy_from_slice(&result);
             }
@@ -453,7 +447,6 @@ pub extern "C" fn fz_append_pdf_string(_ctx: Handle, buf: Handle, str: *const c_
     }
 
     // SAFETY: Caller guarantees str is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(str) };
     let bytes = c_str.to_bytes();
 

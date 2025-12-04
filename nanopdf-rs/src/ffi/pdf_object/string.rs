@@ -18,7 +18,6 @@ pub extern "C" fn pdf_to_string(_ctx: Handle, obj: PdfObjHandle, sizep: *mut usi
     match data {
         Some(s) => {
             if !sizep.is_null() {
-                #[allow(unsafe_code)]
                 unsafe { *sizep = s.len(); }
             }
             let ptr = s.as_ptr() as *const c_char;
@@ -29,7 +28,6 @@ pub extern "C" fn pdf_to_string(_ctx: Handle, obj: PdfObjHandle, sizep: *mut usi
         }
         None => {
             if !sizep.is_null() {
-                #[allow(unsafe_code)]
                 unsafe { *sizep = 0; }
             }
             std::ptr::null()

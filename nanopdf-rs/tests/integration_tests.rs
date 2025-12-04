@@ -285,54 +285,61 @@ mod ffi_integration {
 
     #[test]
     fn test_ffi_context_lifecycle() {
-        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
-        assert_ne!(ctx, 0);
-        fz_drop_context(ctx);
+        unsafe {
+            let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+            assert_ne!(ctx, 0);
+            fz_drop_context(ctx);
+        }
     }
 
     #[test]
     fn test_ffi_buffer_lifecycle() {
-        let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
-        let buf = fz_new_buffer(ctx, 1024);
-        assert_ne!(buf, 0);
+        unsafe {
+            let ctx = fz_new_context(std::ptr::null(), std::ptr::null(), 0);
+            let buf = fz_new_buffer(ctx, 1024);
+            assert_ne!(buf, 0);
 
-        fz_append_byte(ctx, buf, b'H' as i32);
-        fz_append_byte(ctx, buf, b'i' as i32);
+            fz_append_byte(ctx, buf, b'H' as i32);
+            fz_append_byte(ctx, buf, b'i' as i32);
 
-        assert_eq!(fz_buffer_len(ctx, buf), 2);
+            assert_eq!(fz_buffer_len(ctx, buf), 2);
 
-        fz_drop_buffer(ctx, buf);
-        fz_drop_context(ctx);
+            fz_drop_buffer(ctx, buf);
+            fz_drop_context(ctx);
+        }
     }
 
     #[test]
     fn test_ffi_matrix_operations() {
-        // Test identity
-        let identity = fz_matrix::identity();
-        assert_eq!(identity.a, 1.0);
-        assert_eq!(identity.d, 1.0);
+        unsafe {
+            // Test identity
+            let identity = fz_matrix::identity();
+            assert_eq!(identity.a, 1.0);
+            assert_eq!(identity.d, 1.0);
 
-        // Test translation
-        let translate = fz_translate(100.0, 200.0);
-        assert_eq!(translate.e, 100.0);
-        assert_eq!(translate.f, 200.0);
+            // Test translation
+            let translate = fz_translate(100.0, 200.0);
+            assert_eq!(translate.e, 100.0);
+            assert_eq!(translate.f, 200.0);
 
-        // Test scale
-        let scale = fz_scale(2.0, 3.0);
-        assert_eq!(scale.a, 2.0);
-        assert_eq!(scale.d, 3.0);
+            // Test scale
+            let scale = fz_scale(2.0, 3.0);
+            assert_eq!(scale.a, 2.0);
+            assert_eq!(scale.d, 3.0);
 
-        // Test point transformation
-        let point = fz_point { x: 10.0, y: 20.0 };
-        let transformed = fz_transform_point(point, translate);
-        assert_eq!(transformed.x, 110.0);
-        assert_eq!(transformed.y, 220.0);
+            // Test point transformation
+            let point = fz_point { x: 10.0, y: 20.0 };
+            let transformed = fz_transform_point(point, translate);
+            assert_eq!(transformed.x, 110.0);
+            assert_eq!(transformed.y, 220.0);
+        }
     }
 
     #[test]
     fn test_ffi_rect_operations() {
-        let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-        let r2 = fz_rect { x0: 50.0, y0: 50.0, x1: 150.0, y1: 150.0 };
+        unsafe {
+            let r1 = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
+            let r2 = fz_rect { x0: 50.0, y0: 50.0, x1: 150.0, y1: 150.0 };
 
         // Test intersection
         let intersection = fz_intersect_rect(r1, r2);
@@ -348,27 +355,30 @@ mod ffi_integration {
         assert_eq!(union.x1, 150.0);
         assert_eq!(union.y1, 150.0);
 
-        // Test contains
-        assert_eq!(fz_contains_rect(r1, fz_rect { x0: 10.0, y0: 10.0, x1: 50.0, y1: 50.0 }), 1);
-        assert_eq!(fz_contains_rect(r1, r2), 0);
+            // Test contains
+            assert_eq!(fz_contains_rect(r1, fz_rect { x0: 10.0, y0: 10.0, x1: 50.0, y1: 50.0 }), 1);
+            assert_eq!(fz_contains_rect(r1, r2), 0);
+        }
     }
 
     #[test]
     fn test_ffi_quad_operations() {
-        let rect = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
-        let quad = fz_quad_from_rect(rect);
+        unsafe {
+            let rect = fz_rect { x0: 0.0, y0: 0.0, x1: 100.0, y1: 100.0 };
+            let quad = fz_quad_from_rect(rect);
 
-        assert_eq!(quad.ul.x, 0.0);
-        assert_eq!(quad.ul.y, 0.0);
-        assert_eq!(quad.lr.x, 100.0);
-        assert_eq!(quad.lr.y, 100.0);
+            assert_eq!(quad.ul.x, 0.0);
+            assert_eq!(quad.ul.y, 0.0);
+            assert_eq!(quad.lr.x, 100.0);
+            assert_eq!(quad.lr.y, 100.0);
 
-        // Test quad back to rect
-        let back = fz_rect_from_quad(quad);
-        assert_eq!(back.x0, rect.x0);
-        assert_eq!(back.y0, rect.y0);
-        assert_eq!(back.x1, rect.x1);
-        assert_eq!(back.y1, rect.y1);
+            // Test quad back to rect
+            let back = fz_rect_from_quad(quad);
+            assert_eq!(back.x0, rect.x0);
+            assert_eq!(back.y0, rect.y0);
+            assert_eq!(back.x1, rect.x1);
+            assert_eq!(back.y1, rect.y1);
+        }
     }
 }
 

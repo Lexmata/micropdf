@@ -29,7 +29,6 @@ pub extern "C" fn pdf_new_name(_ctx: Handle, str: *const c_char) -> PdfObjHandle
     if str.is_null() {
         return PDF_OBJECTS.insert(PdfObj::new_name(""));
     }
-    #[allow(unsafe_code)]
     let name = unsafe { CStr::from_ptr(str) }
         .to_str()
         .unwrap_or("");
@@ -41,7 +40,6 @@ pub extern "C" fn pdf_new_string(_ctx: Handle, str: *const c_char, len: usize) -
     if str.is_null() || len == 0 {
         return PDF_OBJECTS.insert(PdfObj::new_string(&[]));
     }
-    #[allow(unsafe_code)]
     let data = unsafe { std::slice::from_raw_parts(str as *const u8, len) };
     PDF_OBJECTS.insert(PdfObj::new_string(data))
 }
@@ -51,7 +49,6 @@ pub extern "C" fn pdf_new_text_string(_ctx: Handle, s: *const c_char) -> PdfObjH
     if s.is_null() {
         return PDF_OBJECTS.insert(PdfObj::new_string(&[]));
     }
-    #[allow(unsafe_code)]
     let text = unsafe { CStr::from_ptr(s) }
         .to_str()
         .unwrap_or("");

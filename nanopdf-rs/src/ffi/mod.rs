@@ -12,6 +12,15 @@ pub mod colorspace;
 pub mod pixmap;
 pub mod document;
 pub mod pdf_object;
+pub mod device;
+pub mod path;
+pub mod text;
+pub mod font;
+pub mod image;
+pub mod enhanced;
+
+// Safe helper functions for common FFI patterns
+mod safe_helpers;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}};

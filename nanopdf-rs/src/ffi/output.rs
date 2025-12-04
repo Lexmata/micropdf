@@ -27,7 +27,6 @@ pub extern "C" fn fz_new_output_with_path(
     }
 
     // SAFETY: Caller guarantees filename is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(filename) };
     let path = match c_str.to_str() {
         Ok(s) => s,
@@ -86,7 +85,6 @@ pub extern "C" fn fz_write_data(
     if let Some(output_arc) = OUTPUTS.get(out) {
         if let Ok(mut guard) = output_arc.lock() {
             // SAFETY: Caller guarantees data points to valid memory of size bytes
-            #[allow(unsafe_code)]
             let slice = unsafe { std::slice::from_raw_parts(data as *const u8, size) };
             let _ = guard.write_data(slice);
         }
@@ -104,7 +102,6 @@ pub extern "C" fn fz_write_string(_ctx: Handle, out: Handle, s: *const c_char) {
     }
 
     // SAFETY: Caller guarantees s is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(s) };
     if let Ok(rust_str) = c_str.to_str() {
         if let Some(output_arc) = OUTPUTS.get(out) {

@@ -97,7 +97,6 @@ pub extern "C" fn fz_open_document(_ctx: Handle, filename: *const c_char) -> Han
     }
 
     // SAFETY: Caller guarantees filename is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(filename) };
     let path = match c_str.to_str() {
         Ok(s) => s,
@@ -239,7 +238,6 @@ pub extern "C" fn fz_lookup_metadata(
     // Return empty string for now
     if !buf.is_null() && size > 0 {
         // SAFETY: Caller guarantees buf points to writable memory of `size` bytes
-        #[allow(unsafe_code)]
         unsafe {
             *buf = 0; // Null terminate
         }
@@ -355,7 +353,6 @@ pub extern "C" fn fz_resolve_link(
     }
 
     // SAFETY: Caller guarantees uri is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(uri) };
     let uri_str = match c_str.to_str() {
         Ok(s) => s,
@@ -375,11 +372,9 @@ pub extern "C" fn fz_resolve_link(
         Some(n) => {
             // Set coordinates to top-left of page
             if !xp.is_null() {
-                #[allow(unsafe_code)]
                 unsafe { *xp = 0.0; }
             }
             if !yp.is_null() {
-                #[allow(unsafe_code)]
                 unsafe { *yp = 0.0; }
             }
             n
@@ -408,7 +403,6 @@ pub extern "C" fn fz_make_location_uri(
     let uri_bytes = uri.as_bytes();
     let copy_len = (uri_bytes.len()).min((size - 1) as usize);
 
-    #[allow(unsafe_code)]
     unsafe {
         std::ptr::copy_nonoverlapping(uri_bytes.as_ptr(), buf as *mut u8, copy_len);
         *buf.add(copy_len) = 0; // Null terminate
@@ -805,7 +799,6 @@ mod tests {
         assert!(!result.is_null());
 
         // Check the generated URI
-        #[allow(unsafe_code)]
         let uri = unsafe { std::ffi::CStr::from_ptr(buf.as_ptr()) };
         assert_eq!(uri.to_str().unwrap(), "#page=5");
     }

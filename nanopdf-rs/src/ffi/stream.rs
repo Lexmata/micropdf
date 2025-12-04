@@ -116,7 +116,6 @@ pub extern "C" fn fz_open_file(_ctx: Handle, filename: *const c_char) -> Handle 
     }
 
     // SAFETY: Caller guarantees filename is a valid null-terminated C string
-    #[allow(unsafe_code)]
     let c_str = unsafe { std::ffi::CStr::from_ptr(filename) };
     let path = match c_str.to_str() {
         Ok(s) => s,
@@ -144,7 +143,6 @@ pub extern "C" fn fz_open_memory(
     }
 
     // SAFETY: Caller guarantees data points to valid memory of `len` bytes
-    #[allow(unsafe_code)]
     let slice = unsafe { std::slice::from_raw_parts(data, len) };
     STREAMS.insert(Stream::from_memory(slice.to_vec()))
 }
@@ -178,7 +176,6 @@ pub extern "C" fn fz_read(
     if let Some(stream) = STREAMS.get(stm) {
         if let Ok(mut guard) = stream.lock() {
             // SAFETY: Caller guarantees data points to writable memory of `len` bytes
-            #[allow(unsafe_code)]
             let buf = unsafe { std::slice::from_raw_parts_mut(data, len) };
             return guard.read(buf);
         }
