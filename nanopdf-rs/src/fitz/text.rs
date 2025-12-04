@@ -256,6 +256,7 @@ impl Text {
     }
 
     /// Show a single glyph
+    #[allow(clippy::too_many_arguments)]
     pub fn show_glyph(
         &mut self,
         font: Arc<Font>,
@@ -298,6 +299,7 @@ impl Text {
     }
 
     /// Show a single glyph with full parameters
+    #[allow(clippy::too_many_arguments)]
     pub fn show_glyph_with_advance(
         &mut self,
         font: Arc<Font>,
@@ -341,6 +343,7 @@ impl Text {
     }
 
     /// Show a UTF-8 string
+    #[allow(clippy::too_many_arguments)]
     pub fn show_string(
         &mut self,
         font: Arc<Font>,

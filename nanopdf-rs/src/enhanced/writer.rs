@@ -247,6 +247,7 @@ impl PdfWriter {
     }
 
     /// Write a PDF object
+    #[allow(clippy::only_used_in_recursion)]
     fn write_object<W: Write>(&self, writer: &mut W, obj: &Object) -> Result<()> {
         match obj {
             Object::Null => writer.write_all(b"null")?,
