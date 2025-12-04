@@ -457,11 +457,11 @@ impl Font {
 
         let mut font = Font::new(name);
         font.set_font_data(data.to_vec());
-        
+
         // Try to infer font type from data
         // This is a stub - real implementation would parse font file
         font.font_type = FontType::TrueType;
-        
+
         Ok(font)
     }
 

@@ -4,7 +4,7 @@
 
 use super::{Handle, HandleStore, safe_helpers};
 use crate::fitz::font::Font;
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::LazyLock;
 
 /// Font storage
 pub static FONTS: LazyLock<HandleStore<Font>> =

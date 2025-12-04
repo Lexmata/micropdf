@@ -2,7 +2,6 @@
 //!
 //! Provides structured text representation with font, position, and layout information.
 
-use crate::fitz::error::Result;
 use crate::fitz::font::Font;
 use crate::fitz::geometry::{Matrix, Rect};
 use crate::fitz::path::StrokeState;

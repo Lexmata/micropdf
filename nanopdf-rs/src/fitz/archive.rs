@@ -6,7 +6,6 @@ use crate::fitz::buffer::Buffer;
 use crate::fitz::error::{Error, Result};
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, Read, Seek};
 use std::path::{Path, PathBuf};
 
 /// Archive format

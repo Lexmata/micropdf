@@ -2,8 +2,7 @@
 //!
 //! Provides types and functionality for PDF annotations (interactive elements).
 
-use crate::fitz::error::{Error, Result};
-use crate::fitz::geometry::{Matrix, Point, Rect};
+use crate::fitz::geometry::{Matrix, Rect};
 use std::collections::HashMap;
 
 /// PDF annotation types

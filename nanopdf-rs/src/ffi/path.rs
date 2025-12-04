@@ -5,7 +5,7 @@
 use super::{Handle, HandleStore};
 use crate::fitz::path::{Path, StrokeState, LineCap, LineJoin};
 use crate::fitz::geometry::{Point, Rect};
-use std::sync::{Arc, LazyLock, Mutex};
+use std::sync::LazyLock;
 
 /// Path storage
 pub static PATHS: LazyLock<HandleStore<Path>> =

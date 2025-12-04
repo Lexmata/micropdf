@@ -2,7 +2,6 @@
 
 use crate::fitz::colorspace::Colorspace;
 use crate::fitz::error::{Error, Result};
-use crate::fitz::geometry::IRect;
 use std::sync::Arc;
 
 #[derive(Clone)]

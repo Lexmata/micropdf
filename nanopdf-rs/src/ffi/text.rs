@@ -3,10 +3,9 @@
 //! Provides FFI bindings for text buffer and text span operations.
 
 use super::{Handle, HandleStore, safe_helpers};
-use crate::fitz::text::{Text, TextSpan, TextItem};
-use crate::fitz::font::Font;
-use crate::fitz::geometry::{Matrix, Point, Rect};
-use std::sync::{Arc, LazyLock, Mutex};
+use crate::fitz::text::Text;
+use crate::fitz::geometry::Matrix;
+use std::sync::{Arc, LazyLock};
 
 /// Text storage
 pub static TEXTS: LazyLock<HandleStore<Text>> =

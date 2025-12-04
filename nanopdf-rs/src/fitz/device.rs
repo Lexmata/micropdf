@@ -3,7 +3,6 @@
 //! Devices receive and process drawing operations from content stream interpretation.
 
 use crate::fitz::colorspace::Colorspace;
-use crate::fitz::error::Result;
 use crate::fitz::geometry::{Matrix, Rect};
 use crate::fitz::image::Image;
 use crate::fitz::path::{Path, StrokeState};

@@ -3,7 +3,6 @@
 //! Tokenizes PDF streams into meaningful tokens for parsing.
 
 use crate::fitz::error::{Error, Result};
-use crate::fitz::stream::Stream;
 
 /// PDF token types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

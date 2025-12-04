@@ -5,8 +5,6 @@
 use crate::fitz::error::{Error, Result};
 use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use md5::{Digest, Md5};
-use sha2::{Sha256, Sha384, Sha512};
-use std::sync::Arc;
 
 type Aes128CbcEnc = cbc::Encryptor<aes::Aes128>;
 type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;

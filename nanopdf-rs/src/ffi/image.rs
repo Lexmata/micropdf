@@ -5,8 +5,6 @@
 use super::{Handle, HandleStore, PIXMAPS, BUFFERS};
 use crate::fitz::image::Image;
 use crate::fitz::pixmap::Pixmap;
-use crate::fitz::colorspace::Colorspace;
-use crate::fitz::geometry::Matrix;
 use std::sync::{Arc, LazyLock, Mutex};
 
 /// Image storage

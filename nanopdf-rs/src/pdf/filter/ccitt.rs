@@ -1,6 +1,6 @@
 //! CCITTFaxDecode Filter Implementation
 
-use crate::fitz::error::{Error, Result};
+use crate::fitz::error::Result;
 use super::params::CCITTFaxDecodeParams;
 
 /// Decode CCITT Group 3/4 fax encoded data

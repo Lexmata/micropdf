@@ -1,6 +1,6 @@
 //! PDF Object Types and Core Data Structures
 
-use std::sync::{LazyLock, Mutex};
+use std::sync::LazyLock;
 use super::super::{Handle, HandleStore};
 
 /// PDF Object type enumeration

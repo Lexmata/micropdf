@@ -2,7 +2,6 @@
 //! Simplified error handling without setjmp/longjmp
 
 use super::{Handle, CONTEXTS};
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::ffi::{c_char, c_int, c_void, CStr};
 
