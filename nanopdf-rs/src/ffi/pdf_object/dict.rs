@@ -297,7 +297,7 @@ pub extern "C" fn pdf_dict_put_string(_ctx: Handle, dict: PdfObjHandle, key: Pdf
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::super::create::{pdf_new_dict, pdf_new_name, pdf_new_int, pdf_new_real, pdf_new_bool, pdf_new_string};
+    use super::super::create::{pdf_new_dict, pdf_new_name, pdf_new_int};
     use std::ffi::CString;
 
     #[test]

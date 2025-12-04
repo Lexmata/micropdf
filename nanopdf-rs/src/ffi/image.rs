@@ -326,8 +326,6 @@ pub extern "C" fn fz_image_orientation(_ctx: Handle, _image: Handle) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fitz::colorspace::Colorspace;
-    use crate::fitz::pixmap::Pixmap;
 
     #[test]
     fn test_new_image_from_pixmap() {

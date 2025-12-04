@@ -444,7 +444,6 @@ impl Device for TraceDevice {
 mod tests {
     use super::*;
     use crate::fitz::font::Font;
-    use crate::fitz::path::PathElement;
     use std::sync::Arc;
 
     #[test]

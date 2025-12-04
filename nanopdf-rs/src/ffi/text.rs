@@ -307,7 +307,6 @@ pub extern "C" fn fz_text_walk(_ctx: Handle, text: Handle, callback: *const std:
 mod tests {
     use super::*;
     use crate::fitz::font::Font;
-    use std::sync::{Arc, Mutex};
 
     #[test]
     fn test_new_text() {
