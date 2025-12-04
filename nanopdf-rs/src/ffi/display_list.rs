@@ -178,6 +178,41 @@ pub extern "C" fn fz_display_list_clear(
     }
 }
 
+/// Check if a display list is valid
+///
+/// # Arguments
+/// * `list` - Handle to check
+///
+/// # Returns
+/// 1 if valid, 0 otherwise
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_display_list_is_valid(
+    _ctx: Handle,
+    list: Handle,
+) -> i32 {
+    if DISPLAY_LISTS.get(list).is_some() { 1 } else { 0 }
+}
+
+/// Clone a display list (create a new copy)
+///
+/// # Arguments
+/// * `list` - Handle to the display list
+///
+/// # Returns
+/// Handle to the cloned display list, or 0 on error
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_display_list(
+    _ctx: Handle,
+    list: Handle,
+) -> Handle {
+    if let Some(l) = DISPLAY_LISTS.get(list) {
+        if let Ok(guard) = l.lock() {
+            let cloned = DisplayList::new(guard.mediabox().clone());
+            return DISPLAY_LISTS.insert(cloned);
+        }
+    }
+    0
+}
 
 #[cfg(test)]
 mod tests {
