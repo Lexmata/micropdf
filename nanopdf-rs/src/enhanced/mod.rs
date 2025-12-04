@@ -8,6 +8,7 @@
 //! - **Document Creation**: Create PDFs from scratch
 //! - **Page Manipulation**: Add, remove, reorder pages
 //! - **Content Addition**: Text overlay, images, watermarks
+//! - **Drawing**: Direct drawing with colors and opacity
 //! - **Optimization**: Compression, cleanup, form flattening
 //! - **Bookmarks**: Outline management
 //! - **Attachments**: Embed and extract files
@@ -16,6 +17,7 @@
 pub mod writer;
 pub mod page_ops;
 pub mod content;
+pub mod drawing;
 pub mod optimization;
 pub mod bookmarks;
 pub mod attachments;

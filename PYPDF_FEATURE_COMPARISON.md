@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-**Date**: December 4, 2025  
-**pypdf Version**: 4.x (latest)  
-**NanoPDF Version**: 0.1.0  
+**Date**: December 4, 2025
+**pypdf Version**: 4.x (latest)
+**NanoPDF Version**: 0.1.0
 **MuPDF Version**: 1.26.3 (reference)
 
 This document identifies features present in pypdf that are not available in the original MuPDF library (and therefore not in our MuPDF-compatible implementation). These features represent opportunities for enhanced functionality in our `enhanced/` module.
@@ -557,7 +557,7 @@ This positions NanoPDF as the **best-of-both-worlds** solution:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: December 4, 2025  
+**Document Version**: 1.0
+**Last Updated**: December 4, 2025
 **Status**: Planning Phase
 

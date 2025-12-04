@@ -122,7 +122,7 @@ mod tests {
             .with_author("Author")
             .with_subject("Subject")
             .with_keywords("rust, pdf");
-        
+
         assert!(metadata.title.is_some());
         assert!(metadata.author.is_some());
         assert!(metadata.subject.is_some());

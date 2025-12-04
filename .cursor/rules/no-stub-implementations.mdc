@@ -1,0 +1,335 @@
+---
+alwaysApply: true
+---
+
+# No Stub Implementations
+
+All code must be fully implemented. Stub implementations, placeholders, and `NotImplemented` errors are prohibited.
+
+## Rule
+
+**NEVER create stub implementations, placeholder code, or functions that return `NotImplemented` errors.**
+
+All functions, methods, and modules must be complete and functional when committed to the repository.
+
+## Rationale
+
+1. **Code Quality**: Stubs create technical debt and confusion about what works
+2. **Testing**: Incomplete code cannot be properly tested
+3. **Reliability**: Users expect all public APIs to be functional
+4. **Maintainability**: Stubs are often forgotten and left incomplete
+5. **Professionalism**: Production code should not contain placeholders
+
+## Prohibited Patterns
+
+### ❌ DO NOT DO THIS
+
+```rust
+// BAD: Stub implementation with NotImplemented error
+pub fn add_watermark(&self, text: &str) -> Result<()> {
+    Err(EnhancedError::NotImplemented("add_watermark".into()))
+}
+
+// BAD: TODO placeholder
+pub fn compress_pdf(&self) -> Result<()> {
+    // TODO: Implement compression
+    unimplemented!()
+}
+
+// BAD: Panic placeholder
+pub fn merge_pdfs(&self, files: &[&str]) -> Result<()> {
+    todo!("Implement PDF merging")
+}
+
+// BAD: Empty implementation that doesn't do what it claims
+pub fn save(&self, path: &str) -> Result<()> {
+    // Does nothing
+    Ok(())
+}
+
+// BAD: Fake implementation
+pub fn get_page_count(&self) -> usize {
+    0 // Always returns 0, not actually implemented
+}
+```
+
+### ✅ DO THIS INSTEAD
+
+```rust
+// GOOD: Fully implemented function
+pub fn add_watermark(&self, text: &str, x: f32, y: f32) -> Result<()> {
+    let content_stream = self.create_watermark_stream(text)?;
+    self.add_to_page_content(content_stream)?;
+    self.mark_modified()?;
+    Ok(())
+}
+
+// GOOD: Complete implementation with all logic
+pub fn compress_pdf(&self) -> Result<()> {
+    for stream in self.get_content_streams()? {
+        let compressed = flate_encode(&stream.data)?;
+        stream.replace_data(compressed)?;
+        stream.set_filter("FlateDecode")?;
+    }
+    self.rebuild_xref()?;
+    Ok(())
+}
+
+// GOOD: Full merging implementation
+pub fn merge_pdfs(&self, files: &[&str]) -> Result<()> {
+    for file_path in files {
+        let source = PdfDocument::open(file_path)?;
+        for page_idx in 0..source.page_count() {
+            let page = source.load_page(page_idx)?;
+            self.append_page(page)?;
+        }
+    }
+    Ok(())
+}
+```
+
+## Exceptions
+
+### When Planning is Acceptable
+
+During the **initial design phase** (before any commit), you may:
+
+1. **Architecture Planning**: Outline module structure in comments
+2. **API Design**: Define function signatures with detailed doc comments
+3. **Prototyping**: Create experimental branches with incomplete code
+
+**BUT**: None of this incomplete code should be committed to `main`, `develop`, or feature branches intended for review.
+
+### Phased Implementation
+
+If a feature is too large to implement at once:
+
+**Option 1: Hidden/Private Implementation**
+
+```rust
+// Keep incomplete functions private until ready
+mod internal {
+    // Work in progress, not exposed to users
+    fn experimental_feature() -> Result<()> {
+        todo!()
+    }
+}
+
+// Only expose what's complete
+pub fn stable_feature() -> Result<()> {
+    // Fully implemented
+    Ok(())
+}
+```
+
+**Option 2: Feature Flags**
+
+```rust
+#[cfg(feature = "experimental")]
+pub fn new_feature() -> Result<()> {
+    // May be incomplete, but behind feature flag
+    todo!()
+}
+```
+
+**Option 3: Separate Branch**
+
+Work on a WIP branch that doesn't get merged until complete.
+
+## Implementation Checklist
+
+Before committing any function, verify:
+
+- ✅ All logic paths are implemented
+- ✅ Error handling is complete
+- ✅ Edge cases are handled
+- ✅ Tests exist and pass
+- ✅ No `todo!()`, `unimplemented!()`, or panic calls
+- ✅ No `NotImplemented` error returns
+- ✅ Documentation is complete
+- ✅ Function does what its name/docs claim
+
+## Enforcement
+
+### Code Review
+
+Reviewers should reject PRs containing:
+- `todo!()`
+- `unimplemented!()`
+- `NotImplemented` errors
+- Functions that don't match their documentation
+- Empty or fake implementations
+
+### CI Checks
+
+Consider adding:
+
+```bash
+# Check for stub patterns
+git grep -n "todo!()" src/
+git grep -n "unimplemented!()" src/
+git grep -n "NotImplemented" src/
+```
+
+### Testing
+
+All public functions must have tests that:
+- Call the function successfully
+- Verify the function's claimed behavior
+- Test error conditions
+- Don't just check that stubs exist
+
+## Migration Strategy
+
+For existing stub code:
+
+1. **Audit**: Identify all stub implementations
+2. **Prioritize**: Rank by user impact and dependencies
+3. **Implement**: Complete implementations one by one
+4. **Test**: Add comprehensive tests
+5. **Document**: Update documentation if behavior differs from stubs
+6. **Remove**: Delete the old stub code
+
+## Error Messages
+
+When a feature truly cannot be implemented yet, be explicit:
+
+```rust
+// BAD: Implies it will be implemented
+return Err(Error::NotImplemented("feature".into()));
+
+// GOOD: Make it clear why
+return Err(Error::Unsupported(
+    "This feature requires external library XYZ which is not yet integrated".into()
+));
+```
+
+## Documentation
+
+If a feature is planned but not implemented:
+
+```rust
+// BAD: Document non-existent feature
+/// Compresses the PDF using advanced algorithms
+pub fn compress() -> Result<()> {
+    Err(Error::NotImplemented("compress".into()))
+}
+
+// GOOD: Don't expose it at all, or mark clearly
+#[doc(hidden)]
+/// **⚠️ NOT YET IMPLEMENTED**
+///
+/// This feature is planned for v2.0
+pub(crate) fn compress() -> Result<()> {
+    Err(Error::Unsupported(
+        "PDF compression planned for v2.0".into()
+    ))
+}
+```
+
+## Module-Level Policy
+
+When creating a new module:
+
+**Option A: Implement Fully Before Exposing**
+
+```rust
+// Private module during development
+mod watermark {
+    // Work in progress...
+}
+
+// Only make public when complete
+pub mod watermark {
+    // All functions fully implemented
+}
+```
+
+**Option B: Incremental Public API**
+
+```rust
+pub mod watermark {
+    // Only expose what's complete
+    pub fn add_text_watermark() -> Result<()> {
+        // Fully implemented
+    }
+
+    // Keep incomplete parts private
+    fn add_image_watermark() -> Result<()> {
+        // TODO: Complete before making public
+    }
+}
+```
+
+## Examples of Complete Implementation
+
+### Example 1: Drawing Rectangle
+
+```rust
+pub fn draw_rectangle(&mut self, x: f32, y: f32, w: f32, h: f32) -> Result<()> {
+    // Create path
+    let mut path = Path::new();
+    path.move_to(Point::new(x, y));
+    path.line_to(Point::new(x + w, y));
+    path.line_to(Point::new(x + w, y + h));
+    path.line_to(Point::new(x, y + h));
+    path.close();
+
+    // Build content stream
+    let mut stream = Vec::new();
+    stream.extend(format!("{} {} {} {} re\n", x, y, w, h).as_bytes());
+    stream.extend(b"S\n"); // Stroke
+
+    // Apply to current page
+    self.append_to_content_stream(&stream)?;
+
+    Ok(())
+}
+```
+
+### Example 2: Color with Opacity
+
+```rust
+pub fn set_color_with_opacity(&mut self, r: f32, g: f32, b: f32, a: f32) -> Result<()> {
+    // Validate inputs
+    if ![r, g, b, a].iter().all(|v| *v >= 0.0 && *v <= 1.0) {
+        return Err(Error::InvalidParameter(
+            "Color components must be between 0.0 and 1.0".into()
+        ));
+    }
+
+    // Set color
+    self.current_color = Color::new(r, g, b, a);
+
+    // Generate PDF operator
+    let color_op = format!("{} {} {} rg\n", r, g, b);
+    self.append_to_content_stream(color_op.as_bytes())?;
+
+    // Handle opacity if not fully opaque
+    if a < 1.0 {
+        let gs_name = self.add_graphics_state_with_opacity(a)?;
+        let gs_op = format!("/{} gs\n", gs_name);
+        self.append_to_content_stream(gs_op.as_bytes())?;
+    }
+
+    Ok(())
+}
+```
+
+## Summary
+
+**Rule**: Every public function must be fully implemented before commit.
+
+**Exceptions**: Private/experimental code, feature-flagged code, or WIP branches.
+
+**Goal**: High-quality, reliable code that users can depend on.
+
+**Benefit**: No technical debt, clear expectations, better user experience.
+
+---
+
+**Enforcement Level**: STRICT - No exceptions without explicit approval
+
+**Applies To**: All Rust code, FFI bindings, and public APIs
+
+**Review Priority**: HIGH - Stubs should block PR approval
