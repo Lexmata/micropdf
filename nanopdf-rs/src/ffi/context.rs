@@ -378,6 +378,68 @@ pub extern "C" fn fz_new_default_context() -> Handle {
     unsafe { fz_new_context(std::ptr::null(), std::ptr::null(), 256 * 1024 * 1024) } // 256 MB default
 }
 
+/// Keep a context (alias for clone, increments refcount)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_keep_context(ctx: Handle) -> Handle {
+    fz_clone_context(ctx)
+}
+
+/// Check if context has an error
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_has_error(ctx: Handle) -> c_int {
+    let code = fz_caught(ctx);
+    if code == FzErrorType::None as c_int { 0 } else { 1 }
+}
+
+/// Check if context is valid
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_context_is_valid(ctx: Handle) -> c_int {
+    if CONTEXTS.get(ctx).is_some() { 1 } else { 0 }
+}
+
+/// Shrink store to given size (placeholder)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_shrink_store(_ctx: Handle, _percent: c_int) {
+    // Placeholder - store management not yet implemented
+}
+
+/// Empty the store completely
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_empty_store(_ctx: Handle) {
+    // Placeholder - store management not yet implemented
+}
+
+/// Get current store usage (placeholder)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_store_scavenge(_ctx: Handle, _size: usize, _phase: *mut c_int) -> c_int {
+    // Placeholder - returns 0 (nothing scavenged)
+    0
+}
+
+/// Enable ICC color management
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_enable_icc(_ctx: Handle) {
+    // Placeholder - ICC management not yet implemented
+}
+
+/// Disable ICC color management
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_disable_icc(_ctx: Handle) {
+    // Placeholder - ICC management not yet implemented
+}
+
+/// Set AA level (anti-aliasing)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_set_aa_level(_ctx: Handle, _bits: c_int) {
+    // Placeholder - AA level management not yet implemented
+}
+
+/// Get AA level
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_aa_level(_ctx: Handle) -> c_int {
+    8 // Default AA level
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

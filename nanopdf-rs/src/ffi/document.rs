@@ -63,7 +63,7 @@ impl Document {
         // Basic PDF detection and page count estimation
         // In a real implementation, this would parse the PDF structure
         let page_count = Self::estimate_page_count(&data);
-        
+
         // Detect format from magic bytes
         let format = if data.starts_with(b"%PDF-") {
             "PDF".to_string()
