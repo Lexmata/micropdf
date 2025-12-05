@@ -14,7 +14,7 @@ All GitHub Actions workflows now include `lfs: true` in their checkout steps to 
 - ✅ `docs-rust` - Rust documentation
 - ✅ `coverage-rust` - Rust coverage
 - ✅ `test-nodejs` - Node.js tests
-- ✅ `lint-nodejs` - Node.js linting  
+- ✅ `lint-nodejs` - Node.js linting
 - ✅ `test-go` - Go tests
 - ✅ `lint-go` - Go linting
 - ✅ `docker-build` - Docker builds
@@ -93,7 +93,7 @@ To verify LFS files are downloaded in CI:
       echo "ERROR: LFS files not downloaded!"
       exit 1
     fi
-    
+
     # Show file size (should be actual size, not pointer size)
     ls -lh test-pdfs/simple/hello-world.pdf
 ```
@@ -184,7 +184,7 @@ func TestWithPDF(t *testing.T) {
 
 **Symptom**: "Git LFS bandwidth or storage quota exceeded"
 
-**Solution**: 
+**Solution**:
 - GitHub provides 1GB storage + 1GB bandwidth per month (free)
 - Paid plans have higher limits
 - Monitor usage: https://github.com/settings/billing
@@ -226,7 +226,7 @@ func TestWithPDF(t *testing.T) {
 
 ---
 
-**Last Updated**: 2025-01-05  
-**Configuration Version**: 1.0  
+**Last Updated**: 2025-01-05
+**Configuration Version**: 1.0
 **Workflows Updated**: 4 (ci, test-go-bindings, test-nodejs-bindings, bench)
 
