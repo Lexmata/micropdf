@@ -194,3 +194,125 @@ func TestDocumentDrop(t *testing.T) {
 	// Multiple drops should be safe
 	doc.Drop()
 }
+
+func TestDocumentAuthenticate(t *testing.T) {
+	ctx := NewContext()
+	if ctx == nil {
+		t.Fatal("Failed to create context")
+	}
+	defer ctx.Drop()
+
+	pdfPath := createTestPDF(t)
+	doc, err := OpenDocument(ctx, pdfPath)
+	if err != nil {
+		t.Fatalf("Failed to open document: %v", err)
+	}
+	defer doc.Drop()
+
+	// Test with non-encrypted PDF
+	authenticated, err := doc.Authenticate("")
+	if err != nil {
+		t.Errorf("Authenticate should not error: %v", err)
+	}
+
+	// For non-encrypted PDFs, authentication may succeed with empty password
+	t.Logf("Authenticated: %v", authenticated)
+
+	// Test with wrong password (should not panic)
+	_, err = doc.Authenticate("wrongpassword")
+	if err != nil {
+		t.Logf("Expected behavior: wrong password returns error or false")
+	}
+}
+
+func TestDocumentHasPermission(t *testing.T) {
+	ctx := NewContext()
+	if ctx == nil {
+		t.Fatal("Failed to create context")
+	}
+	defer ctx.Drop()
+
+	pdfPath := createTestPDF(t)
+	doc, err := OpenDocument(ctx, pdfPath)
+	if err != nil {
+		t.Fatalf("Failed to open document: %v", err)
+	}
+	defer doc.Drop()
+
+	// Test various permissions
+	permissions := []struct {
+		perm int
+		name string
+	}{
+		{2, "PRINT"},
+		{4, "COPY"},
+		{8, "EDIT"},
+		{16, "ANNOTATE"},
+	}
+
+	for _, p := range permissions {
+		hasPermission, err := doc.HasPermission(p.perm)
+		if err != nil {
+			t.Errorf("HasPermission(%s) error: %v", p.name, err)
+		} else {
+			t.Logf("Permission %s: %v", p.name, hasPermission)
+		}
+	}
+}
+
+func TestDocumentSave(t *testing.T) {
+	ctx := NewContext()
+	if ctx == nil {
+		t.Fatal("Failed to create context")
+	}
+	defer ctx.Drop()
+
+	pdfPath := createTestPDF(t)
+	doc, err := OpenDocument(ctx, pdfPath)
+	if err != nil {
+		t.Fatalf("Failed to open document: %v", err)
+	}
+	defer doc.Drop()
+
+	// Save to a new file
+	outputPath := filepath.Join(t.TempDir(), "output.pdf")
+	err = doc.Save(outputPath)
+	if err != nil {
+		t.Errorf("Save failed: %v", err)
+	}
+
+	// In mock mode, Save may not actually create a file
+	// In real mode, file should be created
+	if !IsMock() {
+		if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+			t.Error("Output file was not created")
+		} else {
+			t.Logf("Saved to: %s", outputPath)
+		}
+	} else {
+		t.Log("Mock mode: Save called but file not created")
+	}
+}
+
+func TestDocumentResolveLink(t *testing.T) {
+	ctx := NewContext()
+	if ctx == nil {
+		t.Fatal("Failed to create context")
+	}
+	defer ctx.Drop()
+
+	pdfPath := createTestPDF(t)
+	doc, err := OpenDocument(ctx, pdfPath)
+	if err != nil {
+		t.Fatalf("Failed to open document: %v", err)
+	}
+	defer doc.Drop()
+
+	// Test resolving a link (may fail if no links in test PDF)
+	pageNum, err := doc.ResolveLink("SomeLink")
+	if err != nil {
+		t.Logf("Expected: no links in test PDF - %v", err)
+	} else {
+		t.Logf("Resolved link to page: %d", pageNum)
+	}
+}

@@ -83,12 +83,12 @@ jobs:
         run: |
           cd go-nanopdf
           CGO_ENABLED=0 go test -tags=mock -v ./...
-      
+
       - name: Test Go bindings (CGO Unit Tests)
         run: |
           cd go-nanopdf
           CGO_ENABLED=1 go test -v -short ./...
-      
+
       - name: Test Go bindings (Integration Tests)
         run: |
           cd go-nanopdf
