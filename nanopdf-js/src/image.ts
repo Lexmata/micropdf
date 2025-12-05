@@ -1,6 +1,6 @@
 /**
  * Image - PDF image handling
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's image operations.
  * Handles image loading, decoding, and format conversion.
  */
@@ -382,7 +382,7 @@ export class ImageDecoder {
    */
   static decode(data: Uint8Array): Image | null {
     const format = ImageDecoder.detectFormat(data);
-    
+
     // Simplified: would call appropriate decoder based on format
     if (format === ImageFormat.Unknown) {
       return null;
