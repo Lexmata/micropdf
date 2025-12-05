@@ -31,11 +31,11 @@ export interface NativeAddon {
   loadPage(ctx: NativeContext, doc: NativeDocument, pageNum: number): NativePage;
   dropPage(ctx: NativeContext, page: NativePage): void;
   boundPage(ctx: NativeContext, page: NativePage): NativeRect;
-  
+
   // Document metadata
   getMetadata(ctx: NativeContext, doc: NativeDocument, key: string): string | null;
   setMetadata(ctx: NativeContext, doc: NativeDocument, key: string, value: string): void;
-  
+
   // Document writing
   saveDocument(ctx: NativeContext, doc: NativeDocument, path: string, options?: string): void;
   writeDocument(ctx: NativeContext, doc: NativeDocument): globalThis.Buffer;
@@ -84,7 +84,7 @@ export interface NativeAddon {
   dropFont(ctx: NativeContext, font: NativeFont): void;
   getFontName(ctx: NativeContext, font: NativeFont): string;
   getFontBBox(ctx: NativeContext, font: NativeFont): NativeRect;
-  
+
   // Image operations
   loadImageFromMemory(ctx: NativeContext, data: globalThis.Buffer): NativeImage;
   loadImageFromFile(ctx: NativeContext, path: string): NativeImage;
@@ -1039,3 +1039,4 @@ if (native !== null) {
 
 export const native_addon = addon;
 export const isMock = native === null;
+export { addon as native };

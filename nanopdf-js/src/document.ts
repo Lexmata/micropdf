@@ -8,7 +8,9 @@ import { Buffer } from './buffer.js';
 import { Pixmap } from './pixmap.js';
 import { Colorspace } from './colorspace.js';
 import { Rect, Matrix, Quad } from './geometry.js';
-import { NanoPDFError, type Link, type RectLike, type MatrixLike } from './types.js';
+import { NanoPDFError, LinkDestType, type Link, type RectLike, type MatrixLike } from './types.js';
+import { native } from './native.js';
+import type { NativeContext, NativePage, NativeRect } from './native.js';
 
 /**
  * An item in the document outline (table of contents)
@@ -60,6 +62,8 @@ export interface TextSpan {
  * A page in a document
  */
 export class Page {
+  private _ctx?: NativeContext;
+  private _page?: NativePage;
   private readonly _pageNumber: number;
   private readonly _bounds: Rect;
   private readonly _mediaBox: Rect;
@@ -73,6 +77,7 @@ export class Page {
     mediaBox: Rect,
     rotation: number
   ) {
+    // Native handles will be set when FFI is fully integrated
     this._pageNumber = pageNumber;
     this._bounds = bounds;
     this._mediaBox = mediaBox;
@@ -116,72 +121,126 @@ export class Page {
   }
 
   /**
-   * Render the page to a pixmap
+   * Render the page to a pixmap using FFI
+   * @throws Error when native bindings are not available
    */
   toPixmap(
     matrix: MatrixLike = Matrix.IDENTITY,
     colorspace: Colorspace = Colorspace.deviceRGB(),
     alpha: boolean = true
   ): Pixmap {
-    // Calculate transformed bounds
+    if (!this._ctx || !this._page) {
+      throw new Error('Page rendering requires native FFI bindings (fz_run_page, fz_new_bbox_device)');
+    }
+
     const m = Matrix.from(matrix);
-    const transformedBounds = this._bounds.transform(m);
+    const nativeMatrix = {
+      a: m.a,
+      b: m.b,
+      c: m.c,
+      d: m.d,
+      e: m.e,
+      f: m.f
+    };
+    
+    const nativeColorspace = {
+      name: colorspace.name,
+      n: colorspace.n,
+      type: colorspace.type.toString()
+    };
 
-    const width = Math.ceil(transformedBounds.width);
-    const height = Math.ceil(transformedBounds.height);
-
-    // Create pixmap with appropriate size
-    const pixmap = Pixmap.create(colorspace, width > 0 ? width : 1, height > 0 ? height : 1, alpha);
-    pixmap.clearWithValue(255); // White background
-
-    // Rendering requires FFI connection to native MuPDF library
-    // This method returns a blank pixmap until FFI bindings are connected
-
-    return pixmap;
+    const nativePixmap = native.renderPage(this._ctx, this._page, nativeMatrix, nativeColorspace, alpha);
+    
+    // Convert native pixmap to TypeScript Pixmap
+    return Pixmap.create(colorspace, nativePixmap.width, nativePixmap.height, alpha);
   }
 
   /**
-   * Render the page to PNG
-   * @throws Error PNG encoding requires FFI bindings to native library
+   * Render the page to PNG using FFI
+   * @throws Error when native bindings are not available
    */
-  toPNG(_dpi: number = 72): Uint8Array {
-    throw new Error('PNG encoding requires FFI bindings to native MuPDF library');
+  toPNG(dpi: number = 72): Uint8Array {
+    if (!this._ctx || !this._page) {
+      throw new Error('PNG encoding requires native FFI bindings (fz_save_pixmap_as_png)');
+    }
+
+    const nativeColorspace = {
+      name: 'DeviceRGB',
+      n: 3,
+      type: 'RGB'
+    };
+    
+    const pngBuffer = native.renderPageToPNG(this._ctx, this._page, dpi, nativeColorspace);
+    return new Uint8Array(pngBuffer);
   }
 
   /**
-   * Extract text from the page
-   * Returns empty string until FFI bindings are connected
+   * Extract text from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getText(): string {
-    // Text extraction requires FFI connection to parse content streams
-    return '';
+    if (!this._ctx || !this._page) {
+      throw new Error('Text extraction requires native FFI bindings (fz_new_stext_page_from_page)');
+    }
+    return native.extractText(this._ctx, this._page);
   }
 
   /**
-   * Get text blocks from the page
-   * Returns empty array until FFI bindings are connected
+   * Get text blocks from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getTextBlocks(): TextBlock[] {
-    // Text block extraction requires FFI connection to parse content streams
-    return [];
+    if (!this._ctx || !this._page) {
+      throw new Error('Text block extraction requires native FFI bindings (fz_new_stext_page_from_page)');
+    }
+    const blocks = native.extractTextBlocks(this._ctx, this._page);
+    return blocks.map((block: { text: string; bbox: NativeRect }) => ({
+      text: block.text,
+      bbox: Rect.from(block.bbox),
+      lines: [] // Lines will be populated when FFI provides detailed text structure
+    }));
   }
 
   /**
-   * Get links from the page
-   * Returns empty array until FFI bindings are connected
+   * Get links from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getLinks(): Link[] {
-    // Link extraction requires FFI connection to parse annotations
-    return [];
+    if (!this._ctx || !this._page) {
+      throw new Error('Link extraction requires native FFI bindings (fz_load_links, pdf_annot_type)');
+    }
+    const links = native.getPageLinks(this._ctx, this._page);
+    return links.map((link: { rect: NativeRect; uri?: string; page?: number }): Link => {
+      const bounds = Rect.from(link.rect);
+      if (link.uri) {
+        return { bounds, dest: LinkDestType.URI, uri: link.uri };
+      } else if (link.page !== undefined) {
+        return { bounds, dest: LinkDestType.Goto, page: link.page };
+      } else {
+        return { bounds, dest: LinkDestType.None };
+      }
+    });
   }
 
   /**
-   * Search for text on the page
-   * Returns empty array until FFI bindings are connected
+   * Search for text on the page using FFI
+   * @throws Error when native bindings are not available
    */
-  search(_needle: string): Quad[] {
-    // Text search requires FFI connection to parse content streams
-    return [];
+  search(needle: string): Quad[] {
+    if (!this._ctx || !this._page) {
+      throw new Error('Text search requires native FFI bindings (fz_search_stext_page)');
+    }
+    const rects = native.searchText(this._ctx, this._page, needle, false);
+    // Convert Rects to Quads (each rect becomes a quad)
+    return rects.map((rect: NativeRect) => {
+      const r = Rect.from(rect);
+      return new Quad(
+        { x: r.x0, y: r.y0 },
+        { x: r.x1, y: r.y0 },
+        { x: r.x0, y: r.y1 },
+        { x: r.x1, y: r.y1 }
+      );
+    });
   }
 }
 
