@@ -1,6 +1,6 @@
 /**
  * Archive - File archive handling
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's archive operations.
  * Handles ZIP and other archive formats embedded in PDFs.
  */

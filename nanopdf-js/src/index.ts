@@ -340,6 +340,20 @@ export {
 } from './archive.js';
 
 // ============================================================================
+// Context (Error & Memory Management)
+// ============================================================================
+
+export {
+  Context,
+  getDefaultContext,
+  setDefaultContext,
+  resetDefaultContext,
+  type ErrorCallback,
+  type WarningCallback,
+  type ContextInfo,
+} from './context.js';
+
+// ============================================================================
 // Main API
 // ============================================================================
 
