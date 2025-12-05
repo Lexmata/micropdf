@@ -1,6 +1,6 @@
 /**
  * Cookie - Operation progress and cancellation tracking
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's cookie operations.
  * Cookies track progress, errors, and allow cancellation of long-running operations.
  */
