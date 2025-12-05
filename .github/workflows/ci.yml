@@ -265,13 +265,17 @@ jobs:
 
   # Docker build test
   docker-build:
-    name: Docker Build Test
+    name: Docker Build Test (${{ matrix.arch }})
     needs: changes
     if: ${{ needs.changes.outputs.docker == 'true' || needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        platform: [linux/amd64, linux/arm64]
+        include:
+          - platform: linux/amd64
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -283,27 +287,27 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Debian image (${{ matrix.platform }})
+      - name: Build Debian image (${{ matrix.arch }})
         uses: docker/build-push-action@v5
         with:
           context: ./nanopdf-rs
           file: nanopdf-rs/docker/Dockerfile.debian
           platforms: ${{ matrix.platform }}
           push: false
-          tags: nanopdf:debian-test-${{ matrix.platform }}
-          cache-from: type=gha,scope=${{ matrix.platform }}-debian
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}-debian
+          tags: nanopdf:debian-test-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.arch }}-debian
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-debian
 
-      - name: Build RPM image (${{ matrix.platform }})
+      - name: Build RPM image (${{ matrix.arch }})
         uses: docker/build-push-action@v5
         with:
           context: ./nanopdf-rs
           file: nanopdf-rs/docker/Dockerfile.redhat
           platforms: ${{ matrix.platform }}
           push: false
-          tags: nanopdf:rpm-test-${{ matrix.platform }}
-          cache-from: type=gha,scope=${{ matrix.platform }}-rpm
-          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}-rpm
+          tags: nanopdf:rpm-test-${{ matrix.arch }}
+          cache-from: type=gha,scope=${{ matrix.arch }}-rpm
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-rpm
 
   # Summary job - always runs to provide status
   ci-status:
