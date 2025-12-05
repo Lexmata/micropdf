@@ -1,6 +1,6 @@
 /**
  * Font - PDF font handling
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's font operations.
  * Handles font loading, glyph encoding, metrics, and rendering.
  */
