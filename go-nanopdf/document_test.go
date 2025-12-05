@@ -9,7 +9,7 @@ import (
 // Helper to create a test PDF file
 func createTestPDF(t *testing.T) string {
 	t.Helper()
-	
+
 	// Create a minimal PDF
 	pdfContent := `%PDF-1.4
 1 0 obj
@@ -47,15 +47,15 @@ trailer
 startxref
 418
 %%EOF`
-	
+
 	tmpDir := t.TempDir()
 	pdfPath := filepath.Join(tmpDir, "test.pdf")
-	
+
 	err := os.WriteFile(pdfPath, []byte(pdfContent), 0644)
 	if err != nil {
 		t.Fatalf("Failed to create test PDF: %v", err)
 	}
-	
+
 	return pdfPath
 }
 
@@ -65,15 +65,15 @@ func TestOpenDocument(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
-	
+
 	doc, err := OpenDocument(ctx, pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to open document: %v", err)
 	}
 	defer doc.Drop()
-	
+
 	if !doc.IsValid() {
 		t.Error("Document should be valid after opening")
 	}
@@ -85,19 +85,19 @@ func TestOpenDocumentFromBytes(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
 	data, err := os.ReadFile(pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to read test PDF: %v", err)
 	}
-	
+
 	doc, err := OpenDocumentFromBytes(ctx, data, "application/pdf")
 	if err != nil {
 		t.Fatalf("Failed to open document from bytes: %v", err)
 	}
 	defer doc.Drop()
-	
+
 	if !doc.IsValid() {
 		t.Error("Document should be valid after opening")
 	}
@@ -109,19 +109,19 @@ func TestDocumentPageCount(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
 	doc, err := OpenDocument(ctx, pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to open document: %v", err)
 	}
 	defer doc.Drop()
-	
+
 	count, err := doc.PageCount()
 	if err != nil {
 		t.Fatalf("Failed to get page count: %v", err)
 	}
-	
+
 	if count != 1 {
 		t.Errorf("Expected 1 page, got %d", count)
 	}
@@ -133,14 +133,14 @@ func TestDocumentMetadata(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
 	doc, err := OpenDocument(ctx, pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to open document: %v", err)
 	}
 	defer doc.Drop()
-	
+
 	// Try to get metadata (may be empty for our test PDF)
 	_, err = doc.GetMetadata("Title")
 	if err != nil {
@@ -154,19 +154,19 @@ func TestDocumentNeedsPassword(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
 	doc, err := OpenDocument(ctx, pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to open document: %v", err)
 	}
 	defer doc.Drop()
-	
+
 	needsPassword, err := doc.NeedsPassword()
 	if err != nil {
 		t.Fatalf("Failed to check password: %v", err)
 	}
-	
+
 	if needsPassword {
 		t.Error("Test PDF should not require password")
 	}
@@ -178,20 +178,19 @@ func TestDocumentDrop(t *testing.T) {
 		t.Fatal("Failed to create context")
 	}
 	defer ctx.Drop()
-	
+
 	pdfPath := createTestPDF(t)
 	doc, err := OpenDocument(ctx, pdfPath)
 	if err != nil {
 		t.Fatalf("Failed to open document: %v", err)
 	}
-	
+
 	doc.Drop()
-	
+
 	if doc.IsValid() {
 		t.Error("Document should be invalid after drop")
 	}
-	
+
 	// Multiple drops should be safe
 	doc.Drop()
 }
-

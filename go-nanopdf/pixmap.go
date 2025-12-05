@@ -17,7 +17,7 @@ type Pixmap struct {
 func (p *Pixmap) Drop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if !p.dropped && p.ptr != 0 && p.ctx != nil {
 		pixmapDrop(p.ctx.Handle(), p.ptr)
 		p.dropped = true
@@ -29,11 +29,11 @@ func (p *Pixmap) Drop() {
 func (p *Pixmap) Width() (int, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return 0, ErrInvalidHandle
 	}
-	
+
 	return pixmapWidth(p.ctx.Handle(), p.ptr), nil
 }
 
@@ -41,11 +41,11 @@ func (p *Pixmap) Width() (int, error) {
 func (p *Pixmap) Height() (int, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return 0, ErrInvalidHandle
 	}
-	
+
 	return pixmapHeight(p.ctx.Handle(), p.ptr), nil
 }
 
@@ -54,11 +54,11 @@ func (p *Pixmap) Height() (int, error) {
 func (p *Pixmap) Samples() ([]byte, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return nil, ErrInvalidHandle
 	}
-	
+
 	return pixmapSamples(p.ctx.Handle(), p.ptr), nil
 }
 
@@ -68,4 +68,3 @@ func (p *Pixmap) IsValid() bool {
 	defer p.mu.Unlock()
 	return !p.dropped && p.ptr != 0
 }
-

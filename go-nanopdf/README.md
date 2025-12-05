@@ -140,7 +140,7 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to render: %v", err)
     }
-    
+
     // Save PNG
     err = os.WriteFile("output.png", pngData, 0644)
     if err != nil {
@@ -225,10 +225,10 @@ func main() {
     // Get pixmap dimensions
     width, _ := pix.Width()
     height, _ := pix.Height()
-    
+
     // Get raw pixel data
     samples, _ := pix.Samples()
-    
+
     // Process pixel data...
     _ = samples
 }

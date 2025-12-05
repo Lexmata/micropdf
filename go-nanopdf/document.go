@@ -18,12 +18,12 @@ func OpenDocument(ctx *Context, path string) (*Document, error) {
 	if ctx == nil || !ctx.IsValid() {
 		return nil, ErrInvalidContext
 	}
-	
+
 	ptr := documentOpenFromPath(ctx.Handle(), path)
 	if ptr == 0 {
 		return nil, ErrFailedToOpen
 	}
-	
+
 	return &Document{
 		ctx: ctx,
 		ptr: ptr,
@@ -35,16 +35,16 @@ func OpenDocumentFromBytes(ctx *Context, data []byte, magic string) (*Document, 
 	if ctx == nil || !ctx.IsValid() {
 		return nil, ErrInvalidContext
 	}
-	
+
 	if len(data) == 0 {
 		return nil, ErrInvalidArgument
 	}
-	
+
 	ptr := documentOpenFromBuffer(ctx.Handle(), data, magic)
 	if ptr == 0 {
 		return nil, ErrFailedToOpen
 	}
-	
+
 	return &Document{
 		ctx: ctx,
 		ptr: ptr,
@@ -55,7 +55,7 @@ func OpenDocumentFromBytes(ctx *Context, data []byte, magic string) (*Document, 
 func (d *Document) Drop() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if !d.dropped && d.ptr != 0 && d.ctx != nil {
 		documentDrop(d.ctx.Handle(), d.ptr)
 		d.dropped = true
@@ -67,11 +67,11 @@ func (d *Document) Drop() {
 func (d *Document) PageCount() (int, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return 0, ErrInvalidHandle
 	}
-	
+
 	return documentCountPages(d.ctx.Handle(), d.ptr), nil
 }
 
@@ -79,11 +79,11 @@ func (d *Document) PageCount() (int, error) {
 func (d *Document) NeedsPassword() (bool, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return false, ErrInvalidHandle
 	}
-	
+
 	return documentNeedsPassword(d.ctx.Handle(), d.ptr), nil
 }
 
@@ -92,11 +92,11 @@ func (d *Document) NeedsPassword() (bool, error) {
 func (d *Document) Authenticate(password string) (bool, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return false, ErrInvalidHandle
 	}
-	
+
 	return documentAuthenticate(d.ctx.Handle(), d.ptr, password), nil
 }
 
@@ -104,11 +104,11 @@ func (d *Document) Authenticate(password string) (bool, error) {
 func (d *Document) HasPermission(permission int) (bool, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return false, ErrInvalidHandle
 	}
-	
+
 	return documentHasPermission(d.ctx.Handle(), d.ptr, permission), nil
 }
 
@@ -117,11 +117,11 @@ func (d *Document) HasPermission(permission int) (bool, error) {
 func (d *Document) GetMetadata(key string) (string, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return "", ErrInvalidHandle
 	}
-	
+
 	return documentGetMetadata(d.ctx.Handle(), d.ptr, key), nil
 }
 
@@ -129,11 +129,11 @@ func (d *Document) GetMetadata(key string) (string, error) {
 func (d *Document) Save(path string) error {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return ErrInvalidHandle
 	}
-	
+
 	documentSave(d.ctx.Handle(), d.ptr, path)
 	return nil
 }
@@ -143,11 +143,11 @@ func (d *Document) Save(path string) error {
 func (d *Document) ResolveLink(name string) (int, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return -1, ErrInvalidHandle
 	}
-	
+
 	page := documentResolveLink(d.ctx.Handle(), d.ptr, name)
 	if page < 0 {
 		return -1, nil
@@ -159,16 +159,16 @@ func (d *Document) ResolveLink(name string) (int, error) {
 func (d *Document) LoadPage(pageNum int) (*Page, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	
+
 	if d.dropped || d.ptr == 0 {
 		return nil, ErrInvalidHandle
 	}
-	
+
 	pagePtr := pageLoad(d.ctx.Handle(), d.ptr, pageNum)
 	if pagePtr == 0 {
 		return nil, ErrFailedToLoad
 	}
-	
+
 	return &Page{
 		ctx:     d.ctx,
 		ptr:     pagePtr,
@@ -182,4 +182,3 @@ func (d *Document) IsValid() bool {
 	defer d.mu.Unlock()
 	return !d.dropped && d.ptr != 0
 }
-

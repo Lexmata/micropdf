@@ -18,7 +18,7 @@ type Page struct {
 func (p *Page) Drop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if !p.dropped && p.ptr != 0 && p.ctx != nil {
 		pageDrop(p.ctx.Handle(), p.ptr)
 		p.dropped = true
@@ -35,11 +35,11 @@ func (p *Page) PageNumber() int {
 func (p *Page) Bounds() Rect {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return Rect{}
 	}
-	
+
 	x0, y0, x1, y1 := pageBounds(p.ctx.Handle(), p.ptr)
 	return Rect{X0: x0, Y0: y0, X1: x1, Y1: y1}
 }
@@ -48,18 +48,18 @@ func (p *Page) Bounds() Rect {
 func (p *Page) RenderToPixmap(matrix Matrix, alpha bool) (*Pixmap, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return nil, ErrInvalidHandle
 	}
-	
+
 	matArray := [6]float32{matrix.A, matrix.B, matrix.C, matrix.D, matrix.E, matrix.F}
 	pixPtr := pageRenderToPixmap(p.ctx.Handle(), p.ptr, matArray, alpha)
-	
+
 	if pixPtr == 0 {
 		return nil, ErrRenderFailed
 	}
-	
+
 	return &Pixmap{
 		ctx: p.ctx,
 		ptr: pixPtr,
@@ -70,16 +70,16 @@ func (p *Page) RenderToPixmap(matrix Matrix, alpha bool) (*Pixmap, error) {
 func (p *Page) RenderToPNG(dpi float32) ([]byte, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return nil, ErrInvalidHandle
 	}
-	
+
 	data := pageRenderToPNG(p.ctx.Handle(), p.ptr, dpi)
 	if data == nil {
 		return nil, ErrRenderFailed
 	}
-	
+
 	return data, nil
 }
 
@@ -87,11 +87,11 @@ func (p *Page) RenderToPNG(dpi float32) ([]byte, error) {
 func (p *Page) ExtractText() (string, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return "", ErrInvalidHandle
 	}
-	
+
 	return pageExtractText(p.ctx.Handle(), p.ptr), nil
 }
 
@@ -100,11 +100,11 @@ func (p *Page) ExtractText() (string, error) {
 func (p *Page) SearchText(needle string) ([]Rect, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	if p.dropped || p.ptr == 0 {
 		return nil, ErrInvalidHandle
 	}
-	
+
 	hits := pageSearchText(p.ctx.Handle(), p.ptr, needle)
 	results := make([]Rect, len(hits))
 	for i, hit := range hits {
@@ -115,7 +115,7 @@ func (p *Page) SearchText(needle string) ([]Rect, error) {
 			Y1: hit[3],
 		}
 	}
-	
+
 	return results, nil
 }
 
@@ -125,4 +125,3 @@ func (p *Page) IsValid() bool {
 	defer p.mu.Unlock()
 	return !p.dropped && p.ptr != 0
 }
-

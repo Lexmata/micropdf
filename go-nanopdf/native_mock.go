@@ -111,15 +111,15 @@ func bufferClear(ptr uintptr) {
 
 // Mock context/document/page storage
 var (
-	mockContexts   = make(map[uintptr]*mockContext)
-	mockDocuments  = make(map[uintptr]*mockDocument)
-	mockPages      = make(map[uintptr]*mockPage)
-	mockPixmaps    = make(map[uintptr]*mockPixmap)
-	mockStorageMu  sync.RWMutex
-	nextContextID  uintptr = 1000
-	nextDocID      uintptr = 2000
-	nextPageID     uintptr = 3000
-	nextPixmapID   uintptr = 4000
+	mockContexts  = make(map[uintptr]*mockContext)
+	mockDocuments = make(map[uintptr]*mockDocument)
+	mockPages     = make(map[uintptr]*mockPage)
+	mockPixmaps   = make(map[uintptr]*mockPixmap)
+	mockStorageMu sync.RWMutex
+	nextContextID uintptr = 1000
+	nextDocID     uintptr = 2000
+	nextPageID    uintptr = 3000
+	nextPixmapID  uintptr = 4000
 )
 
 type mockContext struct{}
@@ -143,7 +143,7 @@ type mockPixmap struct {
 func contextNew() uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	id := nextContextID
 	nextContextID++
 	mockContexts[id] = &mockContext{}
@@ -159,11 +159,11 @@ func contextDrop(ptr uintptr) {
 func contextClone(ptr uintptr) uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	if _, ok := mockContexts[ptr]; !ok {
 		return 0
 	}
-	
+
 	id := nextContextID
 	nextContextID++
 	mockContexts[id] = &mockContext{}
@@ -174,7 +174,7 @@ func contextClone(ptr uintptr) uintptr {
 func documentOpenFromPath(_ uintptr, _ string) uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	id := nextDocID
 	nextDocID++
 	mockDocuments[id] = &mockDocument{pages: 1}
@@ -184,7 +184,7 @@ func documentOpenFromPath(_ uintptr, _ string) uintptr {
 func documentOpenFromBuffer(_ uintptr, _ []byte, _ string) uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	id := nextDocID
 	nextDocID++
 	mockDocuments[id] = &mockDocument{pages: 1}
@@ -200,7 +200,7 @@ func documentDrop(_ uintptr, doc uintptr) {
 func documentCountPages(_ uintptr, doc uintptr) int {
 	mockStorageMu.RLock()
 	defer mockStorageMu.RUnlock()
-	
+
 	if d, ok := mockDocuments[doc]; ok {
 		return d.pages
 	}
@@ -235,7 +235,7 @@ func documentResolveLink(_ uintptr, _ uintptr, _ string) int {
 func pageLoad(_ uintptr, _ uintptr, pageNum int) uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	id := nextPageID
 	nextPageID++
 	mockPages[id] = &mockPage{
@@ -254,7 +254,7 @@ func pageDrop(_ uintptr, page uintptr) {
 func pageBounds(_ uintptr, page uintptr) (float32, float32, float32, float32) {
 	mockStorageMu.RLock()
 	defer mockStorageMu.RUnlock()
-	
+
 	if p, ok := mockPages[page]; ok {
 		return p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]
 	}
@@ -264,11 +264,11 @@ func pageBounds(_ uintptr, page uintptr) (float32, float32, float32, float32) {
 func pageRenderToPixmap(_ uintptr, _ uintptr, matrix [6]float32, _ bool) uintptr {
 	mockStorageMu.Lock()
 	defer mockStorageMu.Unlock()
-	
+
 	// Calculate size based on matrix scale
 	width := int(612 * matrix[0])
 	height := int(792 * matrix[3])
-	
+
 	id := nextPixmapID
 	nextPixmapID++
 	mockPixmaps[id] = &mockPixmap{
@@ -284,7 +284,7 @@ func pageRenderToPNG(_ uintptr, _ uintptr, dpi float32) []byte {
 	scale := dpi / 72.0
 	width := int(612 * scale)
 	height := int(792 * scale)
-	
+
 	// Minimal PNG: signature + IHDR + IEND
 	png := []byte{
 		137, 80, 78, 71, 13, 10, 26, 10, // PNG signature
@@ -322,7 +322,7 @@ func pixmapDrop(_ uintptr, pix uintptr) {
 func pixmapWidth(_ uintptr, pix uintptr) int {
 	mockStorageMu.RLock()
 	defer mockStorageMu.RUnlock()
-	
+
 	if p, ok := mockPixmaps[pix]; ok {
 		return p.width
 	}
@@ -332,7 +332,7 @@ func pixmapWidth(_ uintptr, pix uintptr) int {
 func pixmapHeight(_ uintptr, pix uintptr) int {
 	mockStorageMu.RLock()
 	defer mockStorageMu.RUnlock()
-	
+
 	if p, ok := mockPixmaps[pix]; ok {
 		return p.height
 	}
@@ -342,7 +342,7 @@ func pixmapHeight(_ uintptr, pix uintptr) int {
 func pixmapSamples(_ uintptr, pix uintptr) []byte {
 	mockStorageMu.RLock()
 	defer mockStorageMu.RUnlock()
-	
+
 	if p, ok := mockPixmaps[pix]; ok {
 		result := make([]byte, len(p.data))
 		copy(result, p.data)
@@ -350,4 +350,3 @@ func pixmapSamples(_ uintptr, pix uintptr) []byte {
 	}
 	return nil
 }
-

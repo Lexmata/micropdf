@@ -28,7 +28,7 @@ func NewContext() *Context {
 func (c *Context) Drop() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if !c.dropped && c.ptr != 0 {
 		contextDrop(c.ptr)
 		c.dropped = true
@@ -41,16 +41,16 @@ func (c *Context) Drop() {
 func (c *Context) Clone() *Context {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if c.dropped || c.ptr == 0 {
 		return nil
 	}
-	
+
 	ptr := contextClone(c.ptr)
 	if ptr == 0 {
 		return nil
 	}
-	
+
 	return &Context{ptr: ptr}
 }
 
@@ -66,4 +66,3 @@ func (c *Context) IsValid() bool {
 func (c *Context) Handle() uintptr {
 	return c.ptr
 }
-

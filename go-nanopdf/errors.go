@@ -144,4 +144,3 @@ var (
 	// ErrRenderFailed indicates a rendering operation failed.
 	ErrRenderFailed = ErrGeneric("rendering failed")
 )
-

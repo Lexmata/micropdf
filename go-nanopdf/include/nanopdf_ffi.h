@@ -57,29 +57,46 @@ typedef struct {
 } fz_quad;
 
 // ============================================================================
-// Opaque Handle Types (represented as int32_t in FFI)
+// Opaque Handle Types (represented as uint64_t in FFI)
 // ============================================================================
 
-typedef int32_t fz_context;
-typedef int32_t fz_document;
-typedef int32_t fz_page;
-typedef int32_t fz_pixmap;
-typedef int32_t fz_buffer;
-typedef int32_t fz_colorspace;
-typedef int32_t fz_stext_page;
-typedef int32_t fz_link;
-typedef int32_t fz_device;
-typedef int32_t fz_stream;
-typedef int32_t fz_output;
-typedef int32_t fz_font;
-typedef int32_t fz_image;
-typedef int32_t fz_archive;
+typedef uint64_t fz_context;
+typedef uint64_t fz_document;
+typedef uint64_t fz_page;
+typedef uint64_t fz_pixmap;
+typedef uint64_t fz_buffer;
+typedef uint64_t fz_colorspace;
+typedef uint64_t fz_stext_page;
+typedef uint64_t fz_link;
+typedef uint64_t fz_device;
+typedef uint64_t fz_stream;
+typedef uint64_t fz_output;
+typedef uint64_t fz_font;
+typedef uint64_t fz_image;
+typedef uint64_t fz_archive;
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 #define FZ_STORE_DEFAULT (256 * 1024 * 1024)  // 256 MB
+
+// ============================================================================
+// Buffer Functions
+// ============================================================================
+
+fz_buffer fz_new_buffer(fz_context ctx, size_t capacity);
+fz_buffer fz_new_buffer_from_copied_data(fz_context ctx, const unsigned char* data, size_t size);
+fz_buffer fz_new_buffer_from_data(fz_context ctx, unsigned char* data, size_t size);
+fz_buffer fz_keep_buffer(fz_context ctx, fz_buffer buf);
+void fz_drop_buffer(fz_context ctx, fz_buffer buf);
+size_t fz_buffer_storage(fz_context ctx, fz_buffer buf, unsigned char** datap);
+void fz_append_data(fz_context ctx, fz_buffer buf, const void* data, size_t len);
+void fz_append_string(fz_context ctx, fz_buffer buf, const char* str);
+void fz_append_byte(fz_context ctx, fz_buffer buf, int c);
+void fz_append_buffer(fz_context ctx, fz_buffer buf, fz_buffer src);
+void fz_clear_buffer(fz_context ctx, fz_buffer buf);
+void fz_resize_buffer(fz_context ctx, fz_buffer buf, size_t size);
 
 // ============================================================================
 // Context Functions
