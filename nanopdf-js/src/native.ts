@@ -19,6 +19,144 @@ const require = createRequire(import.meta.url);
 export interface NativeAddon {
   getVersion(): string;
 
+  // Context
+  createContext(): NativeContext;
+  dropContext(ctx: NativeContext): void;
+
+  // Document
+  openDocument(ctx: NativeContext, data: globalThis.Buffer, magic?: string): NativeDocument;
+  openDocumentFromPath(ctx: NativeContext, path: string): NativeDocument;
+  dropDocument(ctx: NativeContext, doc: NativeDocument): void;
+  countPages(ctx: NativeContext, doc: NativeDocument): number;
+  loadPage(ctx: NativeContext, doc: NativeDocument, pageNum: number): NativePage;
+  dropPage(ctx: NativeContext, page: NativePage): void;
+  boundPage(ctx: NativeContext, page: NativePage): NativeRect;
+  
+  // Document metadata
+  getMetadata(ctx: NativeContext, doc: NativeDocument, key: string): string | null;
+  setMetadata(ctx: NativeContext, doc: NativeDocument, key: string, value: string): void;
+  
+  // Document writing
+  saveDocument(ctx: NativeContext, doc: NativeDocument, path: string, options?: string): void;
+  writeDocument(ctx: NativeContext, doc: NativeDocument): globalThis.Buffer;
+
+  // Rendering
+  renderPage(
+    ctx: NativeContext,
+    page: NativePage,
+    matrix: NativeMatrix,
+    colorspace: NativeColorspace,
+    alpha: boolean
+  ): NativePixmap;
+  renderPageToPNG(
+    ctx: NativeContext,
+    page: NativePage,
+    dpi: number,
+    colorspace: NativeColorspace
+  ): globalThis.Buffer;
+
+  // Text extraction
+  extractText(ctx: NativeContext, page: NativePage): string;
+  extractTextBlocks(ctx: NativeContext, page: NativePage): Array<{
+    text: string;
+    bbox: NativeRect;
+  }>;
+  searchText(ctx: NativeContext, page: NativePage, needle: string, caseSensitive: boolean): NativeRect[];
+
+  // Links
+  getPageLinks(ctx: NativeContext, page: NativePage): Array<{
+    rect: NativeRect;
+    uri?: string;
+    page?: number;
+  }>;
+
+  // Authentication
+  needsPassword(ctx: NativeContext, doc: NativeDocument): boolean;
+  authenticatePassword(ctx: NativeContext, doc: NativeDocument, password: string): boolean;
+  hasPermission(ctx: NativeContext, doc: NativeDocument, permission: number): boolean;
+
+  // Named destinations
+  resolveLink(ctx: NativeContext, doc: NativeDocument, uri: string): number | null;
+
+  // Font operations
+  loadFontFromMemory(ctx: NativeContext, data: globalThis.Buffer, index: number): NativeFont;
+  loadFontFromFile(ctx: NativeContext, path: string, index: number): NativeFont;
+  dropFont(ctx: NativeContext, font: NativeFont): void;
+  getFontName(ctx: NativeContext, font: NativeFont): string;
+  getFontBBox(ctx: NativeContext, font: NativeFont): NativeRect;
+  
+  // Image operations
+  loadImageFromMemory(ctx: NativeContext, data: globalThis.Buffer): NativeImage;
+  loadImageFromFile(ctx: NativeContext, path: string): NativeImage;
+  dropImage(ctx: NativeContext, image: NativeImage): void;
+  getImageWidth(ctx: NativeContext, image: NativeImage): number;
+  getImageHeight(ctx: NativeContext, image: NativeImage): number;
+  getImageColorspace(ctx: NativeContext, image: NativeImage): NativeColorspace;
+  getImagePixmap(ctx: NativeContext, image: NativeImage, subarea?: NativeRect): NativePixmap;
+  scalePixmap(ctx: NativeContext, pixmap: NativePixmap, width: number, height: number): NativePixmap;
+
+  // Output operations
+  openOutput(ctx: NativeContext, path: string): NativeOutput;
+  dropOutput(ctx: NativeContext, output: NativeOutput): void;
+  writeOutput(ctx: NativeContext, output: NativeOutput, data: globalThis.Buffer): void;
+  tellOutput(ctx: NativeContext, output: NativeOutput): number;
+  seekOutput(ctx: NativeContext, output: NativeOutput, offset: number, whence: number): void;
+
+  // Archive operations
+  openArchive(ctx: NativeContext, path: string): NativeArchive;
+  openArchiveFromMemory(ctx: NativeContext, data: globalThis.Buffer): NativeArchive;
+  dropArchive(ctx: NativeContext, archive: NativeArchive): void;
+  countArchiveEntries(ctx: NativeContext, archive: NativeArchive): number;
+  listArchiveEntry(ctx: NativeContext, archive: NativeArchive, index: number): string;
+  hasArchiveEntry(ctx: NativeContext, archive: NativeArchive, name: string): boolean;
+  readArchiveEntry(ctx: NativeContext, archive: NativeArchive, name: string): globalThis.Buffer;
+
+  // Enhanced API (np_* functions)
+  npAddBlankPage(ctx: NativeContext, doc: NativeDocument, width: number, height: number): number;
+  npAddWatermark(
+    ctx: NativeContext,
+    doc: NativeDocument,
+    text: string,
+    fontSize: number,
+    opacity: number
+  ): void;
+  npDrawLine(
+    ctx: NativeContext,
+    page: NativePage,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    color: number[],
+    alpha: number,
+    lineWidth: number
+  ): void;
+  npDrawRectangle(
+    ctx: NativeContext,
+    page: NativePage,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: number[],
+    alpha: number,
+    fill: boolean
+  ): void;
+  npDrawCircle(
+    ctx: NativeContext,
+    page: NativePage,
+    x: number,
+    y: number,
+    radius: number,
+    color: number[],
+    alpha: number,
+    fill: boolean
+  ): void;
+  npMergePDFs(ctx: NativeContext, inputPaths: string[], outputPath: string): void;
+  npSplitPDF(ctx: NativeContext, inputPath: string, outputDir: string): string[];
+  npOptimizePDF(ctx: NativeContext, path: string): void;
+  npLinearizePDF(ctx: NativeContext, inputPath: string, outputPath: string): void;
+
   // Buffer
   Buffer: {
     new (capacity?: number): NativeBuffer;
@@ -110,6 +248,34 @@ export interface NativeBuffer {
   md5Digest(): Uint8Array;
 }
 
+export interface NativeContext {
+  _handle: number; // Opaque handle
+}
+
+export interface NativeDocument {
+  _handle: number; // Opaque handle
+}
+
+export interface NativePage {
+  _handle: number; // Opaque handle
+}
+
+export interface NativeFont {
+  _handle: number; // Opaque handle
+}
+
+export interface NativeImage {
+  _handle: number; // Opaque handle
+}
+
+export interface NativeOutput {
+  _handle: number; // Opaque handle
+}
+
+export interface NativeArchive {
+  _handle: number; // Opaque handle
+}
+
 export interface NativePoint {
   x: number;
   y: number;
@@ -189,6 +355,18 @@ function tryLoadNative(): NativeAddon | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Helper to create a function that throws "FFI required" error
+ */
+function requireFFI(fnName: string): (...args: unknown[]) => never {
+  return (..._args: unknown[]) => {
+    throw new Error(
+      `FFI function '${fnName}' requires native bindings. ` +
+        'Build the native addon or provide mock implementation.'
+    );
+  };
 }
 
 /**
@@ -598,7 +776,253 @@ function createMockAddon(): NativeAddon {
           }
         }
       }
-    }
+    },
+
+    // Context operations
+    createContext: requireFFI('createContext') as () => NativeContext,
+    dropContext: requireFFI('dropContext') as (ctx: NativeContext) => void,
+
+    // Document operations
+    openDocument: requireFFI('openDocument') as (
+      ctx: NativeContext,
+      data: globalThis.Buffer,
+      magic?: string
+    ) => NativeDocument,
+    openDocumentFromPath: requireFFI('openDocumentFromPath') as (
+      ctx: NativeContext,
+      path: string
+    ) => NativeDocument,
+    dropDocument: requireFFI('dropDocument') as (ctx: NativeContext, doc: NativeDocument) => void,
+    countPages: requireFFI('countPages') as (ctx: NativeContext, doc: NativeDocument) => number,
+    loadPage: requireFFI('loadPage') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      pageNum: number
+    ) => NativePage,
+    dropPage: requireFFI('dropPage') as (ctx: NativeContext, page: NativePage) => void,
+    boundPage: requireFFI('boundPage') as (ctx: NativeContext, page: NativePage) => NativeRect,
+    getMetadata: requireFFI('getMetadata') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      key: string
+    ) => string | null,
+    setMetadata: requireFFI('setMetadata') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      key: string,
+      value: string
+    ) => void,
+    saveDocument: requireFFI('saveDocument') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      path: string,
+      options?: string
+    ) => void,
+    writeDocument: requireFFI('writeDocument') as (
+      ctx: NativeContext,
+      doc: NativeDocument
+    ) => globalThis.Buffer,
+
+    // Rendering operations
+    renderPage: requireFFI('renderPage') as (
+      ctx: NativeContext,
+      page: NativePage,
+      matrix: NativeMatrix,
+      colorspace: NativeColorspace,
+      alpha: boolean
+    ) => NativePixmap,
+    renderPageToPNG: requireFFI('renderPageToPNG') as (
+      ctx: NativeContext,
+      page: NativePage,
+      dpi: number,
+      colorspace: NativeColorspace
+    ) => globalThis.Buffer,
+
+    // Text extraction
+    extractText: requireFFI('extractText') as (ctx: NativeContext, page: NativePage) => string,
+    extractTextBlocks: requireFFI('extractTextBlocks') as (
+      ctx: NativeContext,
+      page: NativePage
+    ) => Array<{ text: string; bbox: NativeRect }>,
+    searchText: requireFFI('searchText') as (
+      ctx: NativeContext,
+      page: NativePage,
+      needle: string,
+      caseSensitive: boolean
+    ) => NativeRect[],
+
+    // Links
+    getPageLinks: requireFFI('getPageLinks') as (
+      ctx: NativeContext,
+      page: NativePage
+    ) => Array<{ rect: NativeRect; uri?: string; page?: number }>,
+
+    // Authentication
+    needsPassword: requireFFI('needsPassword') as (ctx: NativeContext, doc: NativeDocument) => boolean,
+    authenticatePassword: requireFFI('authenticatePassword') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      password: string
+    ) => boolean,
+    hasPermission: requireFFI('hasPermission') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      permission: number
+    ) => boolean,
+    resolveLink: requireFFI('resolveLink') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      uri: string
+    ) => number | null,
+
+    // Font operations
+    loadFontFromMemory: requireFFI('loadFontFromMemory') as (
+      ctx: NativeContext,
+      data: globalThis.Buffer,
+      index: number
+    ) => NativeFont,
+    loadFontFromFile: requireFFI('loadFontFromFile') as (
+      ctx: NativeContext,
+      path: string,
+      index: number
+    ) => NativeFont,
+    dropFont: requireFFI('dropFont') as (ctx: NativeContext, font: NativeFont) => void,
+    getFontName: requireFFI('getFontName') as (ctx: NativeContext, font: NativeFont) => string,
+    getFontBBox: requireFFI('getFontBBox') as (ctx: NativeContext, font: NativeFont) => NativeRect,
+
+    // Image operations
+    loadImageFromMemory: requireFFI('loadImageFromMemory') as (
+      ctx: NativeContext,
+      data: globalThis.Buffer
+    ) => NativeImage,
+    loadImageFromFile: requireFFI('loadImageFromFile') as (
+      ctx: NativeContext,
+      path: string
+    ) => NativeImage,
+    dropImage: requireFFI('dropImage') as (ctx: NativeContext, image: NativeImage) => void,
+    getImageWidth: requireFFI('getImageWidth') as (ctx: NativeContext, image: NativeImage) => number,
+    getImageHeight: requireFFI('getImageHeight') as (ctx: NativeContext, image: NativeImage) => number,
+    getImageColorspace: requireFFI('getImageColorspace') as (
+      ctx: NativeContext,
+      image: NativeImage
+    ) => NativeColorspace,
+    getImagePixmap: requireFFI('getImagePixmap') as (
+      ctx: NativeContext,
+      image: NativeImage,
+      subarea?: NativeRect
+    ) => NativePixmap,
+    scalePixmap: requireFFI('scalePixmap') as (
+      ctx: NativeContext,
+      pixmap: NativePixmap,
+      width: number,
+      height: number
+    ) => NativePixmap,
+
+    // Output operations
+    openOutput: requireFFI('openOutput') as (ctx: NativeContext, path: string) => NativeOutput,
+    dropOutput: requireFFI('dropOutput') as (ctx: NativeContext, output: NativeOutput) => void,
+    writeOutput: requireFFI('writeOutput') as (
+      ctx: NativeContext,
+      output: NativeOutput,
+      data: globalThis.Buffer
+    ) => void,
+    tellOutput: requireFFI('tellOutput') as (ctx: NativeContext, output: NativeOutput) => number,
+    seekOutput: requireFFI('seekOutput') as (
+      ctx: NativeContext,
+      output: NativeOutput,
+      offset: number,
+      whence: number
+    ) => void,
+
+    // Archive operations
+    openArchive: requireFFI('openArchive') as (ctx: NativeContext, path: string) => NativeArchive,
+    openArchiveFromMemory: requireFFI('openArchiveFromMemory') as (
+      ctx: NativeContext,
+      data: globalThis.Buffer
+    ) => NativeArchive,
+    dropArchive: requireFFI('dropArchive') as (ctx: NativeContext, archive: NativeArchive) => void,
+    countArchiveEntries: requireFFI('countArchiveEntries') as (
+      ctx: NativeContext,
+      archive: NativeArchive
+    ) => number,
+    listArchiveEntry: requireFFI('listArchiveEntry') as (
+      ctx: NativeContext,
+      archive: NativeArchive,
+      index: number
+    ) => string,
+    hasArchiveEntry: requireFFI('hasArchiveEntry') as (
+      ctx: NativeContext,
+      archive: NativeArchive,
+      name: string
+    ) => boolean,
+    readArchiveEntry: requireFFI('readArchiveEntry') as (
+      ctx: NativeContext,
+      archive: NativeArchive,
+      name: string
+    ) => globalThis.Buffer,
+
+    // Enhanced API (np_* functions)
+    npAddBlankPage: requireFFI('npAddBlankPage') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      width: number,
+      height: number
+    ) => number,
+    npAddWatermark: requireFFI('npAddWatermark') as (
+      ctx: NativeContext,
+      doc: NativeDocument,
+      text: string,
+      fontSize: number,
+      opacity: number
+    ) => void,
+    npDrawLine: requireFFI('npDrawLine') as (
+      ctx: NativeContext,
+      page: NativePage,
+      x0: number,
+      y0: number,
+      x1: number,
+      y1: number,
+      color: number[],
+      alpha: number,
+      lineWidth: number
+    ) => void,
+    npDrawRectangle: requireFFI('npDrawRectangle') as (
+      ctx: NativeContext,
+      page: NativePage,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+      color: number[],
+      alpha: number,
+      fill: boolean
+    ) => void,
+    npDrawCircle: requireFFI('npDrawCircle') as (
+      ctx: NativeContext,
+      page: NativePage,
+      x: number,
+      y: number,
+      radius: number,
+      color: number[],
+      alpha: number,
+      fill: boolean
+    ) => void,
+    npMergePDFs: requireFFI('npMergePDFs') as (
+      ctx: NativeContext,
+      inputPaths: string[],
+      outputPath: string
+    ) => void,
+    npSplitPDF: requireFFI('npSplitPDF') as (
+      ctx: NativeContext,
+      inputPath: string,
+      outputDir: string
+    ) => string[],
+    npOptimizePDF: requireFFI('npOptimizePDF') as (ctx: NativeContext, path: string) => void,
+    npLinearizePDF: requireFFI('npLinearizePDF') as (
+      ctx: NativeContext,
+      inputPath: string,
+      outputPath: string
+    ) => void
   };
 }
 
