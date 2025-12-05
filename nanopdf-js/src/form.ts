@@ -1,6 +1,6 @@
 /**
  * Form - PDF form/AcroForm handling
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's form operations.
  * Supports text fields, checkboxes, radio buttons, combo boxes, and signatures.
  */
@@ -533,7 +533,7 @@ export class Form {
    * Delete a field
    */
   deleteField(nameOrField: string | FormField): boolean {
-    const field = typeof nameOrField === 'string' 
+    const field = typeof nameOrField === 'string'
       ? this._fieldMap.get(nameOrField)
       : nameOrField;
 
