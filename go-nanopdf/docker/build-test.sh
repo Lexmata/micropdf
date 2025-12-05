@@ -22,6 +22,7 @@ NC='\033[0m' # No Color
 NO_CACHE=""
 SHELL_MODE=false
 VERBOSE=false
+TEST_MODE="all"  # all, unit, integration
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -35,6 +36,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --verbose)
             VERBOSE=true
+            shift
+            ;;
+        --unit)
+            TEST_MODE="unit"
+            shift
+            ;;
+        --integration)
+            TEST_MODE="integration"
             shift
             ;;
         *)
@@ -80,14 +89,27 @@ echo ""
 # Run the container
 if [ "$SHELL_MODE" = true ]; then
     echo -e "${BLUE}==> Dropping into shell...${NC}"
-    echo -e "${YELLOW}Tip: Run 'go test -v ./...' to run tests${NC}"
+    echo -e "${YELLOW}Tip: Run 'go test -v ./...' for unit tests${NC}"
+    echo -e "${YELLOW}      Run 'go test -v -tags=integration ./test/integration/...' for integration tests${NC}"
     echo ""
     docker run -it --rm \
         -v "$GO_PROJECT_DIR:/workspace/go-nanopdf" \
         nanopdf-go-test:latest \
         /bin/bash
+elif [ "$TEST_MODE" = "unit" ]; then
+    echo -e "${GREEN}==> Running unit tests only...${NC}"
+    echo ""
+    docker run --rm \
+        nanopdf-go-test:latest \
+        sh -c "CGO_ENABLED=0 go test -tags=mock -v ./... && CGO_ENABLED=1 go test -v -short ./..."
+elif [ "$TEST_MODE" = "integration" ]; then
+    echo -e "${GREEN}==> Running integration tests only...${NC}"
+    echo ""
+    docker run --rm \
+        nanopdf-go-test:latest \
+        sh -c "CGO_ENABLED=1 go test -v -tags=integration ./test/integration/..."
 else
-    echo -e "${GREEN}==> Running tests...${NC}"
+    echo -e "${GREEN}==> Running all tests...${NC}"
     echo ""
     docker run --rm \
         nanopdf-go-test:latest

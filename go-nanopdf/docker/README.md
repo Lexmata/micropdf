@@ -37,6 +37,12 @@ This will:
 # Drop into an interactive shell
 ./docker/build-test.sh --shell
 
+# Run only unit tests
+./docker/build-test.sh --unit
+
+# Run only integration tests
+./docker/build-test.sh --integration
+
 # Verbose output
 ./docker/build-test.sh --verbose
 ```
@@ -78,7 +84,7 @@ Ensure the Go bindings work correctly with the Rust FFI:
 
 ## What Gets Tested
 
-### Mock Tests (CGO_ENABLED=0)
+### Unit Tests (Mock) - CGO_ENABLED=0
 
 ```bash
 go test -tags=mock -v ./...
@@ -87,18 +93,42 @@ go test -tags=mock -v ./...
 - Tests the pure Go mock implementation
 - Verifies API correctness
 - No Rust library required
-- Fast execution
+- Fast execution (~5-10 seconds)
+- Tests all modules in isolation
 
-### CGO Tests (CGO_ENABLED=1)
+### Unit Tests (CGO) - CGO_ENABLED=1
 
 ```bash
-go test -v ./...
+go test -v -short ./...
 ```
 
 - Tests with actual Rust FFI
 - Verifies CGO integration
 - Tests real PDF operations
 - Requires libnanopdf.a
+- Execution time: ~10-20 seconds
+
+### Integration Tests - CGO_ENABLED=1
+
+```bash
+go test -v -tags=integration ./test/integration/...
+```
+
+- End-to-end PDF processing workflows
+- Real document operations:
+  - Opening and reading PDFs
+  - Rendering pages to images
+  - Text extraction and search
+  - Metadata handling
+  - Security/permissions
+- Performance verification
+- Memory management testing
+- Execution time: ~15-30 seconds
+
+**Integration Test Suites:**
+- `document_integration_test.go` - Document lifecycle, metadata, security
+- `rendering_integration_test.go` - Page rendering at various scales/formats
+- `text_integration_test.go` - Text extraction and search operations
 
 ### Example Builds
 
@@ -180,7 +210,17 @@ docker run -it --rm \
   /bin/bash
 
 # Inside container:
+# Run all unit tests
 go test -v ./...
+
+# Run specific package
+go test -v ./document_test.go ./document.go
+
+# Run integration tests
+go test -v -tags=integration ./test/integration/...
+
+# Run specific integration test
+go test -v -tags=integration -run TestPageRendering ./test/integration/
 ```
 
 ### Debug Build Issues
@@ -254,11 +294,33 @@ Inside the container:
 
 ## Advanced Usage
 
-### Custom Test Command
+### Run Specific Test Types
 
 ```bash
+# Unit tests only
+./docker/build-test.sh --unit
+
+# Integration tests only
+./docker/build-test.sh --integration
+
+# All tests (default)
+./docker/build-test.sh
+```
+
+### Custom Test Commands
+
+```bash
+# Run specific unit test
 docker run --rm nanopdf-go-test:latest \
   sh -c "go test -run TestBuffer ./..."
+
+# Run specific integration test
+docker run --rm nanopdf-go-test:latest \
+  sh -c "go test -tags=integration -run TestPageRendering ./test/integration/..."
+
+# Run with verbose output
+docker run --rm nanopdf-go-test:latest \
+  sh -c "go test -v -tags=integration ./test/integration/..."
 ```
 
 ### Benchmark Tests

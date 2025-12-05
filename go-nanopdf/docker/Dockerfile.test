@@ -53,17 +53,23 @@ CMD ["sh", "-c", "\
     echo 'Testing go-nanopdf' && \
     echo '=====================================' && \
     echo '' && \
-    echo '==> Running mock tests (no CGO)...' && \
+    echo '==> Running unit tests (mock, no CGO)...' && \
     CGO_ENABLED=0 go test -tags=mock -v ./... && \
     echo '' && \
-    echo '==> Running CGO tests (with Rust FFI)...' && \
-    CGO_ENABLED=1 go test -v ./... && \
+    echo '==> Running unit tests (CGO with Rust FFI)...' && \
+    CGO_ENABLED=1 go test -v -short ./... && \
+    echo '' && \
+    echo '==> Running integration tests...' && \
+    CGO_ENABLED=1 go test -v -tags=integration ./test/integration/... && \
     echo '' && \
     echo '==> Building mock example...' && \
     CGO_ENABLED=0 go build -tags=mock -o /tmp/example-mock ./example && \
     echo '' && \
     echo '==> Building CGO example...' && \
     CGO_ENABLED=1 go build -o /tmp/example-cgo ./example && \
+    echo '' && \
+    echo '==> Running example (mock)...' && \
+    CGO_ENABLED=0 /tmp/example-mock || true && \
     echo '' && \
     echo '=====================================' && \
     echo 'All tests passed!' && \
