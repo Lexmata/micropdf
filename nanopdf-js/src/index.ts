@@ -354,6 +354,22 @@ export {
 } from './context.js';
 
 // ============================================================================
+// Enhanced API (High-level convenience functions)
+// ============================================================================
+
+export {
+  Enhanced,
+  getEnhanced,
+  addWatermark,
+  mergePDFs,
+  splitPDF,
+  optimizePDF,
+  linearizePDF,
+  createBlankDocument,
+  createTextPDF,
+} from './enhanced.js';
+
+// ============================================================================
 // Main API
 // ============================================================================
 

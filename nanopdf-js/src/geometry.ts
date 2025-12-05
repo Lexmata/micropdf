@@ -689,3 +689,60 @@ export class Quad implements QuadLike {
     return `Quad(${this.ul}, ${this.ur}, ${this.ll}, ${this.lr})`;
   }
 }
+
+// ============================================================================
+// Color
+// ============================================================================
+
+/**
+ * Color-like type
+ */
+export type ColorLike = Color | { r: number; g: number; b: number; a?: number } | [number, number, number] | [number, number, number, number];
+
+/**
+ * An RGBA color
+ */
+export class Color {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  readonly a: number;
+
+  constructor(r: number, g: number, b: number, a: number = 1.0) {
+    this.r = Math.max(0, Math.min(1, r));
+    this.g = Math.max(0, Math.min(1, g));
+    this.b = Math.max(0, Math.min(1, b));
+    this.a = Math.max(0, Math.min(1, a));
+  }
+
+  /**
+   * Create color from color-like object
+   */
+  static from(c: ColorLike): Color {
+    if (c instanceof Color) {
+      return c;
+    }
+    if (Array.isArray(c)) {
+      return new Color(c[0]!, c[1]!, c[2]!, c[3]);
+    }
+    return new Color(c.r, c.g, c.b, c.a);
+  }
+
+  /** Black color */
+  static readonly BLACK = new Color(0, 0, 0);
+  /** White color */
+  static readonly WHITE = new Color(1, 1, 1);
+  /** Red color */
+  static readonly RED = new Color(1, 0, 0);
+  /** Green color */
+  static readonly GREEN = new Color(0, 1, 0);
+  /** Blue color */
+  static readonly BLUE = new Color(0, 0, 1);
+
+  /**
+   * Get as array [r, g, b, a]
+   */
+  toArray(): [number, number, number, number] {
+    return [this.r, this.g, this.b, this.a];
+  }
+}

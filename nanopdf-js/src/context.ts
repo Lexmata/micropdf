@@ -1,6 +1,6 @@
 /**
  * Context - Rendering and error context
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's context operations.
  * Handles error management, memory management, and rendering contexts.
  */
