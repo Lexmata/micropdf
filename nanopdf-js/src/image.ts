@@ -7,6 +7,9 @@
 
 import { Pixmap } from './pixmap.js';
 import { Colorspace } from './colorspace.js';
+import { native } from './native.js';
+import type { NativeContext, NativeImage } from './native.js';
+import { getDefaultContext } from './context.js';
 
 /**
  * Image orientation (EXIF orientation)
@@ -26,6 +29,10 @@ export enum ImageOrientation {
  * A PDF image
  */
 export class Image {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _image?: NativeImage;
   private _width: number;
   private _height: number;
   private _xres: number = 96;
@@ -72,6 +79,13 @@ export class Image {
   }
 
   /**
+   * @internal Check if FFI bindings are available
+   */
+  get hasNativeHandle(): boolean {
+    return this._ctx !== undefined && this._image !== undefined;
+  }
+
+  /**
    * Create image from pixmap
    */
   static createFromPixmap(pixmap: Pixmap): Image {
@@ -103,21 +117,43 @@ export class Image {
   }
 
   /**
-   * Create image from file
-   * @note Returns placeholder image until FFI bindings decode actual file
+   * Create image from file using FFI
+   * @throws Error when native bindings are not available
    */
-  static createFromFile(_path: string): Image {
-    // Image file decoding requires FFI connection to image decoder APIs
-    return new Image(100, 100, Colorspace.createRGB());
+  static createFromFile(path: string): Image {
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Image loading from file requires native FFI bindings (fz_new_image_from_file)');
+    }
+    
+    const nativeImage = native.loadImageFromFile(ctx, path);
+    const width = native.getImageWidth(ctx, nativeImage);
+    const height = native.getImageHeight(ctx, nativeImage);
+    const image = new Image(width, height, Colorspace.createRGB());
+    image._ctx = ctx;
+    image._image = nativeImage;
+    return image;
   }
 
   /**
-   * Create image from buffer
-   * @note Returns placeholder image until FFI bindings decode actual buffer
+   * Create image from buffer using FFI
+   * @throws Error when native bindings are not available
    */
-  static createFromBuffer(_buffer: Uint8Array): Image {
-    // Image buffer decoding requires FFI connection to image decoder APIs
-    return new Image(100, 100, Colorspace.createRGB());
+  static createFromBuffer(buffer: Uint8Array): Image {
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Image loading from buffer requires native FFI bindings (fz_new_image_from_buffer)');
+    }
+    
+    const nativeImage = native.loadImageFromMemory(ctx, Buffer.from(buffer));
+    const width = native.getImageWidth(ctx, nativeImage);
+    const height = native.getImageHeight(ctx, nativeImage);
+    const image = new Image(width, height, Colorspace.createRGB());
+    image._ctx = ctx;
+    image._image = nativeImage;
+    return image;
   }
 
   // ============================================================================

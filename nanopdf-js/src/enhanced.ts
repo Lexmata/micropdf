@@ -7,7 +7,9 @@
 
 import { Context, getDefaultContext } from './context.js';
 import { Document } from './document.js';
-import { type ColorLike } from './geometry.js';
+import { Color, type ColorLike } from './geometry.js';
+import { native } from './native.js';
+import type { NativeContext, NativeDocument, NativePage } from './native.js';
 
 /**
  * Enhanced NanoPDF API
@@ -31,13 +33,20 @@ export class Enhanced {
   // ============================================================================
 
   /**
-   * Add a blank page to a document
-   * @returns Current page count (page not added until FFI bindings connected)
-   * @note Requires FFI bindings to modify PDF structure
+   * Add a blank page to a document using FFI
+   * @returns Page number of newly added page
+   * @throws Error when native bindings are not available
    */
-  addBlankPage(doc: Document, _width: number, _height: number): number {
-    // Page addition requires FFI connection to native library
-    return doc.pageCount;
+  addBlankPage(_doc: Document, width: number, height: number): number {
+    // Get native handles (will be available when Document exposes them)
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    const nativeDoc = (_doc as unknown as { _doc?: NativeDocument })?._doc;
+    
+    if (!ctx || !nativeDoc) {
+      throw new Error('Adding blank page requires native FFI bindings (np_add_blank_page)');
+    }
+    
+    return native.npAddBlankPage(ctx, nativeDoc, width, height);
   }
 
   // ============================================================================
@@ -45,56 +54,80 @@ export class Enhanced {
   // ============================================================================
 
   /**
-   * Draw a line on a page
-   * @note Requires FFI bindings to create paths and render to page
+   * Draw a line on a page using FFI
+   * @throws Error when native bindings are not available
    */
   drawLine(
-    _page: unknown,
-    _x0: number,
-    _y0: number,
-    _x1: number,
-    _y1: number,
-    _color: ColorLike,
-    _alpha: number = 1.0,
-    _lineWidth: number = 1.0
+    page: unknown,
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    color: ColorLike,
+    alpha: number = 1.0,
+    lineWidth: number = 1.0
   ): void {
-    // Drawing operations require FFI connection to Path and Device APIs
-    // @note When FFI is connected, will create Path, set color, and render to page
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    const nativePage = (page as unknown as { _page?: NativePage })?._page;
+    
+    if (!ctx || !nativePage) {
+      throw new Error('Drawing line requires native FFI bindings (np_draw_line)');
+    }
+    
+    const c = Color.from(color);
+    const colorArray = [c.r, c.g, c.b];
+    native.npDrawLine(ctx, nativePage, x0, y0, x1, y1, colorArray, alpha, lineWidth);
   }
 
   /**
-   * Draw a rectangle on a page
-   * @note Requires FFI bindings to create paths and render to page
+   * Draw a rectangle on a page using FFI
+   * @throws Error when native bindings are not available
    */
   drawRectangle(
-    _page: unknown,
-    _x: number,
-    _y: number,
-    _width: number,
-    _height: number,
-    _color: ColorLike,
-    _alpha: number = 1.0,
-    _fill: boolean = false
+    page: unknown,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: ColorLike,
+    alpha: number = 1.0,
+    fill: boolean = false
   ): void {
-    // Drawing operations require FFI connection to Path and Device APIs
-    // @note When FFI is connected, will create Path, set color, and render to page
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    const nativePage = (page as unknown as { _page?: NativePage })?._page;
+    
+    if (!ctx || !nativePage) {
+      throw new Error('Drawing rectangle requires native FFI bindings (np_draw_rectangle)');
+    }
+    
+    const c = Color.from(color);
+    const colorArray = [c.r, c.g, c.b];
+    native.npDrawRectangle(ctx, nativePage, x, y, width, height, colorArray, alpha, fill);
   }
 
   /**
-   * Draw a circle on a page
-   * @note Requires FFI bindings to create paths and render to page
+   * Draw a circle on a page using FFI
+   * @throws Error when native bindings are not available
    */
   drawCircle(
-    _page: unknown,
-    _x: number,
-    _y: number,
-    _radius: number,
-    _color: ColorLike,
-    _alpha: number = 1.0,
-    _fill: boolean = false
+    page: unknown,
+    x: number,
+    y: number,
+    radius: number,
+    color: ColorLike,
+    alpha: number = 1.0,
+    fill: boolean = false
   ): void {
-    // Drawing operations require FFI connection to Path and Device APIs
-    // @note When FFI is connected, will create Path, set color, and render to page
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    const nativePage = (page as unknown as { _page?: NativePage })?._page;
+    
+    if (!ctx || !nativePage) {
+      throw new Error('Drawing circle requires native FFI bindings (np_draw_circle)');
+    }
+    
+    const c = Color.from(color);
+    const colorArray = [c.r, c.g, c.b];
+    native.npDrawCircle(ctx, nativePage, x, y, radius, colorArray, alpha, fill);
   }
 
   // ============================================================================
@@ -102,19 +135,28 @@ export class Enhanced {
   // ============================================================================
 
   /**
-   * Add watermark to PDF
-   * @note Requires FFI bindings to open PDF, add text to pages, and save
+   * Add watermark to PDF using FFI
+   * @throws Error when native bindings are not available
    */
   async addWatermark(
-    _inputPath: string,
+    inputPath: string,
     _outputPath: string,
-    _text: string,
+    text: string,
     _x: number = 100,
     _y: number = 100,
-    _fontSize: number = 48,
-    _opacity: number = 0.3
+    fontSize: number = 48,
+    opacity: number = 0.3
   ): Promise<void> {
-    // Watermark operations require FFI connection to document and text APIs
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Watermark requires native FFI bindings (np_add_watermark)');
+    }
+    
+    // Open document
+    const doc = native.openDocumentFromPath(ctx, inputPath);
+    native.npAddWatermark(ctx, doc, text, fontSize, opacity);
+    native.dropDocument(ctx, doc);
   }
 
   // ============================================================================
@@ -122,45 +164,75 @@ export class Enhanced {
   // ============================================================================
 
   /**
-   * Merge multiple PDFs into one
-   * @note Requires FFI bindings to open PDFs, copy pages, and save
+   * Merge multiple PDFs into one using FFI
+   * @throws Error when native bindings are not available
    */
-  async mergePDFs(_inputPaths: string[], _outputPath: string): Promise<void> {
-    // PDF merging requires FFI connection to document and page APIs
+  async mergePDFs(inputPaths: string[], outputPath: string): Promise<void> {
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('PDF merging requires native FFI bindings (np_merge_pdfs)');
+    }
+    
+    native.npMergePDFs(ctx, inputPaths, outputPath);
   }
 
   /**
-   * Split PDF into separate files
-   * @returns Empty array until FFI bindings connected
-   * @note Requires FFI bindings to open PDF, extract pages, and save
+   * Split PDF into separate files using FFI
+   * @returns Array of output file paths
+   * @throws Error when native bindings are not available
    */
-  async splitPDF(_inputPath: string, _outputDir: string): Promise<string[]> {
-    // PDF splitting requires FFI connection to document and page APIs
-    return [];
+  async splitPDF(inputPath: string, outputDir: string): Promise<string[]> {
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('PDF splitting requires native FFI bindings (np_split_pdf)');
+    }
+    
+    return native.npSplitPDF(ctx, inputPath, outputDir);
   }
 
   /**
-   * Optimize PDF (compress, remove unused objects)
-   * @note Requires FFI bindings to compress streams and clean objects
+   * Optimize PDF (compress, remove unused objects) using FFI
+   * @throws Error when native bindings are not available
    */
-  async optimizePDF(_path: string): Promise<void> {
-    // PDF optimization requires FFI connection to document structure APIs
+  async optimizePDF(path: string): Promise<void> {
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('PDF optimization requires native FFI bindings (np_optimize_pdf)');
+    }
+    
+    native.npOptimizePDF(ctx, path);
   }
 
   /**
-   * Linearize PDF for fast web viewing
-   * @note Requires FFI bindings to reorganize PDF structure
+   * Linearize PDF for fast web viewing using FFI
+   * @throws Error when native bindings are not available
    */
-  async linearizePDF(_inputPath: string, _outputPath: string): Promise<void> {
-    // PDF linearization requires FFI connection to document structure APIs
+  async linearizePDF(inputPath: string, outputPath: string): Promise<void> {
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('PDF linearization requires native FFI bindings (np_linearize_pdf)');
+    }
+    
+    native.npLinearizePDF(ctx, inputPath, outputPath);
   }
 
   /**
-   * Write document to PDF file
-   * @note Requires FFI bindings to serialize document to file
+   * Write document to PDF file using FFI
+   * @throws Error when native bindings are not available
    */
-  async writePDF(_doc: Document, _path: string): Promise<void> {
-    // Document writing requires FFI connection to save API
+  async writePDF(doc: Document, path: string): Promise<void> {
+    const ctx = (this._ctx as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    const nativeDoc = (doc as unknown as { _doc?: NativeDocument })?._doc;
+    
+    if (!ctx || !nativeDoc) {
+      throw new Error('Writing PDF requires native FFI bindings (pdf_save_document)');
+    }
+    
+    native.saveDocument(ctx, nativeDoc, path);
   }
 
   // ============================================================================
@@ -171,15 +243,18 @@ export class Enhanced {
    * Create a new blank PDF document
    * @param width Page width in points (default A4 width: 595)
    * @param height Page height in points (default A4 height: 842)
-   * @note Requires FFI bindings to create document with blank page
+   * @throws Error This is a static method that requires instance context
    */
   static createBlankDocument(_width: number = 595, _height: number = 842): Document {
-    // Document creation with blank page requires FFI connection
-    throw new Error('Document creation requires FFI bindings');
+    throw new Error(
+      'Document creation requires native FFI bindings (fz_new_document). ' +
+        'Use Document.fromBuffer() or Enhanced instance methods instead.'
+    );
   }
 
   /**
    * Quick create PDF with text
+   * @throws Error This is a static method that requires instance context
    */
   static async createTextPDF(
     _text: string,
@@ -191,8 +266,10 @@ export class Enhanced {
       pageHeight?: number;
     }
   ): Promise<void> {
-    // PDF creation from text requires FFI connection to document and text APIs
-    throw new Error('PDF text creation requires FFI bindings');
+    throw new Error(
+      'PDF text creation requires native FFI bindings (fz_new_document, fz_show_string). ' +
+        'Use Enhanced instance methods instead.'
+    );
   }
 }
 

@@ -5,6 +5,10 @@
  * Handles ZIP and other archive formats embedded in PDFs.
  */
 
+import { native } from './native.js';
+import type { NativeContext, NativeArchive } from './native.js';
+import { getDefaultContext } from './context.js';
+
 /**
  * Archive format types
  */
@@ -28,6 +32,10 @@ export interface ArchiveEntry {
  * An archive (ZIP, TAR, etc.)
  */
 export class Archive {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _archive?: NativeArchive;
   private _format: ArchiveFormat;
   private _entries: Map<string, Uint8Array> = new Map();
   private _refCount: number = 1;
@@ -39,27 +47,50 @@ export class Archive {
   }
 
   /**
-   * Open archive from file path
-   * @note Archive parsing requires FFI bindings to libarchive or similar
+   * @internal Check if FFI bindings are available
+   */
+  get hasNativeHandle(): boolean {
+    return this._ctx !== undefined && this._archive !== undefined;
+  }
+
+  /**
+   * Open archive from file path using FFI
+   * @throws Error when native bindings are not available
    */
   static open(path: string): Archive {
-    // Archive format detection and parsing requires FFI connection
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Archive opening from file requires native FFI bindings (fz_open_archive)');
+    }
+    
     const format = path.endsWith('.zip')
       ? ArchiveFormat.Zip
       : path.endsWith('.tar')
         ? ArchiveFormat.Tar
         : ArchiveFormat.Unknown;
-    return new Archive(format, path);
+    
+    const archive = new Archive(format, path);
+    archive._ctx = ctx;
+    archive._archive = native.openArchive(ctx, path);
+    return archive;
   }
 
   /**
-   * Open archive from buffer
-   * @note Archive parsing requires FFI bindings to libarchive or similar
+   * Open archive from buffer using FFI
+   * @throws Error when native bindings are not available
    */
   static openWithBuffer(buffer: Uint8Array): Archive {
-    // Archive format detection and parsing requires FFI connection
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Archive opening from buffer requires native FFI bindings (fz_open_archive_with_buffer)');
+    }
+    
     const format = Archive.detectFormat(buffer);
     const archive = new Archive(format);
+    archive._ctx = ctx;
+    archive._archive = native.openArchiveFromMemory(ctx, Buffer.from(buffer));
     return archive;
   }
 

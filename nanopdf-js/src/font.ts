@@ -7,6 +7,9 @@
 
 import { Rect, type RectLike } from './geometry.js';
 import { Path } from './path.js';
+import { native } from './native.js';
+import type { NativeContext, NativeFont } from './native.js';
+import { getDefaultContext } from './context.js';
 
 /**
  * Font flags
@@ -23,6 +26,10 @@ export enum FontFlags {
  * A PDF font
  */
 export class Font {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _font?: NativeFont;
   private _name: string;
   private _flags: number = 0;
   private _bbox: Rect = Rect.EMPTY;
@@ -40,6 +47,13 @@ export class Font {
   }
 
   /**
+   * @internal Check if FFI bindings are available
+   */
+  get hasNativeHandle(): boolean {
+    return this._ctx !== undefined && this._font !== undefined;
+  }
+
+  /**
    * Create a new font
    */
   static create(name: string, flags?: number): Font {
@@ -47,26 +61,43 @@ export class Font {
   }
 
   /**
-   * Create font from memory buffer
-   * @note Font parsing requires FFI bindings to native font library
+   * Create font from memory buffer using FFI
+   * @throws Error when native bindings are not available
    */
-  static createFromMemory(name: string, _data: Uint8Array): Font {
-    // Font data parsing requires FFI connection to native library
-    return new Font(name);
+  static createFromMemory(name: string, data: Uint8Array): Font {
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Font creation from memory requires native FFI bindings (fz_new_font_from_memory)');
+    }
+    
+    const font = new Font(name);
+    font._ctx = ctx;
+    font._font = native.loadFontFromMemory(ctx, Buffer.from(data), 0);
+    return font;
   }
 
   /**
-   * Create font from file
-   * @note Font loading requires FFI bindings to native font library
+   * Create font from file using FFI
+   * @throws Error when native bindings are not available
    */
   static createFromFile(path: string): Font {
-    // Font file loading requires FFI connection to native library
+    const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
+    
+    if (!ctx) {
+      throw new Error('Font loading from file requires native FFI bindings (fz_new_font_from_file)');
+    }
+    
     const name =
       path
         .split('/')
         .pop()
         ?.replace(/\.[^.]+$/, '') || 'Unknown';
-    return new Font(name);
+    
+    const font = new Font(name);
+    font._ctx = ctx;
+    font._font = native.loadFontFromFile(ctx, path, 0);
+    return font;
   }
 
   // ============================================================================

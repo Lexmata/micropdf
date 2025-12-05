@@ -44,7 +44,7 @@ To achieve 100% FFI parity, we need to:
    - Update all metadata methods to use FFI
 
 2. **Refactor Page Class**:
-   - Add `_ctx: NativeContext` field  
+   - Add `_ctx: NativeContext` field
    - Add `_page: NativePage` handle
    - Update constructor to accept native handles
    - All page operations already converted ✅

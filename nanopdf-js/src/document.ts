@@ -10,7 +10,7 @@ import { Colorspace } from './colorspace.js';
 import { Rect, Matrix, Quad } from './geometry.js';
 import { NanoPDFError, LinkDestType, type Link, type RectLike, type MatrixLike } from './types.js';
 import { native } from './native.js';
-import type { NativeContext, NativePage, NativeRect } from './native.js';
+import type { NativeContext, NativeDocument, NativePage, NativeRect } from './native.js';
 
 /**
  * An item in the document outline (table of contents)
@@ -62,7 +62,9 @@ export interface TextSpan {
  * A page in a document
  */
 export class Page {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _page?: NativePage;
   private readonly _pageNumber: number;
   private readonly _bounds: Rect;
@@ -142,7 +144,7 @@ export class Page {
       e: m.e,
       f: m.f
     };
-    
+
     const nativeColorspace = {
       name: colorspace.name,
       n: colorspace.n,
@@ -150,7 +152,7 @@ export class Page {
     };
 
     const nativePixmap = native.renderPage(this._ctx, this._page, nativeMatrix, nativeColorspace, alpha);
-    
+
     // Convert native pixmap to TypeScript Pixmap
     return Pixmap.create(colorspace, nativePixmap.width, nativePixmap.height, alpha);
   }
@@ -169,7 +171,7 @@ export class Page {
       n: 3,
       type: 'RGB'
     };
-    
+
     const pngBuffer = native.renderPageToPNG(this._ctx, this._page, dpi, nativeColorspace);
     return new Uint8Array(pngBuffer);
   }
@@ -248,6 +250,10 @@ export class Page {
  * A PDF or other document
  */
 export class Document {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _doc?: NativeDocument;
   private _pages: Page[];
   private readonly _format: string;
   private readonly _metadata: Map<string, string>;
@@ -378,34 +384,39 @@ export class Document {
   }
 
   /**
-   * Authenticate with a password
+   * Authenticate with a password using FFI
    * @returns true if authentication successful
-   * @note Requires FFI bindings for actual PDF encryption handling
+   * @throws Error when native bindings are not available
    */
-  authenticate(_password: string): boolean {
-    // PDF authentication requires FFI connection to native library
-    // For now, mark as authenticated for testing purposes
-    this._isAuthenticated = true;
-    return true;
+  authenticate(password: string): boolean {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Authentication requires native FFI bindings (pdf_authenticate_password)');
+    }
+    const result = native.authenticatePassword(this._ctx, this._doc, password);
+    if (result) {
+      this._isAuthenticated = true;
+    }
+    return result;
   }
 
   /**
-   * Check if the document has a specific permission
+   * Check if the document has a specific permission using FFI
    * @param permission The permission to check (print, edit, copy, annotate)
+   * @throws Error when native bindings are not available
    */
-  hasPermission(_permission: string): boolean {
-    // For unencrypted documents, all permissions are granted
-    if (!this._needsPassword) {
-      return true;
+  hasPermission(permission: string): boolean {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Permission check requires native FFI bindings (pdf_has_permission)');
     }
-
-    // For authenticated documents, assume all permissions
-    if (this._isAuthenticated) {
-      return true;
-    }
-
-    // For encrypted but not authenticated documents, no permissions
-    return false;
+    // Map permission string to permission bits
+    const permissionMap: Record<string, number> = {
+      print: 4,
+      edit: 8,
+      copy: 16,
+      annotate: 32
+    };
+    const permissionBit = permissionMap[permission] ?? 0;
+    return native.hasPermission(this._ctx, this._doc, permissionBit);
   }
 
   /**
@@ -440,14 +451,17 @@ export class Document {
   }
 
   /**
-   * Resolve a named destination to a page location
+   * Resolve a named destination to a page location using FFI
    * @param name Named destination (e.g., "section1", "chapter2")
    * @returns Page number (0-based) or undefined if not found
-   * @note Requires FFI bindings to parse PDF catalog /Dests or /Names dictionary
+   * @throws Error when native bindings are not available
    */
-  resolveNamedDest(_name: string): number | undefined {
-    // Named destination lookup requires FFI connection to parse PDF catalog
-    return undefined;
+  resolveNamedDest(name: string): number | undefined {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Named destination lookup requires native FFI bindings (pdf_lookup_dest)');
+    }
+    const result = native.resolveLink(this._ctx, this._doc, name);
+    return result !== null ? result : undefined;
   }
 
   /**
