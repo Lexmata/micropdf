@@ -14,13 +14,13 @@
  */
 Napi::Value CreateContext(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     fz_context ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
     if (ctx == 0) {
         Napi::Error::New(env, "Failed to create context").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("_handle", Napi::Number::New(env, ctx));
     return obj;
@@ -32,21 +32,21 @@ Napi::Value CreateContext(const Napi::CallbackInfo& info) {
  */
 Napi::Value DropContext(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 1 || !info[0].IsObject()) {
         Napi::TypeError::New(env, "Expected context object").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
+
     Napi::Object ctxObj = info[0].As<Napi::Object>();
     if (!ctxObj.Has("_handle")) {
         Napi::TypeError::New(env, "Invalid context object").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
+
     fz_context ctx = ctxObj.Get("_handle").As<Napi::Number>().Int32Value();
     fz_drop_context(ctx);
-    
+
     return env.Undefined();
 }
 
@@ -56,17 +56,17 @@ Napi::Value DropContext(const Napi::CallbackInfo& info) {
  */
 Napi::Value CloneContext(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 1 || !info[0].IsObject()) {
         Napi::TypeError::New(env, "Expected context object").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     Napi::Object ctxObj = info[0].As<Napi::Object>();
     fz_context ctx = ctxObj.Get("_handle").As<Napi::Number>().Int32Value();
-    
+
     fz_context newCtx = fz_clone_context(ctx);
-    
+
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("_handle", Napi::Number::New(env, newCtx));
     return obj;

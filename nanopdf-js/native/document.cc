@@ -28,21 +28,21 @@ static fz_document GetDocument(const Napi::Object& obj) {
  */
 Napi::Value OpenDocumentFromPath(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 2 || !info[0].IsObject() || !info[1].IsString()) {
         Napi::TypeError::New(env, "Expected (context, path)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     std::string path = info[1].As<Napi::String>().Utf8Value();
-    
+
     fz_document doc = fz_open_document(ctx, path.c_str());
     if (doc == 0) {
         Napi::Error::New(env, "Failed to open document").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("_handle", Napi::Number::New(env, doc));
     return obj;
@@ -54,22 +54,22 @@ Napi::Value OpenDocumentFromPath(const Napi::CallbackInfo& info) {
  */
 Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsBuffer() || !info[2].IsString()) {
         Napi::TypeError::New(env, "Expected (context, buffer, magic)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     Napi::Buffer<uint8_t> buffer = info[1].As<Napi::Buffer<uint8_t>>();
     std::string magic = info[2].As<Napi::String>().Utf8Value();
-    
+
     fz_document doc = fz_open_document_with_buffer(ctx, magic.c_str(), buffer.Data(), buffer.Length());
     if (doc == 0) {
         Napi::Error::New(env, "Failed to open document").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     Napi::Object obj = Napi::Object::New(env);
     obj.Set("_handle", Napi::Number::New(env, doc));
     return obj;
@@ -81,17 +81,17 @@ Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
  */
 Napi::Value DropDocument(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject()) {
         Napi::TypeError::New(env, "Expected (context, document)").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
-    
+
     fz_drop_document(ctx, doc);
-    
+
     return env.Undefined();
 }
 
@@ -101,17 +101,17 @@ Napi::Value DropDocument(const Napi::CallbackInfo& info) {
  */
 Napi::Value CountPages(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject()) {
         Napi::TypeError::New(env, "Expected (context, document)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
-    
+
     int count = fz_count_pages(ctx, doc);
-    
+
     return Napi::Number::New(env, count);
 }
 
@@ -121,17 +121,17 @@ Napi::Value CountPages(const Napi::CallbackInfo& info) {
  */
 Napi::Value NeedsPassword(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 2 || !info[0].IsObject() || !info[1].IsObject()) {
         Napi::TypeError::New(env, "Expected (context, document)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
-    
+
     int needs = fz_needs_password(ctx, doc);
-    
+
     return Napi::Boolean::New(env, needs != 0);
 }
 
@@ -141,18 +141,18 @@ Napi::Value NeedsPassword(const Napi::CallbackInfo& info) {
  */
 Napi::Value AuthenticatePassword(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsObject() || !info[2].IsString()) {
         Napi::TypeError::New(env, "Expected (context, document, password)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
     std::string password = info[2].As<Napi::String>().Utf8Value();
-    
+
     int success = fz_authenticate_password(ctx, doc, password.c_str());
-    
+
     return Napi::Boolean::New(env, success != 0);
 }
 
@@ -162,18 +162,18 @@ Napi::Value AuthenticatePassword(const Napi::CallbackInfo& info) {
  */
 Napi::Value HasPermission(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsObject() || !info[2].IsNumber()) {
         Napi::TypeError::New(env, "Expected (context, document, permission)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
     int permission = info[2].As<Napi::Number>().Int32Value();
-    
+
     int has = fz_has_permission(ctx, doc, permission);
-    
+
     return Napi::Boolean::New(env, has != 0);
 }
 
@@ -183,23 +183,23 @@ Napi::Value HasPermission(const Napi::CallbackInfo& info) {
  */
 Napi::Value GetMetadata(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsObject() || !info[2].IsString()) {
         Napi::TypeError::New(env, "Expected (context, document, key)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
     std::string key = info[2].As<Napi::String>().Utf8Value();
-    
+
     char buf[1024] = {0};
     int len = fz_lookup_metadata(ctx, doc, key.c_str(), buf, sizeof(buf));
-    
+
     if (len > 0) {
         return Napi::String::New(env, buf);
     }
-    
+
     return env.Null();
 }
 
@@ -209,18 +209,18 @@ Napi::Value GetMetadata(const Napi::CallbackInfo& info) {
  */
 Napi::Value SaveDocument(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsObject() || !info[2].IsString()) {
         Napi::TypeError::New(env, "Expected (context, document, path)").ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
     std::string path = info[2].As<Napi::String>().Utf8Value();
-    
+
     pdf_save_document(ctx, doc, path.c_str(), nullptr);
-    
+
     return env.Undefined();
 }
 
@@ -230,22 +230,22 @@ Napi::Value SaveDocument(const Napi::CallbackInfo& info) {
  */
 Napi::Value ResolveLink(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    
+
     if (info.Length() < 3 || !info[0].IsObject() || !info[1].IsObject() || !info[2].IsString()) {
         Napi::TypeError::New(env, "Expected (context, document, name)").ThrowAsJavaScriptException();
         return env.Null();
     }
-    
+
     fz_context ctx = GetContext(info[0].As<Napi::Object>());
     fz_document doc = GetDocument(info[1].As<Napi::Object>());
     std::string name = info[2].As<Napi::String>().Utf8Value();
-    
+
     int page = pdf_lookup_named_dest(ctx, doc, name.c_str());
-    
+
     if (page >= 0) {
         return Napi::Number::New(env, page);
     }
-    
+
     return env.Null();
 }
 

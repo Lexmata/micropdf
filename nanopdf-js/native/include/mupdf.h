@@ -4,6 +4,7 @@
 #ifndef MUPDF_H
 #define MUPDF_H
 
+#include "nanopdf/types.h"
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
