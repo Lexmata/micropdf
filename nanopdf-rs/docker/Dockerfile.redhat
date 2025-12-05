@@ -1,16 +1,23 @@
 # Dockerfile for building NanoPDF as an RPM package (.rpm)
+# Supports multi-architecture builds (amd64, arm64) via Docker Buildx
 FROM rust:1.87-bookworm AS builder
 
+# Install build dependencies and Python for header generation
 RUN apt-get update && apt-get install -y \
-    build-essential pkg-config libssl-dev rpm \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    rpm \
+    python3 \
     && rm -rf /var/lib/apt/lists/*
 
+# Install cargo-generate-rpm
 RUN cargo install cargo-generate-rpm
 
 WORKDIR /build
 COPY . .
 
-# Build the library
+# Build the library (native build for container architecture)
 RUN cargo build --release
 
 # Generate pkg-config files from templates
@@ -21,6 +28,7 @@ RUN VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\
 # Build the RPM package
 RUN cargo generate-rpm
 
+# Final stage - minimal image with just the package
 FROM debian:bookworm-slim
 WORKDIR /output
 COPY --from=builder /build/target/generate-rpm/*.rpm ./
