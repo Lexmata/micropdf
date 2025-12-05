@@ -30,4 +30,3 @@ func TestIsMock(t *testing.T) {
 		t.Log("Using native CGO implementation")
 	}
 }
-
