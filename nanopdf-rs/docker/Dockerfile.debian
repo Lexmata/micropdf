@@ -21,7 +21,7 @@ COPY . .
 # Build the library (native build for container architecture)
 RUN cargo build --release
 
-# Generate pkg-config files from templates  
+# Generate pkg-config files from templates
 RUN VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*= *"\([^"]*\)".*/\1/') && \
     sed -e "s|@PREFIX@|/usr|g" -e "s|@VERSION@|$VERSION|g" nanopdf.pc.in > nanopdf.pc && \
     sed -e "s|@PREFIX@|/usr|g" -e "s|@VERSION@|$VERSION|g" mupdf.pc.in > mupdf.pc
