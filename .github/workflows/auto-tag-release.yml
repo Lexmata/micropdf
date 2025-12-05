@@ -1,0 +1,204 @@
+name: Auto-Tag Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  check-release-merge:
+    name: Check for Release Branch Merge
+    runs-on: ubuntu-latest
+    outputs:
+      is_release_merge: ${{ steps.detect.outputs.is_release }}
+      version: ${{ steps.detect.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Detect release branch merge
+        id: detect
+        run: |
+          # Get the commit message
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Check if this is a merge from a release branch
+          if echo "$COMMIT_MSG" | grep -qE "Merge (pull request|branch) .*(release/|from release/)"; then
+            # Extract version from commit message or branch name
+            if echo "$COMMIT_MSG" | grep -qE "release/[0-9]+\.[0-9]+\.[0-9]+"; then
+              VERSION=$(echo "$COMMIT_MSG" | grep -oE "release/[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?" | sed 's/release\///')
+              echo "Detected release merge for version: $VERSION"
+              echo "is_release=true" >> $GITHUB_OUTPUT
+              echo "version=$VERSION" >> $GITHUB_OUTPUT
+            elif echo "$COMMIT_MSG" | grep -qE "bump version to [0-9]+\.[0-9]+\.[0-9]+"; then
+              VERSION=$(echo "$COMMIT_MSG" | grep -oE "bump version to [0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?" | sed 's/bump version to //')
+              echo "Detected version bump: $VERSION"
+              echo "is_release=true" >> $GITHUB_OUTPUT
+              echo "version=$VERSION" >> $GITHUB_OUTPUT
+            else
+              echo "Release branch merge detected but no version found"
+              echo "is_release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Not a release branch merge"
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check VERSION file
+        if: steps.detect.outputs.is_release != 'true'
+        id: version_file
+        run: |
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION)
+            TAG="v$VERSION"
+            
+            # Check if tag already exists
+            if git rev-parse "$TAG" >/dev/null 2>&1; then
+              echo "Tag $TAG already exists"
+              echo "is_release=false" >> $GITHUB_OUTPUT
+            else
+              echo "VERSION file found with new version: $VERSION"
+              echo "is_release=true" >> $GITHUB_OUTPUT
+              echo "version=$VERSION" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "No VERSION file found"
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set final output
+        id: final
+        run: |
+          if [ "${{ steps.detect.outputs.is_release }}" == "true" ]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "version=${{ steps.detect.outputs.version }}" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.version_file.outputs.is_release }}" == "true" ]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "version=${{ steps.version_file.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  create-tag:
+    name: Create Release Tag
+    needs: check-release-merge
+    if: needs.check-release-merge.outputs.is_release_merge == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create and push tag
+        run: |
+          VERSION="${{ needs.check-release-merge.outputs.version }}"
+          TAG="v$VERSION"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+            exit 0
+          fi
+          
+          # Verify version consistency
+          echo "Verifying version consistency..."
+          
+          # Check Cargo.toml
+          if [ -f nanopdf-rs/Cargo.toml ]; then
+            CARGO_VERSION=$(grep '^version = ' nanopdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+            echo "Cargo.toml version: $CARGO_VERSION"
+            if [ "$CARGO_VERSION" != "$VERSION" ]; then
+              echo "::warning::Version mismatch in Cargo.toml: $CARGO_VERSION != $VERSION"
+            fi
+          fi
+          
+          # Check package.json
+          if [ -f nanopdf-js/package.json ]; then
+            PACKAGE_VERSION=$(node -p "require('./nanopdf-js/package.json').version")
+            echo "package.json version: $PACKAGE_VERSION"
+            if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+              echo "::warning::Version mismatch in package.json: $PACKAGE_VERSION != $VERSION"
+            fi
+          fi
+          
+          # Create tag
+          echo "Creating tag: $TAG"
+          git tag -a "$TAG" -m "Release $VERSION
+
+          NanoPDF $VERSION
+          
+          This release was automatically tagged from a release branch merge.
+          
+          Projects:
+          - nanopdf-rs: $VERSION
+          - nanopdf-js: $VERSION
+          - go-nanopdf: $VERSION
+          
+          See CHANGELOG.md for details."
+          
+          # Push tag
+          echo "Pushing tag: $TAG"
+          git push origin "$TAG"
+          
+          echo "✅ Tag $TAG created and pushed successfully"
+          
+          echo "## 🏷️ Release Tag Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: \`$TAG\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The release workflow will now be triggered automatically." >> $GITHUB_STEP_SUMMARY
+
+      - name: Create GitHub Release (draft)
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.check-release-merge.outputs.version }}
+          name: Release ${{ needs.check-release-merge.outputs.version }}
+          draft: true
+          body: |
+            # NanoPDF ${{ needs.check-release-merge.outputs.version }}
+            
+            **This is an automated draft release. Please update the release notes.**
+            
+            ## What's Changed
+            
+            - Version bumped to ${{ needs.check-release-merge.outputs.version }}
+            
+            ## Installation
+            
+            ### Rust
+            ```bash
+            cargo add nanopdf@${{ needs.check-release-merge.outputs.version }}
+            ```
+            
+            ### Node.js
+            ```bash
+            npm install @nanopdf/nanopdf@${{ needs.check-release-merge.outputs.version }}
+            ```
+            
+            ### Go
+            ```bash
+            go get github.com/lexmata/nanopdf/go-nanopdf@v${{ needs.check-release-merge.outputs.version }}
+            ```
+            
+            ---
+            
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-release-merge.outputs.version }}...HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+

@@ -55,6 +55,8 @@ Synchronizes version numbers across all NanoPDF projects.
 
 Complete deployment workflow for NanoPDF releases.
 
+**🔄 Integrated with GitHub Actions**: This script is used by `.github/workflows/release-branch.yml` to validate release branches before merging.
+
 **Usage:**
 
 ```bash
@@ -76,7 +78,7 @@ Complete deployment workflow for NanoPDF releases.
 # Create release locally without pushing
 ./scripts/deploy.sh 0.2.0 --no-push
 
-# Dry run to see what would happen
+# Dry run to see what would happen (used by CI)
 ./scripts/deploy.sh 0.2.0 --dry-run
 ```
 
@@ -287,37 +289,128 @@ If versions are out of sync, run:
 
 ## CI/CD Integration
 
-The deployment scripts are designed to work with GitHub Actions:
+The deployment scripts are fully integrated with GitHub Actions workflows:
 
-```yaml
-name: Release
+### Release Branch Workflow (`.github/workflows/release-branch.yml`)
 
-on:
-  push:
-    tags:
-      - 'v*'
+Automatically validates release branches when pushed:
 
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+1. **Detects version** from branch name (`release/0.2.0`)
+2. **Runs deploy script in dry-run mode** to validate
+3. **Executes comprehensive tests** across all platforms
+4. **Builds release artifacts** for verification
+5. **Posts summary** with next steps
 
-      - name: Extract version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+**Triggered by:**
+- Push to `release/**` branches
+- Pull requests to `main`/`master` from release branches
 
-      - name: Verify version sync
-        run: |
-          if [[ "$(cat VERSION)" != "${{ steps.version.outputs.VERSION }}" ]]; then
-            echo "Version mismatch!"
-            exit 1
-          fi
+**Usage:**
+```bash
+# Create release branch
+git checkout develop
+git checkout -b release/0.2.0
 
-      - name: Build and publish
-        run: |
-          cd nanopdf-rs && cargo publish
-          cd ../nanopdf-js && pnpm publish
+# Sync version
+./scripts/sync-version.sh 0.2.0 --no-commit --no-tag
+
+# Commit changes
+git add -A
+git commit -m "chore: prepare release 0.2.0"
+
+# Push (triggers validation)
+git push origin release/0.2.0
+
+# CI will validate and report status
+# Merge to main when all checks pass
+```
+
+### Auto-Tag Workflow (`.github/workflows/auto-tag-release.yml`)
+
+Automatically creates release tags when release branches are merged to `main`:
+
+1. **Detects merge** from release branch
+2. **Extracts version** from commit message or VERSION file
+3. **Verifies version consistency** across projects
+4. **Creates git tag** (`v0.2.0`)
+5. **Pushes tag** to remote
+6. **Creates draft GitHub release**
+
+**Triggered by:**
+- Push to `main`/`master` from release branch merge
+
+**Flow:**
+```
+release/0.2.0 → merge to main → auto-tag v0.2.0 → release workflow
+```
+
+### Release Workflow (`.github/workflows/release.yml`)
+
+Builds and publishes packages when tags are pushed:
+
+1. **Builds Rust libraries** for all platforms
+2. **Generates C headers**
+3. **Creates Debian/RPM packages**
+4. **Builds Node.js prebuilds**
+5. **Creates GitHub release** with artifacts
+6. **Publishes to crates.io** (Rust)
+7. **Publishes to npm** (Node.js)
+
+**Triggered by:**
+- Tags: `v*`, `rs-v*`, `js-v*`, `go-v*`
+
+### Example CI/CD Flow
+
+**Option 1: Automated (Recommended)**
+
+```bash
+# 1. Create and push release branch
+git checkout develop
+git checkout -b release/0.2.0
+./scripts/sync-version.sh 0.2.0 --no-commit --no-tag
+git add -A
+git commit -m "chore: prepare release 0.2.0"
+git push origin release/0.2.0
+
+# 2. GitHub Actions validates release branch
+#    - Runs deploy.sh --dry-run
+#    - Executes all tests
+#    - Builds artifacts
+
+# 3. Create PR to main and merge
+#    (after CI passes)
+
+# 4. GitHub Actions auto-tags v0.2.0
+#    - Creates tag
+#    - Triggers release workflow
+
+# 5. Release workflow publishes packages
+#    - Builds for all platforms
+#    - Publishes to crates.io/npm
+```
+
+**Option 2: Manual with Deploy Script**
+
+```bash
+# Run deploy script locally
+./scripts/deploy.sh 0.2.0
+
+# Script creates tag and pushes
+# Release workflow triggers automatically
+```
+
+### Workflow Dependencies
+
+```
+release-branch.yml
+    ↓ (validates)
+merge to main
+    ↓ (triggers)
+auto-tag-release.yml
+    ↓ (creates tag)
+release.yml
+    ↓ (publishes)
+packages published
 ```
 
 ---
