@@ -469,10 +469,10 @@ export class Path {
             const y1 = cmd.params[1]!;
             const x2 = x1 + cmd.params[2]!;
             const y2 = y1 + cmd.params[3]!;
-            
+
             const p1 = m.transformPoint({ x: x1, y: y1 });
             const p2 = m.transformPoint({ x: x2, y: y2 });
-            
+
             cmd.params[0] = Math.min(p1.x, p2.x);
             cmd.params[1] = Math.min(p1.y, p2.y);
             cmd.params[2] = Math.abs(p2.x - p1.x);
