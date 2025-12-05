@@ -1,6 +1,6 @@
 /**
  * Enhanced - NanoPDF high-level convenience API
- * 
+ *
  * This module provides NanoPDF-specific high-level functions for common PDF operations.
  * These are convenience wrappers that simplify complex workflows.
  */
