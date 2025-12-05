@@ -260,9 +260,9 @@ use nanopdf::Document;
 fn test_hello_world_pdf() {
     let bytes = fs::read("test-pdfs/simple/hello-world.pdf").unwrap();
     let doc = Document::from_bytes(&bytes).unwrap();
-    
+
     assert_eq!(doc.page_count(), 1);
-    
+
     let page = doc.load_page(0).unwrap();
     let text = page.extract_text().unwrap();
     assert!(text.contains("Hello, World!"));
@@ -279,9 +279,9 @@ describe('Hello World PDF', () => {
   it('should extract text', async () => {
     const buffer = readFileSync('test-pdfs/simple/hello-world.pdf');
     const doc = Document.fromBuffer(buffer);
-    
+
     expect(doc.pageCount).toBe(1);
-    
+
     const page = doc.loadPage(0);
     const text = page.extractText();
     expect(text).toContain('Hello, World!');
@@ -305,16 +305,16 @@ func TestHelloWorldPDF(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
-    
+
     ctx := nanopdf.NewContext()
     defer ctx.Drop()
-    
+
     doc, err := nanopdf.OpenDocumentFromBytes(ctx, data, "application/pdf")
     if err != nil {
         t.Fatal(err)
     }
     defer doc.Drop()
-    
+
     count, _ := doc.PageCount()
     if count != 1 {
         t.Errorf("Expected 1 page, got %d", count)
