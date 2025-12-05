@@ -38,6 +38,21 @@ Minimal valid PDF structures for basic parsing tests.
   - Minimal structure testing
   - Error handling (empty content)
 
+#### `minimal/corrupted.pdf`
+- **Size**: ~230 bytes
+- **Features**:
+  - Intentionally malformed PDF structure
+  - Incomplete object definitions
+  - Missing xref table
+  - Invalid object references (999 0 R)
+  - Truncated content
+- **Use Cases**:
+  - Error handling testing
+  - Robust parser validation
+  - Graceful degradation
+  - Recovery from corrupt data
+  - Error message generation
+
 ---
 
 ### Simple (< 10 KB)
@@ -106,6 +121,38 @@ PDFs with metadata, links, and more advanced features.
   - Destination resolution
   - Interactive element handling
 
+#### `medium/with-outline.pdf`
+- **Size**: ~1.1 KB
+- **Features**:
+  - 3 pages with content
+  - Document outline (bookmarks)
+  - Hierarchical bookmark structure
+  - Two top-level outline entries
+  - Destination links to pages
+  - Chapter organization
+- **Use Cases**:
+  - Outline/bookmark extraction
+  - Table of contents handling
+  - Navigation tree parsing
+  - Hierarchical structure traversal
+  - Destination resolution from bookmarks
+
+#### `medium/with-attachments.pdf`
+- **Size**: ~720 bytes
+- **Features**:
+  - PDF 1.7 with embedded files
+  - File attachment (data.txt)
+  - EmbeddedFiles name tree
+  - File specification dictionary
+  - Embedded file stream
+  - MIME type specification
+- **Use Cases**:
+  - File attachment extraction
+  - Embedded file handling
+  - Name tree traversal
+  - File specification parsing
+  - Attachment metadata access
+
 ---
 
 ### Complex (100 KB - 1 MB)
@@ -127,35 +174,65 @@ Advanced PDFs with forms, annotations, and complex structures.
   - Interactive form testing
   - Field type identification
 
-#### `complex/with-images.pdf` (TODO)
-- **Size**: TBD
+#### `complex/with-images.pdf`
+- **Size**: ~1.2 KB
 - **Features**:
-  - Embedded images (JPEG, PNG)
-  - Image XObjects
-  - Image compression
-  - Color spaces
-  - Image masks
+  - Embedded JPEG and grayscale images
+  - Image XObjects with DCT (JPEG) compression
+  - 32x32 color image (RGB) and 16x16 grayscale image
+  - Image placement with transformation matrices
+  - Resource dictionary with multiple images
 - **Use Cases**:
-  - Image extraction
-  - Image decoding
-  - Compression handling
-  - Color space conversion
-  - Resource management
+  - Image extraction from PDFs
+  - DCT/JPEG image decoding
+  - Multiple image format handling
+  - Image XObject parsing
+  - Color space handling (RGB, Grayscale)
 
-#### `complex/with-annotations.pdf` (TODO)
-- **Size**: TBD
+#### `complex/with-annotations.pdf`
+- **Size**: ~1 KB
 - **Features**:
-  - Text annotations (comments)
-  - Highlight annotations
-  - Underline/strikeout
-  - Shape annotations (rectangles, circles)
-  - Popup annotations
+  - Text highlight annotation (yellow highlight)
+  - Square and circle shape annotations
+  - Text/sticky note annotation (comment)
+  - Annotation properties (color, border, author, timestamp)
+  - Multiple annotation types on single page
 - **Use Cases**:
   - Annotation extraction
-  - Markup handling
-  - Comment threading
-  - Appearance streams
-  - Annotation types
+  - Markup annotation handling
+  - Shape annotation parsing
+  - Comment/note annotation support
+  - Annotation property access
+
+#### `complex/encrypted.pdf`
+- **Size**: ~650 bytes
+- **Features**:
+  - Standard PDF encryption (V2, R3, 128-bit)
+  - Password protection (password: test123)
+  - Owner and user passwords
+  - Permission flags
+  - Encrypted content
+- **Use Cases**:
+  - Password authentication testing
+  - Encryption handling
+  - Permission checking
+  - Secured PDF access
+  - Decryption workflows
+
+#### `complex/linearized.pdf`
+- **Size**: ~570 bytes
+- **Features**:
+  - Linearized PDF structure (web-optimized)
+  - Hint streams for fast web viewing
+  - Page-at-a-time access
+  - Optimized object ordering
+  - Fast first page display
+- **Use Cases**:
+  - Linearization detection
+  - Web-optimized PDF handling
+  - Incremental loading testing
+  - Fast display optimization
+  - Streaming PDF support
 
 ---
 
@@ -163,32 +240,35 @@ Advanced PDFs with forms, annotations, and complex structures.
 
 Large PDFs for performance and stress testing.
 
-#### `large/multi-page-100.pdf` (TODO)
-- **Size**: TBD
+#### `large/multi-page-100.pdf`
+- **Size**: ~25 KB
 - **Features**:
-  - 100+ pages
-  - Mixed content (text, images, forms)
-  - Large page tree
-  - Cross-references
+  - Exactly 100 pages
+  - Page numbering on each page
+  - Large page tree structure
+  - Extensive cross-reference table
+  - Sequential page access
 - **Use Cases**:
-  - Performance testing
-  - Memory management
-  - Large file handling
-  - Incremental loading
-  - Page tree traversal
+  - Multi-page performance testing
+  - Page iteration benchmarks
+  - Memory management with many pages
+  - Large xref table handling
+  - Page tree traversal optimization
 
-#### `large/high-resolution-images.pdf` (TODO)
-- **Size**: TBD
+#### `large/high-resolution-images.pdf`
+- **Size**: ~1.2 KB
 - **Features**:
-  - High-resolution images
-  - Multiple image formats
-  - Large embedded resources
-  - Compression optimization
+  - High-resolution image specification (1920x1080)
+  - JPEG/DCT compressed image
+  - Large image dimensions
+  - DeviceRGB color space
+  - 8-bit color depth
 - **Use Cases**:
-  - Large resource handling
-  - Memory stress testing
-  - Image processing performance
-  - Compression benchmarking
+  - High-resolution image handling
+  - Large image memory management
+  - Image rendering performance
+  - JPEG decompression testing
+  - High-DPI image support
 
 ---
 
@@ -377,12 +457,17 @@ doc.end();
 | **Multi-Page** | ❌ | ✅ | ✅ | ✅ | ✅ |
 | **Metadata** | ❌ | ❌ | ✅ | ✅ | ✅ |
 | **Links** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Outlines** | ❌ | ❌ | ✅ | ✅ | ✅ |
 | **Forms** | ❌ | ❌ | ❌ | ✅ | ✅ |
-| **Images** | ❌ | ❌ | ❌ | 🚧 | 🚧 |
-| **Annotations** | ❌ | ❌ | ❌ | 🚧 | ✅ |
-| **Performance** | ❌ | ❌ | ❌ | ❌ | 🚧 |
+| **Images** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Annotations** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Attachments** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Encryption** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Linearization** | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Error Handling** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Performance** | ❌ | ❌ | ❌ | ❌ | ✅ |
 
-✅ = Covered | ❌ = Not applicable | 🚧 = Planned
+✅ = Covered | ❌ = Not applicable
 
 ---
 
@@ -398,18 +483,36 @@ doc.end();
 
 ---
 
-## TODO
+## File Summary
 
-- [ ] Add `complex/with-images.pdf` (embedded images)
-- [ ] Add `complex/with-annotations.pdf` (markup annotations)
-- [ ] Add `complex/encrypted.pdf` (password-protected)
-- [ ] Add `large/multi-page-100.pdf` (100+ pages)
-- [ ] Add `large/high-resolution-images.pdf` (large embedded images)
-- [ ] Add `minimal/corrupted.pdf` (intentionally malformed for error handling)
-- [ ] Add `medium/with-outline.pdf` (document outline/bookmarks)
-- [ ] Add `medium/with-attachments.pdf` (file attachments)
-- [ ] Add `complex/linearized.pdf` (web-optimized PDF)
-- [ ] Add `complex/pdf2.0.pdf` (PDF 2.0 features)
+All core test files are implemented and tracked with Git LFS:
+
+**Minimal** (2 files):
+- `empty.pdf` - Minimal valid PDF structure
+- `corrupted.pdf` - Intentionally malformed for error handling
+
+**Simple** (2 files):
+- `hello-world.pdf` - Single page with text
+- `multi-page.pdf` - 3 pages with content
+
+**Medium** (4 files):
+- `with-metadata.pdf` - Document metadata and properties
+- `with-links.pdf` - Internal navigation links
+- `with-outline.pdf` - Document outline/bookmarks
+- `with-attachments.pdf` - File attachments/embedded files
+
+**Complex** (5 files):
+- `with-forms.pdf` - AcroForm fields and widgets
+- `with-images.pdf` - Embedded JPEG/PNG images
+- `with-annotations.pdf` - Text markup and shape annotations
+- `encrypted.pdf` - Password-protected PDF
+- `linearized.pdf` - Web-optimized PDF
+
+**Large** (2 files):
+- `multi-page-100.pdf` - 100+ pages for performance testing
+- `high-resolution-images.pdf` - Large embedded images
+
+**Total**: 15 test PDF files covering all core PDF features
 
 ---
 
