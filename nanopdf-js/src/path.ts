@@ -1,6 +1,6 @@
 /**
  * Path - PDF path and stroke operations
- * 
+ *
  * This module provides 100% API compatibility with MuPDF's path operations.
  * Paths are used for drawing vector graphics in PDFs.
  */
@@ -290,10 +290,10 @@ export class Path {
   moveTo(x: number, y: number): this;
   moveTo(point: PointLike): this;
   moveTo(xOrPoint: number | PointLike, y?: number): this {
-    const [x, actualY] = typeof xOrPoint === 'number' 
-      ? [xOrPoint, y!] 
+    const [x, actualY] = typeof xOrPoint === 'number'
+      ? [xOrPoint, y!]
       : [xOrPoint.x, xOrPoint.y];
-    
+
     this._commands.push({ cmd: PathCmd.MoveTo, params: [x, actualY] });
     this._currentPoint = new Point(x, actualY);
     return this;
@@ -308,7 +308,7 @@ export class Path {
     const [x, actualY] = typeof xOrPoint === 'number'
       ? [xOrPoint, y!]
       : [xOrPoint.x, xOrPoint.y];
-    
+
     this._commands.push({ cmd: PathCmd.LineTo, params: [x, actualY] });
     this._currentPoint = new Point(x, actualY);
     return this;
@@ -322,9 +322,9 @@ export class Path {
     cx2: number, cy2: number,
     x: number, y: number
   ): this {
-    this._commands.push({ 
-      cmd: PathCmd.CurveTo, 
-      params: [cx1, cy1, cx2, cy2, x, y] 
+    this._commands.push({
+      cmd: PathCmd.CurveTo,
+      params: [cx1, cy1, cx2, cy2, x, y]
     });
     this._currentPoint = new Point(x, y);
     return this;
@@ -334,9 +334,9 @@ export class Path {
    * Draw a quadratic Bézier curve
    */
   quadTo(cx: number, cy: number, x: number, y: number): this {
-    this._commands.push({ 
-      cmd: PathCmd.QuadTo, 
-      params: [cx, cy, x, y] 
+    this._commands.push({
+      cmd: PathCmd.QuadTo,
+      params: [cx, cy, x, y]
     });
     this._currentPoint = new Point(x, y);
     return this;
@@ -354,9 +354,9 @@ export class Path {
    * Add a rectangle to the path
    */
   rectTo(x: number, y: number, w: number, h: number): this {
-    this._commands.push({ 
-      cmd: PathCmd.RectTo, 
-      params: [x, y, w, h] 
+    this._commands.push({
+      cmd: PathCmd.RectTo,
+      params: [x, y, w, h]
     });
     // Rectangle starts and ends at (x, y)
     this._currentPoint = new Point(x, y);
@@ -434,16 +434,16 @@ export class Path {
         case PathCmd.MoveTo:
         case PathCmd.LineTo:
           {
-            const p = m.transformPoint(cmd.params[0]!, cmd.params[1]!);
+            const p = m.transformPoint({ x: cmd.params[0]!, y: cmd.params[1]! });
             cmd.params[0] = p.x;
             cmd.params[1] = p.y;
           }
           break;
         case PathCmd.CurveTo:
           {
-            const p1 = m.transformPoint(cmd.params[0]!, cmd.params[1]!);
-            const p2 = m.transformPoint(cmd.params[2]!, cmd.params[3]!);
-            const p3 = m.transformPoint(cmd.params[4]!, cmd.params[5]!);
+            const p1 = m.transformPoint({ x: cmd.params[0]!, y: cmd.params[1]! });
+            const p2 = m.transformPoint({ x: cmd.params[2]!, y: cmd.params[3]! });
+            const p3 = m.transformPoint({ x: cmd.params[4]!, y: cmd.params[5]! });
             cmd.params[0] = p1.x;
             cmd.params[1] = p1.y;
             cmd.params[2] = p2.x;
@@ -454,8 +454,8 @@ export class Path {
           break;
         case PathCmd.QuadTo:
           {
-            const p1 = m.transformPoint(cmd.params[0]!, cmd.params[1]!);
-            const p2 = m.transformPoint(cmd.params[2]!, cmd.params[3]!);
+            const p1 = m.transformPoint({ x: cmd.params[0]!, y: cmd.params[1]! });
+            const p2 = m.transformPoint({ x: cmd.params[2]!, y: cmd.params[3]! });
             cmd.params[0] = p1.x;
             cmd.params[1] = p1.y;
             cmd.params[2] = p2.x;
@@ -470,8 +470,8 @@ export class Path {
             const x2 = x1 + cmd.params[2]!;
             const y2 = y1 + cmd.params[3]!;
             
-            const p1 = m.transformPoint(x1, y1);
-            const p2 = m.transformPoint(x2, y2);
+            const p1 = m.transformPoint({ x: x1, y: y1 });
+            const p2 = m.transformPoint({ x: x2, y: y2 });
             
             cmd.params[0] = Math.min(p1.x, p2.x);
             cmd.params[1] = Math.min(p1.y, p2.y);
