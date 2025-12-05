@@ -31,7 +31,7 @@ describe('DisplayList Module', () => {
 
     it('should run display list', () => {
       displayList = new DisplayList(null as any);
-      displayList.run(null as any, Matrix.identity(), Rect.infinite(), null as any);
+      displayList.run(null as any, Matrix.IDENTITY, Rect.infinite(), null as any);
       // Verify it doesn't throw
     });
 
@@ -65,8 +65,8 @@ describe('DisplayList Module', () => {
       // (commands would be added via device)
 
       // Run multiple times (cached)
-      displayList.run(null as any, Matrix.identity(), Rect.infinite(), null as any);
-      displayList.run(null as any, Matrix.identity(), Rect.infinite(), null as any);
+      displayList.run(null as any, Matrix.IDENTITY, Rect.infinite(), null as any);
+      displayList.run(null as any, Matrix.IDENTITY, Rect.infinite(), null as any);
 
       expect(displayList.isValid()).toBe(true);
     });
@@ -92,7 +92,7 @@ describe('DisplayList Module', () => {
     it('should clear and reuse', () => {
       const displayList = new DisplayList(null as any);
 
-      displayList.run(null as any, Matrix.identity(), Rect.infinite(), null as any);
+      displayList.run(null as any, Matrix.IDENTITY, Rect.infinite(), null as any);
       expect(displayList.isEmpty()).toBe(false);
 
       displayList.clear();

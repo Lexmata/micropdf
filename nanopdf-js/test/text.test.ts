@@ -50,19 +50,19 @@ describe('Text Module', () => {
 
     it('should get bounding box', () => {
       text = new Text(null as any);
-      const bbox = text.bbox(null as any, Matrix.identity());
+      const bbox = text.getBounds(null as any, Matrix.IDENTITY);
       expect(bbox).toBeInstanceOf(Rect);
     });
 
     it('should show glyph', () => {
       text = new Text(null as any);
-      text.showGlyph(null as any, Matrix.identity(), 65, 0x41, false, null as any);
+      text.showGlyph(null as any, Matrix.IDENTITY, 65, 0x41, false, null as any);
       // Verify it doesn't throw
     });
 
     it('should show string', () => {
       text = new Text(null as any);
-      text.showString(null as any, Matrix.identity(), 'Hello', false, null as any);
+      text.showString(null as any, Matrix.IDENTITY, 'Hello', false, null as any);
       // Verify it doesn't throw
     });
 
@@ -105,7 +105,7 @@ describe('Text Module', () => {
   describe('Text Integration', () => {
     it('should handle text rendering', () => {
       const text = new Text(null as any);
-      const matrix = Matrix.identity();
+      const matrix = Matrix.IDENTITY;
 
       text.showString(null as any, matrix, 'Hello, World!', false, null as any);
       expect(text.isEmpty()).toBe(false);
@@ -127,15 +127,15 @@ describe('Text Module', () => {
 
     it('should handle text bounding boxes', () => {
       const text = new Text(null as any);
-      const matrix = Matrix.identity();
+      const matrix = Matrix.IDENTITY;
 
-      const bbox = text.bbox(null as any, matrix);
+      const bbox = text.getBounds(null as any, matrix);
       expect(bbox).toBeInstanceOf(Rect);
     });
 
     it('should clone text with content', () => {
       const text = new Text(null as any);
-      text.showString(null as any, Matrix.identity(), 'Test', false, null as any);
+      text.showString(null as any, Matrix.IDENTITY, 'Test', false, null as any);
 
       const cloned = text.clone();
       expect(cloned).toBeDefined();

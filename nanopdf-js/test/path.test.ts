@@ -120,7 +120,7 @@ describe('Path Module', () => {
     });
 
     it('should handle edge case: empty transform', () => {
-      const transformed = path.transform(Matrix.identity());
+      const transformed = path.transform(Matrix.IDENTITY);
       expect(transformed.isEmpty()).toBe(true);
     });
 

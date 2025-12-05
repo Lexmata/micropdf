@@ -53,7 +53,7 @@ describe('Device Module', () => {
     it('should handle begin/end tile', () => {
       device = new Device(null as any);
       const rect = new Rect(0, 0, 100, 100);
-      const matrix = Matrix.identity();
+      const matrix = Matrix.IDENTITY;
 
       device.beginTile(rect, rect, 1.0, 0, matrix, 0);
       device.endTile();
@@ -65,7 +65,7 @@ describe('Device Module', () => {
       device.fillPath(
         null as any,
         true,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,
@@ -79,7 +79,7 @@ describe('Device Module', () => {
       device.strokePath(
         null as any,
         null as any,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,
@@ -90,19 +90,19 @@ describe('Device Module', () => {
 
     it('should handle clip path', () => {
       device = new Device(null as any);
-      device.clipPath(null as any, true, Matrix.identity(), null as any);
+      device.clipPath(null as any, true, Matrix.IDENTITY, null as any);
       // Verify it doesn't throw
     });
 
     it('should handle clip stroke path', () => {
       device = new Device(null as any);
-      device.clipStrokePath(null as any, null as any, Matrix.identity(), null as any);
+      device.clipStrokePath(null as any, null as any, Matrix.IDENTITY, null as any);
       // Verify it doesn't throw
     });
 
     it('should handle fill text', () => {
       device = new Device(null as any);
-      device.fillText(null as any, Matrix.identity(), null as any, 1.0, null as any, null as any);
+      device.fillText(null as any, Matrix.IDENTITY, null as any, 1.0, null as any, null as any);
       // Verify it doesn't throw
     });
 
@@ -111,7 +111,7 @@ describe('Device Module', () => {
       device.strokeText(
         null as any,
         null as any,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,
@@ -122,25 +122,25 @@ describe('Device Module', () => {
 
     it('should handle clip text', () => {
       device = new Device(null as any);
-      device.clipText(null as any, Matrix.identity(), null as any);
+      device.clipText(null as any, Matrix.IDENTITY, null as any);
       // Verify it doesn't throw
     });
 
     it('should handle clip stroke text', () => {
       device = new Device(null as any);
-      device.clipStrokeText(null as any, null as any, Matrix.identity(), null as any);
+      device.clipStrokeText(null as any, null as any, Matrix.IDENTITY, null as any);
       // Verify it doesn't throw
     });
 
     it('should handle ignore text', () => {
       device = new Device(null as any);
-      device.ignoreText(null as any, Matrix.identity());
+      device.ignoreText(null as any, Matrix.IDENTITY);
       // Verify it doesn't throw
     });
 
     it('should handle fill image', () => {
       device = new Device(null as any);
-      device.fillImage(null as any, Matrix.identity(), 1.0, null as any);
+      device.fillImage(null as any, Matrix.IDENTITY, 1.0, null as any);
       // Verify it doesn't throw
     });
 
@@ -148,7 +148,7 @@ describe('Device Module', () => {
       device = new Device(null as any);
       device.fillImageMask(
         null as any,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,
@@ -159,7 +159,7 @@ describe('Device Module', () => {
 
     it('should handle clip image mask', () => {
       device = new Device(null as any);
-      device.clipImageMask(null as any, Matrix.identity(), null as any);
+      device.clipImageMask(null as any, Matrix.IDENTITY, null as any);
       // Verify it doesn't throw
     });
 
@@ -191,7 +191,7 @@ describe('Device Module', () => {
   describe('Device Integration', () => {
     it('should handle drawing workflow', () => {
       const device = new Device(null as any);
-      const matrix = Matrix.identity();
+      const matrix = Matrix.IDENTITY;
       const rect = new Rect(0, 0, 100, 100);
 
       device.beginTile(rect, rect, 1.0, 0, matrix, 0);
@@ -213,7 +213,7 @@ describe('Device Module', () => {
 
     it('should handle clipping workflow', () => {
       const device = new Device(null as any);
-      const matrix = Matrix.identity();
+      const matrix = Matrix.IDENTITY;
 
       device.clipPath(null as any, true, matrix, null as any);
       device.fillPath(null as any, true, matrix, null as any, 1.0, null as any, null as any);
@@ -231,7 +231,7 @@ describe('Device Module', () => {
       device.fillPath(
         null as any,
         true,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,
@@ -251,7 +251,7 @@ describe('Device Module', () => {
       device.fillPath(
         null as any,
         true,
-        Matrix.identity(),
+        Matrix.IDENTITY,
         null as any,
         1.0,
         null as any,

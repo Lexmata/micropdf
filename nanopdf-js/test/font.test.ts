@@ -73,7 +73,7 @@ describe('Font Module', () => {
 
     it('should get glyph bounding box', () => {
       font = new Font(null as any);
-      const bbox = font.boundGlyph(1, Matrix.identity());
+      const bbox = font.boundGlyph(1, Matrix.IDENTITY);
       expect(bbox).toBeInstanceOf(Rect);
     });
 
@@ -85,7 +85,7 @@ describe('Font Module', () => {
 
     it('should get glyph outline', () => {
       font = new Font(null as any);
-      const outline = font.outlineGlyph(1, Matrix.identity());
+      const outline = font.outlineGlyph(1, Matrix.IDENTITY);
       // Outline might be null for some glyphs
       expect(outline === null || typeof outline === 'object').toBe(true);
     });
@@ -152,7 +152,7 @@ describe('Font Module', () => {
       const gid = font.encodeCharacter(65); // 'A'
 
       const advance = font.advanceGlyph(gid, false);
-      const bbox = font.boundGlyph(gid, Matrix.identity());
+      const bbox = font.boundGlyph(gid, Matrix.IDENTITY);
 
       expect(typeof advance).toBe('number');
       expect(bbox).toBeInstanceOf(Rect);
@@ -174,7 +174,7 @@ describe('Font Module', () => {
       const font = new Font(null as any);
       const gid = font.encodeCharacter(65); // 'A'
 
-      const outline = font.outlineGlyph(gid, Matrix.identity());
+      const outline = font.outlineGlyph(gid, Matrix.IDENTITY);
       expect(outline === null || typeof outline === 'object').toBe(true);
     });
   });

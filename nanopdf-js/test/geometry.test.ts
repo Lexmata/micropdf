@@ -248,7 +248,7 @@ describe('Geometry Module', () => {
 
   describe('Matrix', () => {
     it('should create an identity matrix', () => {
-      const m = Matrix.identity();
+      const m = Matrix.IDENTITY;
       expect(m.a).toBe(1);
       expect(m.b).toBe(0);
       expect(m.c).toBe(0);
@@ -314,7 +314,7 @@ describe('Geometry Module', () => {
     });
 
     it('should check if matrix is identity', () => {
-      const m1 = Matrix.identity();
+      const m1 = Matrix.IDENTITY;
       const m2 = Matrix.translate(10, 20);
       expect(m1.isIdentity()).toBe(true);
       expect(m2.isIdentity()).toBe(false);

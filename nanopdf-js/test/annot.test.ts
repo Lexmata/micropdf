@@ -29,8 +29,8 @@ describe('Annotation Module', () => {
       expect(AnnotationType.PrinterMark).toBeDefined();
       expect(AnnotationType.TrapNet).toBeDefined();
       expect(AnnotationType.Watermark).toBeDefined();
-      expect(AnnotationType['3D']).toBeDefined();
-      expect(AnnotationType.Unknown).toBeDefined();
+      expect(AnnotationType.ThreeD).toBeDefined();
+      expect(AnnotationType.Redact).toBeDefined();
     });
   });
 
