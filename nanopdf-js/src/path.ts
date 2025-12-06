@@ -1,40 +1,192 @@
 /**
- * Path - PDF path and stroke operations
+ * Path - PDF path construction and vector graphics
+ *
+ * This module provides comprehensive support for creating and manipulating vector paths
+ * used in PDF graphics. Paths are fundamental building blocks for drawing lines, curves,
+ * shapes, and complex vector graphics in PDF documents.
  *
  * This module provides 100% API compatibility with MuPDF's path operations.
- * Paths are used for drawing vector graphics in PDFs.
+ *
+ * @module path
+ * @example
+ * ```typescript
+ * import { Path, StrokeState, LineCap, LineJoin, Matrix } from 'nanopdf';
+ *
+ * // Create a simple path
+ * const path = Path.create();
+ * path.moveTo(10, 10);
+ * path.lineTo(100, 10);
+ * path.lineTo(100, 100);
+ * path.close();
+ *
+ * // Create a rectangle
+ * const rect = Path.create();
+ * rect.rect(0, 0, 200, 100);
+ *
+ * // Create a curve
+ * const curve = Path.create();
+ * curve.moveTo(0, 0);
+ * curve.curveTo(50, 100, 100, 100, 150, 0);
+ *
+ * // Configure stroke
+ * const stroke = StrokeState.create();
+ * stroke.setLineWidth(2);
+ * stroke.setLineCap(LineCap.Round);
+ * stroke.setLineJoin(LineJoin.Round);
+ * stroke.setDash([5, 3], 0); // 5 on, 3 off
+ *
+ * // Transform path
+ * const matrix = Matrix.scale(2, 2);
+ * path.transform(matrix);
+ * ```
  */
 
 import { Point, Rect, Matrix, type PointLike, type MatrixLike } from './geometry.js';
 
 /**
- * Line cap styles
+ * Line cap styles determine how the ends of stroked paths are rendered.
+ *
+ * @enum {number}
+ * @example
+ * ```typescript
+ * const stroke = StrokeState.create();
+ * stroke.setLineCap(LineCap.Round); // Rounded end caps
+ * stroke.setStartCap(LineCap.Square); // Square start cap
+ * stroke.setEndCap(LineCap.Butt); // Flat end cap
+ * ```
  */
 export enum LineCap {
+  /**
+   * Butt cap - Line ends exactly at the endpoint (no extension).
+   * This is the most common and default cap style.
+   */
   Butt = 0,
+
+  /**
+   * Round cap - Line extends with a semicircular cap at the endpoint.
+   * The diameter equals the line width.
+   */
   Round = 1,
+
+  /**
+   * Square cap - Line extends with a square cap at the endpoint.
+   * The extension equals half the line width.
+   */
   Square = 2,
+
+  /**
+   * Triangle cap - Line extends with a triangular cap at the endpoint.
+   * Less common, used for special effects.
+   */
   Triangle = 3
 }
 
 /**
- * Line join styles
+ * Line join styles determine how path segments connect at corners.
+ *
+ * @enum {number}
+ * @example
+ * ```typescript
+ * const stroke = StrokeState.create();
+ * stroke.setLineJoin(LineJoin.Round); // Smooth rounded corners
+ * stroke.setLineJoin(LineJoin.Miter); // Sharp pointed corners
+ * stroke.setMiterLimit(10); // Limit miter length
+ * ```
  */
 export enum LineJoin {
+  /**
+   * Miter join - Extends the outer edges until they meet at a point.
+   * Creates sharp corners but can become very long at acute angles.
+   * Use miterLimit to prevent excessive extension.
+   */
   Miter = 0,
+
+  /**
+   * Round join - Joins segments with a circular arc.
+   * Creates smooth, rounded corners with radius equal to half the line width.
+   */
   Round = 1,
+
+  /**
+   * Bevel join - Joins segments with a straight line across the corner.
+   * Creates a flat, beveled corner. Safe for all angles.
+   */
   Bevel = 2,
+
+  /**
+   * Miter XPS join - Miter join variant used in XPS documents.
+   * Similar to standard miter but with slightly different behavior.
+   */
   MiterXPS = 3
 }
 
 /**
- * Type aliases for backwards compatibility
+ * Type alias for line cap styles (backwards compatibility).
+ * @deprecated Use {@link LineCap} instead
+ * @type {typeof LineCap}
  */
 export const LineCapStyle = LineCap;
+
+/**
+ * Type alias for line join styles (backwards compatibility).
+ * @deprecated Use {@link LineJoin} instead
+ * @type {typeof LineJoin}
+ */
 export const LineJoinStyle = LineJoin;
 
 /**
- * Stroke state (line width, caps, joins, dash pattern)
+ * Stroke state configuration for path rendering.
+ *
+ * StrokeState encapsulates all the properties that control how paths are stroked
+ * (drawn with lines). This includes line width, cap styles, join styles, miter limits,
+ * and dash patterns.
+ *
+ * **Reference Counting**: StrokeState uses manual reference counting. Call `keep()` to
+ * increment the reference count and `drop()` to decrement it.
+ *
+ * @class StrokeState
+ * @example
+ * ```typescript
+ * // Create default stroke state
+ * const stroke = StrokeState.create();
+ *
+ * // Configure stroke properties
+ * stroke.setLineWidth(2.5);
+ * stroke.setStartCap(LineCap.Round);
+ * stroke.setLineJoin(LineJoin.Round);
+ * stroke.setMiterLimit(10);
+ *
+ * // Set dash pattern: 5 units on, 3 units off
+ * stroke.setDash([5, 3], 0);
+ *
+ * // Clone for variations
+ * const thickStroke = stroke.clone();
+ * thickStroke.setLineWidth(5);
+ *
+ * // Clean up
+ * stroke.drop();
+ * thickStroke.drop();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Create dotted line
+ * const dotted = StrokeState.create();
+ * dotted.setLineWidth(1);
+ * dotted.setLineCap(LineCap.Round);
+ * dotted.setDash([2, 2], 0); // 2 on, 2 off
+ *
+ * // Create dashed line
+ * const dashed = StrokeState.create();
+ * dashed.setLineWidth(2);
+ * dashed.setDash([10, 5], 0); // 10 on, 5 off
+ *
+ * // Create solid line with rounded corners
+ * const rounded = StrokeState.create();
+ * rounded.setLineWidth(3);
+ * rounded.setLineCap(LineCap.Round);
+ * rounded.setLineJoin(LineJoin.Round);
+ * ```
  */
 export class StrokeState {
   private _lineWidth: number = 1.0;
@@ -231,7 +383,90 @@ interface PathCommand {
 }
 
 /**
- * A graphics path for drawing shapes
+ * A graphics path for constructing vector shapes and drawings.
+ *
+ * Path represents a sequence of drawing commands that define vector graphics.
+ * Paths can contain lines, curves, rectangles, and other geometric primitives.
+ * They can be stroked (outlined) or filled to create visible graphics in PDFs.
+ *
+ * **Path Construction**: Paths are built using a sequence of commands:
+ * - `moveTo()` - Start a new subpath at a point
+ * - `lineTo()` - Draw a straight line to a point
+ * - `curveTo()` - Draw a cubic Bézier curve
+ * - `quadTo()` - Draw a quadratic Bézier curve
+ * - `rect()` - Add a rectangle
+ * - `closePath()` / `close()` - Close the current subpath
+ *
+ * **Reference Counting**: Paths use manual reference counting. Call `keep()` to
+ * increment the reference count and `drop()` to decrement it.
+ *
+ * @class Path
+ * @example
+ * ```typescript
+ * // Draw a triangle
+ * const triangle = Path.create();
+ * triangle.moveTo(50, 0);
+ * triangle.lineTo(100, 100);
+ * triangle.lineTo(0, 100);
+ * triangle.close();
+ *
+ * // Draw a rectangle
+ * const rect = Path.create();
+ * rect.rect(10, 10, 200, 100);
+ *
+ * // Draw a rounded rectangle
+ * const roundedRect = Path.create();
+ * const x = 10, y = 10, w = 200, h = 100, r = 10;
+ * roundedRect.moveTo(x + r, y);
+ * roundedRect.lineTo(x + w - r, y);
+ * roundedRect.curveTo(x + w, y, x + w, y, x + w, y + r);
+ * roundedRect.lineTo(x + w, y + h - r);
+ * roundedRect.curveTo(x + w, y + h, x + w, y + h, x + w - r, y + h);
+ * roundedRect.lineTo(x + r, y + h);
+ * roundedRect.curveTo(x, y + h, x, y + h, x, y + h - r);
+ * roundedRect.lineTo(x, y + r);
+ * roundedRect.curveTo(x, y, x, y, x + r, y);
+ * roundedRect.close();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Draw a sine wave
+ * const wave = Path.create();
+ * wave.moveTo(0, 50);
+ * for (let x = 0; x <= 200; x += 5) {
+ *   const y = 50 + Math.sin(x * 0.1) * 20;
+ *   wave.lineTo(x, y);
+ * }
+ *
+ * // Transform the path
+ * const matrix = Matrix.scale(2, 2);
+ * wave.transform(matrix);
+ *
+ * // Check if empty
+ * if (!wave.isEmpty()) {
+ *   console.log('Path has commands');
+ * }
+ *
+ * // Clean up
+ * wave.drop();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Draw a circle approximation with cubic Bézier curves
+ * const circle = Path.create();
+ * const cx = 100, cy = 100, r = 50;
+ * const k = 0.5522847498; // 4/3 * (sqrt(2) - 1)
+ * const kr = r * k;
+ *
+ * circle.moveTo(cx, cy - r);
+ * circle.curveTo(cx + kr, cy - r, cx + r, cy - kr, cx + r, cy);
+ * circle.curveTo(cx + r, cy + kr, cx + kr, cy + r, cx, cy + r);
+ * circle.curveTo(cx - kr, cy + r, cx - r, cy + kr, cx - r, cy);
+ * circle.curveTo(cx - r, cy - kr, cx - kr, cy - r, cx, cy - r);
+ * circle.close();
+ * ```
  */
 export class Path {
   private _commands: PathCommand[] = [];

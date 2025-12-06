@@ -1,7 +1,33 @@
 /**
- * Buffer - Dynamic byte array wrapper
+ * Buffer - Dynamic byte array wrapper for PDF data manipulation
  *
- * This implementation mirrors the Rust `fitz::buffer::Buffer` for 100% API compatibility.
+ * This module provides a flexible buffer implementation for working with binary PDF data.
+ * Buffers are used throughout the library for reading, writing, and manipulating
+ * PDF content, streams, and binary resources.
+ *
+ * This implementation mirrors the Rust `fitz::buffer::Buffer` for 100% API compatibility
+ * and wraps Node.js Buffer for efficient memory management.
+ *
+ * @module buffer
+ * @example
+ * ```typescript
+ * import { Buffer } from 'nanopdf';
+ *
+ * // Create from string
+ * const buf = Buffer.fromString('Hello, PDF!');
+ *
+ * // Append data
+ * buf.append(Buffer.fromString(' More text.'));
+ *
+ * // Get as string
+ * console.log(buf.toString()); // "Hello, PDF! More text."
+ *
+ * // Get raw bytes
+ * const bytes = buf.toUint8Array();
+ *
+ * // Get size
+ * console.log(buf.length); // 24
+ * ```
  */
 
 import { NanoPDFError, type BufferLike, isBufferLike } from './types.js';
@@ -10,13 +36,66 @@ import { NanoPDFError, type BufferLike, isBufferLike } from './types.js';
 export { BufferLike, isBufferLike };
 
 /**
- * A dynamic byte buffer for PDF data
+ * A dynamic byte buffer for PDF data manipulation.
+ *
+ * Buffer provides efficient storage and manipulation of binary data. It's used
+ * throughout the library for PDF streams, content, images, and other binary resources.
+ *
+ * **Key Features:**
+ * - Dynamic resizing as data is appended
+ * - Zero-copy conversion to/from Node.js Buffer
+ * - String encoding/decoding support
+ * - Slice and copy operations
+ * - Compatible with standard Node.js Buffer operations
  *
  * Mirrors the Rust `Buffer` implementation with `bytes` crate semantics.
+ *
+ * @class Buffer
+ * @example
+ * ```typescript
+ * // Create empty buffer
+ * const buf1 = Buffer.create();
+ *
+ * // Create from string
+ * const buf2 = Buffer.fromString('Hello');
+ *
+ * // Create from bytes
+ * const bytes = new Uint8Array([72, 101, 108, 108, 111]);
+ * const buf3 = Buffer.fromUint8Array(bytes);
+ *
+ * // Append data
+ * buf1.append(buf2);
+ * buf1.append(Buffer.fromString(' World!'));
+ *
+ * // Extract data
+ * console.log(buf1.toString()); // "Hello World!"
+ * console.log(buf1.length); // 12
+ *
+ * // Slice
+ * const hello = buf1.slice(0, 5);
+ * console.log(hello.toString()); // "Hello"
+ *
+ * // Clear
+ * buf1.clear();
+ * console.log(buf1.length); // 0
+ * ```
  */
 export class Buffer {
+  /**
+   * The underlying Node.js Buffer containing the data.
+   * @private
+   * @type {globalThis.Buffer}
+   */
   private _data: globalThis.Buffer;
 
+  /**
+   * Creates a new Buffer instance.
+   *
+   * **Note**: Use static factory methods instead of calling this constructor directly.
+   *
+   * @private
+   * @param {globalThis.Buffer} data - The underlying Node.js Buffer
+   */
   private constructor(data: globalThis.Buffer) {
     this._data = data;
   }
@@ -26,35 +105,114 @@ export class Buffer {
   // ============================================================================
 
   /**
-   * Create a new empty buffer with optional initial capacity
+   * Creates a new empty buffer with optional initial capacity.
+   *
+   * The capacity parameter is a hint for initial memory allocation. The buffer
+   * will automatically grow as needed when data is appended.
+   *
+   * @static
+   * @param {number} [capacity=0] - Initial capacity in bytes (optional)
+   * @returns {Buffer} A new empty buffer
+   * @example
+   * ```typescript
+   * // Create empty buffer
+   * const buf1 = Buffer.create();
+   *
+   * // Create with initial capacity
+   * const buf2 = Buffer.create(1024); // Reserve 1KB
+   * ```
    */
   static create(capacity = 0): Buffer {
     return new Buffer(globalThis.Buffer.alloc(capacity));
   }
 
   /**
-   * Create a buffer from a Node.js Buffer (zero-copy)
+   * Creates a buffer from a Node.js Buffer (zero-copy).
+   *
+   * This operation wraps the existing Buffer without copying data, making it
+   * very efficient. Modifications to the original Buffer will be visible in
+   * the NanoPDF Buffer and vice versa.
+   *
+   * @static
+   * @param {globalThis.Buffer} data - The Node.js Buffer to wrap
+   * @returns {Buffer} A new Buffer wrapping the provided data
+   * @example
+   * ```typescript
+   * const nodeBuffer = Buffer.from('Hello');
+   * const pdfBuffer = Buffer.fromBuffer(nodeBuffer);
+   * console.log(pdfBuffer.toString()); // "Hello"
+   * ```
    */
   static fromBuffer(data: globalThis.Buffer): Buffer {
     return new Buffer(data);
   }
 
   /**
-   * Create a buffer from a Uint8Array
+   * Creates a buffer from a Uint8Array.
+   *
+   * The data is copied into a new Node.js Buffer.
+   *
+   * @static
+   * @param {Uint8Array} data - The byte array to copy
+   * @returns {Buffer} A new Buffer containing the data
+   * @example
+   * ```typescript
+   * const bytes = new Uint8Array([72, 101, 108, 108, 111]);
+   * const buf = Buffer.fromUint8Array(bytes);
+   * console.log(buf.toString()); // "Hello"
+   * ```
    */
   static fromUint8Array(data: Uint8Array): Buffer {
     return new Buffer(globalThis.Buffer.from(data));
   }
 
   /**
-   * Create a buffer from an ArrayBuffer
+   * Creates a buffer from an ArrayBuffer.
+   *
+   * Useful for working with binary data from various Web APIs and file operations.
+   *
+   * @static
+   * @param {ArrayBuffer} data - The ArrayBuffer to convert
+   * @returns {Buffer} A new Buffer containing the data
+   * @example
+   * ```typescript
+   * const arrayBuffer = new ArrayBuffer(5);
+   * const view = new Uint8Array(arrayBuffer);
+   * view.set([72, 101, 108, 108, 111]);
+   * const buf = Buffer.fromArrayBuffer(arrayBuffer);
+   * console.log(buf.toString()); // "Hello"
+   * ```
    */
   static fromArrayBuffer(data: ArrayBuffer): Buffer {
     return new Buffer(globalThis.Buffer.from(data));
   }
 
   /**
-   * Create a buffer from a string (UTF-8 encoded)
+   * Creates a buffer from a string with specified encoding.
+   *
+   * Supports all standard Node.js buffer encodings including UTF-8, ASCII,
+   * Base64, Hex, and more.
+   *
+   * @static
+   * @param {string} str - The string to encode
+   * @param {BufferEncoding} [encoding='utf-8'] - The character encoding to use
+   * @returns {Buffer} A new Buffer containing the encoded string
+   * @example
+   * ```typescript
+   * // UTF-8 (default)
+   * const buf1 = Buffer.fromString('Hello');
+   *
+   * // ASCII
+   * const buf2 = Buffer.fromString('Hello', 'ascii');
+   *
+   * // Base64
+   * const buf3 = Buffer.fromString('SGVsbG8=', 'base64');
+   * console.log(buf3.toString()); // "Hello"
+   *
+   * // Hex
+   * const buf4 = Buffer.fromString('48656c6c6f', 'hex');
+   * console.log(buf4.toString()); // "Hello"
+   * ```
    */
   static fromString(str: string, encoding: BufferEncoding = 'utf-8'): Buffer {
     return new Buffer(globalThis.Buffer.from(str, encoding));
