@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NanoPDF API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 3rem 2rem;
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .api-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .api-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .api-card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .api-card p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .api-card .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+
+        .api-card .badge.rust {
+            background: #ce422b;
+        }
+
+        .api-card .badge.go {
+            background: #00ADD8;
+        }
+
+        .api-card .badge.nodejs {
+            background: #339933;
+        }
+
+        .features {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        footer {
+            background: #f5f5f5;
+            padding: 2rem;
+            text-align: center;
+            color: #666;
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 NanoPDF API Documentation</h1>
+            <p class="subtitle">Complete reference for all language bindings</p>
+        </header>
+
+        <div class="content">
+            <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem;">
+                Choose your language to view the complete API documentation
+            </p>
+
+            <div class="api-grid">
+                <!-- Rust Documentation -->
+                <a href="https://docs.rs/nanopdf" class="api-card" target="_blank">
+                    <h2>🦀 Rust Core Library</h2>
+                    <div>
+                        <span class="badge rust">Rust</span>
+                        <span class="badge">Core</span>
+                    </div>
+                    <p>Complete Rust API documentation with inline examples and type information.</p>
+                    <ul class="features">
+                        <li>11,000+ lines of documented code</li>
+                        <li>660+ FFI functions</li>
+                        <li>All modules with rustdoc</li>
+                        <li>Type-level documentation</li>
+                    </ul>
+                </a>
+
+                <!-- Go Documentation -->
+                <a href="https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf" class="api-card" target="_blank">
+                    <h2>🐹 Go Bindings</h2>
+                    <div>
+                        <span class="badge go">Go</span>
+                        <span class="badge">CGO</span>
+                    </div>
+                    <p>Idiomatic Go API with comprehensive godoc coverage and examples.</p>
+                    <ul class="features">
+                        <li>8 FFI modules documented</li>
+                        <li>Easy API for fluent operations</li>
+                        <li>16 runnable examples</li>
+                        <li>90.5% test coverage</li>
+                    </ul>
+                </a>
+
+                <!-- Node.js Documentation -->
+                <a href="./nodejs/index.html" class="api-card">
+                    <h2>📦 Node.js / TypeScript</h2>
+                    <div>
+                        <span class="badge nodejs">Node.js</span>
+                        <span class="badge">TypeScript</span>
+                    </div>
+                    <p>TypeScript definitions with complete JSDoc coverage and interactive examples.</p>
+                    <ul class="features">
+                        <li>Full TypeScript definitions</li>
+                        <li>Easy & Simple APIs</li>
+                        <li>N-API native bindings</li>
+                        <li>20+ code examples</li>
+                    </ul>
+                </a>
+            </div>
+
+            <div style="margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+                <h3 style="color: #667eea; margin-bottom: 1rem;">📖 Additional Resources</h3>
+                <ul style="list-style: none;">
+                    <li style="padding: 0.5rem 0;">
+                        <a href="https://github.com/lexmata/nanopdf" style="color: #667eea; text-decoration: none;">
+                            📁 GitHub Repository
+                        </a>
+                    </li>
+                    <li style="padding: 0.5rem 0;">
+                        <a href="https://lexmata.github.io/nanopdf/dev/bench/" style="color: #667eea; text-decoration: none;">
+                            📊 Performance Benchmarks
+                        </a>
+                    </li>
+                    <li style="padding: 0.5rem 0;">
+                        <a href="https://github.com/lexmata/nanopdf/blob/main/README.md" style="color: #667eea; text-decoration: none;">
+                            📚 Getting Started Guide
+                        </a>
+                    </li>
+                    <li style="padding: 0.5rem 0;">
+                        <a href="https://github.com/lexmata/nanopdf/blob/main/COMPATIBILITY.md" style="color: #667eea; text-decoration: none;">
+                            🔄 MuPDF Compatibility Matrix
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                <strong>NanoPDF</strong> - A pure Rust PDF library
+            </p>
+            <p style="margin-top: 0.5rem;">
+                Made with ❤️ by <a href="https://lexmata.ai">Lexmata</a> |
+                <a href="https://github.com/lexmata/nanopdf/blob/main/LICENSE-MIT">MIT</a> /
+                <a href="https://github.com/lexmata/nanopdf/blob/main/LICENSE-APACHE">Apache 2.0</a> License
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
+

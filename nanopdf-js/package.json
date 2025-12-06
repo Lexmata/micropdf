@@ -21,11 +21,10 @@
   },
   "files": [
     "dist",
-    "native/**/*.cc",
-    "native/**/*.h",
-    "native/**/mupdf_minimal.h",
+    "native",
     "prebuilds",
-    "binding.gyp"
+    "binding.gyp",
+    "scripts"
   ],
   "scripts": {
     "build": "npm run build:ts",
@@ -35,6 +34,8 @@
     "build:from-rust": "node scripts/build-from-rust.js && npm run build:native",
     "prebuild": "prebuildify --napi --strip",
     "prebuild:all": "prebuildify --napi --strip --target 18.0.0 --target 20.0.0 --target 22.0.0",
+    "docs": "typedoc",
+    "docs:serve": "cd ../docs/api/nodejs && python3 -m http.server 8080",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -92,6 +93,8 @@
     "node-gyp": "^10.3.1",
     "prebuildify": "^6.0.1",
     "prettier": "^3.4.2",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },

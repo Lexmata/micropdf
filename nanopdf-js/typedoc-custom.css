@@ -1,0 +1,110 @@
+/* Custom styling for NanoPDF TypeDoc documentation */
+
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-accent: #8b5cf6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+}
+
+/* Header styling */
+.tsd-page-title h1 {
+  color: var(--color-primary);
+}
+
+/* Navigation improvements */
+.tsd-navigation a {
+  transition: all 0.2s ease;
+}
+
+.tsd-navigation a:hover {
+  color: var(--color-primary);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Code block improvements */
+code {
+  background-color: rgba(59, 130, 246, 0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Droid Sans Mono', monospace;
+}
+
+pre code {
+  display: block;
+  padding: 1em;
+  overflow-x: auto;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-left: 3px solid var(--color-primary);
+}
+
+/* Member signature improvements */
+.tsd-signature {
+  border-left: 3px solid var(--color-primary);
+}
+
+/* Category headers */
+.tsd-panel > h2 {
+  color: var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: 0.5em;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+/* Badges for tags */
+.tsd-tag {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+  margin: 0.2em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.tsd-tag.ts-flagPrivate {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.tsd-tag.ts-flagProtected {
+  background-color: rgba(251, 146, 60, 0.1);
+  color: #ea580c;
+}
+
+.tsd-tag.ts-flagOptional {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-primary);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #60a5fa;
+    --color-primary-dark: #93c5fd;
+  }
+
+  pre code {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .tsd-page-title h1 {
+    font-size: 1.5em;
+  }
+
+  .tsd-signature {
+    font-size: 0.9em;
+  }
+}
+
