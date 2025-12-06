@@ -218,6 +218,22 @@ void fz_run_display_list(fz_context ctx, fz_display_list_handle list, fz_device 
 fz_display_list_handle fz_new_display_list_from_page(fz_context ctx, fz_page page);
 
 // ============================================================================
+// Path Functions
+// ============================================================================
+
+typedef uint64_t fz_path_handle;
+typedef uint64_t fz_stroke_handle;
+
+fz_path_handle fz_new_path(fz_context ctx);
+void fz_drop_path(fz_context ctx, fz_path_handle path);
+void fz_moveto(fz_context ctx, fz_path_handle path, float x, float y);
+void fz_lineto(fz_context ctx, fz_path_handle path, float x, float y);
+void fz_curveto(fz_context ctx, fz_path_handle path, float x1, float y1, float x2, float y2, float x3, float y3);
+void fz_closepath(fz_context ctx, fz_path_handle path);
+void fz_rectto(fz_context ctx, fz_path_handle path, float x, float y, float w, float h);
+fz_rect fz_bound_path(fz_context ctx, fz_path_handle path, fz_stroke_handle stroke);
+
+// ============================================================================
 // Device Functions
 // ============================================================================
 

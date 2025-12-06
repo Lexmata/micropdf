@@ -148,7 +148,7 @@ pub extern "C" fn fz_bound_text(
 
             // Get stroke state if provided
             let stroke_opt = if stroke != 0 {
-                super::path::STROKE_STATES
+                super::path::STROKE_STORE
                     .get(stroke)
                     .and_then(|s| s.lock().ok().map(|guard| guard.clone()))
             } else {
