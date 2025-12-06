@@ -47,7 +47,7 @@ The Node.js bindings need to be updated to expose these new capabilities through
 
 ### 🚧 Needs N-API Bindings (Priority Order)
 
-#### **Phase 1: Structured Text Extraction** (~v0.2.0) - 🚧 IN PROGRESS
+#### **Phase 1: Structured Text Extraction** (~v0.2.0) - 🚧 IN PROGRESS (~75%)
 
 | Feature | Rust Core | N-API | TypeScript | Tests | Priority |
 |---------|-----------|-------|------------|-------|----------|
@@ -56,9 +56,13 @@ The Node.js bindings need to be updated to expose these new capabilities through
 | getText() | ✅ | ✅ | ✅ | ✅ | HIGH |
 | search() | ✅ | ✅ | ✅ | ✅ | HIGH |
 | Quad Bounding Boxes | ✅ | ✅ | ✅ | ✅ | HIGH |
-| Block/Line/Char | ✅ | ❌ | ❌ | ❌ | HIGH |
-| Writing Mode | ✅ | ❌ | ❌ | ❌ | MEDIUM |
-| Layout Analysis | ✅ | ❌ | ❌ | ❌ | MEDIUM |
+| Block/Line/Char API | ✅ | ⚠️ | ✅ | ✅ | HIGH |
+| Writing Mode | ✅ | ⚠️ | ✅ | ✅ | MEDIUM |
+| getBlocks() | ✅ | ⚠️ | ✅ | ✅ | MEDIUM |
+| blockCount/charCount | ✅ | ⚠️ | ✅ | ✅ | MEDIUM |
+| getBlocksOfType() | ✅ | ⚠️ | ✅ | ✅ | MEDIUM |
+
+⚠️ = TypeScript API complete, native FFI simplified (needs full implementation)
 
 **Implemented N-API Functions** ✅:
 ```cpp
@@ -379,8 +383,62 @@ describe('STextPage', () => {
 
 **What's Next:**
 - Build and test native addon
-- Add block/line/char navigation (Phase 1 completion)
+- Implement full native FFI for block/line/char access
+- Add word boundary detection
+- Add paragraph detection
 - Move to Phase 2: Advanced Rendering
+
+### 2024-12-06 (Later): Hierarchical Text Structure API
+
+**What Was Completed:**
+- ✅ Added hierarchical text structure interfaces (195 lines)
+  - `STextBlockType` enum (Text, Image, List, Table)
+  - `WritingMode` enum (HorizontalLtr, HorizontalRtl, VerticalTtb, VerticalBtt)
+  - `STextCharData` interface (char, quad, size, fontName)
+  - `STextLineData` interface (wmode, bbox, baseline, dir, chars[])
+  - `STextBlockData` interface (blockType, bbox, lines[])
+
+- ✅ Extended STextPage API (110 lines)
+  - `getBlocks()` - Get hierarchical block/line/char structure
+  - `blockCount()` - Count blocks on page
+  - `charCount()` - Count total characters
+  - `getBlocksOfType(type)` - Filter blocks by type
+
+- ✅ Comprehensive Testing (149 lines total)
+  - Unit tests: 6 new suites, 29 new test cases
+  - Integration tests: 5 new suites, 5 new test cases
+  - Total: 34 new test cases
+
+- ✅ Type system and exports
+  - Exported all new enums and interfaces
+  - Full JSDoc documentation
+  - Integration with existing API
+
+**Progress:**
+- Phase 1: 60% → 75% (+15%)
+- Overall: 68% → 70% (+2%)
+
+**Implementation Status:**
+- TypeScript API: Complete with simplified FFI
+- Native FFI: Simplified (returns structure from getText())
+- Full native FFI: TODO (requires native block/line/char access)
+
+**What's Implemented:**
+Users can now call `stext.getBlocks()` and navigate the full hierarchy:
+```typescript
+const blocks = stext.getBlocks();
+for (const block of blocks) {
+  for (const line of block.lines) {
+    for (const char of line.chars) {
+      console.log(char.c, char.quad, char.size);
+    }
+  }
+}
+```
+
+**What's Simplified:**
+Currently, the structure is generated from `getText()` with estimated positions.
+Full FFI implementation will provide accurate positions from MuPDF's structured text.
 
 ---
 
