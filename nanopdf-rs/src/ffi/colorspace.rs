@@ -981,7 +981,7 @@ mod tests {
     }
 
     #[test]
-    fn test_device_colorspaces() {
+    fn test_device_colorspace_handles() {
         assert_eq!(fz_device_gray(0), FZ_COLORSPACE_GRAY);
         assert_eq!(fz_device_rgb(0), FZ_COLORSPACE_RGB);
         assert_eq!(fz_device_bgr(0), FZ_COLORSPACE_BGR);
