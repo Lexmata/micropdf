@@ -57,14 +57,25 @@ export interface NativeAddon {
 
   // Text extraction
   extractText(ctx: NativeContext, page: NativePage): string;
-  extractTextBlocks(ctx: NativeContext, page: NativePage): Array<{
+  extractTextBlocks(
+    ctx: NativeContext,
+    page: NativePage
+  ): Array<{
     text: string;
     bbox: NativeRect;
   }>;
-  searchText(ctx: NativeContext, page: NativePage, needle: string, caseSensitive: boolean): NativeRect[];
+  searchText(
+    ctx: NativeContext,
+    page: NativePage,
+    needle: string,
+    caseSensitive: boolean
+  ): NativeRect[];
 
   // Links
-  getPageLinks(ctx: NativeContext, page: NativePage): Array<{
+  getPageLinks(
+    ctx: NativeContext,
+    page: NativePage
+  ): Array<{
     rect: NativeRect;
     uri?: string;
     page?: number;
@@ -93,7 +104,12 @@ export interface NativeAddon {
   getImageHeight(ctx: NativeContext, image: NativeImage): number;
   getImageColorspace(ctx: NativeContext, image: NativeImage): NativeColorspace;
   getImagePixmap(ctx: NativeContext, image: NativeImage, subarea?: NativeRect): NativePixmap;
-  scalePixmap(ctx: NativeContext, pixmap: NativePixmap, width: number, height: number): NativePixmap;
+  scalePixmap(
+    ctx: NativeContext,
+    pixmap: NativePixmap,
+    width: number,
+    height: number
+  ): NativePixmap;
 
   // Output operations
   openOutput(ctx: NativeContext, path: string): NativeOutput;
@@ -858,7 +874,10 @@ function createMockAddon(): NativeAddon {
     ) => Array<{ rect: NativeRect; uri?: string; page?: number }>,
 
     // Authentication
-    needsPassword: requireFFI('needsPassword') as (ctx: NativeContext, doc: NativeDocument) => boolean,
+    needsPassword: requireFFI('needsPassword') as (
+      ctx: NativeContext,
+      doc: NativeDocument
+    ) => boolean,
     authenticatePassword: requireFFI('authenticatePassword') as (
       ctx: NativeContext,
       doc: NativeDocument,
@@ -900,8 +919,14 @@ function createMockAddon(): NativeAddon {
       path: string
     ) => NativeImage,
     dropImage: requireFFI('dropImage') as (ctx: NativeContext, image: NativeImage) => void,
-    getImageWidth: requireFFI('getImageWidth') as (ctx: NativeContext, image: NativeImage) => number,
-    getImageHeight: requireFFI('getImageHeight') as (ctx: NativeContext, image: NativeImage) => number,
+    getImageWidth: requireFFI('getImageWidth') as (
+      ctx: NativeContext,
+      image: NativeImage
+    ) => number,
+    getImageHeight: requireFFI('getImageHeight') as (
+      ctx: NativeContext,
+      image: NativeImage
+    ) => number,
     getImageColorspace: requireFFI('getImageColorspace') as (
       ctx: NativeContext,
       image: NativeImage

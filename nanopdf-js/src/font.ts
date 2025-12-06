@@ -68,7 +68,9 @@ export class Font {
     const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
 
     if (!ctx) {
-      throw new Error('Font creation from memory requires native FFI bindings (fz_new_font_from_memory)');
+      throw new Error(
+        'Font creation from memory requires native FFI bindings (fz_new_font_from_memory)'
+      );
     }
 
     const font = new Font(name);
@@ -85,7 +87,9 @@ export class Font {
     const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
 
     if (!ctx) {
-      throw new Error('Font loading from file requires native FFI bindings (fz_new_font_from_file)');
+      throw new Error(
+        'Font loading from file requires native FFI bindings (fz_new_font_from_file)'
+      );
     }
 
     const name =

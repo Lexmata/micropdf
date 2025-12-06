@@ -132,7 +132,9 @@ export class Page {
     alpha: boolean = true
   ): Pixmap {
     if (!this._ctx || !this._page) {
-      throw new Error('Page rendering requires native FFI bindings (fz_run_page, fz_new_bbox_device)');
+      throw new Error(
+        'Page rendering requires native FFI bindings (fz_run_page, fz_new_bbox_device)'
+      );
     }
 
     const m = Matrix.from(matrix);
@@ -151,7 +153,13 @@ export class Page {
       type: colorspace.type.toString()
     };
 
-    const nativePixmap = native.renderPage(this._ctx, this._page, nativeMatrix, nativeColorspace, alpha);
+    const nativePixmap = native.renderPage(
+      this._ctx,
+      this._page,
+      nativeMatrix,
+      nativeColorspace,
+      alpha
+    );
 
     // Convert native pixmap to TypeScript Pixmap
     return Pixmap.create(colorspace, nativePixmap.width, nativePixmap.height, alpha);
@@ -193,7 +201,9 @@ export class Page {
    */
   getTextBlocks(): TextBlock[] {
     if (!this._ctx || !this._page) {
-      throw new Error('Text block extraction requires native FFI bindings (fz_new_stext_page_from_page)');
+      throw new Error(
+        'Text block extraction requires native FFI bindings (fz_new_stext_page_from_page)'
+      );
     }
     const blocks = native.extractTextBlocks(this._ctx, this._page);
     return blocks.map((block: { text: string; bbox: NativeRect }) => ({
@@ -209,7 +219,9 @@ export class Page {
    */
   getLinks(): Link[] {
     if (!this._ctx || !this._page) {
-      throw new Error('Link extraction requires native FFI bindings (fz_load_links, pdf_annot_type)');
+      throw new Error(
+        'Link extraction requires native FFI bindings (fz_load_links, pdf_annot_type)'
+      );
     }
     const links = native.getPageLinks(this._ctx, this._page);
     return links.map((link: { rect: NativeRect; uri?: string; page?: number }): Link => {

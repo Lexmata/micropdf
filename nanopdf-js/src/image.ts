@@ -124,7 +124,9 @@ export class Image {
     const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
 
     if (!ctx) {
-      throw new Error('Image loading from file requires native FFI bindings (fz_new_image_from_file)');
+      throw new Error(
+        'Image loading from file requires native FFI bindings (fz_new_image_from_file)'
+      );
     }
 
     const nativeImage = native.loadImageFromFile(ctx, path);
@@ -144,7 +146,9 @@ export class Image {
     const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
 
     if (!ctx) {
-      throw new Error('Image loading from buffer requires native FFI bindings (fz_new_image_from_buffer)');
+      throw new Error(
+        'Image loading from buffer requires native FFI bindings (fz_new_image_from_buffer)'
+      );
     }
 
     const nativeImage = native.loadImageFromMemory(ctx, Buffer.from(buffer));

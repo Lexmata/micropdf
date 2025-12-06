@@ -84,7 +84,9 @@ export class Archive {
     const ctx = (getDefaultContext() as unknown as { _nativeCtx?: NativeContext })?._nativeCtx;
 
     if (!ctx) {
-      throw new Error('Archive opening from buffer requires native FFI bindings (fz_open_archive_with_buffer)');
+      throw new Error(
+        'Archive opening from buffer requires native FFI bindings (fz_open_archive_with_buffer)'
+      );
     }
 
     const format = Archive.detectFormat(buffer);

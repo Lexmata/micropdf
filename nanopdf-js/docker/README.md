@@ -24,6 +24,7 @@ The Docker testing container:
 ```
 
 This will:
+
 - Build the Docker image
 - Compile the Rust library
 - Build the N-API native addon
@@ -309,10 +310,10 @@ pnpm test
 
 Inside the container:
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `NODE_ENV` | `test` | Test environment |
-| `PATH` | Includes pnpm, node-gyp | Tool access |
+| Variable   | Value                   | Purpose          |
+| ---------- | ----------------------- | ---------------- |
+| `NODE_ENV` | `test`                  | Test environment |
+| `PATH`     | Includes pnpm, node-gyp | Tool access      |
 
 ## Advanced Usage
 
@@ -426,6 +427,7 @@ Subsequent builds with cache: ~1-2 minutes
 ### Unit Tests
 
 Located in `test/`:
+
 - `buffer.test.ts` - Buffer operations
 - `context.test.ts` - Context management
 - `document.test.ts` - Document operations
@@ -436,6 +438,7 @@ Located in `test/`:
 ### Integration Tests
 
 Located in `test/integration/`:
+
 - Real PDF processing
 - End-to-end workflows
 - Performance tests
@@ -455,11 +458,11 @@ The container includes:
 
 ## Comparison with Other Approaches
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| **Docker** | Isolated, reproducible, CI-ready | Slower, requires Docker |
-| **Native** | Fast, local development | Requires Rust installed |
-| **GitHub Actions** | Automated, cloud-based | Only on push/PR |
+| Approach           | Pros                             | Cons                    |
+| ------------------ | -------------------------------- | ----------------------- |
+| **Docker**         | Isolated, reproducible, CI-ready | Slower, requires Docker |
+| **Native**         | Fast, local development          | Requires Rust installed |
+| **GitHub Actions** | Automated, cloud-based           | Only on push/PR         |
 
 ## Related Documentation
 
@@ -470,4 +473,3 @@ The container includes:
 ## License
 
 Same as the main project: Dual-licensed under Apache 2.0 and MIT.
-
