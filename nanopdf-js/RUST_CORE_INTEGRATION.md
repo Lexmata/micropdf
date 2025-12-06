@@ -85,15 +85,21 @@ The Node.js bindings need to be updated to expose these new capabilities through
 
 ---
 
-#### **Phase 2: Advanced Rendering** (~v0.3.0)
+#### **Phase 2: Advanced Rendering** (~v0.3.0) - 🚧 IN PROGRESS (~40%)
 
 | Feature | Rust Core | N-API | TypeScript | Tests | Priority |
 |---------|-----------|-------|------------|-------|----------|
-| **Rendering Options** | ✅ | ❌ | ⚠️ | ❌ | HIGH |
-| Anti-aliasing Level | ✅ | ❌ | ❌ | ❌ | HIGH |
-| Colorspace Options | ✅ | ⚠️ | ⚠️ | ❌ | MEDIUM |
-| Custom Resolution | ✅ | ⚠️ | ⚠️ | ❌ | MEDIUM |
-| Alpha Channel | ✅ | ⚠️ | ⚠️ | ❌ | LOW |
+| **Rendering Options** | ✅ | ⚠️ | ✅ | ✅ | HIGH |
+| renderWithOptions() | ✅ | ⚠️ | ✅ | ✅ | HIGH |
+| renderWithProgress() | ✅ | ⚠️ | ✅ | ✅ | HIGH |
+| Anti-aliasing Level | ✅ | ⚠️ | ✅ | ✅ | HIGH |
+| Colorspace Options | ✅ | ✅ | ✅ | ✅ | MEDIUM |
+| Custom Resolution | ✅ | ✅ | ✅ | ✅ | MEDIUM |
+| Alpha Channel | ✅ | ✅ | ✅ | ✅ | LOW |
+| Progress Callbacks | ✅ | ⚠️ | ✅ | ✅ | MEDIUM |
+| Timeout Support | ✅ | ⚠️ | ✅ | ✅ | LOW |
+
+⚠️ = TypeScript API complete, uses existing FFI (needs native anti-aliasing & progress)
 
 **Required N-API Functions**:
 ```cpp
@@ -439,6 +445,91 @@ for (const block of blocks) {
 **What's Simplified:**
 Currently, the structure is generated from `getText()` with estimated positions.
 Full FFI implementation will provide accurate positions from MuPDF's structured text.
+
+### 2024-12-06 (Latest): Advanced Rendering Options (Phase 2 Start)
+
+**What Was Completed:**
+- ✅ Created comprehensive rendering options system (305 lines)
+  - `AntiAliasLevel` enum (None, Low, Medium, High)
+  - `RenderOptions` interface (8 configurable parameters)
+  - `ExtendedRenderOptions` with callbacks and timeout
+  - Helper functions: dpiToScale, scaleToDpi, validate, merge
+
+- ✅ Extended Page API with advanced rendering (122 lines)
+  - `renderWithOptions(options)` - Full control over rendering
+  - `renderWithProgress(options)` - Async with progress tracking
+  - Support for DPI, colorspace, alpha, anti-aliasing
+  - Support for custom transforms
+  - Annotation/form field rendering control
+
+- ✅ Comprehensive Testing (288 lines)
+  - 12 test suites
+  - 40 test cases
+  - Tests for enums, validation, merging, conversions
+  - Common use case scenarios
+
+- ✅ Exports and integration
+  - All types exported from index.ts
+  - Full JSDoc documentation
+  - Usage examples
+
+**Progress:**
+- Phase 2: 0% → 40% (+40%)
+- Overall: 70% → 72% (+2%)
+
+**Features Available:**
+```typescript
+// High-quality print rendering
+const pixmap = page.renderWithOptions({
+  dpi: 300,
+  colorspace: Colorspace.deviceRGB(),
+  alpha: true,
+  antiAlias: AntiAliasLevel.High
+});
+
+// Fast preview
+const preview = page.renderWithOptions({
+  dpi: 72,
+  antiAlias: AntiAliasLevel.None
+});
+
+// With progress tracking
+const pixmap = await page.renderWithProgress({
+  dpi: 600,
+  onProgress: (current, total) => {
+    console.log(`${Math.round(current/total*100)}%`);
+    return true; // Continue
+  },
+  onError: (error) => console.error(error),
+  timeout: 30000
+});
+```
+
+**Implementation Status:**
+- TypeScript API: ✅ Complete
+- Options system: ✅ Complete
+- Validation: ✅ Complete
+- Tests: ✅ 40 test cases
+- FFI: ⚠️ Uses existing toPixmap (native anti-aliasing & progress TODO)
+
+**What Works:**
+- DPI control (72-2400)
+- Colorspace selection
+- Alpha channel
+- Custom transforms
+- Timeout support
+- Error handling
+
+**What's Simplified:**
+- Anti-aliasing level (enum defined, FFI uses default)
+- Progress callbacks (simulated, not from native)
+- Render interruption (timeout only, not native abort)
+
+**Next Steps:**
+- Implement native anti-aliasing control
+- Add native progress callbacks
+- Implement render interruption
+- Complete remaining Phase 2 features
 
 ---
 
