@@ -258,11 +258,11 @@ impl<T> HandleStore<T> {
         self.items.insert(id, Arc::new(Mutex::new(item)));
         id
     }
-    
+
     pub fn get(&self, handle: Handle) -> Option<Arc<Mutex<T>>> {
         self.items.get(&handle).map(|r| Arc::clone(r.value()))
     }
-    
+
     pub fn remove(&self, handle: Handle) -> Option<Arc<Mutex<T>>> {
         self.items.remove(&handle).map(|(_, v)| v)
     }
@@ -276,20 +276,20 @@ impl<T> HandleStore<T> {
 class Document {
   private _handle: bigint; // Native handle
   private _dropped: boolean = false;
-  
+
   static open(path: string): Document {
     // Calls N-API which calls Rust FFI
     const handle = native.openDocumentFromPath(path);
     return new Document(handle);
   }
-  
+
   close(): void {
     if (!this._dropped) {
       native.dropDocument(this._handle);
       this._dropped = true;
     }
   }
-  
+
   // Destructor-like behavior (not guaranteed to run!)
   // Always call close() explicitly
 }
@@ -377,19 +377,19 @@ interface NativePage {
 // native/page.cc
 Napi::Value RenderPage(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  
+
   // Extract arguments
   uint64_t pageHandle = info[0].As<Napi::BigInt>().Uint64Value();
-  
+
   // Call Rust FFI
   uint64_t pixmapHandle = fz_render_page(0, pageHandle, /* ... */);
-  
+
   // Convert result to JavaScript
   Napi::Object result = Napi::Object::New(env);
   result.Set("handle", Napi::BigInt::New(env, pixmapHandle));
   result.Set("width", Napi::Number::New(env, width));
   result.Set("height", Napi::Number::New(env, height));
-  
+
   return result;
 }
 ```
@@ -451,17 +451,17 @@ try {
 // N-API
 Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  
+
   std::string path = info[0].As<Napi::String>().Utf8Value();
-  
+
   uint64_t handle = fz_open_document(0, path.c_str());
-  
+
   if (handle == 0) {
     Napi::Error::New(env, "Failed to open document")
       .ThrowAsJavaScriptException();
     return env.Null();
   }
-  
+
   return Napi::BigInt::New(env, handle);
 }
 ```
@@ -626,7 +626,7 @@ Some operations are deferred until needed:
 ```typescript
 class Page {
   private _text?: string;
-  
+
   // Lazy evaluation: Only extract text when accessed
   extractText(): string {
     if (!this._text) {

@@ -237,10 +237,10 @@ const doc = Document.open('document.pdf');
 for (let i = 0; i < doc.pageCount; i++) {
   const page = doc.loadPage(i);
   const text = page.extractText();
-  
+
   console.log(`\n=== Page ${i + 1} ===`);
   console.log(text);
-  
+
   page.drop();
 }
 
@@ -257,17 +257,17 @@ const doc = Document.open('document.pdf');
 
 for (let i = 0; i < Math.min(5, doc.pageCount); i++) {
   const page = doc.loadPage(i);
-  
+
   // Render at thumbnail size (scale down to 0.2x)
   const matrix = Matrix.scale(0.2, 0.2);
   const pixmap = page.toPixmap(matrix, Colorspace.deviceRGB(), false);
-  
+
   // Save as PNG
   const pngData = page.toPNG(36); // 36 DPI
   writeFileSync(`thumb_${i}.png`, pngData);
-  
+
   console.log(`Created thumbnail ${i}: ${pixmap.width}x${pixmap.height}`);
-  
+
   page.drop();
 }
 
@@ -281,11 +281,11 @@ import { Document } from 'nanopdf';
 
 function findTextWithContext(doc: Document, searchTerm: string) {
   const results = [];
-  
+
   for (let i = 0; i < doc.pageCount; i++) {
     const page = doc.loadPage(i);
     const hits = page.searchText(searchTerm);
-    
+
     if (hits.length > 0) {
       const text = page.extractText();
       results.push({
@@ -294,10 +294,10 @@ function findTextWithContext(doc: Document, searchTerm: string) {
         text: text.substring(0, 200) // First 200 chars
       });
     }
-    
+
     page.drop();
   }
-  
+
   return results;
 }
 
@@ -321,12 +321,12 @@ import { readdirSync } from 'fs';
 function processPDFs(directory: string) {
   const files = readdirSync(directory)
     .filter(f => f.endsWith('.pdf'));
-  
+
   const stats = [];
-  
+
   for (const file of files) {
     const doc = Document.open(`${directory}/${file}`);
-    
+
     stats.push({
       file,
       pages: doc.pageCount,
@@ -334,10 +334,10 @@ function processPDFs(directory: string) {
       author: doc.getMetadata('Author'),
       encrypted: doc.needsPassword()
     });
-    
+
     doc.close();
   }
-  
+
   return stats;
 }
 
@@ -385,13 +385,13 @@ class Document {
   static open(path: string, password?: string): Document;
   static fromBuffer(buffer: Buffer, password?: string): Document;
   static fromUint8Array(data: Uint8Array, password?: string): Document;
-  
+
   // Properties
   get pageCount(): number;
   get format(): string;
   get needsPassword(): boolean;
   get isAuthenticated(): boolean;
-  
+
   // Methods
   loadPage(pageNum: number): Page;
   getMetadata(key: string): string | null;
@@ -414,19 +414,19 @@ class Page {
   get mediaBox(): Rect;
   get cropBox(): Rect;
   get rotation(): number;
-  
+
   // Rendering
   toPixmap(matrix?: MatrixLike, colorspace?: Colorspace, alpha?: boolean): Pixmap;
   toPNG(dpi?: number): Uint8Array;
-  
+
   // Text extraction
   extractText(): string;
   extractTextBlocks(): TextBlock[];
   searchText(needle: string, caseSensitive?: boolean): Rect[];
-  
+
   // Links
   getLinks(): Link[];
-  
+
   // Lifecycle
   drop(): void;
 }
@@ -466,7 +466,7 @@ class Matrix {
   static scale(sx: number, sy: number): Matrix;
   static rotate(degrees: number): Matrix;
   static shear(sx: number, sy: number): Matrix;
-  
+
   concat(other: MatrixLike): Matrix;
   preTranslate(tx: number, ty: number): Matrix;
   postScale(sx: number, sy: number): Matrix;
@@ -484,10 +484,10 @@ class Buffer {
   static fromString(str: string, encoding?: BufferEncoding): Buffer;
   static fromBuffer(data: globalThis.Buffer): Buffer;
   static fromUint8Array(data: Uint8Array): Buffer;
-  
+
   get length(): number;
   get isEmpty(): boolean;
-  
+
   append(data: BufferLike | string): this;
   clear(): this;
   slice(start: number, end?: number): Buffer;
@@ -505,11 +505,11 @@ class Colorspace {
   static deviceRGB(): Colorspace;
   static deviceBGR(): Colorspace;
   static deviceCMYK(): Colorspace;
-  
+
   get name(): string;
   get n(): number; // Number of components
   get type(): ColorspaceType;
-  
+
   convertColor(destColorspace: Colorspace, srcValues: number[]): number[];
 }
 ```
@@ -521,14 +521,14 @@ class Pixmap {
   static create(colorspace: Colorspace, width: number, height: number, alpha?: boolean): Pixmap;
   static createWithBbox(colorspace: Colorspace, bbox: IRectLike, alpha?: boolean): Pixmap;
   static fromSamples(colorspace: Colorspace, width: number, height: number, alpha: boolean, samples: Uint8Array): Pixmap;
-  
+
   get width(): number;
   get height(): number;
   get n(): number; // Components including alpha
   get alpha(): boolean;
   get colorspace(): Colorspace;
   get samples(): Uint8Array;
-  
+
   getPixel(x: number, y: number): number[];
   setPixel(x: number, y: number, values: number[]): void;
   clear(): void;
@@ -536,7 +536,7 @@ class Pixmap {
   convert(destColorspace: Colorspace): Pixmap;
   scale(width: number, height: number): Pixmap;
   toRGBA(): Uint8Array;
-  
+
   keep(): this;
   drop(): void;
 }
@@ -733,10 +733,10 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
    ```typescript
    // For thumbnails: 36-72 DPI
    const thumb = page.toPNG(72);
-   
+
    // For screen display: 96-144 DPI
    const display = page.toPNG(144);
-   
+
    // For printing: 300+ DPI
    const print = page.toPNG(300);
    ```
@@ -749,7 +749,7 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
      // process...
      doc.close();
    }
-   
+
    // Good: Reuse context when possible
    const docs = files.map(f => Document.open(f));
    for (const doc of docs) {

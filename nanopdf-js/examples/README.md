@@ -205,9 +205,9 @@ const doc = Document.open('file.pdf');
 
 for (let i = 0; i < doc.pageCount; i++) {
   const page = doc.loadPage(i);
-  
+
   // Process page...
-  
+
   page.drop();
 }
 
@@ -219,16 +219,16 @@ doc.close();
 ```typescript
 try {
   const doc = Document.open('file.pdf');
-  
+
   if (doc.needsPassword()) {
     const success = doc.authenticate('password');
     if (!success) {
       throw new Error('Invalid password');
     }
   }
-  
+
   // Work with document...
-  
+
   doc.close();
 } catch (error) {
   if (error instanceof NanoPDFError) {
@@ -273,7 +273,7 @@ const pngData = page.toPNG(targetDPI);
      // Process...
      page.drop(); // Free memory immediately
    }
-   
+
    // Bad: Load all pages at once
    const pages = Array.from({length: doc.pageCount}, (_, i) => doc.loadPage(i));
    // ... uses too much memory!
@@ -328,11 +328,11 @@ interface PageProcessor {
 
 class TextExtractor implements PageProcessor {
   private texts: string[] = [];
-  
+
   process(page: Page): void {
     this.texts.push(page.extractText());
   }
-  
+
   getAllText(): string {
     return this.texts.join('\n\n');
   }
@@ -364,7 +364,7 @@ function processPageInWorker(pdfPath: string, pageNum: number): Promise<string> 
     const worker = new Worker('./page-worker.js', {
       workerData: { pdfPath, pageNum }
     });
-    
+
     worker.on('message', resolve);
     worker.on('error', reject);
   });
