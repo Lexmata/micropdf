@@ -1,8 +1,17 @@
 /**
- * NanoPDF C API Header
+ * NanoPDF - Fast, lightweight PDF library
  *
- * This header defines the C API for the NanoPDF Rust library.
- * The actual implementation is provided by the Rust static library.
+ * This is a comprehensive C FFI header for the NanoPDF Rust library.
+ * All functions are prefixed with fz_ or pdf_ for compatibility with MuPDF.
+ *
+ * This header includes all auto-generated module headers with complete
+ * function declarations for all 660+ FFI functions.
+ *
+ * Usage:
+ *   #include <nanopdf.h>
+ *
+ * For MuPDF drop-in compatibility:
+ *   #include <mupdf.h>
  */
 
 #ifndef NANOPDF_H
@@ -10,73 +19,88 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Error codes */
-typedef enum {
-    NANOPDF_OK = 0,
-    NANOPDF_ERROR_GENERIC = 1,
-    NANOPDF_ERROR_IO = 2,
-    NANOPDF_ERROR_FORMAT = 3,
-    NANOPDF_ERROR_MEMORY = 4,
-    NANOPDF_ERROR_ARGUMENT = 5,
-    NANOPDF_ERROR_UNSUPPORTED = 6,
-} nanopdf_error_t;
+// ============================================================================
+// Type Definitions - Opaque handles for resource management
+// ============================================================================
 
-/* Opaque types */
-typedef struct nanopdf_buffer nanopdf_buffer_t;
-typedef struct nanopdf_document nanopdf_document_t;
-typedef struct nanopdf_page nanopdf_page_t;
-typedef struct nanopdf_pixmap nanopdf_pixmap_t;
+typedef int32_t fz_context;
+typedef int32_t fz_document;
+typedef int32_t fz_page;
+typedef int32_t fz_device;
+typedef int32_t fz_pixmap;
+typedef int32_t fz_buffer;
+typedef int32_t fz_stream;
+typedef int32_t fz_output;
+typedef int32_t fz_colorspace;
+typedef int32_t fz_font;
+typedef int32_t fz_image;
+typedef int32_t fz_path;
+typedef int32_t fz_text;
+typedef int32_t fz_cookie;
+typedef int32_t fz_display_list;
+typedef int32_t fz_link;
+typedef int32_t fz_archive;
+typedef int32_t pdf_obj;
+typedef int32_t pdf_annot;
+typedef int32_t pdf_form_field;
 
-/* Geometry types */
+// ============================================================================
+// Geometry types (used by many modules)
+// ============================================================================
+
 typedef struct {
-    float x;
-    float y;
-} nanopdf_point_t;
+    float x, y;
+} fz_point;
 
 typedef struct {
-    float x0;
-    float y0;
-    float x1;
-    float y1;
-} nanopdf_rect_t;
+    float x0, y0;
+    float x1, y1;
+} fz_rect;
+
+typedef struct {
+    int x0, y0;
+    int x1, y1;
+} fz_irect;
 
 typedef struct {
     float a, b, c, d, e, f;
-} nanopdf_matrix_t;
+} fz_matrix;
 
-/* Buffer API */
-nanopdf_buffer_t* nanopdf_buffer_new(size_t capacity);
-nanopdf_buffer_t* nanopdf_buffer_from_data(const uint8_t* data, size_t len);
-void nanopdf_buffer_free(nanopdf_buffer_t* buf);
-size_t nanopdf_buffer_len(const nanopdf_buffer_t* buf);
-const uint8_t* nanopdf_buffer_data(const nanopdf_buffer_t* buf);
-nanopdf_error_t nanopdf_buffer_append(nanopdf_buffer_t* buf, const uint8_t* data, size_t len);
+typedef struct {
+    fz_point ul, ur, ll, lr;
+} fz_quad;
 
-/* Geometry API */
-nanopdf_matrix_t nanopdf_matrix_identity(void);
-nanopdf_matrix_t nanopdf_matrix_translate(float tx, float ty);
-nanopdf_matrix_t nanopdf_matrix_scale(float sx, float sy);
-nanopdf_matrix_t nanopdf_matrix_rotate(float degrees);
-nanopdf_matrix_t nanopdf_matrix_concat(nanopdf_matrix_t a, nanopdf_matrix_t b);
-nanopdf_point_t nanopdf_point_transform(nanopdf_point_t p, nanopdf_matrix_t m);
+// ============================================================================
+// Common type aliases
+// ============================================================================
 
-nanopdf_rect_t nanopdf_rect_empty(void);
-nanopdf_rect_t nanopdf_rect_unit(void);
-int nanopdf_rect_is_empty(nanopdf_rect_t r);
-nanopdf_rect_t nanopdf_rect_union(nanopdf_rect_t a, nanopdf_rect_t b);
-nanopdf_rect_t nanopdf_rect_intersect(nanopdf_rect_t a, nanopdf_rect_t b);
+typedef int32_t PdfObjHandle;
+typedef int32_t Handle;
 
-/* Version */
-const char* nanopdf_version(void);
+// ============================================================================
+// Function Declarations
+// ============================================================================
+
+/*
+ * All function declarations are auto-generated from Rust FFI source.
+ * See individual module headers in mupdf/fitz/ and mupdf/pdf/ for details.
+ *
+ * Total: 660+ functions covering:
+ * - Core fitz functions (geometry, buffers, streams, devices, etc.)
+ * - PDF-specific functions (annotations, forms, objects, etc.)
+ */
+
+// For complete function declarations, include the comprehensive header:
+#include "mupdf.h"
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* NANOPDF_H */
-

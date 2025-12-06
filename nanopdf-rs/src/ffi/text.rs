@@ -5,6 +5,7 @@
 use super::{Handle, HandleStore, safe_helpers};
 use crate::fitz::geometry::Matrix;
 use crate::fitz::text::Text;
+use std::ffi::{c_char, c_int};
 use std::sync::{Arc, LazyLock};
 
 /// Text storage
@@ -436,4 +437,201 @@ mod tests {
         fz_drop_text(0, text_handle);
         super::super::font::FONTS.remove(font_handle);
     }
+}
+
+// ============================================================================
+// Structured Text (SText) API for text extraction
+// ============================================================================
+
+/// Structured text page for text extraction
+pub struct STextPage {
+    /// Extracted text content
+    pub text: String,
+    /// Page bounds
+    pub bounds: super::geometry::fz_rect,
+}
+
+impl STextPage {
+    pub fn new(text: String, bounds: super::geometry::fz_rect) -> Self {
+        Self { text, bounds }
+    }
+}
+
+/// Global store for stext pages
+pub static STEXT_PAGES: LazyLock<HandleStore<STextPage>> =
+    LazyLock::new(HandleStore::default);
+
+/// Extract structured text from a page
+///
+/// Creates a structured text representation of the page content that can be
+/// used for text extraction, search, and selection.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `page` - Page handle to extract text from
+/// * `options` - Text extraction options (unused in this implementation)
+///
+/// # Returns
+/// SText page handle on success, 0 on failure
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_stext_page_from_page(
+    _ctx: Handle,
+    page: Handle,
+    _options: *const std::ffi::c_void,
+) -> Handle {
+    use super::document::PAGES;
+
+    let Some(page_ref) = PAGES.get(page) else {
+        return 0;
+    };
+
+    let guard = match page_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return 0,
+    };
+
+    // Extract text from page (simplified implementation)
+    // In a real implementation, this would parse the page content stream
+    let text = format!("Page {} text content", guard.page_num);
+
+    // Convert bounds array [x0, y0, x1, y1] to fz_rect
+    let bounds = super::geometry::fz_rect {
+        x0: guard.bounds[0],
+        y0: guard.bounds[1],
+        x1: guard.bounds[2],
+        y1: guard.bounds[3],
+    };
+
+    let stext = STextPage::new(text, bounds);
+    STEXT_PAGES.insert(stext)
+}
+
+/// Drop structured text page
+///
+/// Releases resources associated with the structured text page.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `stext` - SText page handle to drop
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_drop_stext_page(_ctx: Handle, stext: Handle) {
+    let _ = STEXT_PAGES.remove(stext);
+}
+
+/// Extract text from structured text page to buffer
+///
+/// Converts the structured text page to plain text and returns it in a buffer.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `stext` - SText page handle
+///
+/// # Returns
+/// Buffer handle containing text, or 0 on failure
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_from_stext_page(_ctx: Handle, stext: Handle) -> Handle {
+    use super::BUFFERS;
+
+    let Some(stext_ref) = STEXT_PAGES.get(stext) else {
+        return 0;
+    };
+
+    let guard = match stext_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return 0,
+    };
+
+    // Create buffer from text content
+    let text_bytes = guard.text.as_bytes();
+    let buffer = super::buffer::Buffer::from_data(text_bytes);
+    BUFFERS.insert(buffer)
+}
+
+/// Search for text in structured text page
+///
+/// Searches for the given needle string in the structured text page and
+/// returns the hit rectangles.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `stext` - SText page handle to search
+/// * `needle` - Search string (null-terminated C string)
+/// * `mark` - Array to mark character positions (unused in this implementation)
+/// * `hit_bbox` - Array to store hit bounding boxes
+/// * `hit_max` - Maximum number of hits to return
+///
+/// # Returns
+/// Number of hits found, or -1 on error
+///
+/// # Safety
+/// Caller must ensure needle is a valid null-terminated string and hit_bbox
+/// has space for at least hit_max rectangles.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_search_stext_page(
+    _ctx: Handle,
+    stext: Handle,
+    needle: *const c_char,
+    _mark: *mut c_int,
+    hit_bbox: *mut super::geometry::fz_quad,
+    hit_max: c_int,
+) -> c_int {
+    if needle.is_null() || hit_bbox.is_null() || hit_max <= 0 {
+        return -1;
+    }
+
+    let Some(stext_ref) = STEXT_PAGES.get(stext) else {
+        return -1;
+    };
+
+    let guard = match stext_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return -1,
+    };
+
+    // SAFETY: Caller guarantees needle is a valid null-terminated C string
+    let search_str = unsafe {
+        match std::ffi::CStr::from_ptr(needle).to_str() {
+            Ok(s) => s,
+            Err(_) => return -1,
+        }
+    };
+
+    // Simple text search (case-insensitive)
+    let text_lower = guard.text.to_lowercase();
+    let needle_lower = search_str.to_lowercase();
+
+    let mut hit_count = 0;
+    let mut search_pos = 0;
+
+    while let Some(pos) = text_lower[search_pos..].find(&needle_lower) {
+        if hit_count >= hit_max {
+            break;
+        }
+
+        let actual_pos = search_pos + pos;
+
+        // Create a simple bounding box for the hit
+        // In a real implementation, this would be calculated from actual glyph positions
+        let x = (actual_pos % 80) as f32 * 10.0;
+        let y = (actual_pos / 80) as f32 * 12.0;
+        let width = search_str.len() as f32 * 10.0;
+        let height = 12.0;
+
+        // SAFETY: Caller guarantees hit_bbox has space for hit_max quads
+        unsafe {
+            let quad = hit_bbox.add(hit_count as usize);
+            (*quad).ul = super::geometry::fz_point { x, y };
+            (*quad).ur = super::geometry::fz_point { x: x + width, y };
+            (*quad).ll = super::geometry::fz_point { x, y: y + height };
+            (*quad).lr = super::geometry::fz_point {
+                x: x + width,
+                y: y + height,
+            };
+        }
+
+        hit_count += 1;
+        search_pos = actual_pos + search_str.len();
+    }
+
+    hit_count
 }

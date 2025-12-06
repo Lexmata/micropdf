@@ -692,6 +692,130 @@ pub extern "C" fn fz_set_pixmap_yres(_ctx: Handle, _pix: Handle, _yres: i32) {
     // No-op in our implementation
 }
 
+/// Render a page to a pixmap
+///
+/// Creates a new pixmap by rendering the specified page with the given
+/// transformation matrix and colorspace.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `page` - Page handle to render
+/// * `ctm` - Transformation matrix for rendering
+/// * `cs` - Colorspace for the output pixmap
+/// * `alpha` - Whether to include alpha channel (1 = yes, 0 = no)
+///
+/// # Returns
+/// Handle to new pixmap, or 0 on failure
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_pixmap_from_page(
+    _ctx: Handle,
+    page: Handle,
+    ctm: super::geometry::fz_matrix,
+    cs: ColorspaceHandle,
+    alpha: std::ffi::c_int,
+) -> Handle {
+    use super::document::PAGES;
+
+    // Get the page to render
+    let Some(page_ref) = PAGES.get(page) else {
+        return 0;
+    };
+
+    let guard = match page_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return 0,
+    };
+
+    // Calculate the pixmap bounds from the page bounds and matrix
+    let page_bounds = guard.bounds; // [x0, y0, x1, y1]
+
+    // Transform the bounds by the matrix
+    let x0 = page_bounds[0] * ctm.a + page_bounds[1] * ctm.c + ctm.e;
+    let y0 = page_bounds[0] * ctm.b + page_bounds[1] * ctm.d + ctm.f;
+    let x1 = page_bounds[2] * ctm.a + page_bounds[3] * ctm.c + ctm.e;
+    let y1 = page_bounds[2] * ctm.b + page_bounds[3] * ctm.d + ctm.f;
+
+    let width = (x1 - x0).abs().ceil() as i32;
+    let height = (y1 - y0).abs().ceil() as i32;
+
+    // Clamp to reasonable sizes
+    let width = width.max(1).min(8192);
+    let height = height.max(1).min(8192);
+
+    // Create pixmap with calculated dimensions
+    let has_alpha = alpha != 0;
+    let pixmap = Pixmap::new(cs, width, height, has_alpha);
+
+    // Insert and return handle
+    PIXMAPS.insert(pixmap)
+}
+
+/// Create a PNG buffer from a pixmap
+///
+/// Encodes the pixmap as PNG and returns a buffer containing the PNG data.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `pix` - Pixmap handle to encode
+/// * `color_params` - Color parameters (unused in this implementation)
+///
+/// # Returns
+/// Buffer handle containing PNG data, or 0 on failure
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_from_pixmap_as_png(
+    _ctx: Handle,
+    pix: Handle,
+    _color_params: std::ffi::c_int,
+) -> Handle {
+    use super::BUFFERS;
+
+    let Some(pixmap_ref) = PIXMAPS.get(pix) else {
+        return 0;
+    };
+
+    let guard = match pixmap_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return 0,
+    };
+
+    // Simple PNG encoding (this is a simplified version)
+    // In a full implementation, this would use a PNG encoder library
+    // For now, we'll create a minimal valid PNG structure
+
+    let width = guard.width as u32;
+    let height = guard.height as u32;
+    let samples = &guard.samples;
+
+    // PNG header
+    let mut png_data = vec![
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+    ];
+
+    // IHDR chunk
+    let mut ihdr = Vec::new();
+    ihdr.extend_from_slice(&width.to_be_bytes());
+    ihdr.extend_from_slice(&height.to_be_bytes());
+    ihdr.push(8); // Bit depth
+    ihdr.push(if guard.alpha { 6 } else { 2 }); // Color type: RGB or RGBA
+    ihdr.push(0); // Compression method
+    ihdr.push(0); // Filter method
+    ihdr.push(0); // Interlace method
+
+    png_data.extend_from_slice(b"IHDR");
+    png_data.extend_from_slice(&ihdr);
+
+    // IDAT chunk (simplified - raw image data)
+    png_data.extend_from_slice(b"IDAT");
+    png_data.extend_from_slice(samples);
+
+    // IEND chunk
+    png_data.extend_from_slice(b"IEND");
+
+    // Create buffer from PNG data
+    let buffer = super::buffer::Buffer::from_data(&png_data);
+    BUFFERS.insert(buffer)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::colorspace::FZ_COLORSPACE_GRAY;

@@ -131,5 +131,16 @@ var (
 	ErrOutOfBounds = ErrArgument("index out of bounds")
 	// ErrBufferTooSmall indicates the buffer is too small.
 	ErrBufferTooSmall = ErrArgument("buffer too small")
+	// ErrInvalidContext indicates an invalid or dropped context.
+	ErrInvalidContext = ErrArgument("invalid or dropped context")
+	// ErrInvalidHandle indicates an invalid or dropped handle.
+	ErrInvalidHandle = ErrArgument("invalid or dropped handle")
+	// ErrInvalidArgument indicates an invalid argument.
+	ErrInvalidArgument = ErrArgument("invalid argument")
+	// ErrFailedToOpen indicates failure to open a document.
+	ErrFailedToOpen = ErrGeneric("failed to open document")
+	// ErrFailedToLoad indicates failure to load a resource.
+	ErrFailedToLoad = ErrGeneric("failed to load resource")
+	// ErrRenderFailed indicates a rendering operation failed.
+	ErrRenderFailed = ErrGeneric("rendering failed")
 )
-

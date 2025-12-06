@@ -1,0 +1,94 @@
+# .dockerignore for nanopdf-js Docker builds
+#
+# This file excludes unnecessary files from the Docker build context
+# to speed up builds and reduce image size.
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build artifacts
+dist/
+build/
+*.node
+*.a
+*.o
+*.so
+*.dll
+
+# Test output
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Native addon build
+prebuilds/
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Documentation
+docs/_build/
+site/
+
+# Docker
+docker/output/
+*.tar
+*.tar.gz
+Dockerfile*
+.dockerignore
+
+# Package managers
+.pnpm-store/
+.yarn/
+.npm/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Rust build artifacts (will be built in container)
+../nanopdf-rs/target/
+../nanopdf-rs/Cargo.lock
+
+# Testing
+.vitest/
+

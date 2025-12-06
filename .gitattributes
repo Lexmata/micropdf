@@ -1,6 +1,5 @@
 # Git LFS Configuration for NanoPDF
 # https://git-lfs.github.com/
-
 # ============================================================================
 # PDF Files (test fixtures, samples)
 *.pdf filter=lfs diff=lfs merge=lfs -text

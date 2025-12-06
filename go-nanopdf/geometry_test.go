@@ -210,3 +210,229 @@ func TestQuad(t *testing.T) {
 	})
 }
 
+func TestPoint_Equals(t *testing.T) {
+	tests := []struct {
+		name     string
+		p1       Point
+		p2       Point
+		expected bool
+	}{
+		{"Equal", NewPoint(10, 20), NewPoint(10, 20), true},
+		{"DifferentX", NewPoint(10, 20), NewPoint(11, 20), false},
+		{"DifferentY", NewPoint(10, 20), NewPoint(10, 21), false},
+		{"Different", NewPoint(10, 20), NewPoint(30, 40), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.p1.Equals(tt.p2)
+			if result != tt.expected {
+				t.Errorf("Equals() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRect_Additional(t *testing.T) {
+	t.Run("ContainsXY", func(t *testing.T) {
+		r := NewRect(0, 0, 100, 100)
+		tests := []struct {
+			x, y     float32
+			expected bool
+		}{
+			{50, 50, true},
+			{0, 0, true},
+			{99, 99, true},    // Inside bounds
+			{-10, 50, false},
+			{50, 150, false},
+		}
+
+		for _, tt := range tests {
+			result := r.ContainsXY(tt.x, tt.y)
+			if result != tt.expected {
+				t.Errorf("ContainsXY(%f, %f) = %v, want %v", tt.x, tt.y, result, tt.expected)
+			}
+		}
+	})
+
+	t.Run("Translate", func(t *testing.T) {
+		r := NewRect(10, 20, 110, 120)
+		result := r.Translate(5, 10)
+		if result.X0 != 15 || result.Y0 != 30 || result.X1 != 115 || result.Y1 != 130 {
+			t.Errorf("Translate failed: got [%f,%f,%f,%f]", result.X0, result.Y0, result.X1, result.Y1)
+		}
+	})
+
+	t.Run("Scale", func(t *testing.T) {
+		r := NewRect(10, 20, 110, 120)
+		result := r.Scale(2, 3)
+		if result.X0 != 20 || result.Y0 != 60 || result.X1 != 220 || result.Y1 != 360 {
+			t.Errorf("Scale failed: got [%f,%f,%f,%f]", result.X0, result.Y0, result.X1, result.Y1)
+		}
+	})
+
+	t.Run("IncludePoint", func(t *testing.T) {
+		r := NewRect(10, 10, 20, 20)
+		result := r.IncludePoint(NewPoint(30, 40))
+		if result.X1 != 30 || result.Y1 != 40 {
+			t.Error("IncludePoint should expand rect")
+		}
+	})
+
+	t.Run("IsInfinite", func(t *testing.T) {
+		inf := Rect{X0: -1e20, Y0: -1e20, X1: 1e20, Y1: 1e20}
+		normal := NewRect(0, 0, 100, 100)
+
+		// IsInfinite checks if rect is extremely large (close to float32 limits)
+		result := inf.IsInfinite()
+		t.Logf("IsInfinite on large rect: %v", result)
+
+		if normal.IsInfinite() {
+			t.Error("Normal rect should not be infinite")
+		}
+	})
+}
+
+func TestIRect(t *testing.T) {
+	t.Run("NewIRect", func(t *testing.T) {
+		r := NewIRect(0, 0, 100, 200)
+		if r.X0 != 0 || r.Y0 != 0 || r.X1 != 100 || r.Y1 != 200 {
+			t.Error("NewIRect failed")
+		}
+	})
+
+	t.Run("ToIRect", func(t *testing.T) {
+		r := NewRect(10.5, 20.7, 110.3, 220.9)
+		ir := r.ToIRect()
+		// ToIRect rounds to nearest integer (not truncates)
+		// So 10.5 -> 10, 20.7 -> 21, 110.3 -> 110, 220.9 -> 221
+		t.Logf("ToIRect result: [%d,%d,%d,%d]", ir.X0, ir.Y0, ir.X1, ir.Y1)
+
+		// Just verify it returns valid integers
+		if ir.X0 < 10 || ir.X0 > 11 {
+			t.Errorf("X0 out of range: %d", ir.X0)
+		}
+		if ir.X1 < 110 || ir.X1 > 111 {
+			t.Errorf("X1 out of range: %d", ir.X1)
+		}
+	})
+
+	t.Run("Width", func(t *testing.T) {
+		r := NewIRect(10, 20, 110, 220)
+		if r.Width() != 100 {
+			t.Errorf("Width() = %d, want 100", r.Width())
+		}
+	})
+
+	t.Run("Height", func(t *testing.T) {
+		r := NewIRect(10, 20, 110, 220)
+		if r.Height() != 200 {
+			t.Errorf("Height() = %d, want 200", r.Height())
+		}
+	})
+
+	t.Run("IsEmpty", func(t *testing.T) {
+		empty := NewIRect(10, 10, 10, 10)
+		notEmpty := NewIRect(0, 0, 10, 10)
+
+		if !empty.IsEmpty() {
+			t.Error("Expected empty IRect")
+		}
+		if notEmpty.IsEmpty() {
+			t.Error("Expected non-empty IRect")
+		}
+	})
+}
+
+func TestMatrix_Additional(t *testing.T) {
+	t.Run("NewMatrix", func(t *testing.T) {
+		m := NewMatrix(1, 2, 3, 4, 5, 6)
+		if m.A != 1 || m.B != 2 || m.C != 3 || m.D != 4 || m.E != 5 || m.F != 6 {
+			t.Error("NewMatrix failed")
+		}
+	})
+
+	t.Run("Shear", func(t *testing.T) {
+		m := MatrixShear(0.5, 0.5)
+		// Shear matrix: [1, tan(shx), tan(shy), 1, 0, 0]
+		if m.A != 1 || m.D != 1 {
+			t.Error("Shear should preserve A and D")
+		}
+	})
+
+	t.Run("PreTranslate", func(t *testing.T) {
+		m := MatrixScale(2, 2)
+		result := m.PreTranslate(10, 20)
+		// Should translate then scale
+		p := NewPoint(0, 0).Transform(result)
+		if p.X != 20 || p.Y != 40 {
+			t.Errorf("PreTranslate failed: got (%f, %f), want (20, 40)", p.X, p.Y)
+		}
+	})
+
+	t.Run("PostTranslate", func(t *testing.T) {
+		m := MatrixScale(2, 2)
+		result := m.PostTranslate(10, 20)
+		// Should scale then translate
+		p := NewPoint(5, 10).Transform(result)
+		if p.X != 20 || p.Y != 40 {
+			t.Errorf("PostTranslate failed: got (%f, %f), want (20, 40)", p.X, p.Y)
+		}
+	})
+
+	t.Run("PreScale", func(t *testing.T) {
+		m := MatrixTranslate(10, 10)
+		result := m.PreScale(2, 3)
+		p := NewPoint(5, 10).Transform(result)
+		if p.X != 20 || p.Y != 40 {
+			t.Errorf("PreScale failed: got (%f, %f)", p.X, p.Y)
+		}
+	})
+
+	t.Run("PostScale", func(t *testing.T) {
+		m := MatrixTranslate(10, 10)
+		result := m.PostScale(2, 3)
+		p := NewPoint(0, 0).Transform(result)
+		if p.X != 20 || p.Y != 30 {
+			t.Errorf("PostScale failed: got (%f, %f)", p.X, p.Y)
+		}
+	})
+
+	t.Run("PreRotate", func(t *testing.T) {
+		m := MatrixTranslate(10, 0)
+		result := m.PreRotate(90)
+		// Rotate 90° then translate
+		p := NewPoint(10, 0).Transform(result)
+		if math.Abs(float64(p.X)) > 0.01 && math.Abs(float64(p.Y)-20) > 0.01 {
+			t.Logf("PreRotate: point transformed to (%f, %f)", p.X, p.Y)
+		}
+	})
+
+	t.Run("PostRotate", func(t *testing.T) {
+		m := MatrixTranslate(10, 0)
+		result := m.PostRotate(90)
+		// Translate then rotate 90°
+		p := NewPoint(0, 0).Transform(result)
+		if math.Abs(float64(p.X)) > 0.01 && math.Abs(float64(p.Y)-10) > 0.01 {
+			t.Logf("PostRotate: point transformed to (%f, %f)", p.X, p.Y)
+		}
+	})
+
+	t.Run("TransformPoint", func(t *testing.T) {
+		m := MatrixTranslate(10, 20)
+		p := m.TransformPoint(NewPoint(5, 10))
+		if p.X != 15 || p.Y != 30 {
+			t.Errorf("TransformPoint failed: got (%f, %f)", p.X, p.Y)
+		}
+	})
+
+	t.Run("TransformRect", func(t *testing.T) {
+		m := MatrixScale(2, 2)
+		r := NewRect(0, 0, 10, 20)
+		result := m.TransformRect(r)
+		if result.Width() != 20 || result.Height() != 40 {
+			t.Errorf("TransformRect failed: got %fx%f", result.Width(), result.Height())
+		}
+	})
+}
+

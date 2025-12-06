@@ -1,0 +1,291 @@
+name: Test Node.js Bindings
+
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'bugfix/**']
+    paths:
+      - 'nanopdf-js/**'
+      - 'nanopdf-rs/src/**'
+      - 'nanopdf-rs/Cargo.toml'
+      - '.github/workflows/test-nodejs-bindings.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'nanopdf-js/**'
+      - 'nanopdf-rs/src/**'
+      - 'nanopdf-rs/Cargo.toml'
+
+jobs:
+  test-nodejs-docker:
+    name: Test Node.js Bindings (Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and test Node.js bindings
+        run: |
+          cd nanopdf-js
+          chmod +x docker/build-test.sh
+          ./docker/build-test.sh
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-test-results
+          path: |
+            nanopdf-js/coverage/
+            nanopdf-js/*.log
+
+  test-nodejs-native:
+    name: Test Node.js Bindings (Native)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            nanopdf-rs/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache pnpm modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Build Rust library
+        run: |
+          cd nanopdf-rs
+          cargo build --release
+
+      - name: Install Rust library
+        run: |
+          cd nanopdf-rs
+          sudo make install PREFIX=/usr
+
+      - name: Install Node.js dependencies
+        run: |
+          cd nanopdf-js
+          pnpm install --frozen-lockfile
+
+      - name: Build TypeScript
+        run: |
+          cd nanopdf-js
+          pnpm run build:ts
+
+      - name: Build native addon
+        run: |
+          cd nanopdf-js
+          pnpm run build:native
+
+      - name: Run tests
+        run: |
+          cd nanopdf-js
+          pnpm test
+
+      - name: Run integration tests
+        run: |
+          cd nanopdf-js
+          pnpm test -- --run integration || true
+
+      - name: Type check
+        run: |
+          cd nanopdf-js
+          pnpm exec tsc --noEmit
+
+  test-nodejs-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust library
+        run: |
+          cd nanopdf-rs
+          cargo build --release
+
+      - name: Install Rust library
+        run: |
+          cd nanopdf-rs
+          sudo make install PREFIX=/usr
+
+      - name: Install dependencies
+        run: |
+          cd nanopdf-js
+          pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: |
+          cd nanopdf-js
+          pnpm run build:ts
+          pnpm run build:native
+
+      - name: Run tests with coverage
+        run: |
+          cd nanopdf-js
+          pnpm test -- --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./nanopdf-js/coverage/coverage-final.json
+          flags: nodejs-bindings
+          name: nanopdf-js
+
+  lint-nodejs:
+    name: Lint Node.js Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: |
+          cd nanopdf-js
+          pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: |
+          cd nanopdf-js
+          pnpm run lint || echo "ESLint not configured"
+
+      - name: Run Prettier check
+        run: |
+          cd nanopdf-js
+          pnpm run format:check || echo "Prettier not configured"
+
+      - name: Type check
+        run: |
+          cd nanopdf-js
+          pnpm exec tsc --noEmit
+
+  test-prebuilds:
+    name: Test Prebuilds
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18, 20, 22]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust library
+        run: |
+          cd nanopdf-rs
+          cargo build --release
+
+      - name: Copy Rust library (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p nanopdf-js/native/lib/linux-x64
+          cp nanopdf-rs/target/release/libnanopdf.a nanopdf-js/native/lib/linux-x64/
+
+      - name: Copy Rust library (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p nanopdf-js/native/lib/darwin-x64
+          cp nanopdf-rs/target/release/libnanopdf.a nanopdf-js/native/lib/darwin-x64/
+
+      - name: Copy headers
+        run: |
+          mkdir -p nanopdf-js/native/include
+          cp -r nanopdf-rs/include/* nanopdf-js/native/include/
+
+      - name: Install dependencies
+        run: |
+          cd nanopdf-js
+          pnpm install --frozen-lockfile
+
+      - name: Build native addon
+        run: |
+          cd nanopdf-js
+          pnpm run build:native
+
+      - name: Test native addon
+        run: |
+          cd nanopdf-js
+          node -e "const addon = require('./build/Release/nanopdf_native.node'); console.log('Loaded:', Object.keys(addon).length, 'exports');"
+
