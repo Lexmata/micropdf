@@ -334,7 +334,17 @@ export { Text, Language, type TextSpan, type TextItem, type TextWalker } from '.
 // Structured Text
 // ============================================================================
 
-export { STextPage, type Quad, quadToRect, quadsOverlap } from './stext.js';
+export {
+  STextPage,
+  STextBlockType,
+  WritingMode,
+  type Quad,
+  type STextCharData,
+  type STextLineData,
+  type STextBlockData,
+  quadToRect,
+  quadsOverlap
+} from './stext.js';
 
 // ============================================================================
 // Display List

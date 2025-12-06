@@ -24,6 +24,76 @@ export interface Quad {
 }
 
 /**
+ * Text block type
+ */
+export enum STextBlockType {
+  /** Regular text block */
+  Text = 0,
+  /** Image block */
+  Image = 1,
+  /** List item */
+  List = 2,
+  /** Table cell */
+  Table = 3
+}
+
+/**
+ * Writing mode for text lines
+ */
+export enum WritingMode {
+  /** Horizontal left-to-right */
+  HorizontalLtr = 0,
+  /** Horizontal right-to-left */
+  HorizontalRtl = 1,
+  /** Vertical top-to-bottom */
+  VerticalTtb = 2,
+  /** Vertical bottom-to-top */
+  VerticalBtt = 3
+}
+
+/**
+ * Structured text character
+ */
+export interface STextCharData {
+  /** Unicode character */
+  c: string;
+  /** Character quad (4 corners) */
+  quad: Quad;
+  /** Font size */
+  size: number;
+  /** Font name */
+  fontName: string;
+}
+
+/**
+ * Structured text line
+ */
+export interface STextLineData {
+  /** Writing mode */
+  wmode: WritingMode;
+  /** Bounding box */
+  bbox: Rect;
+  /** Baseline coordinate */
+  baseline: number;
+  /** Text direction */
+  dir: { x: number; y: number };
+  /** Characters in this line */
+  chars: STextCharData[];
+}
+
+/**
+ * Structured text block
+ */
+export interface STextBlockData {
+  /** Block type */
+  blockType: STextBlockType;
+  /** Bounding box */
+  bbox: Rect;
+  /** Lines in this block */
+  lines: STextLineData[];
+}
+
+/**
  * Structured Text Page
  *
  * Represents extracted text from a PDF page with layout information.
@@ -161,6 +231,117 @@ export class STextPage {
   }
 
   /**
+   * Get blocks from the page
+   *
+   * Returns the hierarchical structure of text blocks, lines, and characters.
+   * Note: This requires full FFI implementation. For now, returns simplified structure.
+   *
+   * @returns Array of text blocks
+   *
+   * @example
+   * ```typescript
+   * const blocks = stext.getBlocks();
+   * for (const block of blocks) {
+   *   console.log(`Block type: ${block.blockType}`);
+   *   for (const line of block.lines) {
+   *     console.log(`  Line: ${line.chars.map(c => c.c).join('')}`);
+   *   }
+   * }
+   * ```
+   */
+  getBlocks(): STextBlockData[] {
+    this._checkDropped();
+
+    // TODO: Implement native FFI for block/line/char access
+    // For now, provide a simplified version using getText()
+    const text = this.getText();
+    const bounds = this.getBounds();
+
+    // Create a single text block with the full text
+    const lines = text.split('\n').map((lineText, lineIndex) => {
+      const lineHeight = bounds.height / Math.max(1, text.split('\n').length);
+      const lineY = bounds.y0 + lineIndex * lineHeight;
+
+      const chars: STextCharData[] = [...lineText].map((char, charIndex) => ({
+        c: char,
+        quad: {
+          ul: { x: bounds.x0 + charIndex * 10, y: lineY },
+          ur: { x: bounds.x0 + (charIndex + 1) * 10, y: lineY },
+          ll: { x: bounds.x0 + charIndex * 10, y: lineY + lineHeight },
+          lr: { x: bounds.x0 + (charIndex + 1) * 10, y: lineY + lineHeight }
+        },
+        size: 12,
+        fontName: 'Unknown'
+      }));
+
+      return {
+        wmode: WritingMode.HorizontalLtr,
+        bbox: new Rect(bounds.x0, lineY, bounds.x1, lineY + lineHeight),
+        baseline: lineY + lineHeight * 0.8,
+        dir: { x: 1, y: 0 },
+        chars
+      };
+    });
+
+    return [
+      {
+        blockType: STextBlockType.Text,
+        bbox: bounds,
+        lines
+      }
+    ];
+  }
+
+  /**
+   * Get the number of blocks on the page
+   *
+   * @returns Number of blocks
+   *
+   * @example
+   * ```typescript
+   * const count = stext.blockCount();
+   * console.log(`Page has ${count} blocks`);
+   * ```
+   */
+  blockCount(): number {
+    this._checkDropped();
+    return this.getBlocks().length;
+  }
+
+  /**
+   * Get the number of characters on the page
+   *
+   * @returns Total character count
+   *
+   * @example
+   * ```typescript
+   * const count = stext.charCount();
+   * console.log(`Page has ${count} characters`);
+   * ```
+   */
+  charCount(): number {
+    this._checkDropped();
+    return this.getText().length;
+  }
+
+  /**
+   * Get blocks of a specific type
+   *
+   * @param blockType - The block type to filter by
+   * @returns Array of blocks matching the type
+   *
+   * @example
+   * ```typescript
+   * const textBlocks = stext.getBlocksOfType(STextBlockType.Text);
+   * const imageBlocks = stext.getBlocksOfType(STextBlockType.Image);
+   * ```
+   */
+  getBlocksOfType(blockType: STextBlockType): STextBlockData[] {
+    this._checkDropped();
+    return this.getBlocks().filter((block) => block.blockType === blockType);
+  }
+
+  /**
    * Get the native handle (for advanced use)
    *
    * @internal
@@ -207,6 +388,6 @@ export function quadToRect(quad: Quad): Rect {
 export function quadsOverlap(q1: Quad, q2: Quad): boolean {
   const r1 = quadToRect(q1);
   const r2 = quadToRect(q2);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
   return r1.intersects(r2);
 }

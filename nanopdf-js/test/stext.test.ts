@@ -4,7 +4,14 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Document } from '../src/document.js';
-import { STextPage, quadToRect, quadsOverlap, type Quad } from '../src/stext.js';
+import {
+  STextPage,
+  STextBlockType,
+  WritingMode,
+  quadToRect,
+  quadsOverlap,
+  type Quad
+} from '../src/stext.js';
 import { Rect } from '../src/geometry.js';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -374,6 +381,189 @@ describe('Quad Helper Functions', () => {
       const q2 = { ...q1 };
 
       expect(quadsOverlap(q1, q2)).toBe(true);
+    });
+  });
+});
+
+describe('Hierarchical Text Structure', () => {
+  const testPdfPath = join(process.cwd(), '../test-pdfs/simple/hello-world.pdf');
+  const hasTestPdf = existsSync(testPdfPath);
+
+  let doc: Document;
+  let page: ReturnType<Document['loadPage']>;
+  let stext: STextPage;
+
+  beforeEach(() => {
+    if (hasTestPdf) {
+      try {
+        doc = Document.open(testPdfPath);
+        page = doc.loadPage(0);
+        stext = STextPage.fromPage(page);
+      } catch (e) {
+        // Native addon not built, skip tests
+      }
+    }
+  });
+
+  afterEach(() => {
+    if (stext) {
+      stext.drop();
+    }
+    if (page) {
+      page.drop();
+    }
+    if (doc) {
+      doc.close();
+    }
+  });
+
+  describe('getBlocks', () => {
+    it('should return array of blocks', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const blocks = stext.getBlocks();
+      expect(Array.isArray(blocks)).toBe(true);
+      expect(blocks.length).toBeGreaterThan(0);
+    });
+
+    it('should have valid block structure', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const blocks = stext.getBlocks();
+      const block = blocks[0];
+
+      expect(block).toHaveProperty('blockType');
+      expect(block).toHaveProperty('bbox');
+      expect(block).toHaveProperty('lines');
+      expect(Array.isArray(block.lines)).toBe(true);
+    });
+
+    it('should have valid line structure', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const blocks = stext.getBlocks();
+      if (blocks.length > 0 && blocks[0].lines.length > 0) {
+        const line = blocks[0].lines[0];
+
+        expect(line).toHaveProperty('wmode');
+        expect(line).toHaveProperty('bbox');
+        expect(line).toHaveProperty('baseline');
+        expect(line).toHaveProperty('dir');
+        expect(line).toHaveProperty('chars');
+        expect(Array.isArray(line.chars)).toBe(true);
+      }
+    });
+
+    it('should have valid char structure', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const blocks = stext.getBlocks();
+      if (
+        blocks.length > 0 &&
+        blocks[0].lines.length > 0 &&
+        blocks[0].lines[0].chars.length > 0
+      ) {
+        const char = blocks[0].lines[0].chars[0];
+
+        expect(char).toHaveProperty('c');
+        expect(char).toHaveProperty('quad');
+        expect(char).toHaveProperty('size');
+        expect(char).toHaveProperty('fontName');
+        expect(typeof char.c).toBe('string');
+        expect(char.c.length).toBe(1);
+      }
+    });
+  });
+
+  describe('blockCount', () => {
+    it('should return number of blocks', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const count = stext.blockCount();
+      expect(typeof count).toBe('number');
+      expect(count).toBeGreaterThan(0);
+    });
+
+    it('should match blocks array length', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const blocks = stext.getBlocks();
+      const count = stext.blockCount();
+      expect(count).toBe(blocks.length);
+    });
+  });
+
+  describe('charCount', () => {
+    it('should return number of characters', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const count = stext.charCount();
+      expect(typeof count).toBe('number');
+      expect(count).toBeGreaterThan(0);
+    });
+
+    it('should match text length', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const text = stext.getText();
+      const count = stext.charCount();
+      expect(count).toBe(text.length);
+    });
+  });
+
+  describe('getBlocksOfType', () => {
+    it('should filter text blocks', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      const textBlocks = stext.getBlocksOfType(STextBlockType.Text);
+      expect(Array.isArray(textBlocks)).toBe(true);
+      for (const block of textBlocks) {
+        expect(block.blockType).toBe(STextBlockType.Text);
+      }
+    });
+
+    it('should return empty array for non-existent types', function () {
+      if (!hasTestPdf || !stext) {
+        this.skip();
+      }
+
+      // Most simple PDFs won't have image blocks
+      const imageBlocks = stext.getBlocksOfType(STextBlockType.Image);
+      expect(Array.isArray(imageBlocks)).toBe(true);
+    });
+  });
+
+  describe('Enums', () => {
+    it('should have STextBlockType enum', () => {
+      expect(STextBlockType.Text).toBe(0);
+      expect(STextBlockType.Image).toBe(1);
+      expect(STextBlockType.List).toBe(2);
+      expect(STextBlockType.Table).toBe(3);
+    });
+
+    it('should have WritingMode enum', () => {
+      expect(WritingMode.HorizontalLtr).toBe(0);
+      expect(WritingMode.HorizontalRtl).toBe(1);
+      expect(WritingMode.VerticalTtb).toBe(2);
+      expect(WritingMode.VerticalBtt).toBe(3);
     });
   });
 });

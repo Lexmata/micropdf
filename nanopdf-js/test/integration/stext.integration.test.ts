@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { Document, STextPage } from '../../src/index.js';
+import { Document, STextPage, STextBlockType, WritingMode } from '../../src/index.js';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -400,6 +400,130 @@ describe('Structured Text Integration', () => {
 
       stext1.drop();
       stext2.drop();
+      page.drop();
+      doc.close();
+    });
+  });
+
+  describe('Hierarchical Structure', () => {
+    it('should provide blocks/lines/chars hierarchy', () => {
+      const pdfPath = join(testPdfsDir, 'simple/hello-world.pdf');
+      if (!existsSync(pdfPath)) {
+        expect.soft(true).toBe(true);
+        return;
+      }
+
+      const doc = Document.open(pdfPath);
+      const page = doc.loadPage(0);
+      const stext = STextPage.fromPage(page);
+
+      const blocks = stext.getBlocks();
+      expect(blocks.length).toBeGreaterThan(0);
+
+      // Check first block
+      const block = blocks[0];
+      expect(block.blockType).toBeDefined();
+      expect(block.bbox).toBeDefined();
+      expect(block.lines.length).toBeGreaterThan(0);
+
+      // Check first line
+      const line = block.lines[0];
+      expect(line.wmode).toBeDefined();
+      expect(line.bbox).toBeDefined();
+      expect(line.chars.length).toBeGreaterThan(0);
+
+      // Check first char
+      const char = line.chars[0];
+      expect(char.c).toBeDefined();
+      expect(char.quad).toBeDefined();
+      expect(char.size).toBeGreaterThan(0);
+
+      stext.drop();
+      page.drop();
+      doc.close();
+    });
+
+    it('should count blocks correctly', () => {
+      const pdfPath = join(testPdfsDir, 'simple/hello-world.pdf');
+      if (!existsSync(pdfPath)) {
+        expect.soft(true).toBe(true);
+        return;
+      }
+
+      const doc = Document.open(pdfPath);
+      const page = doc.loadPage(0);
+      const stext = STextPage.fromPage(page);
+
+      const blockCount = stext.blockCount();
+      const blocks = stext.getBlocks();
+      expect(blockCount).toBe(blocks.length);
+
+      stext.drop();
+      page.drop();
+      doc.close();
+    });
+
+    it('should count characters correctly', () => {
+      const pdfPath = join(testPdfsDir, 'simple/hello-world.pdf');
+      if (!existsSync(pdfPath)) {
+        expect.soft(true).toBe(true);
+        return;
+      }
+
+      const doc = Document.open(pdfPath);
+      const page = doc.loadPage(0);
+      const stext = STextPage.fromPage(page);
+
+      const charCount = stext.charCount();
+      const text = stext.getText();
+      expect(charCount).toBe(text.length);
+
+      stext.drop();
+      page.drop();
+      doc.close();
+    });
+
+    it('should filter blocks by type', () => {
+      const pdfPath = join(testPdfsDir, 'simple/hello-world.pdf');
+      if (!existsSync(pdfPath)) {
+        expect.soft(true).toBe(true);
+        return;
+      }
+
+      const doc = Document.open(pdfPath);
+      const page = doc.loadPage(0);
+      const stext = STextPage.fromPage(page);
+
+      const textBlocks = stext.getBlocksOfType(STextBlockType.Text);
+      expect(textBlocks.length).toBeGreaterThan(0);
+
+      for (const block of textBlocks) {
+        expect(block.blockType).toBe(STextBlockType.Text);
+      }
+
+      stext.drop();
+      page.drop();
+      doc.close();
+    });
+
+    it('should handle writing modes', () => {
+      const pdfPath = join(testPdfsDir, 'simple/hello-world.pdf');
+      if (!existsSync(pdfPath)) {
+        expect.soft(true).toBe(true);
+        return;
+      }
+
+      const doc = Document.open(pdfPath);
+      const page = doc.loadPage(0);
+      const stext = STextPage.fromPage(page);
+
+      const blocks = stext.getBlocks();
+      if (blocks.length > 0 && blocks[0].lines.length > 0) {
+        const line = blocks[0].lines[0];
+        expect(Object.values(WritingMode)).toContain(line.wmode);
+      }
+
+      stext.drop();
       page.drop();
       doc.close();
     });
