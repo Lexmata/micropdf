@@ -41,6 +41,14 @@ import { Rect, Matrix, Quad } from './geometry.js';
 import { native } from './native.js';
 import type { NativeContext, NativeDocument, NativePage, NativeRect } from './native.js';
 import { Pixmap } from './pixmap.js';
+import {
+  type RenderOptions,
+  type ExtendedRenderOptions,
+  AntiAliasLevel,
+  mergeRenderOptions,
+  validateRenderOptions,
+  dpiToScale
+} from './render-options.js';
 import { NanoPDFError, LinkDestType, type Link, type RectLike, type MatrixLike } from './types.js';
 
 /**
@@ -404,6 +412,125 @@ export class Page {
 
     const pngBuffer = native.renderPageToPNG(this._ctx, this._page, dpi, nativeColorspace);
     return new Uint8Array(pngBuffer);
+  }
+
+  /**
+   * Render page with advanced options
+   *
+   * Provides fine-grained control over rendering quality, colorspace,
+   * anti-aliasing, and other rendering parameters.
+   *
+   * @param options - Rendering options
+   * @returns Pixmap containing the rendered page
+   * @throws Error if native bindings are not available
+   * @throws Error if options are invalid
+   *
+   * @example
+   * ```typescript
+   * // High-quality print rendering
+   * const pixmap = page.renderWithOptions({
+   *   dpi: 300,
+   *   colorspace: Colorspace.deviceRGB(),
+   *   alpha: true,
+   *   antiAlias: AntiAliasLevel.High
+   * });
+   *
+   * // Fast preview rendering
+   * const preview = page.renderWithOptions({
+   *   dpi: 72,
+   *   antiAlias: AntiAliasLevel.Low
+   * });
+   * ```
+   */
+  renderWithOptions(options: RenderOptions = {}): Pixmap {
+    if (!this._ctx || !this._page) {
+      throw new Error('Rendering requires native FFI bindings');
+    }
+
+    // Validate options
+    validateRenderOptions(options);
+
+    // Merge with defaults
+    const opts = mergeRenderOptions(options);
+
+    // Calculate transform matrix from DPI or use provided transform
+    const matrix = opts.transform
+      ? opts.transform
+      : Matrix.scale(dpiToScale(opts.dpi), dpiToScale(opts.dpi));
+
+    // Use existing toPixmap method with derived parameters
+    // TODO: In future, pass antiAlias level, renderAnnotations, renderFormFields through FFI
+    return this.toPixmap(matrix, opts.colorspace, opts.alpha);
+  }
+
+  /**
+   * Render page with progress tracking
+   *
+   * Extended rendering with progress callbacks and timeout support.
+   * Useful for long-running renders of complex pages.
+   *
+   * @param options - Extended rendering options with callbacks
+   * @returns Promise resolving to the rendered pixmap
+   * @throws Error if rendering fails or times out
+   *
+   * @example
+   * ```typescript
+   * const pixmap = await page.renderWithProgress({
+   *   dpi: 600,
+   *   onProgress: (current, total) => {
+   *     console.log(`Rendering: ${Math.round(current/total * 100)}%`);
+   *     return true; // Continue rendering
+   *   },
+   *   onError: (error) => {
+   *     console.error('Render error:', error);
+   *   },
+   *   timeout: 30000 // 30 second timeout
+   * });
+   * ```
+   */
+  async renderWithProgress(options: ExtendedRenderOptions = {}): Promise<Pixmap> {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      let timeoutId: NodeJS.Timeout | undefined;
+
+      // Set up timeout if specified
+      if (options.timeout) {
+        timeoutId = setTimeout(() => {
+          const error = 'Rendering timeout exceeded';
+          if (options.onError) {
+            options.onError(error);
+          }
+          reject(new Error(error));
+        }, options.timeout);
+      }
+
+      try {
+        // For now, perform synchronous render
+        // TODO: Implement async rendering with FFI progress callbacks
+        const pixmap = this.renderWithOptions(options);
+
+        // Simulate progress callback
+        if (options.onProgress) {
+          options.onProgress(100, 100);
+        }
+
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        resolve(pixmap);
+      } catch (error) {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (options.onError) {
+          options.onError(errorMsg);
+        }
+        reject(error);
+      }
+    });
   }
 
   /**

@@ -319,6 +319,23 @@ export {
 export { Colorspace, ColorspaceType } from './colorspace.js';
 
 // ============================================================================
+// Rendering Options
+// ============================================================================
+
+export {
+  type RenderOptions,
+  type ExtendedRenderOptions,
+  type RenderProgressCallback,
+  type RenderErrorCallback,
+  AntiAliasLevel,
+  getDefaultRenderOptions,
+  dpiToScale,
+  scaleToDpi,
+  validateRenderOptions,
+  mergeRenderOptions
+} from './render-options.js';
+
+// ============================================================================
 // Pixmap (Full Implementation)
 // ============================================================================
 
