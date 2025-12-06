@@ -728,7 +728,7 @@ pub extern "C" fn fz_new_pixmap_from_page(
 
     // Calculate the pixmap bounds from the page bounds and matrix
     let page_bounds = guard.bounds; // [x0, y0, x1, y1]
-    
+
     // Transform the bounds by the matrix
     let x0 = page_bounds[0] * ctm.a + page_bounds[1] * ctm.c + ctm.e;
     let y0 = page_bounds[0] * ctm.b + page_bounds[1] * ctm.d + ctm.f;

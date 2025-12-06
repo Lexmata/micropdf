@@ -493,7 +493,7 @@ pub extern "C" fn fz_new_stext_page_from_page(
     // Extract text from page (simplified implementation)
     // In a real implementation, this would parse the page content stream
     let text = format!("Page {} text content", guard.page_num);
-    
+
     // Convert bounds array [x0, y0, x1, y1] to fz_rect
     let bounds = super::geometry::fz_rect {
         x0: guard.bounds[0],
