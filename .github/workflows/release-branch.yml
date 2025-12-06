@@ -8,7 +8,7 @@ on:
     branches: [main, master]
     types: [opened, synchronize]
     # Only trigger if PR is from a release branch
-    
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -84,21 +84,21 @@ jobs:
       - name: Check version consistency
         run: |
           VERSION="${{ needs.detect-version.outputs.version }}"
-          
+
           # Check Cargo.toml
           CARGO_VERSION=$(grep '^version = ' nanopdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "Cargo.toml version: $CARGO_VERSION"
-          
+
           # Check package.json
           PACKAGE_VERSION=$(node -p "require('./nanopdf-js/package.json').version")
           echo "package.json version: $PACKAGE_VERSION"
-          
+
           # Check VERSION file if it exists
           if [ -f VERSION ]; then
             FILE_VERSION=$(cat VERSION)
             echo "VERSION file: $FILE_VERSION"
           fi
-          
+
           # Warn if versions don't match
           if [ "$CARGO_VERSION" != "$VERSION" ] || [ "$PACKAGE_VERSION" != "$VERSION" ]; then
             echo "::warning::Version mismatch detected. Run: ./scripts/sync-version.sh $VERSION"
@@ -238,32 +238,32 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: \`${{ needs.detect-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### Status" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ needs.validate-release.result }}" == "success" ]]; then
             echo "✅ **Validation**: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Validation**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "${{ needs.test-release.result }}" == "success" ]]; then
             echo "✅ **Tests**: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Tests**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [[ "${{ needs.build-release-artifacts.result }}" == "success" ]]; then
             echo "✅ **Build**: Passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Build**: Failed" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [[ "${{ needs.validate-release.result }}" == "success" ]] && \
              [[ "${{ needs.test-release.result }}" == "success" ]] && \
              [[ "${{ needs.build-release-artifacts.result }}" == "success" ]]; then
@@ -294,37 +294,37 @@ jobs:
             const validateResult = '${{ needs.validate-release.result }}';
             const testResult = '${{ needs.test-release.result }}';
             const buildResult = '${{ needs.build-release-artifacts.result }}';
-            
+
             const allPassed = validateResult === 'success' && testResult === 'success' && buildResult === 'success';
-            
+
             const body = `## 🚀 Release Branch Validation
-            
+
             **Version**: \`${version}\`
-            
+
             ### Status
             - ${validateResult === 'success' ? '✅' : '❌'} **Validation**: ${validateResult}
             - ${testResult === 'success' ? '✅' : '❌'} **Tests**: ${testResult}
             - ${buildResult === 'success' ? '✅' : '❌'} **Build**: ${buildResult}
-            
+
             ${allPassed ? `### ✅ Ready to Release
-            
+
             This release branch has passed all checks and is ready to be merged.
-            
+
             **Next steps:**
             1. Merge this PR to \`main\`
             2. Merge back to \`develop\`
             3. GitHub Actions will automatically create the release
-            
+
             Or deploy manually:
             \`\`\`bash
             ./scripts/deploy.sh ${version}
             \`\`\`
             ` : `### ⚠️ Issues Detected
-            
+
             Some checks have failed. Please review the workflow logs and fix any issues before merging.
             `}
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

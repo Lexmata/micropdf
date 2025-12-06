@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -636,4 +637,3 @@ func TestMixedFeatures(t *testing.T) {
 
 	t.Log("Mixed features test completed")
 }
-

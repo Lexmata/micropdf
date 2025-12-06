@@ -28,7 +28,7 @@ jobs:
           # Get the commit message
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MSG"
-          
+
           # Check if this is a merge from a release branch
           if echo "$COMMIT_MSG" | grep -qE "Merge (pull request|branch) .*(release/|from release/)"; then
             # Extract version from commit message or branch name
@@ -58,7 +58,7 @@ jobs:
           if [ -f VERSION ]; then
             VERSION=$(cat VERSION)
             TAG="v$VERSION"
-            
+
             # Check if tag already exists
             if git rev-parse "$TAG" >/dev/null 2>&1; then
               echo "Tag $TAG already exists"
@@ -107,16 +107,16 @@ jobs:
         run: |
           VERSION="${{ needs.check-release-merge.outputs.version }}"
           TAG="v$VERSION"
-          
+
           # Check if tag already exists
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping"
             exit 0
           fi
-          
+
           # Verify version consistency
           echo "Verifying version consistency..."
-          
+
           # Check Cargo.toml
           if [ -f nanopdf-rs/Cargo.toml ]; then
             CARGO_VERSION=$(grep '^version = ' nanopdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
@@ -125,7 +125,7 @@ jobs:
               echo "::warning::Version mismatch in Cargo.toml: $CARGO_VERSION != $VERSION"
             fi
           fi
-          
+
           # Check package.json
           if [ -f nanopdf-js/package.json ]; then
             PACKAGE_VERSION=$(node -p "require('./nanopdf-js/package.json').version")
@@ -134,28 +134,28 @@ jobs:
               echo "::warning::Version mismatch in package.json: $PACKAGE_VERSION != $VERSION"
             fi
           fi
-          
+
           # Create tag
           echo "Creating tag: $TAG"
           git tag -a "$TAG" -m "Release $VERSION
 
           NanoPDF $VERSION
-          
+
           This release was automatically tagged from a release branch merge.
-          
+
           Projects:
           - nanopdf-rs: $VERSION
           - nanopdf-js: $VERSION
           - go-nanopdf: $VERSION
-          
+
           See CHANGELOG.md for details."
-          
+
           # Push tag
           echo "Pushing tag: $TAG"
           git push origin "$TAG"
-          
+
           echo "✅ Tag $TAG created and pushed successfully"
-          
+
           echo "## 🏷️ Release Tag Created" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
@@ -171,32 +171,32 @@ jobs:
           draft: true
           body: |
             # NanoPDF ${{ needs.check-release-merge.outputs.version }}
-            
+
             **This is an automated draft release. Please update the release notes.**
-            
+
             ## What's Changed
-            
+
             - Version bumped to ${{ needs.check-release-merge.outputs.version }}
-            
+
             ## Installation
-            
+
             ### Rust
             ```bash
             cargo add nanopdf@${{ needs.check-release-merge.outputs.version }}
             ```
-            
+
             ### Node.js
             ```bash
             npm install @nanopdf/nanopdf@${{ needs.check-release-merge.outputs.version }}
             ```
-            
+
             ### Go
             ```bash
             go get github.com/lexmata/nanopdf/go-nanopdf@v${{ needs.check-release-merge.outputs.version }}
             ```
-            
+
             ---
-            
+
             **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-release-merge.outputs.version }}...HEAD
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
