@@ -9,7 +9,7 @@ import {
   Matrix,
   Quad,
   IRect,
-  type ColorspaceType,
+  type ColorspaceType
 } from '../src/index.js';
 
 describe('NanoPDFError', () => {

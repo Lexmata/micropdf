@@ -17,7 +17,7 @@ export enum ErrorCode {
   Eof = 'EOF',
   Argument = 'ARGUMENT',
   Limit = 'LIMIT',
-  Unsupported = 'UNSUPPORTED',
+  Unsupported = 'UNSUPPORTED'
 }
 
 /**
@@ -136,7 +136,7 @@ export enum ColorspaceType {
   CMYK = 'CMYK',
   Lab = 'LAB',
   Indexed = 'INDEXED',
-  Separation = 'SEPARATION',
+  Separation = 'SEPARATION'
 }
 
 /**
@@ -175,7 +175,7 @@ export interface PixmapLike {
 export enum SeekOrigin {
   Start = 0,
   Current = 1,
-  End = 2,
+  End = 2
 }
 
 /**
@@ -198,12 +198,7 @@ export interface StreamLike {
 /**
  * Types that can be converted to a Buffer
  */
-export type BufferLike =
-  | globalThis.Buffer
-  | Uint8Array
-  | ArrayBuffer
-  | string
-  | number[];
+export type BufferLike = globalThis.Buffer | Uint8Array | ArrayBuffer | string | number[];
 
 /**
  * Check if a value is BufferLike
@@ -233,7 +228,7 @@ export enum DocumentPermission {
   Form = 1 << 8,
   Accessibility = 1 << 9,
   Assemble = 1 << 10,
-  PrintHQ = 1 << 11,
+  PrintHQ = 1 << 11
 }
 
 /**
@@ -253,7 +248,7 @@ export enum LinkDestType {
   GotoR = 'GOTOR',
   URI = 'URI',
   Launch = 'LAUNCH',
-  Named = 'NAMED',
+  Named = 'NAMED'
 }
 
 /**
@@ -294,7 +289,7 @@ export enum PdfObjectType {
   Array = 'ARRAY',
   Dict = 'DICT',
   Indirect = 'INDIRECT',
-  Stream = 'STREAM',
+  Stream = 'STREAM'
 }
 
 /**
@@ -322,7 +317,7 @@ export enum FilterName {
   DCTDecode = 'DCTDecode',
   JPXDecode = 'JPXDecode',
   JBIG2Decode = 'JBIG2Decode',
-  Crypt = 'Crypt',
+  Crypt = 'Crypt'
 }
 
 /**
@@ -446,7 +441,7 @@ export enum AnnotationType {
   TrapNet = 'TRAP_NET',
   Watermark = 'WATERMARK',
   ThreeD = 'THREE_D',
-  Redact = 'REDACT',
+  Redact = 'REDACT'
 }
 
 /**
@@ -476,7 +471,7 @@ export enum FormFieldType {
   Text = 'TEXT',
   ListBox = 'LIST_BOX',
   ComboBox = 'COMBO_BOX',
-  Signature = 'SIGNATURE',
+  Signature = 'SIGNATURE'
 }
 
 /**
@@ -489,4 +484,3 @@ export interface FormFieldLike {
   readonly rect: RectLike;
   readonly flags: number;
 }
-

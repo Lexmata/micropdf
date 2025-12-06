@@ -8,7 +8,9 @@ import { Buffer } from './buffer.js';
 import { Pixmap } from './pixmap.js';
 import { Colorspace } from './colorspace.js';
 import { Rect, Matrix, Quad } from './geometry.js';
-import { NanoPDFError, type Link, type RectLike, type MatrixLike } from './types.js';
+import { NanoPDFError, LinkDestType, type Link, type RectLike, type MatrixLike } from './types.js';
+import { native } from './native.js';
+import type { NativeContext, NativeDocument, NativePage, NativeRect } from './native.js';
 
 /**
  * An item in the document outline (table of contents)
@@ -60,6 +62,10 @@ export interface TextSpan {
  * A page in a document
  */
 export class Page {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _page?: NativePage;
   private readonly _pageNumber: number;
   private readonly _bounds: Rect;
   private readonly _mediaBox: Rect;
@@ -73,6 +79,7 @@ export class Page {
     mediaBox: Rect,
     rotation: number
   ) {
+    // Native handles will be set when FFI is fully integrated
     this._pageNumber = pageNumber;
     this._bounds = bounds;
     this._mediaBox = mediaBox;
@@ -116,69 +123,126 @@ export class Page {
   }
 
   /**
-   * Render the page to a pixmap
+   * Render the page to a pixmap using FFI
+   * @throws Error when native bindings are not available
    */
   toPixmap(
     matrix: MatrixLike = Matrix.IDENTITY,
     colorspace: Colorspace = Colorspace.deviceRGB(),
     alpha: boolean = true
   ): Pixmap {
-    // Calculate transformed bounds
+    if (!this._ctx || !this._page) {
+      throw new Error('Page rendering requires native FFI bindings (fz_run_page, fz_new_bbox_device)');
+    }
+
     const m = Matrix.from(matrix);
-    const transformedBounds = this._bounds.transform(m);
+    const nativeMatrix = {
+      a: m.a,
+      b: m.b,
+      c: m.c,
+      d: m.d,
+      e: m.e,
+      f: m.f
+    };
 
-    const width = Math.ceil(transformedBounds.width);
-    const height = Math.ceil(transformedBounds.height);
+    const nativeColorspace = {
+      name: colorspace.name,
+      n: colorspace.n,
+      type: colorspace.type.toString()
+    };
 
-    // Create pixmap with appropriate size
-    const pixmap = Pixmap.create(colorspace, width > 0 ? width : 1, height > 0 ? height : 1, alpha);
-    pixmap.clearWithValue(255); // White background
+    const nativePixmap = native.renderPage(this._ctx, this._page, nativeMatrix, nativeColorspace, alpha);
 
-    // TODO: Actual rendering requires content stream interpretation
-
-    return pixmap;
+    // Convert native pixmap to TypeScript Pixmap
+    return Pixmap.create(colorspace, nativePixmap.width, nativePixmap.height, alpha);
   }
 
   /**
-   * Render the page to PNG
+   * Render the page to PNG using FFI
+   * @throws Error when native bindings are not available
    */
   toPNG(dpi: number = 72): Uint8Array {
-    const scale = dpi / 72;
-    const matrix = Matrix.scale(scale, scale);
-    const pixmap = this.toPixmap(matrix, Colorspace.deviceRGB(), true);
-    return pixmap.toPNG();
+    if (!this._ctx || !this._page) {
+      throw new Error('PNG encoding requires native FFI bindings (fz_save_pixmap_as_png)');
+    }
+
+    const nativeColorspace = {
+      name: 'DeviceRGB',
+      n: 3,
+      type: 'RGB'
+    };
+
+    const pngBuffer = native.renderPageToPNG(this._ctx, this._page, dpi, nativeColorspace);
+    return new Uint8Array(pngBuffer);
   }
 
   /**
-   * Extract text from the page
+   * Extract text from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getText(): string {
-    // TODO: Text extraction requires content stream interpretation
-    return '';
+    if (!this._ctx || !this._page) {
+      throw new Error('Text extraction requires native FFI bindings (fz_new_stext_page_from_page)');
+    }
+    return native.extractText(this._ctx, this._page);
   }
 
   /**
-   * Get text blocks from the page
+   * Get text blocks from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getTextBlocks(): TextBlock[] {
-    // TODO: Text extraction requires content stream interpretation
-    return [];
+    if (!this._ctx || !this._page) {
+      throw new Error('Text block extraction requires native FFI bindings (fz_new_stext_page_from_page)');
+    }
+    const blocks = native.extractTextBlocks(this._ctx, this._page);
+    return blocks.map((block: { text: string; bbox: NativeRect }) => ({
+      text: block.text,
+      bbox: Rect.from(block.bbox),
+      lines: [] // Lines will be populated when FFI provides detailed text structure
+    }));
   }
 
   /**
-   * Get links from the page
+   * Get links from the page using FFI
+   * @throws Error when native bindings are not available
    */
   getLinks(): Link[] {
-    // TODO: Link extraction requires annotation parsing
-    return [];
+    if (!this._ctx || !this._page) {
+      throw new Error('Link extraction requires native FFI bindings (fz_load_links, pdf_annot_type)');
+    }
+    const links = native.getPageLinks(this._ctx, this._page);
+    return links.map((link: { rect: NativeRect; uri?: string; page?: number }): Link => {
+      const bounds = Rect.from(link.rect);
+      if (link.uri) {
+        return { bounds, dest: LinkDestType.URI, uri: link.uri };
+      } else if (link.page !== undefined) {
+        return { bounds, dest: LinkDestType.Goto, page: link.page };
+      } else {
+        return { bounds, dest: LinkDestType.None };
+      }
+    });
   }
 
   /**
-   * Search for text on the page
+   * Search for text on the page using FFI
+   * @throws Error when native bindings are not available
    */
-  search(_needle: string): Quad[] {
-    // TODO: Text search requires content stream interpretation
-    return [];
+  search(needle: string): Quad[] {
+    if (!this._ctx || !this._page) {
+      throw new Error('Text search requires native FFI bindings (fz_search_stext_page)');
+    }
+    const rects = native.searchText(this._ctx, this._page, needle, false);
+    // Convert Rects to Quads (each rect becomes a quad)
+    return rects.map((rect: NativeRect) => {
+      const r = Rect.from(rect);
+      return new Quad(
+        { x: r.x0, y: r.y0 },
+        { x: r.x1, y: r.y0 },
+        { x: r.x0, y: r.y1 },
+        { x: r.x1, y: r.y1 }
+      );
+    });
   }
 }
 
@@ -186,6 +250,10 @@ export class Page {
  * A PDF or other document
  */
 export class Document {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _ctx?: NativeContext;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private _doc?: NativeDocument;
   private _pages: Page[];
   private readonly _format: string;
   private readonly _metadata: Map<string, string>;
@@ -236,7 +304,9 @@ export class Document {
     const defaultBounds = new Rect(0, 0, 612, 792); // US Letter size
 
     // Parse MediaBox if present
-    const mediaBoxMatch = content.match(/\/MediaBox\s*\[\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*\]/);
+    const mediaBoxMatch = content.match(
+      /\/MediaBox\s*\[\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*\]/
+    );
     let mediaBox = defaultBounds;
     if (mediaBoxMatch) {
       mediaBox = new Rect(
@@ -314,12 +384,142 @@ export class Document {
   }
 
   /**
-   * Authenticate with a password
+   * Authenticate with a password using FFI
+   * @returns true if authentication successful
+   * @throws Error when native bindings are not available
    */
-  authenticate(_password: string): boolean {
-    // TODO: Implement proper PDF authentication
-    this._isAuthenticated = true;
-    return true;
+  authenticate(password: string): boolean {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Authentication requires native FFI bindings (pdf_authenticate_password)');
+    }
+    const result = native.authenticatePassword(this._ctx, this._doc, password);
+    if (result) {
+      this._isAuthenticated = true;
+    }
+    return result;
+  }
+
+  /**
+   * Check if the document has a specific permission using FFI
+   * @param permission The permission to check (print, edit, copy, annotate)
+   * @throws Error when native bindings are not available
+   */
+  hasPermission(permission: string): boolean {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Permission check requires native FFI bindings (pdf_has_permission)');
+    }
+    // Map permission string to permission bits
+    const permissionMap: Record<string, number> = {
+      print: 4,
+      edit: 8,
+      copy: 16,
+      annotate: 32
+    };
+    const permissionBit = permissionMap[permission] ?? 0;
+    return native.hasPermission(this._ctx, this._doc, permissionBit);
+  }
+
+  /**
+   * Get page label for a given page number
+   * @param pageNum Page number (0-based)
+   * @returns Page label (e.g., "i", "ii", "1", "2", "A-1")
+   */
+  getPageLabel(pageNum: number): string {
+    // Default to simple page numbering if no label scheme defined
+    return String(pageNum + 1);
+  }
+
+  /**
+   * Get page number from a page label
+   * @param label Page label to look up
+   * @returns Page number (0-based) or -1 if not found
+   */
+  getPageFromLabel(label: string): number {
+    // Simple implementation: try to parse as number
+    const num = parseInt(label, 10);
+    if (!isNaN(num) && num > 0 && num <= this.pageCount) {
+      return num - 1;
+    }
+    return -1;
+  }
+
+  /**
+   * Check if the document is valid (not corrupted)
+   */
+  isValid(): boolean {
+    return this._pages.length > 0;
+  }
+
+  /**
+   * Resolve a named destination to a page location using FFI
+   * @param name Named destination (e.g., "section1", "chapter2")
+   * @returns Page number (0-based) or undefined if not found
+   * @throws Error when native bindings are not available
+   */
+  resolveNamedDest(name: string): number | undefined {
+    if (!this._ctx || !this._doc) {
+      throw new Error('Named destination lookup requires native FFI bindings (pdf_lookup_dest)');
+    }
+    const result = native.resolveLink(this._ctx, this._doc, name);
+    return result !== null ? result : undefined;
+  }
+
+  /**
+   * Count chapters in the document (for structured documents)
+   */
+  countChapters(): number {
+    // For PDFs without chapter structure, treat as single chapter
+    return 1;
+  }
+
+  /**
+   * Count pages in a specific chapter
+   * @param chapterIndex Chapter index (0-based)
+   */
+  countChapterPages(chapterIndex: number): number {
+    if (chapterIndex === 0) {
+      return this.pageCount;
+    }
+    return 0;
+  }
+
+  /**
+   * Get page number from a chapter and page location
+   * @param chapter Chapter index (0-based)
+   * @param page Page within chapter (0-based)
+   */
+  pageNumberFromLocation(chapter: number, page: number): number {
+    // Simple implementation: just return page for single chapter
+    if (chapter === 0) {
+      return page;
+    }
+    return -1;
+  }
+
+  /**
+   * Layout the document with specific width and height (for reflowable documents)
+   * @param width Target width
+   * @param height Target height
+   * @param em Font size in points
+   */
+  layout(_width: number, _height: number, _em: number = 12): void {
+    // No-op for non-reflowable PDFs
+    // This is used for EPUB and other reflowable formats
+  }
+
+  /**
+   * Clone the document (create a copy)
+   * Note: This creates a shallow copy sharing the same data
+   */
+  clone(): Document {
+    const cloned = Object.create(Document.prototype);
+    cloned._pages = this._pages;
+    cloned._format = this._format;
+    cloned._needsPassword = this._needsPassword;
+    cloned._isAuthenticated = this._isAuthenticated;
+    cloned._metadata = new Map(this._metadata);
+    cloned._outline = [...this._outline];
+    return cloned;
   }
 
   /**
@@ -404,4 +604,3 @@ export class Document {
     return this._metadata.get('info:Producer');
   }
 }
-

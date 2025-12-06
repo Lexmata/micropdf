@@ -118,7 +118,7 @@ export function ascii85Encode(data: Uint8Array): Uint8Array {
 
   // Add EOD marker
   result.push(126); // '~'
-  result.push(62);  // '>'
+  result.push(62); // '>'
 
   return new Uint8Array(result);
 }
@@ -171,10 +171,10 @@ export function ascii85Decode(data: Uint8Array): Uint8Array {
 
     // Convert to bytes
     const bytes = [
-      (value >>> 24) & 0xFF,
-      (value >>> 16) & 0xFF,
-      (value >>> 8) & 0xFF,
-      value & 0xFF,
+      (value >>> 24) & 0xff,
+      (value >>> 16) & 0xff,
+      (value >>> 8) & 0xff,
+      value & 0xff
     ];
 
     // Output only the non-padded bytes
@@ -207,31 +207,28 @@ export function runLengthEncode(data: Uint8Array): Uint8Array {
   while (i < data.length) {
     // Count consecutive identical bytes
     let runLength = 1;
-    while (i + runLength < data.length &&
-           data[i] === data[i + runLength] &&
-           runLength < 128) {
+    while (i + runLength < data.length && data[i] === data[i + runLength] && runLength < 128) {
       runLength++;
     }
 
     if (runLength > 1) {
       // Run of identical bytes
       result.push(257 - runLength); // Length byte
-      result.push(data[i]!);        // Value byte
+      result.push(data[i]!); // Value byte
       i += runLength;
     } else {
       // Count consecutive different bytes
       let litLength = 1;
       while (i + litLength < data.length && litLength < 128) {
         // Check if next bytes start a run
-        if (i + litLength + 1 < data.length &&
-            data[i + litLength] === data[i + litLength + 1]) {
+        if (i + litLength + 1 < data.length && data[i + litLength] === data[i + litLength + 1]) {
           break;
         }
         litLength++;
       }
 
       // Literal bytes
-      result.push(litLength - 1);   // Length byte
+      result.push(litLength - 1); // Length byte
       for (let j = 0; j < litLength; j++) {
         result.push(data[i + j]!);
       }
@@ -360,7 +357,7 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
 
       // Increase code size if needed
       const nextSize = table.length + (earlyChange ? 0 : 1);
-      if (nextSize > (1 << codeSize) && codeSize < 12) {
+      if (nextSize > 1 << codeSize && codeSize < 12) {
         codeSize++;
       }
     }
@@ -378,7 +375,11 @@ export function lzwDecode(data: Uint8Array, earlyChange: boolean = true): Uint8A
 /**
  * Decode data using the specified filter
  */
-export function decodeFilter(filter: FilterType, data: Uint8Array, params?: Record<string, unknown>): Uint8Array {
+export function decodeFilter(
+  filter: FilterType,
+  data: Uint8Array,
+  params?: Record<string, unknown>
+): Uint8Array {
   switch (filter) {
     case 'FlateDecode':
       return flateDecode(data);
@@ -408,7 +409,11 @@ export function decodeFilter(filter: FilterType, data: Uint8Array, params?: Reco
 /**
  * Encode data using the specified filter
  */
-export function encodeFilter(filter: FilterType, data: Uint8Array, _params?: Record<string, unknown>): Uint8Array {
+export function encodeFilter(
+  filter: FilterType,
+  data: Uint8Array,
+  _params?: Record<string, unknown>
+): Uint8Array {
   switch (filter) {
     case 'FlateDecode':
       return flateEncode(data);
@@ -434,4 +439,3 @@ export function encodeFilter(filter: FilterType, data: Uint8Array, _params?: Rec
       throw NanoPDFError.argument(`Unsupported filter: ${filter as string}`);
   }
 }
-

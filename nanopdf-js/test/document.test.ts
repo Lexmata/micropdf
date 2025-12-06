@@ -288,4 +288,3 @@ describe('OutlineItem', () => {
     expect(item.uri).toBe('https://example.com');
   });
 });
-

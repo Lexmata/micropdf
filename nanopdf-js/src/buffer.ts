@@ -600,9 +600,8 @@ export class BufferReader {
   private position: number;
 
   constructor(buffer: Buffer | BufferLike) {
-    this.data = buffer instanceof Buffer
-      ? buffer.toNodeBuffer()
-      : Buffer.from(buffer).toNodeBuffer();
+    this.data =
+      buffer instanceof Buffer ? buffer.toNodeBuffer() : Buffer.from(buffer).toNodeBuffer();
     this.position = 0;
   }
 

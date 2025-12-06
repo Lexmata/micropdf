@@ -13,7 +13,7 @@ import {
   runLengthDecode,
   lzwDecode,
   decodeFilter,
-  encodeFilter,
+  encodeFilter
 } from '../src/index.js';
 
 describe('FlateDecode (zlib/deflate)', () => {
@@ -133,9 +133,12 @@ describe('RunLengthDecode', () => {
   it('should decode run length encoded data', () => {
     // Run of 4 'A's followed by literal 'BC'
     const encoded = new Uint8Array([
-      253, 65,      // Run of 4 'A's (257 - 253 = 4)
-      1, 66, 67,    // 2 literal bytes 'BC'
-      128,          // EOD
+      253,
+      65, // Run of 4 'A's (257 - 253 = 4)
+      1,
+      66,
+      67, // 2 literal bytes 'BC'
+      128 // EOD
     ]);
 
     const decoded = runLengthDecode(encoded);
@@ -153,9 +156,18 @@ describe('RunLengthDecode', () => {
 
   it('should round-trip data', () => {
     const input = new Uint8Array([
-      1, 1, 1, 1, 1,  // Run of 5
-      2, 3, 4,        // Literals
-      5, 5, 5, 5,     // Run of 4
+      1,
+      1,
+      1,
+      1,
+      1, // Run of 5
+      2,
+      3,
+      4, // Literals
+      5,
+      5,
+      5,
+      5 // Run of 4
     ]);
 
     const encoded = runLengthEncode(input);
@@ -271,4 +283,3 @@ describe('filter chaining', () => {
     expect(decompressed).toEqual(original);
   });
 });
-

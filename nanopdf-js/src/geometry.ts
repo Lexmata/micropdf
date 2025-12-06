@@ -46,10 +46,7 @@ export class Point implements PointLike {
 
   /** Transform this point by a matrix */
   transform(m: MatrixLike): Point {
-    return new Point(
-      this.x * m.a + this.y * m.c + m.e,
-      this.x * m.b + this.y * m.d + m.f
-    );
+    return new Point(this.x * m.a + this.y * m.c + m.e, this.x * m.b + this.y * m.d + m.f);
   }
 
   /** Calculate distance to another point */
@@ -188,12 +185,7 @@ export class Rect implements RectLike {
 
   /** Check if this rectangle contains another rectangle */
   containsRect(other: RectLike): boolean {
-    return (
-      this.x0 <= other.x0 &&
-      this.y0 <= other.y0 &&
-      this.x1 >= other.x1 &&
-      this.y1 >= other.y1
-    );
+    return this.x0 <= other.x0 && this.y0 <= other.y0 && this.x1 >= other.x1 && this.y1 >= other.y1;
   }
 
   /** Union with another rectangle */
@@ -282,10 +274,7 @@ export class Rect implements RectLike {
   /** Check equality */
   equals(other: RectLike): boolean {
     return (
-      this.x0 === other.x0 &&
-      this.y0 === other.y0 &&
-      this.x1 === other.x1 &&
-      this.y1 === other.y1
+      this.x0 === other.x0 && this.y0 === other.y0 && this.x1 === other.x1 && this.y1 === other.y1
     );
   }
 
@@ -334,12 +323,7 @@ export class IRect implements IRectLike {
 
   /** Create from a Rect by rounding */
   static fromRect(r: RectLike): IRect {
-    return new IRect(
-      Math.floor(r.x0),
-      Math.floor(r.y0),
-      Math.ceil(r.x1),
-      Math.ceil(r.y1)
-    );
+    return new IRect(Math.floor(r.x0), Math.floor(r.y0), Math.ceil(r.x1), Math.ceil(r.y1));
   }
 
   // ============================================================================
@@ -404,10 +388,7 @@ export class IRect implements IRectLike {
   /** Check equality */
   equals(other: IRectLike): boolean {
     return (
-      this.x0 === other.x0 &&
-      this.y0 === other.y0 &&
-      this.x1 === other.x1 &&
-      this.y1 === other.y1
+      this.x0 === other.x0 && this.y0 === other.y0 && this.x1 === other.x1 && this.y1 === other.y1
     );
   }
 
@@ -485,12 +466,7 @@ export class Matrix implements MatrixLike {
   /** Check if this is the identity matrix */
   get isIdentity(): boolean {
     return (
-      this.a === 1 &&
-      this.b === 0 &&
-      this.c === 0 &&
-      this.d === 1 &&
-      this.e === 0 &&
-      this.f === 0
+      this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.e === 0 && this.f === 0
     );
   }
 
@@ -574,10 +550,7 @@ export class Matrix implements MatrixLike {
 
   /** Transform a point */
   transformPoint(p: PointLike): Point {
-    return new Point(
-      p.x * this.a + p.y * this.c + this.e,
-      p.x * this.b + p.y * this.d + this.f
-    );
+    return new Point(p.x * this.a + p.y * this.c + this.e, p.x * this.b + p.y * this.d + this.f);
   }
 
   /** Check equality */
@@ -681,11 +654,71 @@ export class Quad implements QuadLike {
     const c3 = cross(this.lr, this.ll, this.ul);
     const c4 = cross(this.ll, this.ul, this.ur);
 
-    return (c1 >= 0 && c2 >= 0 && c3 >= 0 && c4 >= 0) ||
-           (c1 <= 0 && c2 <= 0 && c3 <= 0 && c4 <= 0);
+    return (c1 >= 0 && c2 >= 0 && c3 >= 0 && c4 >= 0) || (c1 <= 0 && c2 <= 0 && c3 <= 0 && c4 <= 0);
   }
 
   toString(): string {
     return `Quad(${this.ul}, ${this.ur}, ${this.ll}, ${this.lr})`;
+  }
+}
+
+// ============================================================================
+// Color
+// ============================================================================
+
+/**
+ * Color-like type
+ */
+export type ColorLike =
+  | Color
+  | { r: number; g: number; b: number; a?: number }
+  | [number, number, number]
+  | [number, number, number, number];
+
+/**
+ * An RGBA color
+ */
+export class Color {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  readonly a: number;
+
+  constructor(r: number, g: number, b: number, a: number = 1.0) {
+    this.r = Math.max(0, Math.min(1, r));
+    this.g = Math.max(0, Math.min(1, g));
+    this.b = Math.max(0, Math.min(1, b));
+    this.a = Math.max(0, Math.min(1, a));
+  }
+
+  /**
+   * Create color from color-like object
+   */
+  static from(c: ColorLike): Color {
+    if (c instanceof Color) {
+      return c;
+    }
+    if (Array.isArray(c)) {
+      return new Color(c[0]!, c[1]!, c[2]!, c[3]);
+    }
+    return new Color(c.r, c.g, c.b, c.a);
+  }
+
+  /** Black color */
+  static readonly BLACK = new Color(0, 0, 0);
+  /** White color */
+  static readonly WHITE = new Color(1, 1, 1);
+  /** Red color */
+  static readonly RED = new Color(1, 0, 0);
+  /** Green color */
+  static readonly GREEN = new Color(0, 1, 0);
+  /** Blue color */
+  static readonly BLUE = new Color(0, 0, 1);
+
+  /**
+   * Get as array [r, g, b, a]
+   */
+  toArray(): [number, number, number, number] {
+    return [this.r, this.g, this.b, this.a];
   }
 }

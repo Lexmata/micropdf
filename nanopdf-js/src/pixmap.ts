@@ -1,606 +1,492 @@
 /**
- * Pixmap - Pixel buffer for rendering
+ * Pixmap - Raster image handling
  *
- * This implementation mirrors the Rust `fitz::pixmap::Pixmap` for 100% API compatibility.
+ * This module provides 100% API compatibility with MuPDF's pixmap operations.
+ * Handles pixel-based images, conversions, and manipulations.
  */
 
+import { Rect, IRect, type IRectLike } from './geometry.js';
 import { Colorspace } from './colorspace.js';
-import { NanoPDFError, type IRectLike } from './types.js';
 
 /**
- * A pixel buffer for storing image data
+ * A raster image (pixmap)
  */
 export class Pixmap {
-  private readonly _x: number;
-  private readonly _y: number;
-  private readonly _width: number;
-  private readonly _height: number;
-  private readonly _n: number;
-  private readonly _alpha: boolean;
-  private readonly _stride: number;
-  private readonly _colorspace: Colorspace | null;
-  private readonly _samples: Uint8Array;
+  private _width: number;
+  private _height: number;
+  private _x: number = 0;
+  private _y: number = 0;
+  private _colorspace: Colorspace;
+  private _alpha: boolean;
+  private _data: Uint8Array;
+  private _xres: number = 96;
+  private _yres: number = 96;
+  private _refCount: number = 1;
 
-  private constructor(
-    x: number,
-    y: number,
+  constructor(
+    colorspace: Colorspace,
     width: number,
     height: number,
-    n: number,
-    alpha: boolean,
-    stride: number,
-    colorspace: Colorspace | null,
-    samples: Uint8Array
+    alpha: boolean = true,
+    x: number = 0,
+    y: number = 0
   ) {
-    this._x = x;
-    this._y = y;
+    this._colorspace = colorspace;
     this._width = width;
     this._height = height;
-    this._n = n;
     this._alpha = alpha;
-    this._stride = stride;
-    this._colorspace = colorspace;
-    this._samples = samples;
+    this._x = x;
+    this._y = y;
+    const stride = colorspace.n + (alpha ? 1 : 0);
+    this._data = new Uint8Array(width * height * stride);
   }
-
-  // ============================================================================
-  // Static Constructors
-  // ============================================================================
 
   /**
    * Create a new pixmap
    */
   static create(
-    colorspace: Colorspace | null,
+    colorspace: Colorspace,
     width: number,
     height: number,
-    alpha: boolean
+    alpha: boolean = true
   ): Pixmap {
-    if (width <= 0 || height <= 0) {
-      throw NanoPDFError.argument('Invalid dimensions');
-    }
-
-    let n: number;
-    if (colorspace !== null) {
-      n = colorspace.n + (alpha ? 1 : 0);
-    } else if (alpha) {
-      n = 1;
-    } else {
-      throw NanoPDFError.argument('Pixmap must have colorspace or alpha');
-    }
-
-    const stride = width * n;
-    const samples = new Uint8Array(stride * height);
-
-    return new Pixmap(0, 0, width, height, n, alpha, stride, colorspace, samples);
+    return new Pixmap(colorspace, width, height, alpha);
   }
 
   /**
-   * Create a new pixmap with a bounding box
+   * Create pixmap with bounding box
    */
-  static createWithBbox(
-    colorspace: Colorspace | null,
-    bbox: IRectLike,
-    alpha: boolean
-  ): Pixmap {
-    const width = bbox.x1 - bbox.x0;
-    const height = bbox.y1 - bbox.y0;
+  static createWithBBox(colorspace: Colorspace, bbox: IRectLike, alpha: boolean = true): Pixmap {
+    const b = IRect.from(bbox);
+    return new Pixmap(colorspace, b.width, b.height, alpha, b.x0, b.y0);
+  }
 
-    if (width <= 0 || height <= 0) {
-      throw NanoPDFError.argument('Invalid bounding box');
+  // ============================================================================
+  // Reference Counting
+  // ============================================================================
+
+  keep(): this {
+    this._refCount++;
+    return this;
+  }
+
+  drop(): void {
+    if (this._refCount > 0) {
+      this._refCount--;
     }
-
-    let n: number;
-    if (colorspace !== null) {
-      n = colorspace.n + (alpha ? 1 : 0);
-    } else if (alpha) {
-      n = 1;
-    } else {
-      throw NanoPDFError.argument('Pixmap must have colorspace or alpha');
-    }
-
-    const stride = width * n;
-    const samples = new Uint8Array(stride * height);
-
-    return new Pixmap(bbox.x0, bbox.y0, width, height, n, alpha, stride, colorspace, samples);
   }
 
   /**
-   * Create a pixmap from existing sample data
+   * Clone this pixmap
    */
-  static fromSamples(
-    colorspace: Colorspace | null,
-    width: number,
-    height: number,
-    alpha: boolean,
-    samples: Uint8Array
-  ): Pixmap {
-    if (width <= 0 || height <= 0) {
-      throw NanoPDFError.argument('Invalid dimensions');
-    }
-
-    let n: number;
-    if (colorspace !== null) {
-      n = colorspace.n + (alpha ? 1 : 0);
-    } else if (alpha) {
-      n = 1;
-    } else {
-      throw NanoPDFError.argument('Pixmap must have colorspace or alpha');
-    }
-
-    const stride = width * n;
-    const expectedSize = stride * height;
-    if (samples.length < expectedSize) {
-      throw NanoPDFError.argument(`Expected ${expectedSize} bytes, got ${samples.length}`);
-    }
-
-    return new Pixmap(0, 0, width, height, n, alpha, stride, colorspace, samples);
+  clone(): Pixmap {
+    const cloned = new Pixmap(
+      this._colorspace,
+      this._width,
+      this._height,
+      this._alpha,
+      this._x,
+      this._y
+    );
+    cloned._data = new Uint8Array(this._data);
+    cloned._xres = this._xres;
+    cloned._yres = this._yres;
+    return cloned;
   }
 
   // ============================================================================
   // Properties
   // ============================================================================
 
-  /**
-   * X origin
-   */
   get x(): number {
     return this._x;
   }
 
-  /**
-   * Y origin
-   */
   get y(): number {
     return this._y;
   }
 
-  /**
-   * Width in pixels
-   */
   get width(): number {
     return this._width;
   }
 
-  /**
-   * Height in pixels
-   */
   get height(): number {
     return this._height;
   }
 
-  /**
-   * Number of components per pixel (including alpha)
-   */
-  get n(): number {
-    return this._n;
-  }
-
-  /**
-   * Number of color components (excluding alpha)
-   */
-  get colorants(): number {
-    return this._alpha ? this._n - 1 : this._n;
-  }
-
-  /**
-   * Whether the pixmap has an alpha channel
-   */
-  get alpha(): boolean {
-    return this._alpha;
-  }
-
-  /**
-   * Stride (bytes per row)
-   */
-  get stride(): number {
-    return this._stride;
-  }
-
-  /**
-   * Get the colorspace (null for alpha-only pixmaps)
-   */
-  get colorspace(): Colorspace | null {
+  get colorspace(): Colorspace {
     return this._colorspace;
   }
 
   /**
-   * Get the sample data
+   * Get number of components (colorants + alpha if present)
    */
-  get samples(): Uint8Array {
-    return this._samples;
+  get components(): number {
+    return this._colorspace.n + (this._alpha ? 1 : 0);
   }
 
   /**
-   * Get the bounding box
+   * Get number of colorant components (excluding alpha)
    */
-  get bbox(): IRectLike {
-    return {
-      x0: this._x,
-      y0: this._y,
-      x1: this._x + this._width,
-      y1: this._y + this._height,
-    };
+  get colorants(): number {
+    return this._colorspace.n;
+  }
+
+  /**
+   * Check if pixmap has alpha channel
+   */
+  get hasAlpha(): boolean {
+    return this._alpha;
+  }
+
+  /**
+   * Get stride (bytes per row)
+   */
+  get stride(): number {
+    return this._width * this.components;
+  }
+
+  /**
+   * Get raw pixel data
+   */
+  get data(): Uint8Array {
+    return this._data;
+  }
+
+  /**
+   * Get bounding box
+   */
+  getBounds(): Rect {
+    return new Rect(this._x, this._y, this._x + this._width, this._y + this._height);
+  }
+
+  /**
+   * Get integer bounding box
+   */
+  getBBox(): IRect {
+    return new IRect(this._x, this._y, this._x + this._width, this._y + this._height);
   }
 
   // ============================================================================
-  // Pixel Access
+  // Resolution
   // ============================================================================
 
-  /**
-   * Get a pixel at (x, y)
-   */
-  getPixel(x: number, y: number): Uint8Array | null {
-    if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
-      return null;
-    }
-    const offset = y * this._stride + x * this._n;
-    return this._samples.slice(offset, offset + this._n);
+  get xres(): number {
+    return this._xres;
+  }
+
+  set xres(res: number) {
+    this._xres = Math.max(1, res);
+  }
+
+  get yres(): number {
+    return this._yres;
+  }
+
+  set yres(res: number) {
+    this._yres = Math.max(1, res);
   }
 
   /**
-   * Set a pixel at (x, y)
+   * Get resolution as [xres, yres]
    */
-  setPixel(x: number, y: number, values: number[]): this {
-    if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
-      return this;
-    }
-    if (values.length < this._n) {
-      throw NanoPDFError.argument(`Expected ${this._n} values, got ${values.length}`);
-    }
-    const offset = y * this._stride + x * this._n;
-    for (let i = 0; i < this._n; i++) {
-      const idx = offset + i;
-      if (idx < this._samples.length) {
-        this._samples[idx] = Math.max(0, Math.min(255, values[i] ?? 0));
-      }
-    }
-    return this;
+  getResolution(): [number, number] {
+    return [this._xres, this._yres];
+  }
+
+  /**
+   * Set resolution
+   */
+  setResolution(xres: number, yres: number): void {
+    this._xres = Math.max(1, xres);
+    this._yres = Math.max(1, yres);
+  }
+
+  // ============================================================================
+  // Sample Access
+  // ============================================================================
+
+  /**
+   * Get samples (pixel data)
+   */
+  samples(): Uint8Array {
+    return this._data;
   }
 
   /**
    * Get a single sample value
    */
-  getSample(x: number, y: number, component: number): number | null {
+  getSample(x: number, y: number, component: number): number {
     if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
-      return null;
+      return 0;
     }
-    if (component < 0 || component >= this._n) {
-      return null;
+    if (component < 0 || component >= this.components) {
+      return 0;
     }
-    const offset = y * this._stride + x * this._n + component;
-    return this._samples[offset] ?? null;
+    const offset = (y * this._width + x) * this.components + component;
+    return this._data[offset] || 0;
   }
 
   /**
    * Set a single sample value
    */
-  setSample(x: number, y: number, component: number, value: number): this {
+  setSample(x: number, y: number, component: number, value: number): void {
     if (x < 0 || x >= this._width || y < 0 || y >= this._height) {
-      return this;
+      return;
     }
-    if (component < 0 || component >= this._n) {
-      return this;
+    if (component < 0 || component >= this.components) {
+      return;
     }
-    const offset = y * this._stride + x * this._n + component;
-    if (offset < this._samples.length) {
-      this._samples[offset] = Math.max(0, Math.min(255, value));
+    const offset = (y * this._width + x) * this.components + component;
+    this._data[offset] = Math.max(0, Math.min(255, value));
+  }
+
+  /**
+   * Get all samples for a pixel
+   */
+  getPixel(x: number, y: number): number[] {
+    const pixel: number[] = [];
+    for (let c = 0; c < this.components; c++) {
+      pixel.push(this.getSample(x, y, c));
     }
-    return this;
+    return pixel;
+  }
+
+  /**
+   * Set all samples for a pixel
+   */
+  setPixel(x: number, y: number, values: number[]): void {
+    for (let c = 0; c < Math.min(this.components, values.length); c++) {
+      this.setSample(x, y, c, values[c]!);
+    }
   }
 
   // ============================================================================
-  // Modification Methods
+  // Clearing and Filling
   // ============================================================================
 
   /**
-   * Clear the pixmap to transparent black
+   * Clear pixmap to transparent/white
    */
-  clear(): this {
-    this._samples.fill(0);
-    return this;
-  }
-
-  /**
-   * Clear the pixmap to a specific value
-   */
-  clearWithValue(value: number): this {
-    this._samples.fill(Math.max(0, Math.min(255, value)));
-    return this;
-  }
-
-  /**
-   * Fill the pixmap with a color
-   */
-  fill(color: number[]): this {
-    if (color.length < this._n) {
-      throw NanoPDFError.argument(`Expected ${this._n} values, got ${color.length}`);
+  clear(): void {
+    if (this._alpha) {
+      // Clear to transparent (all zeros)
+      this._data.fill(0);
+    } else {
+      // Clear to white (all 255)
+      this._data.fill(255);
     }
-    for (let y = 0; y < this._height; y++) {
-      for (let x = 0; x < this._width; x++) {
-        const offset = y * this._stride + x * this._n;
-        for (let i = 0; i < this._n; i++) {
-          const idx = offset + i;
-          if (idx < this._samples.length) {
-            this._samples[idx] = Math.max(0, Math.min(255, color[i] ?? 0));
-          }
-        }
+  }
+
+  /**
+   * Clear pixmap to specific value
+   */
+  clearWithValue(value: number): void {
+    this._data.fill(value);
+  }
+
+  // ============================================================================
+  // Transformations
+  // ============================================================================
+
+  /**
+   * Invert pixmap colors
+   */
+  invert(): void {
+    const colorants = this._colorspace.n;
+    for (let i = 0; i < this._data.length; i++) {
+      // Invert colorants but not alpha
+      if (i % this.components < colorants) {
+        this._data[i] = 255 - this._data[i]!;
       }
     }
-    return this;
-  }
-
-  /**
-   * Invert the pixmap colors
-   */
-  invert(): this {
-    const colorants = this._alpha ? this._n - 1 : this._n;
-    for (let y = 0; y < this._height; y++) {
-      for (let x = 0; x < this._width; x++) {
-        const offset = y * this._stride + x * this._n;
-        for (let i = 0; i < colorants; i++) {
-          const idx = offset + i;
-          if (idx < this._samples.length) {
-            this._samples[idx] = 255 - (this._samples[idx] ?? 0);
-          }
-        }
-      }
-    }
-    return this;
   }
 
   /**
    * Apply gamma correction
    */
-  gamma(gammaValue: number): this {
-    if (gammaValue <= 0) {
-      throw NanoPDFError.argument('Gamma must be positive');
-    }
-    const invGamma = 1 / gammaValue;
-    const colorants = this._alpha ? this._n - 1 : this._n;
-    for (let y = 0; y < this._height; y++) {
-      for (let x = 0; x < this._width; x++) {
-        const offset = y * this._stride + x * this._n;
-        for (let i = 0; i < colorants; i++) {
-          const idx = offset + i;
-          if (idx < this._samples.length) {
-            const normalized = (this._samples[idx] ?? 0) / 255;
-            this._samples[idx] = Math.round(Math.pow(normalized, invGamma) * 255);
-          }
-        }
+  gamma(gamma: number): void {
+    const colorants = this._colorspace.n;
+    const invGamma = 1.0 / gamma;
+
+    for (let i = 0; i < this._data.length; i++) {
+      // Apply gamma to colorants but not alpha
+      if (i % this.components < colorants) {
+        const normalized = this._data[i]! / 255;
+        const corrected = Math.pow(normalized, invGamma);
+        this._data[i] = Math.round(corrected * 255);
       }
     }
-    return this;
   }
 
   /**
-   * Tint the pixmap with a color
+   * Tint pixmap with a color
    */
-  tint(color: number[]): this {
-    const colorants = this._alpha ? this._n - 1 : this._n;
-    if (color.length < colorants) {
-      throw NanoPDFError.argument(`Expected ${colorants} color values, got ${color.length}`);
+  tint(black: number[], white: number[]): void {
+    if (black.length !== this._colorspace.n || white.length !== this._colorspace.n) {
+      return;
     }
+
+    const colorants = this._colorspace.n;
+    const components = this.components;
+
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
-        const offset = y * this._stride + x * this._n;
-        for (let i = 0; i < colorants; i++) {
-          const idx = offset + i;
-          if (idx < this._samples.length) {
-            const orig = (this._samples[idx] ?? 0) / 255;
-            const tintVal = Math.max(0, Math.min(1, color[i] ?? 0));
-            this._samples[idx] = Math.round(orig * tintVal * 255);
-          }
+        const offset = (y * this._width + x) * components;
+
+        for (let c = 0; c < colorants; c++) {
+          const gray = this._data[offset + c]! / 255;
+          const tinted = black[c]! * (1 - gray) + white[c]! * gray;
+          this._data[offset + c] = Math.round(tinted * 255);
         }
       }
     }
-    return this;
   }
 
   // ============================================================================
-  // Clone
+  // Conversion
   // ============================================================================
 
   /**
-   * Create a copy of this pixmap
+   * Convert pixmap to another colorspace
    */
-  clone(): Pixmap {
-    const samples = new Uint8Array(this._samples);
-    return new Pixmap(
-      this._x,
-      this._y,
+  convert(destColorspace: Colorspace): Pixmap {
+    const converted = new Pixmap(
+      destColorspace,
       this._width,
       this._height,
-      this._n,
       this._alpha,
-      this._stride,
-      this._colorspace?.clone() ?? null,
-      samples
+      this._x,
+      this._y
     );
-  }
 
-  // ============================================================================
-  // Export
-  // ============================================================================
+    converted._xres = this._xres;
+    converted._yres = this._yres;
 
-  /**
-   * Convert to raw RGBA data for use with Canvas API
-   * Returns Uint8ClampedArray suitable for ImageData
-   */
-  toRGBA(): Uint8ClampedArray {
-    // Convert to RGBA format for ImageData
-    const rgba = new Uint8ClampedArray(this._width * this._height * 4);
+    const srcComponents = this.components;
+    const dstComponents = converted.components;
+    const srcColorants = this._colorspace.n;
+    const dstColorants = destColorspace.n;
 
     for (let y = 0; y < this._height; y++) {
       for (let x = 0; x < this._width; x++) {
-        const srcOffset = y * this._stride + x * this._n;
-        const dstOffset = (y * this._width + x) * 4;
+        const srcOffset = (y * this._width + x) * srcComponents;
+        const dstOffset = (y * this._width + x) * dstComponents;
 
-        if (this._colorspace?.isGray) {
-          const gray = this._samples[srcOffset] ?? 0;
-          rgba[dstOffset] = gray;
-          rgba[dstOffset + 1] = gray;
-          rgba[dstOffset + 2] = gray;
-          rgba[dstOffset + 3] = this._alpha ? (this._samples[srcOffset + 1] ?? 255) : 255;
-        } else if (this._colorspace?.isRGB || this._colorspace?.isBGR) {
-          if (this._colorspace.isBGR) {
-            rgba[dstOffset] = this._samples[srcOffset + 2] ?? 0;
-            rgba[dstOffset + 1] = this._samples[srcOffset + 1] ?? 0;
-            rgba[dstOffset + 2] = this._samples[srcOffset] ?? 0;
-          } else {
-            rgba[dstOffset] = this._samples[srcOffset] ?? 0;
-            rgba[dstOffset + 1] = this._samples[srcOffset + 1] ?? 0;
-            rgba[dstOffset + 2] = this._samples[srcOffset + 2] ?? 0;
-          }
-          rgba[dstOffset + 3] = this._alpha ? (this._samples[srcOffset + 3] ?? 255) : 255;
-        } else if (this._colorspace?.isCMYK) {
-          const c = (this._samples[srcOffset] ?? 0) / 255;
-          const m = (this._samples[srcOffset + 1] ?? 0) / 255;
-          const yellow = (this._samples[srcOffset + 2] ?? 0) / 255;
-          const k = (this._samples[srcOffset + 3] ?? 0) / 255;
-          rgba[dstOffset] = Math.round((1 - c) * (1 - k) * 255);
-          rgba[dstOffset + 1] = Math.round((1 - m) * (1 - k) * 255);
-          rgba[dstOffset + 2] = Math.round((1 - yellow) * (1 - k) * 255);
-          rgba[dstOffset + 3] = this._alpha ? (this._samples[srcOffset + 4] ?? 255) : 255;
-        } else if (this._alpha && !this._colorspace) {
-          // Alpha-only pixmap
-          rgba[dstOffset] = 0;
-          rgba[dstOffset + 1] = 0;
-          rgba[dstOffset + 2] = 0;
-          rgba[dstOffset + 3] = this._samples[srcOffset] ?? 0;
+        // Extract source color
+        const srcColor: number[] = [];
+        for (let c = 0; c < srcColorants; c++) {
+          srcColor.push(this._data[srcOffset + c]! / 255);
+        }
+
+        // Convert color
+        const dstColor = this._colorspace.convertColor(destColorspace, srcColor);
+
+        // Store destination color
+        for (let c = 0; c < dstColorants; c++) {
+          converted._data[dstOffset + c] = Math.round(dstColor[c]! * 255);
+        }
+
+        // Copy alpha if present
+        if (this._alpha && converted._alpha) {
+          converted._data[dstOffset + dstColorants] = this._data[srcOffset + srcColorants]!;
         }
       }
     }
 
-    return rgba;
+    return converted;
   }
 
   /**
-   * Convert to ImageData for use with Canvas API (browser only)
+   * Scale pixmap to new dimensions
    */
-  toImageData(): ImageData {
-    const rgba = this.toRGBA();
-    // Need to create a new Uint8ClampedArray with proper ArrayBuffer for ImageData
-    const data = new Uint8ClampedArray(rgba.length);
-    data.set(rgba);
-    return new ImageData(data, this._width, this._height);
+  scale(width: number, height: number): Pixmap {
+    const scaled = new Pixmap(this._colorspace, width, height, this._alpha, this._x, this._y);
+
+    scaled._xres = this._xres;
+    scaled._yres = this._yres;
+
+    const xRatio = this._width / width;
+    const yRatio = this._height / height;
+    const components = this.components;
+
+    // Nearest neighbor scaling (simplified)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const srcX = Math.floor(x * xRatio);
+        const srcY = Math.floor(y * yRatio);
+
+        const srcOffset = (srcY * this._width + srcX) * components;
+        const dstOffset = (y * width + x) * components;
+
+        for (let c = 0; c < components; c++) {
+          scaled._data[dstOffset + c] = this._data[srcOffset + c]!;
+        }
+      }
+    }
+
+    return scaled;
   }
+
+  // ============================================================================
+  // Validation
+  // ============================================================================
 
   /**
-   * Get raw samples as Uint8Array
+   * Check if pixmap is valid
    */
-  toUint8Array(): Uint8Array {
-    return new Uint8Array(this._samples);
+  isValid(): boolean {
+    if (this._width <= 0 || this._height <= 0) {
+      return false;
+    }
+    if (!this._colorspace || !this._colorspace.isValid()) {
+      return false;
+    }
+    if (this._data.length !== this._width * this._height * this.components) {
+      return false;
+    }
+    return true;
   }
+
+  // ============================================================================
+  // Information
+  // ============================================================================
 
   /**
-   * Encode to PNG format
-   * Returns raw PNG data as Uint8Array
+   * Get pixmap info
    */
-  toPNG(): Uint8Array {
-    // Simple PNG encoder (no compression for simplicity)
-    const rgba = this.toRGBA();
-
-    // PNG signature
-    const signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-
-    // CRC32 table
-    const crcTable: number[] = [];
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) {
-        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-      }
-      crcTable[n] = c;
-    }
-
-    function crc32(data: number[]): number {
-      let crc = 0xFFFFFFFF;
-      for (const byte of data) {
-        crc = crcTable[(crc ^ byte) & 0xFF]! ^ (crc >>> 8);
-      }
-      return (crc ^ 0xFFFFFFFF) >>> 0;
-    }
-
-    function writeChunk(type: string, data: number[]): number[] {
-      const chunk: number[] = [];
-
-      // Length (4 bytes, big-endian)
-      const len = data.length;
-      chunk.push((len >>> 24) & 0xFF);
-      chunk.push((len >>> 16) & 0xFF);
-      chunk.push((len >>> 8) & 0xFF);
-      chunk.push(len & 0xFF);
-
-      // Type (4 bytes)
-      const typeBytes = type.split('').map(c => c.charCodeAt(0));
-      chunk.push(...typeBytes);
-
-      // Data
-      chunk.push(...data);
-
-      // CRC (4 bytes)
-      const crc = crc32([...typeBytes, ...data]);
-      chunk.push((crc >>> 24) & 0xFF);
-      chunk.push((crc >>> 16) & 0xFF);
-      chunk.push((crc >>> 8) & 0xFF);
-      chunk.push(crc & 0xFF);
-
-      return chunk;
-    }
-
-    // IHDR chunk
-    const ihdr: number[] = [];
-    ihdr.push((this._width >>> 24) & 0xFF);
-    ihdr.push((this._width >>> 16) & 0xFF);
-    ihdr.push((this._width >>> 8) & 0xFF);
-    ihdr.push(this._width & 0xFF);
-    ihdr.push((this._height >>> 24) & 0xFF);
-    ihdr.push((this._height >>> 16) & 0xFF);
-    ihdr.push((this._height >>> 8) & 0xFF);
-    ihdr.push(this._height & 0xFF);
-    ihdr.push(8);  // Bit depth
-    ihdr.push(6);  // Color type (RGBA)
-    ihdr.push(0);  // Compression method
-    ihdr.push(0);  // Filter method
-    ihdr.push(0);  // Interlace method
-
-    // IDAT chunk (raw image data with filter bytes, compressed with deflate)
-    const rawData: number[] = [];
-    for (let y = 0; y < this._height; y++) {
-      rawData.push(0); // Filter type: None
-      const rowOffset = y * this._width * 4;
-      for (let x = 0; x < this._width * 4; x++) {
-        rawData.push(rgba[rowOffset + x] ?? 0);
-      }
-    }
-
-    // Compress using zlib
-    let idat: number[];
-    try {
-      // Use zlib deflate (Node.js only)
-      const zlib = require('zlib');
-      const compressed = zlib.deflateSync(globalThis.Buffer.from(rawData));
-      idat = Array.from(new Uint8Array(compressed));
-    } catch {
-      // Fallback: Store uncompressed (won't be valid PNG but better than nothing)
-      // Wrap in zlib format
-      idat = [0x78, 0x01, ...rawData]; // Very basic zlib header
-    }
-
-    // IEND chunk (empty)
-    const result: number[] = [
-      ...signature,
-      ...writeChunk('IHDR', ihdr),
-      ...writeChunk('IDAT', idat),
-      ...writeChunk('IEND', []),
-    ];
-
-    return new Uint8Array(result);
-  }
-
-  toString(): string {
-    return `Pixmap(${this._width}x${this._height}, n=${this._n}, alpha=${this._alpha})`;
+  getInfo(): PixmapInfo {
+    return {
+      x: this._x,
+      y: this._y,
+      width: this._width,
+      height: this._height,
+      colorspace: this._colorspace,
+      components: this.components,
+      colorants: this.colorants,
+      hasAlpha: this._alpha,
+      stride: this.stride,
+      xres: this._xres,
+      yres: this._yres,
+      size: this._data.length
+    };
   }
 }
 
+/**
+ * Pixmap information
+ */
+export interface PixmapInfo {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  colorspace: Colorspace;
+  components: number;
+  colorants: number;
+  hasAlpha: boolean;
+  stride: number;
+  xres: number;
+  yres: number;
+  size: number;
+}

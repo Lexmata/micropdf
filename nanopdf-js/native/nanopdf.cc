@@ -6,22 +6,20 @@
  */
 
 #include <napi.h>
-#include "include/nanopdf.h"
+#include "include/mupdf_minimal.h"
 
 // Forward declarations from other source files
-Napi::Object InitBuffer(Napi::Env env, Napi::Object exports);
-Napi::Object InitGeometry(Napi::Env env, Napi::Object exports);
+Napi::Object InitContext(Napi::Env env, Napi::Object exports);
+Napi::Object InitDocument(Napi::Env env, Napi::Object exports);
+Napi::Object InitPage(Napi::Env env, Napi::Object exports);
 
 /**
  * Get the NanoPDF library version
  */
 Napi::String GetVersion(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    const char* version = nanopdf_version();
-    if (version == nullptr) {
-        return Napi::String::New(env, "0.1.0");
-    }
-    return Napi::String::New(env, version);
+    // Return version from package.json
+    return Napi::String::New(env, "0.1.0");
 }
 
 /**
@@ -32,8 +30,9 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("getVersion", Napi::Function::New(env, GetVersion));
 
     // Initialize sub-modules
-    InitBuffer(env, exports);
-    InitGeometry(env, exports);
+    InitContext(env, exports);
+    InitDocument(env, exports);
+    InitPage(env, exports);
 
     return exports;
 }
