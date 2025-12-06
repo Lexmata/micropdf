@@ -22,6 +22,7 @@ pub mod page;
 pub mod path;
 pub mod pixmap;
 pub mod render;
+pub mod stext;
 pub mod stream;
 pub mod text;
 

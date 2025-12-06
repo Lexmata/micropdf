@@ -24,7 +24,7 @@ impl GlyphId {
     pub fn new(id: u16) -> Self {
         Self(id)
     }
-    
+
     pub fn value(&self) -> u16 {
         self.0
     }
@@ -73,19 +73,19 @@ impl GlyphOutline {
     pub fn new(gid: GlyphId, path: Path, metrics: GlyphMetrics) -> Self {
         Self { gid, path, metrics }
     }
-    
+
     /// Transform the glyph outline by a matrix
     pub fn transform(&mut self, ctm: &Matrix) {
         // Transform path
         let transformed_path = Path::new();
         // TODO: Transform each path element
         self.path = transformed_path;
-        
+
         // Transform metrics
         let p0 = ctm.transform_point(Point::new(0.0, 0.0));
         let p1 = ctm.transform_point(Point::new(self.metrics.advance_width, 0.0));
         self.metrics.advance_width = (p1.x - p0.x).abs();
-        
+
         // Transform bbox
         let bbox = self.metrics.bbox;
         let corners = [
@@ -94,12 +94,12 @@ impl GlyphOutline {
             ctm.transform_point(Point::new(bbox.x1, bbox.y1)),
             ctm.transform_point(Point::new(bbox.x0, bbox.y1)),
         ];
-        
+
         let min_x = corners.iter().map(|p| p.x).fold(f32::INFINITY, f32::min);
         let min_y = corners.iter().map(|p| p.y).fold(f32::INFINITY, f32::min);
         let max_x = corners.iter().map(|p| p.x).fold(f32::NEG_INFINITY, f32::max);
         let max_y = corners.iter().map(|p| p.y).fold(f32::NEG_INFINITY, f32::max);
-        
+
         self.metrics.bbox = Rect::new(min_x, min_y, max_x, max_y);
     }
 }
@@ -132,7 +132,7 @@ impl GlyphCache {
             current_size: Arc::new(Mutex::new(0)),
         }
     }
-    
+
     /// Get a glyph from the cache
     pub fn get(
         &self,
@@ -147,10 +147,10 @@ impl GlyphCache {
             subpixel_x: (subpixel_x * 64.0) as u8,
             subpixel_y: (subpixel_y * 64.0) as u8,
         };
-        
+
         self.cache.lock().unwrap().get(&key).cloned()
     }
-    
+
     /// Insert a glyph into the cache
     pub fn insert(
         &self,
@@ -166,10 +166,10 @@ impl GlyphCache {
             subpixel_x: (subpixel_x * 64.0) as u8,
             subpixel_y: (subpixel_y * 64.0) as u8,
         };
-        
+
         let pixmap_size = pixmap.samples().len();
         let pixmap = Arc::new(pixmap);
-        
+
         // Check cache size
         let mut current = self.current_size.lock().unwrap();
         if *current + pixmap_size > self.max_size {
@@ -178,17 +178,17 @@ impl GlyphCache {
             self.clear();
             *current = 0;
         }
-        
+
         self.cache.lock().unwrap().insert(key, pixmap);
         *current += pixmap_size;
     }
-    
+
     /// Clear the cache
     pub fn clear(&self) {
         self.cache.lock().unwrap().clear();
         *self.current_size.lock().unwrap() = 0;
     }
-    
+
     /// Get cache statistics
     pub fn stats(&self) -> (usize, usize, usize) {
         let cache = self.cache.lock().unwrap();
@@ -221,7 +221,7 @@ impl GlyphRasterizer {
             cache: GlyphCache::default(),
         }
     }
-    
+
     /// Create glyph rasterizer with custom cache size
     pub fn with_cache_size(cache_size_mb: usize) -> Self {
         let clip = Rect::new(0.0, 0.0, 1024.0, 1024.0);
@@ -230,7 +230,7 @@ impl GlyphRasterizer {
             cache: GlyphCache::new(cache_size_mb),
         }
     }
-    
+
     /// Rasterize a glyph outline to a pixmap
     pub fn rasterize_glyph(
         &self,
@@ -243,7 +243,7 @@ impl GlyphRasterizer {
         if let Some(pixmap) = self.cache.get(outline.gid, font_size, subpixel_x, subpixel_y) {
             return Ok((*pixmap).clone());
         }
-        
+
         // Calculate glyph transformation matrix
         let scale = font_size / 1000.0; // Assuming 1000 units per em (standard)
         let ctm = Matrix::new(
@@ -254,22 +254,22 @@ impl GlyphRasterizer {
             subpixel_x,
             subpixel_y,
         );
-        
+
         // Calculate pixmap dimensions
         let bbox = outline.metrics.bbox;
         let transformed_bbox = bbox.transform(&ctm);
-        
+
         let width = (transformed_bbox.width().ceil() as i32).max(1);
         let height = (transformed_bbox.height().ceil() as i32).max(1);
-        
+
         // Create destination pixmap (grayscale + alpha)
         let mut pixmap = Pixmap::new(None, width, height, true)?;
-        
+
         // Rasterize the glyph path
         let colorspace = crate::fitz::colorspace::Colorspace::device_gray();
         let color = vec![1.0]; // White glyph
         let alpha = 1.0;
-        
+
         self.rasterizer.fill_path(
             &outline.path,
             false, // Non-zero winding rule
@@ -279,13 +279,13 @@ impl GlyphRasterizer {
             alpha,
             &mut pixmap,
         );
-        
+
         // Cache the result
         self.cache.insert(outline.gid, font_size, subpixel_x, subpixel_y, pixmap.clone());
-        
+
         Ok(pixmap)
     }
-    
+
     /// Rasterize multiple glyphs (for performance)
     pub fn rasterize_glyphs(
         &self,
@@ -297,12 +297,12 @@ impl GlyphRasterizer {
             .map(|outline| self.rasterize_glyph(outline, font_size, 0.0, 0.0))
             .collect()
     }
-    
+
     /// Clear the glyph cache
     pub fn clear_cache(&self) {
         self.cache.clear();
     }
-    
+
     /// Get cache statistics
     pub fn cache_stats(&self) -> (usize, usize, usize) {
         self.cache.stats()
@@ -318,18 +318,18 @@ impl Default for GlyphRasterizer {
 /// Helper: Create a simple glyph outline for a rectangle (for missing glyphs)
 pub fn create_missing_glyph_outline(gid: GlyphId, advance: f32) -> GlyphOutline {
     let mut path = Path::new();
-    
+
     // Draw a simple rectangle as "missing glyph" indicator
     let width = advance * 0.8;
     let height = advance * 1.0;
     let margin = advance * 0.1;
-    
+
     path.move_to(Point::new(margin, margin));
     path.line_to(Point::new(width, margin));
     path.line_to(Point::new(width, height));
     path.line_to(Point::new(margin, height));
     path.close();
-    
+
     // Inner rectangle (hollow)
     let inner_margin = margin * 2.0;
     path.move_to(Point::new(inner_margin, inner_margin));
@@ -337,7 +337,7 @@ pub fn create_missing_glyph_outline(gid: GlyphId, advance: f32) -> GlyphOutline 
     path.line_to(Point::new(width - inner_margin, height - inner_margin));
     path.line_to(Point::new(inner_margin, height - inner_margin));
     path.close();
-    
+
     let metrics = GlyphMetrics {
         advance_width: advance,
         advance_height: height,
@@ -345,7 +345,7 @@ pub fn create_missing_glyph_outline(gid: GlyphId, advance: f32) -> GlyphOutline 
         tsb: margin,
         bbox: Rect::new(margin, margin, width, height),
     };
-    
+
     GlyphOutline::new(gid, path, metrics)
 }
 
@@ -364,41 +364,41 @@ impl TrueTypeLoader {
     pub fn new(data: Vec<u8>) -> Result<Self> {
         // Simplified TrueType parser
         // A real implementation would use ttf-parser crate
-        
+
         // Check for TrueType signature
         if data.len() < 12 {
             return Err(Error::Generic("Invalid TrueType font data".into()));
         }
-        
+
         let signature = &data[0..4];
         if signature != b"\x00\x01\x00\x00" && signature != b"true" && signature != b"typ1" {
             return Err(Error::Generic("Invalid TrueType signature".into()));
         }
-        
+
         Ok(Self {
             data,
             units_per_em: 1000, // Default
             num_glyphs: 1,      // Simplified
         })
     }
-    
+
     /// Get the number of glyphs in the font
     pub fn num_glyphs(&self) -> u16 {
         self.num_glyphs
     }
-    
+
     /// Get units per em
     pub fn units_per_em(&self) -> u16 {
         self.units_per_em
     }
-    
+
     /// Load a glyph outline by ID
     pub fn load_glyph(&self, gid: GlyphId) -> Result<GlyphOutline> {
         // Simplified: return a placeholder outline
         // Real implementation would parse the 'glyf' table
         Ok(create_missing_glyph_outline(gid, 500.0))
     }
-    
+
     /// Get glyph metrics
     pub fn glyph_metrics(&self, gid: GlyphId) -> Result<GlyphMetrics> {
         // Simplified: return default metrics
@@ -421,16 +421,16 @@ impl Type1Loader {
         if data.len() < 16 {
             return Err(Error::Generic("Invalid Type1 font data".into()));
         }
-        
+
         // Type1 fonts start with "%!PS-AdobeFont" or "%!FontType1"
         let header = String::from_utf8_lossy(&data[0..14.min(data.len())]);
         if !header.starts_with("%!") {
             return Err(Error::Generic("Invalid Type1 signature".into()));
         }
-        
+
         Ok(Self { data })
     }
-    
+
     /// Load a glyph outline by name
     pub fn load_glyph_by_name(&self, _name: &str) -> Result<GlyphOutline> {
         // Simplified: return a placeholder outline
@@ -446,20 +446,20 @@ impl Type1Loader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_glyph_id() {
         let gid = GlyphId::new(42);
         assert_eq!(gid.value(), 42);
     }
-    
+
     #[test]
     fn test_glyph_metrics_default() {
         let metrics = GlyphMetrics::default();
         assert_eq!(metrics.advance_width, 1.0);
         assert_eq!(metrics.lsb, 0.0);
     }
-    
+
     #[test]
     fn test_glyph_cache_creation() {
         let cache = GlyphCache::new(16);
@@ -468,52 +468,52 @@ mod tests {
         assert_eq!(size, 0);
         assert_eq!(max, 16 * 1024 * 1024);
     }
-    
+
     #[test]
     fn test_glyph_cache_insert_get() {
         let cache = GlyphCache::new(16);
         let pixmap = Pixmap::new(None, 10, 10, true).unwrap();
         let gid = GlyphId::new(42);
-        
+
         cache.insert(gid, 12.0, 0.0, 0.0, pixmap);
-        
+
         let retrieved = cache.get(gid, 12.0, 0.0, 0.0);
         assert!(retrieved.is_some());
-        
+
         let (count, _, _) = cache.stats();
         assert_eq!(count, 1);
     }
-    
+
     #[test]
     fn test_glyph_cache_clear() {
         let cache = GlyphCache::new(16);
         let pixmap = Pixmap::new(None, 10, 10, true).unwrap();
-        
+
         cache.insert(GlyphId::new(1), 12.0, 0.0, 0.0, pixmap);
         cache.clear();
-        
+
         let (count, size, _) = cache.stats();
         assert_eq!(count, 0);
         assert_eq!(size, 0);
     }
-    
+
     #[test]
     fn test_create_missing_glyph_outline() {
         let gid = GlyphId::new(0);
         let outline = create_missing_glyph_outline(gid, 500.0);
-        
+
         assert_eq!(outline.gid, gid);
         assert_eq!(outline.metrics.advance_width, 500.0);
         assert!(!outline.path.elements().is_empty());
     }
-    
+
     #[test]
     fn test_glyph_rasterizer_creation() {
         let rasterizer = GlyphRasterizer::new();
         let (count, _, _) = rasterizer.cache_stats();
         assert_eq!(count, 0);
     }
-    
+
     #[test]
     fn test_glyph_rasterizer_with_cache_size() {
         let rasterizer = GlyphRasterizer::with_cache_size(32);

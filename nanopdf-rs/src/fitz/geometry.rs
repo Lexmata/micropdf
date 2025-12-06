@@ -81,6 +81,11 @@ impl Rect {
             y1: self.y1.min(other.y1),
         }
     }
+    
+    /// Check if two rectangles intersect
+    pub fn intersects(&self, other: &Rect) -> bool {
+        self.x0 < other.x1 && self.x1 > other.x0 && self.y0 < other.y1 && self.y1 > other.y0
+    }
     pub fn include_point(&mut self, p: Point) {
         self.x0 = self.x0.min(p.x);
         self.y0 = self.y0.min(p.y);
