@@ -14,7 +14,8 @@
         "native/form.cc",
         "native/display_list.cc",
         "native/link.cc",
-        "native/cookie.cc"
+        "native/cookie.cc",
+        "native/device.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

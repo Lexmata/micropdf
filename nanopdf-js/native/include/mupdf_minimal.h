@@ -218,6 +218,19 @@ void fz_run_display_list(fz_context ctx, fz_display_list_handle list, fz_device 
 fz_display_list_handle fz_new_display_list_from_page(fz_context ctx, fz_page page);
 
 // ============================================================================
+// Device Functions
+// ============================================================================
+
+typedef uint64_t fz_device_handle;
+
+fz_device_handle fz_new_draw_device(fz_context ctx, fz_pixmap pixmap);
+fz_device_handle fz_new_list_device(fz_context ctx, fz_display_list_handle list);
+void fz_drop_device(fz_context ctx, fz_device_handle device);
+void fz_close_device(fz_context ctx, fz_device_handle device);
+void fz_begin_page(fz_context ctx, fz_device_handle device, fz_rect rect);
+void fz_end_page(fz_context ctx, fz_device_handle device);
+
+// ============================================================================
 // Cookie Functions
 // ============================================================================
 

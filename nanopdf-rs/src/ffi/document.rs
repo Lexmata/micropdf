@@ -469,7 +469,7 @@ pub extern "C" fn fz_run_page(
     };
 
     // Get device for rendering
-    let _dev_arc = match super::device::DEVICES.get(device) {
+    let _dev_arc = match super::device::DEVICE_STORE.get(device) {
         Some(d) => d,
         None => return,
     };
@@ -548,7 +548,7 @@ pub extern "C" fn fz_run_page_annots(
     };
 
     // Verify device exists
-    if super::device::DEVICES.get(device).is_none() {
+    if super::device::DEVICE_STORE.get(device).is_none() {
         return;
     }
 
