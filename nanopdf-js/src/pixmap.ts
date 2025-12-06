@@ -250,13 +250,6 @@ export class Pixmap {
   // ============================================================================
 
   /**
-   * Get samples (pixel data)
-   */
-  samples(): Uint8Array {
-    return this._data;
-  }
-
-  /**
    * Get a single sample value
    */
   getSample(x: number, y: number, component: number): number {

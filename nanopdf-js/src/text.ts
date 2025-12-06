@@ -69,8 +69,8 @@ export class Text {
   private _refCount: number = 1;
   private _currentSpan: TextSpan | null = null;
 
-  constructor(handle: any) {
-    // Accept handle parameter for compatibility
+  constructor(_handle?: any) {
+    // Accept handle parameter for compatibility (optional and unused)
   }
 
   /**
