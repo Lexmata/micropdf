@@ -418,7 +418,7 @@ func TestPerformanceBufferOperations(t *testing.T) {
 		iterations, createTime, createTime/time.Duration(iterations))
 
 	// Test buffer append
-	buf := nanopdf.NewBufferWithCapacity(bufferSize)
+	buf := nanopdf.NewBuffer(bufferSize)
 	if buf == nil {
 		t.Fatal("Failed to create buffer")
 	}
@@ -438,7 +438,7 @@ func TestPerformanceBufferOperations(t *testing.T) {
 	// Test buffer read
 	start = time.Now()
 	for i := 0; i < iterations; i++ {
-		_ = buf.Data()
+		_ = buf.Bytes()
 	}
 	readTime := time.Since(start)
 	t.Logf("Read buffer %d times in %v (avg %v)",
@@ -453,9 +453,9 @@ func TestPerformanceGeometry(t *testing.T) {
 	start := time.Now()
 	m := nanopdf.MatrixIdentity()
 	for i := 0; i < iterations; i++ {
-		m = m.Translate(1.0, 1.0)
-		m = m.Scale(1.1, 1.1)
-		m = m.Rotate(1.0)
+		m = m.PreTranslate(1.0, 1.0)
+		m = m.PreScale(1.1, 1.1)
+		m = m.PreRotate(1.0)
 	}
 	matrixTime := time.Since(start)
 	t.Logf("Performed %d matrix operations in %v (avg %v)",
@@ -465,15 +465,17 @@ func TestPerformanceGeometry(t *testing.T) {
 	start = time.Now()
 	r1 := nanopdf.Rect{X0: 0, Y0: 0, X1: 100, Y1: 100}
 	r2 := nanopdf.Rect{X0: 50, Y0: 50, X1: 150, Y1: 150}
+	p := nanopdf.Point{X: 75, Y: 75}
 	for i := 0; i < iterations; i++ {
 		_ = r1.Union(r2)
 		_ = r1.Intersect(r2)
-		_ = r1.Contains(r2)
-		_ = r1.Intersects(r2)
+		_ = r1.Contains(p)
+		intersect := r1.Intersect(r2)
+		_ = !intersect.IsEmpty() // Check if rects intersect
 	}
 	rectTime := time.Since(start)
 	t.Logf("Performed %d rect operations in %v (avg %v)",
-		iterations*4, rectTime, rectTime/time.Duration(iterations*4))
+		iterations*5, rectTime, rectTime/time.Duration(iterations*5))
 
 	// Test point operations
 	start = time.Now()

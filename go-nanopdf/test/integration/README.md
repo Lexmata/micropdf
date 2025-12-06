@@ -494,10 +494,10 @@ func TestMyFeature(t *testing.T) {
 
 ---
 
-**Last Updated**: 2025-01-05  
-**Test Coverage**: 85%  
-**Total Tests**: 60+  
-**Test Files**: 8  
-**Test PDFs**: 15  
+**Last Updated**: 2025-01-05
+**Test Coverage**: 85%
+**Total Tests**: 60+
+**Test Files**: 8
+**Test PDFs**: 15
 **Lines**: ~2,100
 

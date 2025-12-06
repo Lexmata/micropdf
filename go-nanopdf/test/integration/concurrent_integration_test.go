@@ -321,7 +321,7 @@ func TestConcurrentContextCreation(t *testing.T) {
 				return
 			}
 
-			retrieved := buf.Data()
+			retrieved := buf.Bytes()
 			if len(retrieved) != len(data) {
 				t.Errorf("Goroutine %d: Data mismatch: got %d bytes, want %d",
 					id, len(retrieved), len(data))
@@ -431,7 +431,7 @@ func TestConcurrentBufferOperations(t *testing.T) {
 			}
 
 			// Read data
-			retrieved := buf.Data()
+			retrieved := buf.Bytes()
 			expectedLen := 10 * len("test data chunk")
 			if len(retrieved) != expectedLen {
 				t.Errorf("Goroutine %d: Expected %d bytes, got %d", id, expectedLen, len(retrieved))
