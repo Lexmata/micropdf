@@ -22,7 +22,7 @@ Napi::BigInt NewSTextPage(const Napi::CallbackInfo& info) {
     if (info.Length() < 2) {
         Napi::TypeError::New(env, "Expected 2 arguments: ctx, page")
             .ThrowAsJavaScriptException();
-        return Napi::BigInt::New(env, 0);
+        return Napi::BigInt::New(env, static_cast<uint64_t>(0));
     }
 
     // Get context handle
@@ -156,23 +156,23 @@ Napi::Array SearchSTextPage(const Napi::CallbackInfo& info) {
 
         // Upper-left
         Napi::Object ul = Napi::Object::New(env);
-        ul.Set("x", Napi::Number::New(env, hit_bbox[i].x0));
-        ul.Set("y", Napi::Number::New(env, hit_bbox[i].y0));
+        ul.Set("x", Napi::Number::New(env, hit_bbox[i].ul.x));
+        ul.Set("y", Napi::Number::New(env, hit_bbox[i].ul.y));
 
         // Upper-right
         Napi::Object ur = Napi::Object::New(env);
-        ur.Set("x", Napi::Number::New(env, hit_bbox[i].x1));
-        ur.Set("y", Napi::Number::New(env, hit_bbox[i].y1));
+        ur.Set("x", Napi::Number::New(env, hit_bbox[i].ur.x));
+        ur.Set("y", Napi::Number::New(env, hit_bbox[i].ur.y));
 
         // Lower-left
         Napi::Object ll = Napi::Object::New(env);
-        ll.Set("x", Napi::Number::New(env, hit_bbox[i].x3));
-        ll.Set("y", Napi::Number::New(env, hit_bbox[i].y3));
+        ll.Set("x", Napi::Number::New(env, hit_bbox[i].ll.x));
+        ll.Set("y", Napi::Number::New(env, hit_bbox[i].ll.y));
 
         // Lower-right
         Napi::Object lr = Napi::Object::New(env);
-        lr.Set("x", Napi::Number::New(env, hit_bbox[i].x2));
-        lr.Set("y", Napi::Number::New(env, hit_bbox[i].y2));
+        lr.Set("x", Napi::Number::New(env, hit_bbox[i].lr.x));
+        lr.Set("y", Napi::Number::New(env, hit_bbox[i].lr.y));
 
         quad.Set("ul", ul);
         quad.Set("ur", ur);

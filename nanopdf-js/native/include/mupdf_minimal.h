@@ -214,6 +214,47 @@ int pdf_update_annot(fz_context ctx, pdf_annot annot);
 pdf_annot pdf_clone_annot(fz_context ctx, pdf_annot annot);
 int pdf_annot_is_valid(fz_context ctx, pdf_annot annot);
 
+// ============================================================================
+// Form Widget Functions
+// ============================================================================
+
+typedef uint64_t pdf_widget;
+
+// Widget navigation
+pdf_widget pdf_first_widget(fz_context ctx, fz_page page);
+pdf_widget pdf_next_widget(fz_context ctx, pdf_widget widget);
+void pdf_drop_widget(fz_context ctx, pdf_widget widget);
+
+// Widget properties
+int pdf_widget_type(fz_context ctx, pdf_widget widget);
+void pdf_widget_name(fz_context ctx, pdf_widget widget, char* buf, int size);
+fz_rect pdf_widget_rect(fz_context ctx, pdf_widget widget);
+
+// Widget values
+void pdf_widget_value(fz_context ctx, pdf_widget widget, char* buf, int size);
+int pdf_set_widget_value(fz_context ctx, pdf_widget widget, const char* value);
+
+// Widget state
+int pdf_widget_is_readonly(fz_context ctx, pdf_widget widget);
+int pdf_widget_is_required(fz_context ctx, pdf_widget widget);
+int pdf_widget_is_valid(fz_context ctx, pdf_widget widget);
+
+// Text field specific
+int pdf_widget_text_format(fz_context ctx, pdf_widget widget);
+int pdf_widget_max_len(fz_context ctx, pdf_widget widget);
+int pdf_widget_is_multiline(fz_context ctx, pdf_widget widget);
+
+// Checkbox/radio specific
+int pdf_widget_is_checked(fz_context ctx, pdf_widget widget);
+void pdf_set_widget_checked(fz_context ctx, pdf_widget widget, int checked);
+
+// Choice field specific
+int pdf_widget_option_count(fz_context ctx, pdf_widget widget);
+void pdf_widget_option(fz_context ctx, pdf_widget widget, int index, char* buf, int size);
+
+// Widget updates
+int pdf_update_widget(fz_context ctx, pdf_widget widget);
+
 #ifdef __cplusplus
 }
 #endif

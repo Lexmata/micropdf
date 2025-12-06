@@ -10,7 +10,8 @@
         "native/document.cc",
         "native/page.cc",
         "native/stext.cc",
-        "native/annot.cc"
+        "native/annot.cc",
+        "native/form.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

@@ -23,7 +23,7 @@ Napi::BigInt CreateAnnotation(const Napi::CallbackInfo& info) {
     if (info.Length() < 3) {
         Napi::TypeError::New(env, "Expected 3 arguments: ctx, page, type")
             .ThrowAsJavaScriptException();
-        return Napi::BigInt::New(env, 0);
+        return Napi::BigInt::New(env, static_cast<uint64_t>(0));
     }
 
     bool lossless;
@@ -35,7 +35,7 @@ Napi::BigInt CreateAnnotation(const Napi::CallbackInfo& info) {
     if (annot_type < 0 || annot_type > 27) {
         Napi::TypeError::New(env, "Invalid annotation type (must be 0-27)")
             .ThrowAsJavaScriptException();
-        return Napi::BigInt::New(env, 0);
+        return Napi::BigInt::New(env, static_cast<uint64_t>(0));
     }
 
     // Call Rust FFI
@@ -480,7 +480,7 @@ Napi::BigInt CloneAnnotation(const Napi::CallbackInfo& info) {
     if (info.Length() < 2) {
         Napi::TypeError::New(env, "Expected 2 arguments: ctx, annot")
             .ThrowAsJavaScriptException();
-        return Napi::BigInt::New(env, 0);
+        return Napi::BigInt::New(env, static_cast<uint64_t>(0));
     }
 
     bool lossless;
