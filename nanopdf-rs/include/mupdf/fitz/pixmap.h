@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Pixmap Functions (32 total)
+// Pixmap Functions (34 total)
 // ============================================================================
 
 void fz_clear_pixmap(int32_t _ctx, int32_t pix);
@@ -26,7 +26,9 @@ void fz_gamma_pixmap(int32_t _ctx, int32_t pix, float gamma);
 u8 fz_get_pixmap_sample(int32_t _ctx, int32_t pix, int32_t x, int32_t y, int32_t n);
 void fz_invert_pixmap(int32_t _ctx, int32_t pix);
 int32_t fz_keep_pixmap(int32_t _ctx, int32_t pix);
+int32_t fz_new_buffer_from_pixmap_as_png(int32_t _ctx, int32_t pix, c_int _color_params);
 int32_t fz_new_pixmap(int32_t _ctx, int32_t cs, int32_t w, int32_t h, int32_t _seps, int32_t // Separations not implemented yet alpha);
+int32_t fz_new_pixmap_from_page(int32_t _ctx, int32_t page, fz_matrix ctm, int32_t cs, c_int alpha);
 int32_t fz_new_pixmap_with_bbox(int32_t _ctx, int32_t cs, fz_irect bbox, int32_t _seps, int32_t alpha);
 int32_t fz_pixmap_alpha(int32_t _ctx, int32_t pix);
 fz_irect fz_pixmap_bbox(int32_t _ctx, int32_t pix);

@@ -2,7 +2,7 @@
 //! Safe Rust implementation using handle-based resource management
 
 use super::{DOCUMENTS, Handle, HandleStore, STREAMS};
-use std::ffi::{c_char, c_float};
+use std::ffi::{c_char, c_float, c_int};
 use std::sync::LazyLock;
 
 /// Page storage
@@ -188,6 +188,37 @@ pub extern "C" fn fz_open_document_with_stream(
         }
     }
     0
+}
+
+/// Open a document from a buffer in memory
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused in this implementation)
+/// * `magic` - File type hint (e.g., "application/pdf") - currently unused
+/// * `data` - Pointer to buffer data
+/// * `len` - Length of buffer data
+///
+/// # Returns
+/// Document handle on success, 0 on failure
+///
+/// # Safety
+/// The caller must ensure that `data` points to valid memory of at least `len` bytes.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_open_document_with_buffer(
+    _ctx: Handle,
+    _magic: *const c_char,
+    data: *const u8,
+    len: usize,
+) -> Handle {
+    if data.is_null() || len == 0 {
+        return 0;
+    }
+
+    // SAFETY: Caller guarantees data points to valid memory of len bytes
+    let buffer_data = unsafe { std::slice::from_raw_parts(data, len) };
+
+    // Create document from buffer data
+    DOCUMENTS.insert(Document::new(buffer_data.to_vec()))
 }
 
 /// Keep (increment ref) document
@@ -760,6 +791,94 @@ pub extern "C" fn fz_document_is_valid(_ctx: Handle, doc: Handle) -> i32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_clone_document(_ctx: Handle, doc: Handle) -> Handle {
     fz_keep_document(_ctx, doc)
+}
+
+// ============================================================================
+// PDF-specific functions
+// ============================================================================
+
+/// Save a PDF document to a file
+///
+/// Writes the PDF document to the specified file path with optional save options.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `doc` - Document handle
+/// * `filename` - Path to save the PDF file
+/// * `opts` - Save options (unused in this implementation)
+///
+/// # Safety
+/// Caller must ensure filename is a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_save_document(
+    _ctx: Handle,
+    doc: Handle,
+    filename: *const c_char,
+    _opts: *const std::ffi::c_void,
+) {
+    if filename.is_null() {
+        return;
+    }
+
+    let Some(doc_ref) = DOCUMENTS.get(doc) else {
+        return;
+    };
+
+    let guard = match doc_ref.lock() {
+        Ok(g) => g,
+        Err(_) => return,
+    };
+
+    // SAFETY: Caller guarantees filename is a valid null-terminated C string
+    let c_str = unsafe { std::ffi::CStr::from_ptr(filename) };
+    let path = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return,
+    };
+
+    // Write the PDF data to file
+    let _ = std::fs::write(path, &guard.data);
+}
+
+/// Look up a named destination in a PDF document
+///
+/// Resolves a named destination to a page number in the document.
+///
+/// # Arguments
+/// * `ctx` - Context handle (unused)
+/// * `doc` - Document handle
+/// * `name` - Name of the destination to look up
+///
+/// # Returns
+/// Page number (0-indexed) if found, or -1 if not found
+///
+/// # Safety
+/// Caller must ensure name is a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_lookup_named_dest(
+    _ctx: Handle,
+    doc: Handle,
+    name: *const c_char,
+) -> c_int {
+    if name.is_null() {
+        return -1;
+    }
+
+    let Some(_doc_ref) = DOCUMENTS.get(doc) else {
+        return -1;
+    };
+
+    // SAFETY: Caller guarantees name is a valid null-terminated C string
+    let _name_str = unsafe {
+        match std::ffi::CStr::from_ptr(name).to_str() {
+            Ok(s) => s,
+            Err(_) => return -1,
+        }
+    };
+
+    // In a real implementation, this would parse the PDF's Names dictionary
+    // and resolve the named destination. For now, return -1 (not found).
+    -1
 }
 
 #[cfg(test)]

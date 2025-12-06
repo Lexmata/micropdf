@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Document Functions (31 total)
+// Document Functions (34 total)
 // ============================================================================
 
 int32_t fz_authenticate_password(int32_t _ctx, int32_t doc, const char * password);
@@ -41,6 +41,7 @@ int32_t fz_lookup_metadata(int32_t _ctx, int32_t _doc, const char * _key, char *
 char * fz_make_location_uri(int32_t _ctx, int32_t _doc, int32_t page, char * buf, int32_t size);
 int32_t fz_needs_password(int32_t _ctx, int32_t doc);
 int32_t fz_open_document(int32_t _ctx, const char * filename);
+int32_t fz_open_document_with_buffer(int32_t _ctx, const char * _magic, const u8 * data, size_t len);
 int32_t fz_open_document_with_stream(int32_t _ctx, const char * _magic, int32_t stm);
 int32_t fz_page_label(int32_t _ctx, int32_t doc, int32_t page_num, char * buf, int32_t size);
 int32_t fz_page_number_from_location(int32_t _ctx, int32_t _doc, int32_t chapter, int32_t page);
@@ -48,6 +49,8 @@ int32_t fz_resolve_link(int32_t _ctx, int32_t doc, const char * uri, float * xp,
 void fz_run_page(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
 void fz_run_page_annots(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
 void fz_run_page_contents(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
+int pdf_lookup_named_dest(int32_t _ctx, int32_t doc, const char * name);
+void pdf_save_document(int32_t _ctx, int32_t doc, const char * filename, const void * _opts);
 
 #ifdef __cplusplus
 }
