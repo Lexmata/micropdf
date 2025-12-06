@@ -275,7 +275,8 @@ Napi::Object InitFont(Napi::Env env, Napi::Object exports) {
     exports.Set("fontIsItalic", Napi::Function::New(env, FontIsItalic));
     exports.Set("encodeCharacter", Napi::Function::New(env, EncodeCharacter));
     exports.Set("advanceGlyph", Napi::Function::New(env, AdvanceGlyph));
-    
+
     return exports;
 }
+
 

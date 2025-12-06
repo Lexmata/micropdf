@@ -20,7 +20,8 @@
         "native/pixmap.cc",
         "native/image.cc",
         "native/colorspace.cc",
-        "native/font.cc"
+        "native/font.cc",
+        "native/stream.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

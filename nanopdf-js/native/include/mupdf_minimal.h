@@ -49,7 +49,6 @@ typedef int32_t fz_page;
 typedef int32_t fz_buffer;
 typedef int32_t fz_stext_page;
 typedef int32_t fz_link;
-typedef int32_t fz_stream;
 typedef int32_t fz_output;
 typedef int32_t fz_archive;
 
@@ -57,6 +56,7 @@ typedef int32_t fz_archive;
 typedef uint64_t fz_colorspace;
 typedef uint64_t fz_device;
 typedef uint64_t fz_font;
+typedef uint64_t fz_stream;
 
 // ============================================================================
 // Context Functions
@@ -208,6 +208,19 @@ int fz_font_is_bold(fz_context ctx, fz_font font);
 int fz_font_is_italic(fz_context ctx, fz_font font);
 int fz_encode_character(fz_context ctx, fz_font font, int unicode);
 float fz_advance_glyph(fz_context ctx, fz_font font, int glyph, int wmode);
+
+// ============================================================================
+// Stream Functions
+// ============================================================================
+
+fz_stream fz_open_file(fz_context ctx, const char* filename);
+fz_stream fz_open_memory(fz_context ctx, const unsigned char* data, size_t len);
+void fz_drop_stream(fz_context ctx, fz_stream stm);
+size_t fz_read(fz_context ctx, fz_stream stm, unsigned char* data, size_t len);
+int fz_read_byte(fz_context ctx, fz_stream stm);
+int fz_is_eof(fz_context ctx, fz_stream stm);
+void fz_seek(fz_context ctx, fz_stream stm, int64_t offset, int whence);
+int64_t fz_tell(fz_context ctx, fz_stream stm);
 
 // ============================================================================
 // Image Functions
