@@ -181,6 +181,39 @@ fz_archive fz_open_archive(fz_context ctx, const char* path);
 fz_archive fz_open_archive_with_buffer(fz_context ctx, fz_buffer buffer);
 void fz_drop_archive(fz_context ctx, fz_archive arch);
 
+// ============================================================================
+// Annotation Functions
+// ============================================================================
+
+typedef int32_t pdf_annot;
+
+pdf_annot pdf_create_annot(fz_context ctx, fz_page page, int type);
+void pdf_delete_annot(fz_context ctx, fz_page page, pdf_annot annot);
+void pdf_drop_annot(fz_context ctx, pdf_annot annot);
+
+int pdf_annot_type(fz_context ctx, pdf_annot annot);
+fz_rect pdf_annot_rect(fz_context ctx, pdf_annot annot);
+void pdf_set_annot_rect(fz_context ctx, pdf_annot annot, fz_rect rect);
+
+unsigned int pdf_annot_flags(fz_context ctx, pdf_annot annot);
+void pdf_set_annot_flags(fz_context ctx, pdf_annot annot, unsigned int flags);
+
+void pdf_annot_contents(fz_context ctx, pdf_annot annot, char* buf, int size);
+void pdf_set_annot_contents(fz_context ctx, pdf_annot annot, const char* text);
+
+void pdf_annot_author(fz_context ctx, pdf_annot annot, char* buf, int size);
+void pdf_set_annot_author(fz_context ctx, pdf_annot annot, const char* author);
+
+float pdf_annot_opacity(fz_context ctx, pdf_annot annot);
+void pdf_set_annot_opacity(fz_context ctx, pdf_annot annot, float opacity);
+
+int pdf_annot_has_dirty(fz_context ctx, pdf_annot annot);
+void pdf_annot_clear_dirty(fz_context ctx, pdf_annot annot);
+int pdf_update_annot(fz_context ctx, pdf_annot annot);
+
+pdf_annot pdf_clone_annot(fz_context ctx, pdf_annot annot);
+int pdf_annot_is_valid(fz_context ctx, pdf_annot annot);
+
 #ifdef __cplusplus
 }
 #endif
