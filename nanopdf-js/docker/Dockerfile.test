@@ -47,6 +47,9 @@ RUN mkdir -p native/lib/linux-x64 && \
 RUN mkdir -p native/include && \
     cp -r /usr/local/include/* native/include/
 
+# Set CI environment variable for pnpm
+ENV CI=true
+
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
@@ -72,7 +75,7 @@ CMD ["sh", "-c", "\
     pnpm --version && \
     echo '' && \
     echo '==> Checking native addon...' && \
-    node -e \"const addon = require('./build/Release/nanopdf_native.node'); console.log('✓ Native addon loaded:', Object.keys(addon).length, 'exports');\" && \
+    node -e \"const addon = require('./build/Release/nanopdf.node'); console.log('✓ Native addon loaded:', Object.keys(addon).length, 'exports');\" && \
     echo '' && \
     echo '==> Running unit tests...' && \
     pnpm test && \
