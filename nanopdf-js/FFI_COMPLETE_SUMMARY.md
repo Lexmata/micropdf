@@ -149,9 +149,9 @@ const pixmap = page.renderWithOptions({
 - ✅ `isAnnotationValid()` - Validate handle
 
 **Supported Annotation Types (28 types):**
-Text, Link, FreeText, Line, Square, Circle, Polygon, PolyLine, 
-Highlight, Underline, Squiggly, StrikeOut, Stamp, Caret, Ink, 
-Popup, FileAttachment, Sound, Movie, Widget, Screen, PrinterMark, 
+Text, Link, FreeText, Line, Square, Circle, Polygon, PolyLine,
+Highlight, Underline, Squiggly, StrikeOut, Stamp, Caret, Ink,
+Popup, FileAttachment, Sound, Movie, Widget, Screen, PrinterMark,
 TrapNet, Watermark, 3D, Redact, Projection, Unknown
 
 **Implementation Features:**

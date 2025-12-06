@@ -525,33 +525,33 @@ Napi::Object InitAnnotation(Napi::Env env, Napi::Object exports) {
     exports.Set("createAnnotation", Napi::Function::New(env, CreateAnnotation));
     exports.Set("deleteAnnotation", Napi::Function::New(env, DeleteAnnotation));
     exports.Set("dropAnnotation", Napi::Function::New(env, DropAnnotation));
-    
+
     // Annotation properties
     exports.Set("getAnnotationType", Napi::Function::New(env, GetAnnotationType));
     exports.Set("getAnnotationRect", Napi::Function::New(env, GetAnnotationRect));
     exports.Set("setAnnotationRect", Napi::Function::New(env, SetAnnotationRect));
     exports.Set("getAnnotationFlags", Napi::Function::New(env, GetAnnotationFlags));
     exports.Set("setAnnotationFlags", Napi::Function::New(env, SetAnnotationFlags));
-    
+
     // Annotation content
     exports.Set("getAnnotationContents", Napi::Function::New(env, GetAnnotationContents));
     exports.Set("setAnnotationContents", Napi::Function::New(env, SetAnnotationContents));
     exports.Set("getAnnotationAuthor", Napi::Function::New(env, GetAnnotationAuthor));
     exports.Set("setAnnotationAuthor", Napi::Function::New(env, SetAnnotationAuthor));
-    
+
     // Annotation appearance
     exports.Set("getAnnotationOpacity", Napi::Function::New(env, GetAnnotationOpacity));
     exports.Set("setAnnotationOpacity", Napi::Function::New(env, SetAnnotationOpacity));
-    
+
     // Annotation state
     exports.Set("isAnnotationDirty", Napi::Function::New(env, IsAnnotationDirty));
     exports.Set("clearAnnotationDirty", Napi::Function::New(env, ClearAnnotationDirty));
     exports.Set("updateAnnotation", Napi::Function::New(env, UpdateAnnotation));
-    
+
     // Annotation utilities
     exports.Set("cloneAnnotation", Napi::Function::New(env, CloneAnnotation));
     exports.Set("isAnnotationValid", Napi::Function::New(env, IsAnnotationValid));
-    
+
     return exports;
 }
 
