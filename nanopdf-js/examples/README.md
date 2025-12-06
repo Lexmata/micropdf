@@ -382,6 +382,107 @@ console.log('All pages processed:', results.length);
 
 ---
 
+### 5. Structured Text Extraction (`05-structured-text.ts`) 🆕
+
+**What it demonstrates:**
+- Layout-aware text extraction with blocks, lines, and characters
+- Text search with precise quad bounding boxes
+- Hierarchical text navigation (blocks → lines → chars)
+- Character-level analysis (font, size, position)
+- Filtering blocks by type (text, image, list, table)
+- Exporting structured text as JSON
+- Multi-page structured text extraction
+
+**Usage:**
+```bash
+pnpm exec ts-node examples/05-structured-text.ts
+```
+
+**Functions:**
+- `basicTextExtraction()` - Extract text with layout preservation
+- `textSearchWithPositions()` - Search with quad bounding boxes
+- `hierarchicalTextNavigation()` - Navigate block/line/char hierarchy
+- `characterLevelAnalysis()` - Inspect individual characters
+- `filteringBlocksByType()` - Filter by block type
+- `exportStructuredTextAsJSON()` - Export as JSON
+- `multiPageTextExtraction()` - Process multiple pages
+
+**Output:**
+```
+=== Example 1: Basic Text Extraction ===
+Extracted text: Hello World
+Page dimensions: 612 x 792
+
+=== Example 2: Text Search with Positions ===
+Found 2 occurrences of "Hello":
+Match 1:
+  Upper-left:  (72.00, 700.00)
+  Upper-right: (120.50, 700.00)
+  Lower-left:  (72.00, 710.00)
+  Lower-right: (120.50, 710.00)
+
+=== Example 3: Hierarchical Text Navigation ===
+Block 1:
+  Type: Text
+  Lines: 5
+    Line 1: "Hello World"
+      Writing mode: HorizontalLtr
+      Characters: 11
+```
+
+---
+
+### 6. Advanced Rendering Options (`06-advanced-rendering.ts`) 🆕
+
+**What it demonstrates:**
+- Fine-grained control over rendering quality
+- High-quality print rendering (300-600 DPI)
+- Fast preview rendering (72 DPI)
+- Multiple DPI levels comparison
+- Different colorspaces (RGB, Grayscale, RGBA)
+- Custom transformations (scale, rotate)
+- Progress tracking with callbacks
+- Anti-aliasing level comparison
+- Batch rendering with options
+
+**Usage:**
+```bash
+pnpm exec ts-node examples/06-advanced-rendering.ts
+```
+
+**Functions:**
+- `highQualityPrintRendering()` - 300 DPI print-ready output
+- `fastPreviewRendering()` - 72 DPI quick preview
+- `multipleDPIRenderings()` - Compare different DPI levels
+- `differentColorspaces()` - RGB, Gray, RGBA rendering
+- `customTransformations()` - Scale, rotate, combined
+- `progressTracking()` - Monitor rendering progress
+- `antiAliasingComparison()` - Compare AA levels
+- `batchRenderingWithOptions()` - Multi-page batch rendering
+
+**Output:**
+```
+=== Example 1: High-Quality Print Rendering ===
+Rendering at 300 DPI for print...
+Rendered in 45ms
+Output size: 2550 x 3300 pixels
+Color components: 3
+Has alpha: false
+Memory usage: ~25MB
+Saved to: output-print-300dpi.png
+
+=== Example 3: Multiple DPI Renderings ===
+DPI  | Width  | Height | Scale | Time
+-----|--------|--------|-------|------
+  72 |    612 |    792 |  1.00 | 8ms
+  96 |    816 |   1056 |  1.33 | 12ms
+ 150 |   1275 |   1650 |  2.08 | 18ms
+ 300 |   2550 |   3300 |  4.17 | 42ms
+ 600 |   5100 |   6600 |  8.33 | 165ms
+```
+
+---
+
 ## Troubleshooting
 
 ### Example Doesn't Run
