@@ -68,11 +68,11 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const text = stext.getText();
-      
+
       expect(text).toBeDefined();
       expect(typeof text).toBe('string');
       expect(text.length).toBeGreaterThan(0);
-      
+
       stext.drop();
     });
 
@@ -83,9 +83,9 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const text = stext.getText();
-      
+
       expect(text).toContain('Hello');
-      
+
       stext.drop();
     });
 
@@ -96,7 +96,7 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       stext.drop();
-      
+
       expect(() => stext.getText()).toThrow('STextPage has been dropped');
     });
   });
@@ -109,9 +109,9 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const hits = stext.search('Hello');
-      
+
       expect(Array.isArray(hits)).toBe(true);
-      
+
       stext.drop();
     });
 
@@ -122,20 +122,20 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const hits = stext.search('Hello');
-      
+
       if (hits.length > 0) {
         const quad = hits[0];
         expect(quad).toHaveProperty('ul');
         expect(quad).toHaveProperty('ur');
         expect(quad).toHaveProperty('ll');
         expect(quad).toHaveProperty('lr');
-        
+
         expect(quad.ul).toHaveProperty('x');
         expect(quad.ul).toHaveProperty('y');
         expect(typeof quad.ul.x).toBe('number');
         expect(typeof quad.ul.y).toBe('number');
       }
-      
+
       stext.drop();
     });
 
@@ -146,9 +146,9 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const hits = stext.search('e', 5); // Limit to 5 hits
-      
+
       expect(hits.length).toBeLessThanOrEqual(5);
-      
+
       stext.drop();
     });
 
@@ -159,10 +159,10 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const hits = stext.search('ZZZZNOTFOUND');
-      
+
       expect(Array.isArray(hits)).toBe(true);
       expect(hits.length).toBe(0);
-      
+
       stext.drop();
     });
 
@@ -173,7 +173,7 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       stext.drop();
-      
+
       expect(() => stext.search('test')).toThrow('STextPage has been dropped');
     });
   });
@@ -186,11 +186,11 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const bounds = stext.getBounds();
-      
+
       expect(bounds).toBeInstanceOf(Rect);
       expect(bounds.width).toBeGreaterThan(0);
       expect(bounds.height).toBeGreaterThan(0);
-      
+
       stext.drop();
     });
 
@@ -201,10 +201,10 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       const bounds = stext.getBounds();
-      
+
       expect(bounds.x0).toBeLessThan(bounds.x1);
       expect(bounds.y0).toBeLessThan(bounds.y1);
-      
+
       stext.drop();
     });
 
@@ -215,7 +215,7 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       stext.drop();
-      
+
       expect(() => stext.getBounds()).toThrow('STextPage has been dropped');
     });
   });
@@ -228,7 +228,7 @@ describe('STextPage', () => {
 
       const stext = STextPage.fromPage(page);
       expect(stext.isDropped()).toBe(false);
-      
+
       stext.drop();
       expect(stext.isDropped()).toBe(true);
     });
@@ -268,7 +268,7 @@ describe('Quad Helper Functions', () => {
       };
 
       const rect = quadToRect(quad);
-      
+
       expect(rect.x0).toBe(10);
       expect(rect.y0).toBe(20);
       expect(rect.x1).toBe(100);
@@ -284,7 +284,7 @@ describe('Quad Helper Functions', () => {
       };
 
       const rect = quadToRect(quad);
-      
+
       expect(rect.x0).toBe(20); // Min x
       expect(rect.y0).toBe(10); // Min y
       expect(rect.x1).toBe(100); // Max x
@@ -300,7 +300,7 @@ describe('Quad Helper Functions', () => {
       };
 
       const rect = quadToRect(quad);
-      
+
       expect(rect.x0).toBe(42);
       expect(rect.y0).toBe(42);
       expect(rect.x1).toBe(42);

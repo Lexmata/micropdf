@@ -233,7 +233,7 @@ describe('Structured Text Integration', () => {
       const stext = STextPage.fromPage(page);
 
       const text = stext.getText();
-      
+
       // Forms typically have labels like "Name:", "Email:", etc.
       // Check if we can search for common form terms
       const nameHits = stext.search('Name');
