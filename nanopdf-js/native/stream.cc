@@ -233,7 +233,7 @@ Napi::Object InitStream(Napi::Env env, Napi::Object exports) {
     exports.Set("isEOF", Napi::Function::New(env, IsEOF));
     exports.Set("seek", Napi::Function::New(env, Seek));
     exports.Set("tell", Napi::Function::New(env, Tell));
-    
+
     return exports;
 }
 

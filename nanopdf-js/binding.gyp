@@ -21,7 +21,8 @@
         "native/image.cc",
         "native/colorspace.cc",
         "native/font.cc",
-        "native/stream.cc"
+        "native/stream.cc",
+        "native/output.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

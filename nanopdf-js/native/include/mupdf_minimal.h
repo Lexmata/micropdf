@@ -49,7 +49,6 @@ typedef int32_t fz_page;
 typedef int32_t fz_buffer;
 typedef int32_t fz_stext_page;
 typedef int32_t fz_link;
-typedef int32_t fz_output;
 typedef int32_t fz_archive;
 
 // Forward declarations for types defined later with specific functions
@@ -57,6 +56,7 @@ typedef uint64_t fz_colorspace;
 typedef uint64_t fz_device;
 typedef uint64_t fz_font;
 typedef uint64_t fz_stream;
+typedef uint64_t fz_output;
 
 // ============================================================================
 // Context Functions
@@ -221,6 +221,19 @@ int fz_read_byte(fz_context ctx, fz_stream stm);
 int fz_is_eof(fz_context ctx, fz_stream stm);
 void fz_seek(fz_context ctx, fz_stream stm, int64_t offset, int whence);
 int64_t fz_tell(fz_context ctx, fz_stream stm);
+
+// ============================================================================
+// Output Functions
+// ============================================================================
+
+fz_output fz_new_output_with_path(fz_context ctx, const char* filename, int append);
+fz_output fz_new_output_with_buffer(fz_context ctx, uint64_t buf);
+void fz_drop_output(fz_context ctx, fz_output out);
+void fz_write_data(fz_context ctx, fz_output out, const void* data, size_t size);
+void fz_write_string(fz_context ctx, fz_output out, const char* s);
+void fz_write_byte(fz_context ctx, fz_output out, unsigned char byte);
+void fz_close_output(fz_context ctx, fz_output out);
+int64_t fz_tell_output(fz_context ctx, fz_output out);
 
 // ============================================================================
 // Image Functions
