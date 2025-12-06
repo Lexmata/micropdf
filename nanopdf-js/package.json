@@ -21,7 +21,9 @@
   },
   "files": [
     "dist",
-    "native",
+    "native/**/*.cc",
+    "native/**/*.h",
+    "native/**/mupdf_minimal.h",
     "prebuilds",
     "binding.gyp"
   ],

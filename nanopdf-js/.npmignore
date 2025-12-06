@@ -18,6 +18,11 @@ scripts/
 # Build artifacts (users will build their own native modules)
 build/
 *.node
+native/lib/
+*.a
+*.so
+*.dylib
+*.dll
 
 # Documentation (except README and LICENSE)
 ARCHITECTURE.md
