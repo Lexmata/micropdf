@@ -1,7 +1,26 @@
 /**
  * Geometry primitives - Point, Rect, IRect, Matrix, Quad
  *
+ * This module provides fundamental 2D geometry types used throughout the NanoPDF library.
+ * All types are immutable and follow functional programming principles.
+ *
  * This implementation mirrors the Rust `fitz::geometry` module for 100% API compatibility.
+ *
+ * @module geometry
+ * @example
+ * ```typescript
+ * import { Point, Rect, Matrix } from 'nanopdf';
+ *
+ * // Create a point
+ * const p = new Point(100, 200);
+ *
+ * // Create a rectangle
+ * const rect = new Rect(0, 0, 100, 100);
+ *
+ * // Transform with a matrix
+ * const matrix = Matrix.scale(2, 2);
+ * const transformed = p.transform(matrix);
+ * ```
  */
 
 import type { PointLike, RectLike, IRectLike, MatrixLike, QuadLike } from './types.js';
@@ -10,12 +29,56 @@ import type { PointLike, RectLike, IRectLike, MatrixLike, QuadLike } from './typ
 export type { PointLike, RectLike, IRectLike, MatrixLike, QuadLike };
 
 /**
- * A 2D point
+ * A 2D point with floating-point coordinates.
+ *
+ * Points are immutable - all operations return new Point instances rather than
+ * modifying the existing point. This makes them safe to use in functional programming
+ * contexts and prevents accidental mutations.
+ *
+ * @class Point
+ * @implements {PointLike}
+ * @example
+ * ```typescript
+ * // Create a point
+ * const p1 = new Point(10, 20);
+ *
+ * // Transform it
+ * const p2 = p1.scale(2); // Point(20, 40)
+ *
+ * // Calculate distance
+ * const distance = p1.distanceTo(p2); // 22.36...
+ *
+ * // Points are immutable
+ * const p3 = p1.add(new Point(5, 5)); // p1 is unchanged
+ * ```
  */
 export class Point implements PointLike {
+  /**
+   * The x-coordinate of the point.
+   * @readonly
+   * @type {number}
+   */
   readonly x: number;
+
+  /**
+   * The y-coordinate of the point.
+   * @readonly
+   * @type {number}
+   */
   readonly y: number;
 
+  /**
+   * Creates a new Point with the specified coordinates.
+   *
+   * @param {number} x - The x-coordinate
+   * @param {number} y - The y-coordinate
+   * @example
+   * ```typescript
+   * const point = new Point(100, 200);
+   * console.log(point.x); // 100
+   * console.log(point.y); // 200
+   * ```
+   */
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
@@ -25,14 +88,45 @@ export class Point implements PointLike {
   // Static Constants
   // ============================================================================
 
-  /** Origin point (0, 0) */
+  /**
+   * The origin point at coordinates (0, 0).
+   *
+   * This is a convenience constant for the most commonly used point.
+   *
+   * @static
+   * @readonly
+   * @type {Point}
+   * @example
+   * ```typescript
+   * const origin = Point.ORIGIN;
+   * console.log(origin.x, origin.y); // 0, 0
+   * ```
+   */
   static readonly ORIGIN = new Point(0, 0);
 
   // ============================================================================
   // Static Constructors
   // ============================================================================
 
-  /** Create a point from a point-like object */
+  /**
+   * Creates a Point from a point-like object.
+   *
+   * This method accepts any object with `x` and `y` properties and converts it
+   * to a proper Point instance. If the input is already a Point, it returns it unchanged.
+   *
+   * @static
+   * @param {PointLike} p - A point-like object with x and y properties
+   * @returns {Point} A Point instance
+   * @example
+   * ```typescript
+   * // From a plain object
+   * const p1 = Point.from({ x: 10, y: 20 });
+   *
+   * // From an existing Point (returns the same instance)
+   * const p2 = new Point(10, 20);
+   * const p3 = Point.from(p2); // p2 === p3
+   * ```
+   */
   static from(p: PointLike): Point {
     if (p instanceof Point) {
       return p;
@@ -44,34 +138,131 @@ export class Point implements PointLike {
   // Methods
   // ============================================================================
 
-  /** Transform this point by a matrix */
+  /**
+   * Transforms this point by a transformation matrix.
+   *
+   * Applies a 2D affine transformation to the point. This is commonly used for
+   * scaling, rotation, translation, and skewing operations.
+   *
+   * @param {MatrixLike} m - The transformation matrix to apply
+   * @returns {Point} A new transformed point
+   * @example
+   * ```typescript
+   * const p = new Point(10, 20);
+   *
+   * // Scale by 2x
+   * const scaled = p.transform(Matrix.scale(2, 2));
+   * console.log(scaled); // Point(20, 40)
+   *
+   * // Rotate 90 degrees
+   * const rotated = p.transform(Matrix.rotate(90));
+   * ```
+   */
   transform(m: MatrixLike): Point {
     return new Point(this.x * m.a + this.y * m.c + m.e, this.x * m.b + this.y * m.d + m.f);
   }
 
-  /** Calculate distance to another point */
+  /**
+   * Calculates the Euclidean distance to another point.
+   *
+   * Uses the Pythagorean theorem to compute the straight-line distance
+   * between this point and another point in 2D space.
+   *
+   * @param {PointLike} other - The point to measure distance to
+   * @returns {number} The distance in the same units as the coordinates
+   * @example
+   * ```typescript
+   * const p1 = new Point(0, 0);
+   * const p2 = new Point(3, 4);
+   * const distance = p1.distanceTo(p2); // 5.0
+   *
+   * // Distance is symmetric
+   * p2.distanceTo(p1) === p1.distanceTo(p2); // true
+   * ```
+   */
   distanceTo(other: PointLike): number {
     const dx = this.x - other.x;
     const dy = this.y - other.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
 
-  /** Add another point */
+  /**
+   * Adds another point to this point (vector addition).
+   *
+   * Returns a new point whose coordinates are the sum of this point's
+   * coordinates and the other point's coordinates.
+   *
+   * @param {PointLike} other - The point to add
+   * @returns {Point} A new point with summed coordinates
+   * @example
+   * ```typescript
+   * const p1 = new Point(10, 20);
+   * const p2 = new Point(5, 10);
+   * const sum = p1.add(p2);
+   * console.log(sum); // Point(15, 30)
+   * ```
+   */
   add(other: PointLike): Point {
     return new Point(this.x + other.x, this.y + other.y);
   }
 
-  /** Subtract another point */
+  /**
+   * Subtracts another point from this point (vector subtraction).
+   *
+   * Returns a new point whose coordinates are the difference between
+   * this point's coordinates and the other point's coordinates.
+   *
+   * @param {PointLike} other - The point to subtract
+   * @returns {Point} A new point with the difference
+   * @example
+   * ```typescript
+   * const p1 = new Point(10, 20);
+   * const p2 = new Point(5, 10);
+   * const diff = p1.subtract(p2);
+   * console.log(diff); // Point(5, 10)
+   * ```
+   */
   subtract(other: PointLike): Point {
     return new Point(this.x - other.x, this.y - other.y);
   }
 
-  /** Scale by a factor */
+  /**
+   * Scales this point by a factor (scalar multiplication).
+   *
+   * Multiplies both x and y coordinates by the given factor.
+   *
+   * @param {number} factor - The scaling factor
+   * @returns {Point} A new scaled point
+   * @example
+   * ```typescript
+   * const p = new Point(10, 20);
+   * const doubled = p.scale(2); // Point(20, 40)
+   * const halved = p.scale(0.5); // Point(5, 10)
+   * const negated = p.scale(-1); // Point(-10, -20)
+   * ```
+   */
   scale(factor: number): Point {
     return new Point(this.x * factor, this.y * factor);
   }
 
-  /** Normalize to unit length */
+  /**
+   * Normalizes this point to unit length.
+   *
+   * Returns a point in the same direction but with length 1.0.
+   * If the point is at the origin (length 0), returns the origin.
+   *
+   * @returns {Point} A normalized point with length 1.0 (or origin if length is 0)
+   * @example
+   * ```typescript
+   * const p = new Point(3, 4);
+   * const normalized = p.normalize();
+   * console.log(normalized); // Point(0.6, 0.8)
+   * console.log(normalized.length); // 1.0
+   *
+   * // Origin stays at origin
+   * Point.ORIGIN.normalize(); // Point(0, 0)
+   * ```
+   */
   normalize(): Point {
     const len = Math.sqrt(this.x * this.x + this.y * this.y);
     if (len === 0) {
@@ -80,16 +271,58 @@ export class Point implements PointLike {
     return new Point(this.x / len, this.y / len);
   }
 
-  /** Get the length of the vector */
+  /**
+   * Gets the length (magnitude) of this point when treated as a vector.
+   *
+   * Computes the Euclidean distance from the origin to this point.
+   *
+   * @readonly
+   * @type {number}
+   * @example
+   * ```typescript
+   * const p = new Point(3, 4);
+   * console.log(p.length); // 5.0
+   *
+   * // Right triangle: 3² + 4² = 5²
+   * ```
+   */
   get length(): number {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }
 
-  /** Check equality */
+  /**
+   * Checks if this point is equal to another point.
+   *
+   * Two points are considered equal if both their x and y coordinates are exactly equal.
+   * Note: This uses strict equality, so floating point precision issues may affect the result.
+   *
+   * @param {PointLike} other - The point to compare with
+   * @returns {boolean} True if the points have identical coordinates
+   * @example
+   * ```typescript
+   * const p1 = new Point(10, 20);
+   * const p2 = new Point(10, 20);
+   * const p3 = new Point(10, 21);
+   *
+   * p1.equals(p2); // true
+   * p1.equals(p3); // false
+   * ```
+   */
   equals(other: PointLike): boolean {
     return this.x === other.x && this.y === other.y;
   }
 
+  /**
+   * Returns a string representation of the point.
+   *
+   * @returns {string} A string in the format "Point(x, y)"
+   * @example
+   * ```typescript
+   * const p = new Point(10.5, 20.3);
+   * console.log(p.toString()); // "Point(10.5, 20.3)"
+   * console.log(String(p)); // "Point(10.5, 20.3)"
+   * ```
+   */
   toString(): string {
     return `Point(${this.x}, ${this.y})`;
   }

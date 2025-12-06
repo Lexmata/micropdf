@@ -1,7 +1,38 @@
 /**
  * Document - PDF document handling
  *
+ * This module provides the primary API for working with PDF documents. It handles
+ * document lifecycle, page access, metadata, security, and rendering operations.
+ *
  * This implementation mirrors the Rust `fitz::document::Document` for 100% API compatibility.
+ *
+ * @module document
+ * @example
+ * ```typescript
+ * import { Document } from 'nanopdf';
+ *
+ * // Open a PDF from a file
+ * const doc = Document.open('document.pdf');
+ *
+ * // Check if password is required
+ * if (doc.needsPassword()) {
+ *   doc.authenticate('password');
+ * }
+ *
+ * // Get page count
+ * console.log(`Pages: ${doc.pageCount}`);
+ *
+ * // Load and render a page
+ * const page = doc.loadPage(0);
+ * const pixmap = page.toPixmap(Matrix.identity());
+ *
+ * // Extract text
+ * const text = page.extractText();
+ *
+ * // Clean up
+ * page.drop();
+ * doc.close();
+ * ```
  */
 
 import { Buffer } from './buffer.js';
@@ -13,14 +44,61 @@ import { native } from './native.js';
 import type { NativeContext, NativeDocument, NativePage, NativeRect } from './native.js';
 
 /**
- * An item in the document outline (table of contents)
+ * An item in the document outline (table of contents / bookmarks).
+ *
+ * Outline items form a tree structure representing the document's navigation hierarchy.
+ * Each item can link to a page number, URI, or have child items.
+ *
+ * @class OutlineItem
+ * @example
+ * ```typescript
+ * const outline = doc.getOutline();
+ * for (const item of outline) {
+ *   console.log(`${item.title} -> Page ${item.page}`);
+ *   for (const child of item.children) {
+ *     console.log(`  ${child.title} -> Page ${child.page}`);
+ *   }
+ * }
+ * ```
  */
 export class OutlineItem {
+  /**
+   * The title/label of this outline item.
+   * @readonly
+   * @type {string}
+   */
   readonly title: string;
+
+  /**
+   * The destination page number (0-indexed), if this item links to a page.
+   * Undefined if this item links to a URI instead.
+   * @readonly
+   * @type {number | undefined}
+   */
   readonly page: number | undefined;
+
+  /**
+   * The destination URI, if this item links to an external resource.
+   * Undefined if this item links to a page instead.
+   * @readonly
+   * @type {string | undefined}
+   */
   readonly uri: string | undefined;
+
+  /**
+   * Child outline items nested under this item.
+   * @readonly
+   * @type {OutlineItem[]}
+   */
   readonly children: OutlineItem[];
 
+  /**
+   * Creates a new outline item.
+   *
+   * @param {string} title - The title of the outline item
+   * @param {number} [page] - The destination page number (0-indexed)
+   * @param {string} [uri] - The destination URI
+   */
   constructor(title: string, page?: number, uri?: string) {
     this.title = title;
     this.page = page;
@@ -30,36 +108,181 @@ export class OutlineItem {
 }
 
 /**
- * A text block extracted from a page
+ * A block of text extracted from a PDF page.
+ *
+ * Text blocks represent cohesive units of text, typically paragraphs or sections.
+ * They contain the bounding box, complete text, and structured line information.
+ *
+ * @interface TextBlock
+ * @example
+ * ```typescript
+ * const blocks = page.extractTextBlocks();
+ * for (const block of blocks) {
+ *   console.log(`Block at [${block.bbox.x0}, ${block.bbox.y0}]:`);
+ *   console.log(block.text);
+ *   console.log(`Contains ${block.lines.length} lines`);
+ * }
+ * ```
  */
 export interface TextBlock {
+  /**
+   * The bounding box of the entire text block.
+   * @readonly
+   * @type {RectLike}
+   */
   readonly bbox: RectLike;
+
+  /**
+   * The complete text content of this block.
+   * @readonly
+   * @type {string}
+   */
   readonly text: string;
+
+  /**
+   * The individual lines within this block.
+   * @readonly
+   * @type {TextLine[]}
+   */
   readonly lines: TextLine[];
 }
 
 /**
- * A line of text extracted from a page
+ * A single line of text extracted from a PDF page.
+ *
+ * Text lines represent a horizontal run of text, typically corresponding to
+ * a single line in the original document layout.
+ *
+ * @interface TextLine
+ * @example
+ * ```typescript
+ * const blocks = page.extractTextBlocks();
+ * for (const block of blocks) {
+ *   for (const line of block.lines) {
+ *     console.log(`Line: "${line.text}"`);
+ *     console.log(`  Font sizes: ${line.spans.map(s => s.size).join(', ')}`);
+ *   }
+ * }
+ * ```
  */
 export interface TextLine {
+  /**
+   * The bounding box of the entire line.
+   * @readonly
+   * @type {RectLike}
+   */
   readonly bbox: RectLike;
+
+  /**
+   * The complete text content of this line.
+   * @readonly
+   * @type {string}
+   */
   readonly text: string;
+
+  /**
+   * The individual text spans within this line.
+   * @readonly
+   * @type {TextSpan[]}
+   */
   readonly spans: TextSpan[];
 }
 
 /**
- * A span of text with consistent formatting
+ * A span of text with consistent formatting properties.
+ *
+ * Text spans represent runs of text that share the same font, size, and color.
+ * They are the most granular level of text extraction.
+ *
+ * @interface TextSpan
+ * @example
+ * ```typescript
+ * const blocks = page.extractTextBlocks();
+ * for (const block of blocks) {
+ *   for (const line of block.lines) {
+ *     for (const span of line.spans) {
+ *       console.log(`"${span.text}" - ${span.font} @ ${span.size}pt`);
+ *       console.log(`  Color: RGB(${span.color.join(', ')})`);
+ *     }
+ *   }
+ * }
+ * ```
  */
 export interface TextSpan {
+  /**
+   * The bounding box of this text span.
+   * @readonly
+   * @type {RectLike}
+   */
   readonly bbox: RectLike;
+
+  /**
+   * The text content of this span.
+   * @readonly
+   * @type {string}
+   */
   readonly text: string;
+
+  /**
+   * The font name used for this span.
+   * @readonly
+   * @type {string}
+   */
   readonly font: string;
+
+  /**
+   * The font size in points.
+   * @readonly
+   * @type {number}
+   */
   readonly size: number;
+
+  /**
+   * The text color as RGB values (0-255).
+   * @readonly
+   * @type {number[]}
+   */
   readonly color: number[];
 }
 
 /**
- * A page in a document
+ * A page in a PDF document.
+ *
+ * Represents a single page within a PDF document with methods for rendering,
+ * text extraction, search, and link retrieval. Pages are loaded from a Document
+ * using `Document.loadPage()`.
+ *
+ * **Important**: Pages must be explicitly freed using `drop()` when no longer needed
+ * to prevent memory leaks.
+ *
+ * @class Page
+ * @example
+ * ```typescript
+ * const doc = Document.open('document.pdf');
+ * const page = doc.loadPage(0); // Load first page
+ *
+ * try {
+ *   // Get page dimensions
+ *   console.log(`Size: ${page.bounds.width} x ${page.bounds.height}`);
+ *   console.log(`Rotation: ${page.rotation}°`);
+ *
+ *   // Extract text
+ *   const text = page.extractText();
+ *   console.log(text);
+ *
+ *   // Search for text
+ *   const hits = page.searchText('hello');
+ *   console.log(`Found ${hits.length} occurrences`);
+ *
+ *   // Render to pixmap
+ *   const matrix = Matrix.scale(2, 2); // 2x zoom
+ *   const pixmap = page.toPixmap(matrix);
+ * } finally {
+ *   page.drop(); // Always clean up!
+ * }
+ *
+ * doc.close();
+ * ```
  */
 export class Page {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -259,7 +482,77 @@ export class Page {
 }
 
 /**
- * A PDF or other document
+ * A PDF or other supported document format.
+ *
+ * The Document class is the main entry point for working with PDF files. It provides
+ * methods for opening documents from files or memory, accessing pages, checking security,
+ * reading metadata, and performing document-level operations.
+ *
+ * **Supported formats**: PDF, XPS, CBZ, and other formats supported by MuPDF.
+ *
+ * **Resource Management**: Documents must be explicitly closed using `close()` when
+ * done to free native resources and prevent memory leaks.
+ *
+ * @class Document
+ * @example
+ * ```typescript
+ * // Open from file
+ * const doc = Document.open('document.pdf');
+ *
+ * // Open from buffer
+ * const buffer = fs.readFileSync('document.pdf');
+ * const doc2 = Document.openFromBuffer(buffer);
+ *
+ * // Check basic info
+ * console.log(`Pages: ${doc.pageCount}`);
+ * console.log(`Title: ${doc.getMetadata('Title')}`);
+ * console.log(`Author: ${doc.getMetadata('Author')}`);
+ *
+ * // Handle password-protected PDFs
+ * if (doc.needsPassword()) {
+ *   const success = doc.authenticate('password123');
+ *   if (!success) {
+ *     throw new Error('Invalid password');
+ *   }
+ * }
+ *
+ * // Check permissions
+ * if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
+ *   console.warn('Printing is not allowed');
+ * }
+ *
+ * // Work with pages
+ * for (let i = 0; i < doc.pageCount; i++) {
+ *   const page = doc.loadPage(i);
+ *   const text = page.extractText();
+ *   console.log(`Page ${i + 1}: ${text.substring(0, 100)}...`);
+ *   page.drop();
+ * }
+ *
+ * // Save modified document
+ * doc.save('output.pdf');
+ *
+ * // Always clean up
+ * doc.close();
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Using try-finally for proper cleanup
+ * const doc = Document.open('document.pdf');
+ * try {
+ *   // Work with document
+ *   const page = doc.loadPage(0);
+ *   try {
+ *     const text = page.extractText();
+ *     console.log(text);
+ *   } finally {
+ *     page.drop();
+ *   }
+ * } finally {
+ *   doc.close();
+ * }
+ * ```
  */
 export class Document {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
