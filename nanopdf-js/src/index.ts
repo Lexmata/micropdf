@@ -331,6 +331,12 @@ export { Pixmap, type PixmapInfo } from './pixmap.js';
 export { Text, Language, type TextSpan, type TextItem, type TextWalker } from './text.js';
 
 // ============================================================================
+// Structured Text
+// ============================================================================
+
+export { STextPage, type Quad, quadToRect, quadsOverlap } from './stext.js';
+
+// ============================================================================
 // Display List
 // ============================================================================
 

@@ -71,6 +71,23 @@ export interface NativeAddon {
     caseSensitive: boolean
   ): NativeRect[];
 
+  // Structured text
+  newSTextPage(ctx: NativeContext, page: NativePage): NativeSTextPage;
+  dropSTextPage(ctx: NativeContext, stext: NativeSTextPage): void;
+  getSTextAsText(ctx: NativeContext, stext: NativeSTextPage): string;
+  searchSTextPage(
+    ctx: NativeContext,
+    stext: NativeSTextPage,
+    needle: string,
+    maxHits: number
+  ): Array<{
+    ul: { x: number; y: number };
+    ur: { x: number; y: number };
+    ll: { x: number; y: number };
+    lr: { x: number; y: number };
+  }>;
+  getSTextPageBounds(ctx: NativeContext, stext: NativeSTextPage): NativeRect;
+
   // Links
   getPageLinks(
     ctx: NativeContext,

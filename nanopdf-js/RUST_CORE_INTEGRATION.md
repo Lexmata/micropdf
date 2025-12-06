@@ -153,7 +153,7 @@ Napi::Value fz_render_form_field(field, matrix)
 
 ### Approach 1: Incremental (Recommended)
 
-**Pros**: 
+**Pros**:
 - Lower risk
 - Can release updates incrementally
 - Easier testing
@@ -195,7 +195,7 @@ Napi::Value fz_render_form_field(field, matrix)
 
 ### N-API Bindings
 
-**Current State**: 
+**Current State**:
 - ~30 N-API functions implemented
 - Basic document, page, rendering operations working
 - Located in `nanopdf-js/native/*.cc`
@@ -247,15 +247,15 @@ Napi::Value fz_render_form_field(field, matrix)
 // 1. nanopdf-js/native/stext.cc
 Napi::Value NewSTextPage(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  
+
   // Get page handle
   uint64_t page_handle = info[0].As<Napi::BigInt>().Uint64Value();
-  
+
   // Call Rust FFI
   uint64_t stext_handle = fz_new_stext_page_from_page(
     ctx_handle, page_handle, nullptr
   );
-  
+
   // Return handle
   return Napi::BigInt::New(env, stext_handle);
 }
@@ -265,12 +265,12 @@ Napi::Value NewSTextPage(const Napi::CallbackInfo& info) {
 // 2. nanopdf-js/src/stext.ts
 export class STextPage {
   private handle: bigint;
-  
+
   static fromPage(page: Page): STextPage {
     const handle = native.newSTextPage(page.handle);
     return new STextPage(handle);
   }
-  
+
   getBlocks(): STextBlock[] {
     return native.getBlocks(this.handle);
   }
@@ -284,7 +284,7 @@ describe('STextPage', () => {
     const doc = Document.open('test.pdf');
     const page = doc.loadPage(0);
     const stext = STextPage.fromPage(page);
-    
+
     expect(stext).toBeDefined();
   });
 });

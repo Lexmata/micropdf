@@ -849,7 +849,7 @@ The underlying Rust core now provides **complete MuPDF compatibility**:
 ### Roadmap
 
 - 🚀 **v0.2.0**: Expose structured text extraction API
-- 🚀 **v0.3.0**: Expose annotation rendering API  
+- 🚀 **v0.3.0**: Expose annotation rendering API
 - 🚀 **v0.4.0**: Expose form field rendering API
 - 🚀 **v0.5.0**: Advanced rendering options (anti-aliasing, colorspace)
 - 🎯 **v1.0.0**: Full API parity with 100% complete Rust core

@@ -8,7 +8,8 @@
         "native/nanopdf.cc",
         "native/context.cc",
         "native/document.cc",
-        "native/page.cc"
+        "native/page.cc",
+        "native/stext.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

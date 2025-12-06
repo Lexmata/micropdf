@@ -12,6 +12,7 @@
 Napi::Object InitContext(Napi::Env env, Napi::Object exports);
 Napi::Object InitDocument(Napi::Env env, Napi::Object exports);
 Napi::Object InitPage(Napi::Env env, Napi::Object exports);
+Napi::Object InitSText(Napi::Env env, Napi::Object exports);
 
 /**
  * Get the NanoPDF library version
@@ -33,6 +34,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     InitContext(env, exports);
     InitDocument(env, exports);
     InitPage(env, exports);
+    InitSText(env, exports);
 
     return exports;
 }
