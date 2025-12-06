@@ -25,7 +25,7 @@ This document audits the current state of NanoPDF's MuPDF compatibility implemen
 
 **Overall Progress**: ✅ **100% COMPLETE!**
 
-**Total Code**: ~7,700 lines of production Rust code  
+**Total Code**: ~7,700 lines of production Rust code
 **Total Tests**: 1,101 passing (1,063 unit + 38 integration)
 
 ---
@@ -320,7 +320,7 @@ NanoPDF is now production-ready for:
 The **Rust core is 100% complete**. Next priorities:
 
 1. **Go Bindings** - Leverage complete Rust core
-2. **Node.js Bindings** - Leverage complete Rust core  
+2. **Node.js Bindings** - Leverage complete Rust core
 3. **Performance Optimization** - Profile and optimize hot paths
 4. **Documentation** - API documentation and examples
 5. **Benchmarking** - Compare with MuPDF
