@@ -479,7 +479,7 @@ func TestPerformanceGeometry(t *testing.T) {
 
 	// Test point operations
 	start = time.Now()
-	p := nanopdf.Point{X: 100, Y: 100}
+	p = nanopdf.Point{X: 100, Y: 100}
 	for i := 0; i < iterations; i++ {
 		_ = m.TransformPoint(p)
 		_ = r1.ContainsXY(p.X, p.Y)
