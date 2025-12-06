@@ -161,40 +161,60 @@ func main() {
 
 Each package includes comprehensive documentation:
 
-### Node.js (nanopdf-js)
+### Rust (nanopdf-rs)
 
-- **[README](./nanopdf-js/README.md)** - Complete API reference, quick start, troubleshooting
-- **[ARCHITECTURE](./nanopdf-js/ARCHITECTURE.md)** - System design, 4-layer architecture, memory management
-- **[CONTRIBUTING](./nanopdf-js/CONTRIBUTING.md)** - Development setup, coding standards, PR process
-- **[Examples](./nanopdf-js/examples/)** - 4 practical examples with guides
-- **[FFI Status](./nanopdf-js/FFI_IMPLEMENTATION_STATUS.md)** - Implementation progress (62.0%)
+**📖 API Documentation:**
+- **[docs.rs/nanopdf](https://docs.rs/nanopdf)** - Complete Rust API documentation with examples
+- **[Crate Documentation](https://crates.io/crates/nanopdf)** - Package info and version history
+
+**📘 Guides:**
+- **[README](./nanopdf-rs/README.md)** - Overview, features, FFI interface
+- **[Building Guide](./nanopdf-rs/BUILDING.md)** - Comprehensive build documentation for all platforms
+- **[Makefile](./nanopdf-rs/Makefile)** - 40+ targets for build, test, install
 
 **Highlights**:
-- ✅ 2,500+ lines of professional documentation
-- ✅ Complete JSDoc for all modules (1,640 lines)
-- ✅ 4 runnable examples (basic, text, rendering, batch)
-- ✅ Comprehensive API reference
+- ✅ 660+ FFI functions with full documentation
+- ✅ 11,000+ lines of well-documented Rust code
+- ✅ Thread-safe handle-based memory management
+- ✅ Zero-cost abstractions with safety guarantees
 
 ### Go (go-nanopdf)
 
+**📖 API Documentation:**
+- **[pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf)** - Complete godoc reference
+- **[Easy API](./go-nanopdf/EASY_API.md)** - Fluent, beginner-friendly API guide
+
+**📘 Guides:**
 - **[README](./go-nanopdf/README.md)** - Complete API reference, quick start, troubleshooting
 - **[ARCHITECTURE](./go-nanopdf/ARCHITECTURE.md)** - System design, CGO integration, memory management
 - **[CONTRIBUTING](./go-nanopdf/CONTRIBUTING.md)** - Development setup, coding standards, PR process
-- **[Examples](./go-nanopdf/examples/)** - 4 practical examples with guides
-- **[Package Docs](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf)** - Complete godoc reference
+- **[Examples](./go-nanopdf/examples/)** - 16 practical examples with guides
 
 **Highlights**:
 - ✅ 1,910+ lines of professional documentation
-- ✅ Complete godoc for all types and functions
-- ✅ 4 runnable examples (basic, text, rendering, batch)
+- ✅ Complete godoc for all 8 FFI modules
+- ✅ 16 runnable examples covering all major features
 - ✅ 90.5% test coverage with 143 tests
 
-### Rust (nanopdf-rs)
+### Node.js (nanopdf-js)
 
-- **[README](./nanopdf-rs/README.md)** - Build instructions, FFI interface
-- **[Building Guide](./nanopdf-rs/BUILDING.md)** - Comprehensive build documentation
-- **[Makefile](./nanopdf-rs/Makefile)** - 40+ targets for build, test, install
-- **[API Docs](https://docs.rs/nanopdf)** - Complete Rust API documentation
+**📖 API Documentation:**
+- **[npm package](https://www.npmjs.com/package/nanopdf)** - Installation and quick reference
+- **[Easy API Guide](./nanopdf-js/examples/easy-api-examples.ts)** - 16 examples with auto-cleanup
+- **[Simple API Guide](./nanopdf-js/src/simple.ts)** - Ultra-simple single-function operations
+
+**📘 Guides:**
+- **[README](./nanopdf-js/README.md)** - Complete API reference, quick start, troubleshooting
+- **[ARCHITECTURE](./nanopdf-js/ARCHITECTURE.md)** - System design, 4-layer architecture, memory management
+- **[CONTRIBUTING](./nanopdf-js/CONTRIBUTING.md)** - Development setup, coding standards, PR process
+- **[Examples](./nanopdf-js/examples/)** - 20 practical examples (4 basic + 16 Easy API)
+- **[FFI Status](./nanopdf-js/FFI_IMPLEMENTATION_STATUS.md)** - Implementation progress tracking
+
+**Highlights**:
+- ✅ 2,500+ lines of professional documentation
+- ✅ Complete TypeScript definitions with JSDoc (1,640 lines)
+- ✅ 20 runnable examples with comprehensive guides
+- ✅ Three API levels: Direct FFI, Easy API, Simple API
 
 ---
 

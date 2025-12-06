@@ -109,6 +109,67 @@ let rect = Rect::new(0.0, 0.0, 612.0, 792.0); // US Letter
 let matrix = Matrix::scale(2.0, 2.0);
 ```
 
+## Documentation
+
+Complete documentation is available in multiple formats:
+
+### 📖 Official Documentation
+
+- **[docs.rs/nanopdf](https://docs.rs/nanopdf)** - Complete API documentation with examples
+  - All modules fully documented with rustdoc
+  - Inline examples for common operations
+  - Type-level documentation
+  - 11,000+ lines of documented code
+  
+- **[crates.io/crates/nanopdf](https://crates.io/crates/nanopdf)** - Package information
+  - Version history and changelog
+  - Feature flags and dependencies
+  - Download statistics
+
+### 📚 Guides
+
+- **[Building Guide](BUILDING.md)** - Comprehensive build instructions
+  - Building for all platforms (Linux, macOS, Windows)
+  - Cross-compilation instructions
+  - Static library generation
+  - Integration with C/C++ projects
+  
+- **[Makefile Targets](Makefile)** - 40+ build, test, and install targets
+  - Quick reference for common tasks
+  - CI/CD integration helpers
+  - Platform-specific builds
+
+### 🔗 FFI Documentation
+
+NanoPDF provides 660+ C-compatible FFI functions:
+
+- **FFI Modules**: `context`, `document`, `page`, `buffer`, `stream`, `pixmap`, `colorspace`, `font`, `image`, `cookie`, `device`, `path`, `output`, and more
+- **Memory Management**: Handle-based resource management with automatic cleanup
+- **Thread Safety**: All operations are thread-safe with Rust's ownership system
+
+### 🌐 Language Bindings
+
+NanoPDF provides bindings for multiple languages:
+
+- **[Node.js/TypeScript](../nanopdf-js/README.md)** - Native N-API bindings
+  - TypeScript definitions included
+  - Easy and Simple APIs for common tasks
+  - 20 comprehensive examples
+  
+- **[Go](../go-nanopdf/README.md)** - CGO bindings with pure-Go mock
+  - Idiomatic Go API
+  - 90.5% test coverage
+  - Easy API for fluent operations
+  - 16 runnable examples
+
+### 📊 Additional Resources
+
+- **[Main Project](../README.md)** - Overall project documentation
+- **[Benchmarks](https://lexmata.github.io/nanopdf/dev/bench/)** - Performance comparisons
+- **[Compatibility Matrix](../COMPATIBILITY.md)** - MuPDF API coverage
+
+---
+
 ## Building Static Libraries
 
 The library can be built as a static library for C/C++ integration:

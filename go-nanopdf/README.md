@@ -466,6 +466,43 @@ See the [examples/](examples/) directory for complete working examples.
 
 ---
 
+## Documentation
+
+Complete documentation is available in multiple formats:
+
+### 📖 Official Documentation
+
+- **[pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf)** - Complete godoc API reference with examples
+- **[Easy API Guide](EASY_API.md)** - Simplified, fluent API for common tasks (16 examples)
+- **[Architecture Guide](ARCHITECTURE.md)** - System design, CGO integration, memory management
+- **[Contributing Guide](CONTRIBUTING.md)** - Development setup, coding standards, PR process
+
+### 📚 Examples
+
+- **[examples/](examples/)** - 16 runnable examples covering all major features:
+  - Basic document operations
+  - Page rendering and image export
+  - Text extraction and search
+  - Batch processing
+  - Easy API usage patterns
+
+### 🔗 Module Documentation
+
+Each FFI module has complete godoc documentation:
+
+- **[nanopdf](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf)** - Core package
+- **[easy](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf/easy)** - Simplified API
+- **[example](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf/example)** - Example programs
+- **[examples](https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf/examples)** - Additional examples
+
+### 🔧 Related Documentation
+
+- **[Rust Core Library](../nanopdf-rs/README.md)** - Core PDF engine documentation
+- **[Node.js Bindings](../nanopdf-js/README.md)** - Alternative language bindings
+- **[Main Project](../README.md)** - Overall project documentation
+
+---
+
 ## API Reference
 
 ### Context
