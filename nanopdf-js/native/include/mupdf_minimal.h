@@ -55,7 +55,7 @@ typedef int32_t fz_display_list;
 typedef int32_t fz_stream;
 typedef int32_t fz_output;
 typedef int32_t fz_font;
-typedef int32_t fz_image;
+// fz_image is defined later with specific functions
 typedef int32_t fz_archive;
 
 // ============================================================================
@@ -144,16 +144,6 @@ fz_font fz_new_font_from_file(fz_context ctx, const char* name, const char* path
 void fz_drop_font(fz_context ctx, fz_font font);
 
 // ============================================================================
-// Image Functions
-// ============================================================================
-
-fz_image fz_new_image_from_buffer(fz_context ctx, fz_buffer buffer);
-fz_image fz_new_image_from_file(fz_context ctx, const char* path);
-void fz_drop_image(fz_context ctx, fz_image image);
-int fz_image_width(fz_context ctx, fz_image image);
-int fz_image_height(fz_context ctx, fz_image image);
-
-// ============================================================================
 // Archive Functions
 // ============================================================================
 
@@ -207,6 +197,20 @@ void fz_run_display_list(fz_context ctx, fz_display_list_handle list, fz_device 
 fz_display_list_handle fz_new_display_list_from_page(fz_context ctx, fz_page page);
 
 // ============================================================================
+// Image Functions
+// ============================================================================
+
+typedef uint64_t fz_image;
+
+fz_image fz_new_image_from_file(fz_context ctx, const char* filename);
+fz_image fz_new_image_from_buffer_data(fz_context ctx, const uint8_t* data, size_t len);
+void fz_drop_image(fz_context ctx, fz_image image);
+int fz_image_width(fz_context ctx, fz_image image);
+int fz_image_height(fz_context ctx, fz_image image);
+uint64_t fz_image_colorspace(fz_context ctx, fz_image image);
+// fz_get_pixmap_from_image is declared after fz_pixmap typedef
+
+// ============================================================================
 // Pixmap Functions
 // ============================================================================
 
@@ -228,6 +232,9 @@ void fz_clear_pixmap(fz_context ctx, fz_pixmap pixmap, int value);
 
 // Pixmap-to-buffer conversion
 fz_buffer fz_new_buffer_from_pixmap_as_png(fz_context ctx, fz_pixmap pix, int color_params);
+
+// Image-to-pixmap conversion (needs fz_image and fz_pixmap defined)
+fz_pixmap fz_get_pixmap_from_image(fz_context ctx, fz_image image, const fz_irect* subarea, fz_matrix* ctm, int* w, int* h);
 
 // ============================================================================
 // Path Functions

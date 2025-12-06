@@ -116,7 +116,7 @@ pub unsafe extern "C" fn fz_pixmap_samples(
     };
 
     let samples = pm.samples();
-    
+
     unsafe {
         *data = samples.as_ptr();
         *size = samples.len();

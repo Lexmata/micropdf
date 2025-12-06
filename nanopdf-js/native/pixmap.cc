@@ -135,7 +135,7 @@ Napi::Buffer<uint8_t> PixmapSamples(const Napi::CallbackInfo& info) {
 
     uint8_t* data = nullptr;
     size_t size = 0;
-    
+
     fz_pixmap_samples(ctx_handle, pixmap_handle, &data, &size);
 
     if (data && size > 0) {
@@ -234,7 +234,7 @@ Napi::Object InitPixmap(Napi::Env env, Napi::Object exports) {
     exports.Set("pixmapStride", Napi::Function::New(env, PixmapStride));
     exports.Set("pixmapComponents", Napi::Function::New(env, PixmapComponents));
     exports.Set("clearPixmap", Napi::Function::New(env, ClearPixmap));
-    
+
     return exports;
 }
 

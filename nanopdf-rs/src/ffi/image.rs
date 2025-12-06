@@ -352,6 +352,49 @@ pub extern "C" fn fz_image_orientation(_ctx: Handle, _image: Handle) -> i32 {
     0 // 0 = normal orientation
 }
 
+/// Get image width
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_image_width(_ctx: Handle, image: Handle) -> i32 {
+    if let Some(img) = IMAGES.get(image) {
+        if let Ok(guard) = img.lock() {
+            return guard.width();
+        }
+    }
+    0
+}
+
+/// Get image height
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_image_height(_ctx: Handle, image: Handle) -> i32 {
+    if let Some(img) = IMAGES.get(image) {
+        if let Ok(guard) = img.lock() {
+            return guard.height();
+        }
+    }
+    0
+}
+
+/// Load image from raw buffer data
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn fz_new_image_from_buffer_data(
+    _ctx: Handle,
+    data: *const u8,
+    len: usize,
+) -> Handle {
+    if data.is_null() || len == 0 {
+        return 0;
+    }
+
+    // SAFETY: Caller guarantees data points to readable memory of len bytes
+    let slice = unsafe { std::slice::from_raw_parts(data, len) };
+
+    // Try to decode image
+    match Image::from_data(slice) {
+        Ok(image) => IMAGES.insert(image),
+        Err(_) => 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
