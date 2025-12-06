@@ -8,6 +8,29 @@
 import { Rect, Matrix, type MatrixLike } from './geometry.js';
 
 /**
+ * Language codes for text handling
+ * Maps language codes to numeric identifiers
+ */
+export enum Language {
+  UNSET = 0,
+  en = 1,
+  es = 2,
+  zh = 3,
+  fr = 4,
+  de = 5,
+  ja = 6,
+  ko = 7,
+  ru = 8,
+  ar = 9,
+  pt = 10,
+  it = 11,
+  nl = 12,
+  sv = 13,
+  pl = 14,
+  tr = 15
+}
+
+/**
  * Text span - a run of text with consistent formatting
  */
 export interface TextSpan {
@@ -42,11 +65,13 @@ export interface TextWalker {
  */
 export class Text {
   private _spans: TextSpan[] = [];
-  private _language: string = 'en';
+  private _language: number = Language.en;
   private _refCount: number = 1;
   private _currentSpan: TextSpan | null = null;
 
-  constructor() {}
+  constructor(handle: any) {
+    // Accept handle parameter for compatibility
+  }
 
   /**
    * Create a new text object
@@ -92,11 +117,25 @@ export class Text {
   // Language
   // ============================================================================
 
-  get language(): string {
+  get language(): number {
     return this._language;
   }
 
-  set language(lang: string) {
+  set language(lang: number) {
+    this._language = lang;
+  }
+
+  /**
+   * Get the language code
+   */
+  getLanguage(): number {
+    return this._language;
+  }
+
+  /**
+   * Set the language code
+   */
+  setLanguage(lang: number): void {
     this._language = lang;
   }
 

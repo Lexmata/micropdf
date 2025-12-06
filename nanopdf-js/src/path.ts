@@ -341,6 +341,13 @@ export class Path {
   }
 
   /**
+   * Close the current subpath (alias for closePath)
+   */
+  close(): this {
+    return this.closePath();
+  }
+
+  /**
    * Add a rectangle to the path
    */
   rectTo(x: number, y: number, w: number, h: number): this {

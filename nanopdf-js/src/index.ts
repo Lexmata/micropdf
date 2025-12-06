@@ -242,7 +242,7 @@ export { Pixmap, type PixmapInfo } from './pixmap.js';
 // Text
 // ============================================================================
 
-export { Text, type TextSpan, type TextItem, type TextWalker } from './text.js';
+export { Text, Language, type TextSpan, type TextItem, type TextWalker } from './text.js';
 
 // ============================================================================
 // Display List

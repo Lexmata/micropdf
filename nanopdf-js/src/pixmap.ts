@@ -61,6 +61,28 @@ export class Pixmap {
     return new Pixmap(colorspace, b.width, b.height, alpha, b.x0, b.y0);
   }
 
+  /**
+   * Create pixmap with bounding box (lowercase alias)
+   */
+  static createWithBbox(colorspace: Colorspace, bbox: IRectLike, alpha: boolean = true): Pixmap {
+    return Pixmap.createWithBBox(colorspace, bbox, alpha);
+  }
+
+  /**
+   * Create pixmap from sample data
+   */
+  static fromSamples(
+    colorspace: Colorspace,
+    width: number,
+    height: number,
+    alpha: boolean,
+    samples: Uint8Array
+  ): Pixmap {
+    const pixmap = new Pixmap(colorspace, width, height, alpha);
+    pixmap._data = new Uint8Array(samples);
+    return pixmap;
+  }
+
   // ============================================================================
   // Reference Counting
   // ============================================================================
@@ -126,6 +148,13 @@ export class Pixmap {
   }
 
   /**
+   * Get number of colorant components (excluding alpha) - alias for components
+   */
+  get n(): number {
+    return this.components;
+  }
+
+  /**
    * Get number of colorant components (excluding alpha)
    */
   get colorants(): number {
@@ -140,6 +169,13 @@ export class Pixmap {
   }
 
   /**
+   * Check if pixmap has alpha channel (short alias)
+   */
+  get alpha(): boolean {
+    return this._alpha;
+  }
+
+  /**
    * Get stride (bytes per row)
    */
   get stride(): number {
@@ -150,6 +186,13 @@ export class Pixmap {
    * Get raw pixel data
    */
   get data(): Uint8Array {
+    return this._data;
+  }
+
+  /**
+   * Get samples (pixel data) - alias for data
+   */
+  get samples(): Uint8Array {
     return this._data;
   }
 
@@ -395,6 +438,52 @@ export class Pixmap {
     }
 
     return converted;
+  }
+
+  /**
+   * Convert pixmap to RGBA format
+   */
+  toRGBA(): Uint8Array {
+    // If already RGBA, return a copy
+    if (this._colorspace.n === 3 && this._alpha) {
+      return new Uint8Array(this._data);
+    }
+
+    // Convert to RGB with alpha
+    const rgbaData = new Uint8Array(this._width * this._height * 4);
+    const srcComponents = this.components;
+
+    for (let y = 0; y < this._height; y++) {
+      for (let x = 0; x < this._width; x++) {
+        const srcOffset = (y * this._width + x) * srcComponents;
+        const dstOffset = (y * this._width + x) * 4;
+
+        if (this._colorspace.n === 1) {
+          // Grayscale to RGB
+          const gray = this._data[srcOffset]!;
+          rgbaData[dstOffset] = gray; // R
+          rgbaData[dstOffset + 1] = gray; // G
+          rgbaData[dstOffset + 2] = gray; // B
+          rgbaData[dstOffset + 3] = this._alpha ? this._data[srcOffset + 1]! : 255; // A
+        } else if (this._colorspace.n === 3) {
+          // RGB to RGBA
+          rgbaData[dstOffset] = this._data[srcOffset]!; // R
+          rgbaData[dstOffset + 1] = this._data[srcOffset + 1]!; // G
+          rgbaData[dstOffset + 2] = this._data[srcOffset + 2]!; // B
+          rgbaData[dstOffset + 3] = this._alpha ? this._data[srcOffset + 3]! : 255; // A
+        } else {
+          // Other colorspaces - default to white with alpha
+          rgbaData[dstOffset] = 255;
+          rgbaData[dstOffset + 1] = 255;
+          rgbaData[dstOffset + 2] = 255;
+          rgbaData[dstOffset + 3] = this._alpha
+            ? this._data[srcOffset + this._colorspace.n]!
+            : 255;
+        }
+      }
+    }
+
+    return rgbaData;
   }
 
   /**
