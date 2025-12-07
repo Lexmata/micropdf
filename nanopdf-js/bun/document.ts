@@ -2,7 +2,8 @@
  * Document and Page operations
  */
 
-import type { Context } from "./context.ts";
+import type { Context } from "./context";
+import { ptr } from "bun:ffi";
 import {
   fz_open_document,
   fz_open_document_with_buffer,
@@ -20,9 +21,9 @@ import {
   fz_buffer_data,
   fz_drop_buffer,
   toCString,
-  fromCString,
+  readFloats,
   readBuffer,
-} from "./ffi.ts";
+} from "./ffi";
 
 export interface Rect {
   x0: number;
@@ -50,12 +51,13 @@ export class Page {
   }
 
   bounds(): Rect {
-    const rect = fz_bound_page(this.ctx.getHandle(), this.handle);
+    const rectPtr = fz_bound_page(this.ctx.getHandle(), this.handle);
+    const floats = readFloats(Number(rectPtr), 4);
     return {
-      x0: rect[0],
-      y0: rect[1],
-      x1: rect[2],
-      y1: rect[3],
+      x0: floats[0],
+      y0: floats[1],
+      x1: floats[2],
+      y1: floats[3],
     };
   }
 
@@ -77,17 +79,20 @@ export class Page {
 
       try {
         // Get buffer data
-        const sizePtr = new BigUint64Array(1);
-        const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, Deno.UnsafePointer.of(sizePtr));
+        const sizePtr = Buffer.alloc(8);
+        const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, ptr(sizePtr));
 
-        if (!dataPtr || sizePtr[0] === 0n) {
+        if (!dataPtr) {
           return "";
         }
 
-        const size = Number(sizePtr[0]);
-        const textData = readBuffer(dataPtr, size);
-        const decoder = new TextDecoder();
-        return decoder.decode(textData);
+        const size = sizePtr.readBigUInt64LE(0);
+        if (size === 0n) {
+          return "";
+        }
+
+        const textData = readBuffer(Number(dataPtr), Number(size));
+        return Buffer.from(textData).toString("utf-8");
       } finally {
         fz_drop_buffer(ctxHandle, bufferHandle);
       }
@@ -121,7 +126,7 @@ export class Document {
 
   static open(ctx: Context, path: string): Document {
     const pathBytes = toCString(path);
-    const handle = fz_open_document(ctx.getHandle(), Deno.UnsafePointer.of(pathBytes));
+    const handle = fz_open_document(ctx.getHandle(), ptr(pathBytes));
 
     if (handle === 0n) {
       throw new Error(`Failed to open document: ${path}`);
@@ -134,9 +139,9 @@ export class Document {
     const magicBytes = toCString(magic);
     const handle = fz_open_document_with_buffer(
       ctx.getHandle(),
-      Deno.UnsafePointer.of(magicBytes),
-      Deno.UnsafePointer.of(data),
-      data.length
+      ptr(magicBytes),
+      ptr(data),
+      BigInt(data.length)
     );
 
     if (handle === 0n) {
@@ -166,19 +171,19 @@ export class Document {
     return fz_authenticate_password(
       this.ctx.getHandle(),
       this.handle,
-      Deno.UnsafePointer.of(passwordBytes)
+      ptr(passwordBytes)
     ) !== 0;
   }
 
   getMetadata(key: string): string {
     const keyBytes = toCString(key);
-    const buffer = new Uint8Array(1024);
+    const buffer = Buffer.alloc(1024);
 
     const length = fz_lookup_metadata(
       this.ctx.getHandle(),
       this.handle,
-      Deno.UnsafePointer.of(keyBytes),
-      Deno.UnsafePointer.of(buffer),
+      ptr(keyBytes),
+      ptr(buffer),
       buffer.length
     );
 
@@ -186,8 +191,7 @@ export class Document {
       return "";
     }
 
-    const decoder = new TextDecoder();
-    return decoder.decode(buffer.subarray(0, length));
+    return buffer.toString("utf-8", 0, length);
   }
 
   loadPage(pageNum: number): Page {

@@ -1,27 +1,27 @@
 /**
- * Basic usage examples for NanoPDF with Deno
+ * Basic usage examples for NanoPDF with Bun
  */
 
-import { Context, Document, Pixmap, MatrixHelper } from "../../mod.ts";
+import { Context, Document, Pixmap, MatrixHelper } from "../../bun";
 
 // Example 1: Extract text from PDF
 async function extractText(pdfPath: string): Promise<string> {
   console.log("📄 Extracting text from PDF...");
-
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
-
+  
   const pageCount = doc.pageCount();
   console.log(`   Pages: ${pageCount}`);
-
+  
   let fullText = "";
-
+  
   for (let i = 0; i < pageCount; i++) {
     using page = doc.loadPage(i);
     const text = page.extractText();
     fullText += `\n--- Page ${i + 1} ---\n${text}`;
   }
-
+  
   return fullText;
 }
 
@@ -33,16 +33,16 @@ async function renderToPng(
   dpi = 150
 ): Promise<void> {
   console.log(`\n🖼️  Rendering page ${pageNum} to PNG at ${dpi} DPI...`);
-
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
   using page = doc.loadPage(pageNum);
-
+  
   const matrix = MatrixHelper.dpi(dpi);
   using pixmap = Pixmap.fromPage(ctx, page, matrix);
-
+  
   await pixmap.savePng(outputPath);
-
+  
   console.log(`   Saved to: ${outputPath}`);
   console.log(`   Size: ${pixmap.width()}x${pixmap.height()}`);
 }
@@ -50,10 +50,10 @@ async function renderToPng(
 // Example 3: Get document metadata
 function getMetadata(pdfPath: string): void {
   console.log("\n📋 Document Metadata:");
-
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
-
+  
   const metadata = [
     "Title",
     "Author",
@@ -62,14 +62,14 @@ function getMetadata(pdfPath: string): void {
     "Creator",
     "Producer",
   ];
-
+  
   for (const key of metadata) {
     const value = doc.getMetadata(key);
     if (value) {
       console.log(`   ${key}: ${value}`);
     }
   }
-
+  
   const needsPassword = doc.needsPassword();
   console.log(`   Password Protected: ${needsPassword}`);
   console.log(`   Page Count: ${doc.pageCount()}`);
@@ -78,15 +78,15 @@ function getMetadata(pdfPath: string): void {
 // Example 4: Get page bounds
 function getPageBounds(pdfPath: string, pageNum: number): void {
   console.log(`\n📏 Page ${pageNum} Bounds:`);
-
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
   using page = doc.loadPage(pageNum);
-
+  
   const bounds = page.bounds();
   const width = bounds.x1 - bounds.x0;
   const height = bounds.y1 - bounds.y0;
-
+  
   console.log(`   Width: ${width.toFixed(2)} points (${(width / 72).toFixed(2)} inches)`);
   console.log(`   Height: ${height.toFixed(2)} points (${(height / 72).toFixed(2)} inches)`);
   console.log(`   Bounds: (${bounds.x0}, ${bounds.y0}) to (${bounds.x1}, ${bounds.y1})`);
@@ -99,27 +99,23 @@ async function renderAllPages(
   dpi = 150
 ): Promise<void> {
   console.log(`\n📚 Rendering all pages to ${outputDir}/...`);
-
+  
   // Create output directory
-  try {
-    await Deno.mkdir(outputDir, { recursive: true });
-  } catch {
-    // Directory might already exist
-  }
-
+  await Bun.write(`${outputDir}/.keep`, "");
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
-
+  
   const pageCount = doc.pageCount();
   const matrix = MatrixHelper.dpi(dpi);
-
+  
   for (let i = 0; i < pageCount; i++) {
     using page = doc.loadPage(i);
     using pixmap = Pixmap.fromPage(ctx, page, matrix);
-
+    
     const outputPath = `${outputDir}/page_${String(i + 1).padStart(3, "0")}.png`;
     await pixmap.savePng(outputPath);
-
+    
     console.log(`   ✓ Page ${i + 1}/${pageCount}: ${outputPath}`);
   }
 }
@@ -127,14 +123,14 @@ async function renderAllPages(
 // Example 6: Password-protected PDF
 function openPasswordProtected(pdfPath: string, password: string): void {
   console.log("\n🔒 Opening password-protected PDF...");
-
+  
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
-
+  
   if (doc.needsPassword()) {
     console.log("   Password required!");
     const success = doc.authenticate(password);
-
+    
     if (success) {
       console.log("   ✓ Authentication successful");
       console.log(`   Pages: ${doc.pageCount()}`);
@@ -148,10 +144,10 @@ function openPasswordProtected(pdfPath: string, password: string): void {
 
 // Main function
 async function main() {
-  const args = Deno.args;
-
+  const args = Bun.argv.slice(2);
+  
   if (args.length === 0) {
-    console.log("Usage: deno run --allow-all basic.ts <pdf-file> [command]");
+    console.log("Usage: bun run examples/bun/basic.ts <pdf-file> [command]");
     console.log("\nCommands:");
     console.log("  text         - Extract text from PDF");
     console.log("  render       - Render first page to PNG");
@@ -159,17 +155,17 @@ async function main() {
     console.log("  bounds       - Show page bounds");
     console.log("  render-all   - Render all pages to PNG");
     console.log("\nExample:");
-    console.log("  deno run --allow-all basic.ts sample.pdf text");
-    Deno.exit(1);
+    console.log("  bun run examples/bun/basic.ts sample.pdf text");
+    process.exit(1);
   }
-
+  
   const pdfPath = args[0];
   const command = args[1] || "text";
-
+  
   console.log("╔════════════════════════════════════════════════════════╗");
-  console.log("║  NanoPDF for Deno - Usage Examples                    ║");
+  console.log("║  NanoPDF for Bun - Usage Examples                     ║");
   console.log("╚════════════════════════════════════════════════════════╝");
-
+  
   try {
     switch (command) {
       case "text": {
@@ -178,36 +174,36 @@ async function main() {
         console.log(text.substring(0, 500) + "...");
         break;
       }
-
+      
       case "render": {
         await renderToPng(pdfPath, 0, "output.png", 300);
         break;
       }
-
+      
       case "metadata": {
         getMetadata(pdfPath);
         break;
       }
-
+      
       case "bounds": {
         getPageBounds(pdfPath, 0);
         break;
       }
-
+      
       case "render-all": {
         await renderAllPages(pdfPath, "output_pages", 150);
         break;
       }
-
+      
       default:
         console.log(`Unknown command: ${command}`);
-        Deno.exit(1);
+        process.exit(1);
     }
-
+    
     console.log("\n✅ Complete!");
   } catch (error) {
-    console.error("\n❌ Error:", error.message);
-    Deno.exit(1);
+    console.error("\n❌ Error:", (error as Error).message);
+    process.exit(1);
   }
 }
 

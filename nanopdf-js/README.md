@@ -1,16 +1,17 @@
-# NanoPDF for Node.js & Deno
+# NanoPDF for Node.js, Deno & Bun
 
 <div align="center">
 
-**High-performance PDF manipulation library for Node.js and Deno**
+**High-performance PDF manipulation library for Node.js, Deno, and Bun**
 
 [![NPM Version](https://img.shields.io/npm/v/nanopdf.svg)](https://www.npmjs.com/package/nanopdf)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![Deno](https://img.shields.io/badge/deno-compatible-brightgreen.svg)](https://deno.land/)
+[![Bun](https://img.shields.io/badge/bun-compatible-brightgreen.svg)](https://bun.sh/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
-[Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Deno](#deno-support) • [Documentation](#documentation) • [Examples](#examples)
+[Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Deno](#deno-support) • [Bun](#bun-support) • [Documentation](#documentation)
 
 </div>
 
@@ -144,6 +145,58 @@ deno test --allow-all examples/deno/test.ts
 - ✅ Same API as Node.js version
 
 See [DENO.md](DENO.md) for complete Deno documentation.
+
+---
+
+## Bun Support
+
+NanoPDF now supports Bun with native FFI bindings! 🥟
+
+### Quick Start with Bun
+
+```typescript
+import { Context, Document, Pixmap, MatrixHelper } from "./bun";
+
+// Extract text
+using ctx = new Context();
+using doc = Document.open(ctx, "document.pdf");
+using page = doc.loadPage(0);
+const text = page.extractText();
+console.log(text);
+
+// Render to PNG
+const matrix = MatrixHelper.dpi(300);
+using pixmap = Pixmap.fromPage(ctx, page, matrix);
+await pixmap.savePng("output.png");
+```
+
+### Run Examples
+
+```bash
+# Extract text
+bun run examples/bun/basic.ts sample.pdf text
+
+# Render to PNG
+bun run examples/bun/basic.ts sample.pdf render
+```
+
+### Features
+
+- ✅ Native Bun FFI (no Node.js required)
+- ✅ Zero external dependencies
+- ✅ Full TypeScript support
+- ✅ Automatic resource cleanup with `using` keyword
+- ✅ **Ultra-fast startup** - 3x faster than Node.js
+- ✅ Same API as Node.js and Deno versions
+
+### Why Bun?
+
+- **Fastest Startup** - Bun starts 3x faster than Node.js
+- **Native TypeScript** - No compilation needed
+- **Built-in Tools** - Bundler, test runner, package manager
+- **JavaScriptCore Engine** - Safari's optimized engine
+
+See [BUN.md](BUN.md) for complete Bun documentation.
 
 ---
 

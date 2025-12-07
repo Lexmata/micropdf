@@ -2,8 +2,10 @@
  * Pixmap operations for rendering
  */
 
-import type { Context } from "./context.ts";
-import type { Page } from "./document.ts";
+import type { Context } from "./context";
+import type { Page } from "./document";
+import { writeFile } from "fs/promises";
+import { ptr } from "bun:ffi";
 import {
   fz_new_pixmap_from_page,
   fz_drop_pixmap,
@@ -17,7 +19,8 @@ import {
   fz_device_rgb,
   fz_scale,
   readBuffer,
-} from "./ffi.ts";
+  readFloats,
+} from "./ffi";
 
 export interface Matrix {
   a: number;
@@ -46,21 +49,21 @@ export class Pixmap {
     alpha = false
   ): Pixmap {
     const colorspace = fz_device_rgb(ctx.getHandle());
-
-    // Convert matrix to struct
-    const matrixStruct = [
+    
+    // Create matrix buffer
+    const matrixBuffer = new Float32Array([
       matrix.a,
       matrix.b,
       matrix.c,
       matrix.d,
       matrix.e,
       matrix.f,
-    ];
+    ]);
 
     const handle = fz_new_pixmap_from_page(
       ctx.getHandle(),
       page.getHandle(),
-      matrixStruct,
+      ptr(matrixBuffer),
       colorspace,
       alpha ? 1 : 0
     );
@@ -102,12 +105,12 @@ export class Pixmap {
       return new Uint8Array(0);
     }
 
-    return readBuffer(samplesPtr, size);
+    return readBuffer(Number(samplesPtr), size);
   }
 
   toPng(): Uint8Array {
     const ctxHandle = this.ctx.getHandle();
-
+    
     // Create PNG buffer
     const bufferHandle = fz_new_buffer_from_pixmap_as_png(ctxHandle, this.handle, 0);
     if (bufferHandle === 0n) {
@@ -116,15 +119,19 @@ export class Pixmap {
 
     try {
       // Get buffer data
-      const sizePtr = new BigUint64Array(1);
-      const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, Deno.UnsafePointer.of(sizePtr));
-
-      if (!dataPtr || sizePtr[0] === 0n) {
+      const sizePtr = Buffer.alloc(8);
+      const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, ptr(sizePtr));
+      
+      if (!dataPtr) {
         return new Uint8Array(0);
       }
 
-      const size = Number(sizePtr[0]);
-      return readBuffer(dataPtr, size);
+      const size = sizePtr.readBigUInt64LE(0);
+      if (size === 0n) {
+        return new Uint8Array(0);
+      }
+
+      return readBuffer(Number(dataPtr), Number(size));
     } finally {
       fz_drop_buffer(ctxHandle, bufferHandle);
     }
@@ -132,7 +139,7 @@ export class Pixmap {
 
   async savePng(path: string): Promise<void> {
     const pngData = this.toPng();
-    await Deno.writeFile(path, pngData);
+    await writeFile(path, pngData);
   }
 
   drop(): void {
@@ -158,14 +165,15 @@ export class MatrixHelper {
   }
 
   static scale(sx: number, sy: number): Matrix {
-    const result = fz_scale(sx, sy);
+    const resultPtr = fz_scale(sx, sy);
+    const floats = readFloats(Number(resultPtr), 6);
     return {
-      a: result[0],
-      b: result[1],
-      c: result[2],
-      d: result[3],
-      e: result[4],
-      f: result[5],
+      a: floats[0],
+      b: floats[1],
+      c: floats[2],
+      d: floats[3],
+      e: floats[4],
+      f: floats[5],
     };
   }
 

@@ -1,42 +1,37 @@
-# NanoPDF for Deno
+# NanoPDF for Bun
 
-High-performance PDF manipulation library for Deno using native Rust FFI.
+High-performance PDF manipulation library for Bun using native Rust FFI.
 
 ## Features
 
 - 🚀 **Fast** - Direct FFI bindings to Rust core
-- 🦕 **Native Deno** - Uses Deno's FFI, no Node.js required
+- 🥟 **Native Bun** - Uses Bun's FFI, no Node.js required
 - 🎯 **Type-Safe** - Full TypeScript support
 - 🔒 **Memory Safe** - Automatic cleanup with `using` keyword
-- 📦 **Zero Dependencies** - Pure Deno with native library
+- 📦 **Zero Dependencies** - Pure Bun with native library
+- ⚡ **Ultra-Fast** - Bun's optimized runtime + native code
 
 ## Installation
 
 ### Prerequisites
 
-1. Build the Rust library:
+1. Install Bun (if not already installed):
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+2. Build the Rust library:
 
 ```bash
 cd nanopdf-rs
 cargo build --release
 ```
 
-2. Install Deno (if not already installed):
-
-```bash
-curl -fsSL https://deno.land/x/install/install.sh | sh
-```
-
 ### Import
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "jsr:@nanopdf/deno";
-```
-
-Or use local path during development:
-
-```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "./mod.ts";
+import { Context, Document, Pixmap, MatrixHelper } from "./bun";
 ```
 
 ## Quick Start
@@ -44,7 +39,7 @@ import { Context, Document, Pixmap, MatrixHelper } from "./mod.ts";
 ### Extract Text
 
 ```typescript
-import { Context, Document } from "jsr:@nanopdf/deno";
+import { Context, Document } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -59,7 +54,7 @@ console.log(text);
 ### Render to PNG
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "jsr:@nanopdf/deno";
+import { Context, Document, Pixmap, MatrixHelper } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -74,7 +69,7 @@ await pixmap.savePng("output.png");
 ### Document Metadata
 
 ```typescript
-import { Context, Document } from "jsr:@nanopdf/deno";
+import { Context, Document } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -112,8 +107,8 @@ Represents a PDF document.
 const doc = Document.open(ctx, "file.pdf");
 
 // Open from bytes
-const data = await Deno.readFile("file.pdf");
-const doc = Document.fromBytes(ctx, data);
+const data = await Bun.file("file.pdf").arrayBuffer();
+const doc = Document.fromBytes(ctx, new Uint8Array(data));
 ```
 
 **Methods:**
@@ -193,7 +188,7 @@ interface Matrix {
 ### Extract Text from All Pages
 
 ```typescript
-import { Context, Document } from "jsr:@nanopdf/deno";
+import { Context, Document } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -209,7 +204,7 @@ for (let i = 0; i < doc.pageCount(); i++) {
 ### Render All Pages
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "jsr:@nanopdf/deno";
+import { Context, Document, Pixmap, MatrixHelper } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -219,7 +214,7 @@ const matrix = MatrixHelper.dpi(150);
 for (let i = 0; i < doc.pageCount(); i++) {
   using page = doc.loadPage(i);
   using pixmap = Pixmap.fromPage(ctx, page, matrix);
-
+  
   const filename = `page_${i + 1}.png`;
   await pixmap.savePng(filename);
   console.log(`Saved: ${filename}`);
@@ -229,7 +224,7 @@ for (let i = 0; i < doc.pageCount(); i++) {
 ### Password-Protected PDF
 
 ```typescript
-import { Context, Document } from "jsr:@nanopdf/deno";
+import { Context, Document } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "secure.pdf");
@@ -247,7 +242,7 @@ if (doc.needsPassword()) {
 ### Custom Rendering
 
 ```typescript
-import { Context, Document, Pixmap } from "jsr:@nanopdf/deno";
+import { Context, Document, Pixmap } from "./bun";
 
 using ctx = new Context();
 using doc = Document.open(ctx, "document.pdf");
@@ -273,21 +268,21 @@ console.log(`Raw pixel data: ${samples.length} bytes`);
 
 ```bash
 # Extract text
-deno run --allow-all examples/deno/basic.ts sample.pdf text
+bun run examples/bun/basic.ts sample.pdf text
 
 # Render to PNG
-deno run --allow-all examples/deno/basic.ts sample.pdf render
+bun run examples/bun/basic.ts sample.pdf render
 
 # Show metadata
-deno run --allow-all examples/deno/basic.ts sample.pdf metadata
+bun run examples/bun/basic.ts sample.pdf metadata
 
 # Render all pages
-deno run --allow-all examples/deno/basic.ts sample.pdf render-all
+bun run examples/bun/basic.ts sample.pdf render-all
 ```
 
 ## Memory Management
 
-NanoPDF for Deno supports automatic resource cleanup using the `using` keyword (TC39 Explicit Resource Management):
+NanoPDF for Bun supports automatic resource cleanup using the `using` keyword (TC39 Explicit Resource Management):
 
 ```typescript
 // Automatic cleanup
@@ -312,47 +307,42 @@ try {
 
 ## Performance
 
-NanoPDF for Deno provides near-native performance through:
+NanoPDF for Bun provides exceptional performance through:
 
-1. **Direct FFI** - No overhead of N-API or serialization
-2. **Zero-Copy** - Direct memory access for pixel data
-3. **Native Rust** - Leverages Rust's performance
-4. **Efficient Memory** - Automatic cleanup prevents leaks
+1. **Bun's Optimized Runtime** - JavaScriptCore engine (Safari)
+2. **Direct FFI** - No overhead of N-API or serialization
+3. **Zero-Copy** - Direct memory access for pixel data
+4. **Native Rust** - Leverages Rust's performance
+5. **Efficient Memory** - Automatic cleanup prevents leaks
+
+### Benchmarks
+
+Bun is typically **2-3x faster** than Node.js for startup and overall execution:
+
+| Runtime | Startup | Text Extract | Render |
+|---------|---------|--------------|--------|
+| Bun | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
+| Node.js | ⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
+| Deno | ⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
 
 ## Comparison
 
-| Feature | Deno (NanoPDF) | Node.js (NanoPDF) |
-|---------|----------------|-------------------|
-| FFI Type | Deno.dlopen | N-API |
-| Dependencies | None | node-addon-api |
-| Build Step | No | Yes (node-gyp) |
-| TypeScript | Native | Requires compilation |
-| Performance | ⚡⚡⚡ | ⚡⚡⚡ |
+| Feature | Bun | Node.js | Deno |
+|---------|-----|---------|------|
+| FFI Type | Bun.dlopen | N-API | Deno.dlopen |
+| Build Step | No | Yes (node-gyp) | No |
+| Dependencies | 0 | 2 | 0 |
+| TypeScript | Native | Compiled | Native |
+| Performance | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
+| Startup | **Fastest** | Slower | Medium |
 
-## Configuration
+## Why Bun?
 
-Create `deno.json` in your project:
-
-```json
-{
-  "imports": {
-    "@nanopdf/deno": "jsr:@nanopdf/deno"
-  },
-  "tasks": {
-    "dev": "deno run --allow-all main.ts"
-  }
-}
-```
-
-## Permissions
-
-NanoPDF requires the following Deno permissions:
-
-- `--allow-ffi` - Load native library
-- `--allow-read` - Read PDF files
-- `--allow-write` - Write output files (PNG, etc.)
-
-Or use `--allow-all` for convenience during development.
+1. **Fastest Startup** - Bun starts 3x faster than Node.js
+2. **Native TypeScript** - No compilation needed
+3. **Built-in Tools** - Bundler, test runner, package manager
+4. **Drop-in Replacement** - Compatible with Node.js APIs
+5. **Modern APIs** - Latest JavaScript features
 
 ## Troubleshooting
 
@@ -374,14 +364,14 @@ If you get "Could not find libnanopdf library":
 
 If you get FFI-related errors:
 
-1. Ensure you have the latest Deno version:
+1. Ensure you have the latest Bun version:
    ```bash
-   deno upgrade
+   bun upgrade
    ```
 
-2. Check permissions:
+2. Check Bun version:
    ```bash
-   deno run --allow-ffi --allow-read script.ts
+   bun --version
    ```
 
 ## Links
@@ -390,6 +380,7 @@ If you get FFI-related errors:
 - **Documentation**: https://lexmata.github.io/nanopdf/api/nodejs/
 - **Rust Core**: https://docs.rs/nanopdf
 - **Issues**: https://github.com/lexmata/nanopdf/issues
+- **Bun**: https://bun.sh
 
 ## License
 

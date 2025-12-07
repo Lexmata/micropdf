@@ -1,6 +1,6 @@
 /**
  * Deno FFI bindings for NanoPDF
- * 
+ *
  * This module uses Deno's native FFI to load the Rust library
  * and provides direct bindings to the native functions.
  */

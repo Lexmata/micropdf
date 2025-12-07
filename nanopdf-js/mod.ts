@@ -1,22 +1,22 @@
 /**
  * NanoPDF for Deno
- * 
+ *
  * High-performance PDF manipulation library for Deno using native Rust FFI.
- * 
+ *
  * @example
  * ```ts
  * import { Context, Document, MatrixHelper } from "jsr:@nanopdf/deno";
- * 
+ *
  * using ctx = new Context();
  * using doc = Document.open(ctx, "sample.pdf");
- * 
+ *
  * console.log(`Pages: ${doc.pageCount()}`);
- * 
+ *
  * using page = doc.loadPage(0);
  * const text = page.extractText();
  * console.log(text);
  * ```
- * 
+ *
  * @module
  */
 

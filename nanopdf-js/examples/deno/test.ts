@@ -90,7 +90,7 @@ Deno.test({
     using doc = Document.open(ctx, "sample.pdf");
     using page = doc.loadPage(0);
     const bounds = page.bounds();
-    
+
     assertExists(bounds);
     assertEquals(typeof bounds.x0, "number");
     assertEquals(typeof bounds.y0, "number");
@@ -107,7 +107,7 @@ Deno.test({
     using doc = Document.open(ctx, "sample.pdf");
     using page = doc.loadPage(0);
     const text = page.extractText();
-    
+
     assertEquals(typeof text, "string");
   },
 });
@@ -119,13 +119,13 @@ Deno.test({
     using ctx = new Context();
     using doc = Document.open(ctx, "sample.pdf");
     using page = doc.loadPage(0);
-    
+
     const matrix = MatrixHelper.scale(1.0, 1.0);
     using pixmap = Pixmap.fromPage(ctx, page, matrix);
-    
+
     const width = pixmap.width();
     const height = pixmap.height();
-    
+
     assertEquals(typeof width, "number");
     assertEquals(typeof height, "number");
     assertEquals(width > 0, true);
@@ -140,12 +140,12 @@ Deno.test({
     using ctx = new Context();
     using doc = Document.open(ctx, "sample.pdf");
     using page = doc.loadPage(0);
-    
+
     const matrix = MatrixHelper.scale(0.5, 0.5);
     using pixmap = Pixmap.fromPage(ctx, page, matrix);
-    
+
     const samples = pixmap.samples();
-    
+
     assertExists(samples);
     assertEquals(samples instanceof Uint8Array, true);
     assertEquals(samples.length > 0, true);
@@ -159,16 +159,16 @@ Deno.test({
     using ctx = new Context();
     using doc = Document.open(ctx, "sample.pdf");
     using page = doc.loadPage(0);
-    
+
     const matrix = MatrixHelper.scale(0.5, 0.5);
     using pixmap = Pixmap.fromPage(ctx, page, matrix);
-    
+
     const pngData = pixmap.toPng();
-    
+
     assertExists(pngData);
     assertEquals(pngData instanceof Uint8Array, true);
     assertEquals(pngData.length > 0, true);
-    
+
     // Check PNG signature
     assertEquals(pngData[0], 0x89);
     assertEquals(pngData[1], 0x50);
@@ -182,17 +182,17 @@ Deno.test({
   ignore: !(await hasSamplePdf()),
   fn: async () => {
     const outputPath = "test_output.png";
-    
+
     try {
       using ctx = new Context();
       using doc = Document.open(ctx, "sample.pdf");
       using page = doc.loadPage(0);
-      
+
       const matrix = MatrixHelper.scale(0.5, 0.5);
       using pixmap = Pixmap.fromPage(ctx, page, matrix);
-      
+
       await pixmap.savePng(outputPath);
-      
+
       // Verify file was created
       const stat = await Deno.stat(outputPath);
       assertEquals(stat.isFile, true);
