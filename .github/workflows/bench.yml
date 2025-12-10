@@ -94,8 +94,8 @@ jobs:
           name: NanoPDF Rust Benchmarks
           tool: 'customSmallerIsBetter'
           output-file-path: nanopdf-rs/bench-results.json
-          # Push to gh-pages branch
-          auto-push: true
+          # Push to gh-pages branch (must be false when using external-data-json-path)
+          auto-push: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Alert if performance regresses by more than 20%
           alert-threshold: '120%'
