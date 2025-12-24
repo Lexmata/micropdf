@@ -222,7 +222,6 @@ Each package includes comprehensive documentation:
 - **[CONTRIBUTING](./nanopdf-js/CONTRIBUTING.md)** - Development setup, coding standards, PR process
 - **[Examples](./nanopdf-js/examples/)** - 20 practical examples (4 basic + 16 Easy API)
 - **[Fuzzing Guide](./nanopdf-js/fuzz/README.md)** - Fuzzing setup, targets, CI integration (350+ lines)
-- **[FFI Status](./nanopdf-js/FFI_IMPLEMENTATION_STATUS.md)** - Implementation progress tracking
 
 **Highlights**:
 - ✅ 2,500+ lines of professional documentation
