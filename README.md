@@ -169,7 +169,7 @@ Each package includes comprehensive documentation:
 **🛡️ Security & Testing:**
 - **[Fuzzing Guide](./FUZZING.md)** - Comprehensive fuzzing setup for all packages
   - **Rust**: cargo-fuzz with 5 targets (PDF, buffers, streams, objects, filters)
-  - **Go**: Native Go fuzzing with 5 targets (document, buffers, text, metadata, geometry)  
+  - **Go**: Native Go fuzzing with 5 targets (document, buffers, text, metadata, geometry)
   - **Node.js**: Jazzer.js with 3 targets (PDF parsing, buffers, geometry)
   - CI integration, corpus management, crash reproduction
 
