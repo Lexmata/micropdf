@@ -7,7 +7,7 @@
 [![CI](https://github.com/lexmata/nanopdf/actions/workflows/ci.yml/badge.svg)](https://github.com/lexmata/nanopdf/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](nanopdf-rs/LICENSE-MIT)
 
-[API Docs](https://lexmata.github.io/nanopdf/api/) · [Benchmarks](https://lexmata.github.io/nanopdf/dev/bench/) · [Compatibility](./COMPATIBILITY.md)
+[API Docs](https://lexmata.github.io/nanopdf/api/) · [Benchmarks](https://lexmata.github.io/nanopdf/dev/bench/) · [Compatibility](./COMPATIBILITY.md) · [Fuzzing](./FUZZING.md)
 
 </div>
 
@@ -44,6 +44,7 @@ nanopdf/
 - ✅ Password/security support
 - ✅ Geometry operations (Point, Rect, Matrix, Quad)
 - ✅ Comprehensive test coverage
+- ✅ **Fuzzing infrastructure** for security testing
 - ✅ Professional documentation with examples
 
 **Node.js Specific:**
@@ -51,12 +52,15 @@ nanopdf/
 - ✅ Native N-API addon for performance
 - ✅ ESLint + Prettier with 9 professional plugins
 - ✅ Vitest for testing
+- ✅ Jazzer.js fuzzing (3 targets: PDF parsing, buffers, geometry)
 - ✅ Docker testing environment
+- ✅ Deno and Bun compatibility
 
 **Go Specific:**
 - ✅ Pure Go mock for CGO-disabled environments
 - ✅ Idiomatic Go API with proper error handling
 - ✅ 90.5% test coverage (143 tests)
+- ✅ Native Go fuzzing (5 fuzz targets)
 - ✅ Complete godoc documentation
 - ✅ Docker testing environment
 
@@ -65,6 +69,7 @@ nanopdf/
 - ✅ Handle-based memory management
 - ✅ Thread-safe operations
 - ✅ Zero-cost abstractions
+- ✅ cargo-fuzz with 5 targets (PDF, buffers, streams, objects, filters)
 
 ---
 
@@ -161,6 +166,13 @@ func main() {
 
 Each package includes comprehensive documentation:
 
+**🛡️ Security & Testing:**
+- **[Fuzzing Guide](./FUZZING.md)** - Comprehensive fuzzing setup for all packages
+  - **Rust**: cargo-fuzz with 5 targets (PDF, buffers, streams, objects, filters)
+  - **Go**: Native Go fuzzing with 5 targets (document, buffers, text, metadata, geometry)  
+  - **Node.js**: Jazzer.js with 3 targets (PDF parsing, buffers, geometry)
+  - CI integration, corpus management, crash reproduction
+
 ### Rust (nanopdf-rs)
 
 **📖 API Documentation:**
@@ -209,6 +221,7 @@ Each package includes comprehensive documentation:
 - **[ARCHITECTURE](./nanopdf-js/ARCHITECTURE.md)** - System design, 4-layer architecture, memory management
 - **[CONTRIBUTING](./nanopdf-js/CONTRIBUTING.md)** - Development setup, coding standards, PR process
 - **[Examples](./nanopdf-js/examples/)** - 20 practical examples (4 basic + 16 Easy API)
+- **[Fuzzing Guide](./nanopdf-js/fuzz/README.md)** - Fuzzing setup, targets, CI integration (350+ lines)
 - **[FFI Status](./nanopdf-js/FFI_IMPLEMENTATION_STATUS.md)** - Implementation progress tracking
 
 **Highlights**:
@@ -216,6 +229,7 @@ Each package includes comprehensive documentation:
 - ✅ Complete TypeScript definitions with JSDoc (1,640 lines)
 - ✅ 20 runnable examples with comprehensive guides
 - ✅ Three API levels: Direct FFI, Easy API, Simple API
+- ✅ Comprehensive fuzzing with 3 targets and CI automation
 
 ---
 
@@ -270,6 +284,25 @@ cd nanopdf-js && pnpm test
 cd go-nanopdf && go test ./...
 ```
 
+### Fuzzing
+
+All packages include comprehensive fuzzing infrastructure for security testing:
+
+```bash
+# Rust fuzzing (cargo-fuzz)
+cd nanopdf-rs && cargo fuzz run fuzz_pdf_parse -- -max_total_time=300
+
+# Node.js fuzzing (Jazzer.js)
+cd nanopdf-js && pnpm fuzz              # Run all fuzzers
+cd nanopdf-js && pnpm fuzz:pdf          # PDF parsing only
+cd nanopdf-js && pnpm fuzz:quick        # Quick smoke test
+
+# Go fuzzing (native)
+cd go-nanopdf && go test -fuzz=FuzzDocumentOpen -fuzztime=5m
+```
+
+See [FUZZING.md](./FUZZING.md) for comprehensive fuzzing guide and best practices.
+
 ### Code Style
 
 - **Rust**: Edition 2024 with `#[unsafe(no_mangle)]` for FFI
@@ -314,6 +347,7 @@ Benchmarks run automatically on every push and publish results to GitHub Pages.
 | Geometry | ✅ Complete | Point, Rect, Matrix, Quad |
 | Buffer/Stream | ✅ Complete | Full API |
 | Colorspace | ✅ Complete | RGB, Gray, CMYK |
+| Fuzzing | ✅ Complete | 3 targets (PDF, buffers, geometry) with CI |
 | N-API Bindings | ⚠️ 20% | 130/660 functions (see FFI_IMPLEMENTATION_STATUS.md) |
 | Test Coverage | ⚠️ 62.0% | 439/708 tests passing |
 | Forms | ❌ Not Yet | Planned for v0.2.0 |
