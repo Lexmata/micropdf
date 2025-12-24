@@ -40,7 +40,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 #### fz_shade (Gradients/Shading)
 - [ ] Linear gradients
-- [ ] Radial gradients  
+- [ ] Radial gradients
 - [ ] Coons patch meshes
 - [ ] Tensor-product patch meshes
 - [ ] Function-based shading
@@ -220,6 +220,141 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ---
 
+## Performance Optimization
+
+> Based on benchmark profiling conducted 2025-12-24
+
+### Benchmark Summary
+
+Current performance metrics (from `cargo bench`):
+
+| Operation | Time | Throughput |
+|-----------|------|------------|
+| Buffer create (1KB) | 19.8 ns | 47.9 GiB/s |
+| Buffer from_slice (1KB) | 14.1 ns | 66.8 GiB/s |
+| Buffer append (1000 items) | 11.6 µs | 20.3 GiB/s |
+| Base64 encode (1KB) | 283.6 ns | 3.3 GiB/s |
+| Base64 decode (1KB) | 318.6 ns | 2.9 GiB/s |
+| MD5 hash (1KB) | 1.16 µs | 840 MiB/s |
+| Point transform | 0.59 ns | - |
+| Matrix concat | 1.07 ns | - |
+| Rect operations | 0.52-0.91 ns | - |
+| PDF Object create | 1.77-9.8 ns | - |
+| PDF Name new | 8.4 ns | - |
+| PDF Dict lookup | 8.0 ns | - |
+| PDF Array access | 0.18 ns | - |
+
+### High Priority Optimizations
+
+#### Memory Allocation Hot Paths
+- [ ] **Buffer reuse pool** - Reduce allocations in tight loops
+  - Profile shows `alloc::vec::Vec` and `RawVecInner` in hot paths
+  - Implement buffer pooling for frequently allocated sizes
+  - Add `Buffer::with_capacity()` hints in critical paths
+
+- [ ] **String interning for PDF Names**
+  - `nanopdf::pdf::object::Name::new` appears frequently in profiles
+  - Implement string interning for common PDF names (Type, Length, etc.)
+  - Use `Arc<str>` or cow patterns for shared name storage
+
+- [ ] **PDF Object arena allocation**
+  - PDF Objects created 17B+ samples in profiling
+  - Consider bump allocator for document-lifetime objects
+  - Reduce per-object allocation overhead
+
+#### Algorithm Improvements
+- [ ] **Optimize hashbrown usage**
+  - `hashbrown::raw::RawTable` shows in profiles
+  - Pre-size hash maps when document structure is known
+  - Consider perfect hashing for known key sets
+
+- [ ] **SIMD acceleration**
+  - Matrix operations (currently scalar)
+  - Color space conversions
+  - Buffer operations (copy, fill)
+  - Base64 encode/decode
+
+- [ ] **Lock-free data structures**
+  - Profile shows `futex::Mutex::lock_contended`
+  - Consider lock-free queues for parallel processing
+  - Reduce contention in HandleStore
+
+### Medium Priority Optimizations
+
+#### I/O Performance
+- [ ] **Memory-mapped file reading**
+  - Large PDF files should use mmap
+  - Lazy loading of page content
+  - Reduce memory copies
+
+- [ ] **Buffered writing**
+  - Batch small writes
+  - Use vectored I/O where possible
+  - Async write support
+
+#### Cache Efficiency
+- [ ] **Structure packing**
+  - Audit struct layouts for cache alignment
+  - Use `#[repr(C)]` where beneficial
+  - Reduce padding in hot structs
+
+- [ ] **Data locality**
+  - Group related data in memory
+  - Prefetch hints for sequential access
+  - Page-aligned allocations for large buffers
+
+### Lower Priority Optimizations
+
+#### Compilation
+- [ ] **Profile-guided optimization (PGO)**
+  - Generate profiles from real workloads
+  - Apply PGO in release builds
+
+- [ ] **Link-time optimization (LTO)**
+  - Enable thin-LTO for release builds
+  - Cross-crate inlining
+
+#### Micro-optimizations
+- [ ] **Inline hints**
+  - `#[inline(always)]` for critical small functions
+  - Measure impact of inlining decisions
+
+- [ ] **Branch prediction hints**
+  - `likely`/`unlikely` macros for hot paths
+  - Optimize error path ordering
+
+### Benchmarking Infrastructure
+
+- [x] Criterion benchmarks for core modules
+- [ ] Add benchmarks for missing modules:
+  - [ ] colorspace operations
+  - [ ] device rendering
+  - [ ] filter encode/decode (flate, lzw, etc.)
+  - [ ] font operations
+  - [ ] image operations
+  - [ ] path operations
+  - [ ] pixmap operations
+  - [ ] stream read/write
+  - [ ] text layout
+- [ ] Add real-world PDF benchmarks
+- [ ] Memory usage profiling
+- [ ] Comparison benchmarks vs MuPDF
+
+### Flamegraph Results
+
+Profiling artifacts generated:
+- `flamegraph_pdf_objects.svg` - PDF object operations
+- `flamegraph_geometry.svg` - Geometry operations
+
+Key findings:
+1. `rayon` parallel infrastructure shows expected overhead
+2. `hashbrown` hash table operations are significant
+3. Allocation functions (`__rust_alloc`, `__rust_dealloc`) visible
+4. `nanopdf::pdf::object::Name::new` is a hot path
+5. Criterion benchmark overhead is visible (expected)
+
+---
+
 ## Advanced Features
 
 ### Rendering Enhancements
@@ -355,7 +490,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 2. pdf_redact (redaction)
 3. Enhanced encryption (AES-256)
 
-### v0.4.0 - JavaScript & Interactivity  
+### v0.4.0 - JavaScript & Interactivity
 1. pdf_js (JavaScript)
 2. pdf_layer (OCG)
 3. Enhanced form support
