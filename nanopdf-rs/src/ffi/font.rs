@@ -267,7 +267,7 @@ pub extern "C" fn fz_outline_glyph(
     if let Some(f) = FONTS.get(font) {
         if let Ok(guard) = f.lock() {
             let path = guard.outline_glyph(glyph as u16);
-            return super::path::PATH_STORE.insert(path);
+            return super::path::PATHS.insert(path);
         }
     }
     0

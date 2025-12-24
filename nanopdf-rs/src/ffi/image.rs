@@ -180,16 +180,8 @@ pub extern "C" fn fz_get_pixmap_from_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
-            // Convert handle to Colorspace object
-            let cs = match cs_handle {
-                1 => Some(crate::fitz::colorspace::Colorspace::device_gray()),
-                2 => Some(crate::fitz::colorspace::Colorspace::device_rgb()),
-                4 => Some(crate::fitz::colorspace::Colorspace::device_cmyk()),
-                _ => None,
-            };
-            let Ok(pixmap) = super::pixmap::Pixmap::new(cs, img_w, img_h, true) else {
-                return 0;
-            };
+            // Use colorspace handle directly with Pixmap
+            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
     }
@@ -214,16 +206,8 @@ pub extern "C" fn fz_decode_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
-            // Convert handle to Colorspace object
-            let cs = match cs_handle {
-                1 => Some(crate::fitz::colorspace::Colorspace::device_gray()),
-                2 => Some(crate::fitz::colorspace::Colorspace::device_rgb()),
-                4 => Some(crate::fitz::colorspace::Colorspace::device_cmyk()),
-                _ => None,
-            };
-            let Ok(pixmap) = super::pixmap::Pixmap::new(cs, img_w, img_h, true) else {
-                return 0;
-            };
+            // Use colorspace handle directly with Pixmap
+            let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
     }
@@ -247,16 +231,8 @@ pub extern "C" fn fz_decode_image_scaled(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
-            // Convert handle to Colorspace object
-            let cs = match cs_handle {
-                1 => Some(crate::fitz::colorspace::Colorspace::device_gray()),
-                2 => Some(crate::fitz::colorspace::Colorspace::device_rgb()),
-                4 => Some(crate::fitz::colorspace::Colorspace::device_cmyk()),
-                _ => None,
-            };
-            let Ok(pixmap) = super::pixmap::Pixmap::new(cs, w, h, true) else {
-                return 0;
-            };
+            // Use colorspace handle directly with Pixmap
+            let pixmap = super::pixmap::Pixmap::new(cs_handle, w, h, true);
             return PIXMAPS.insert(pixmap);
         }
     }
@@ -401,11 +377,10 @@ mod tests {
 
     #[test]
     fn test_new_image_from_pixmap() {
-        // Create a pixmap first using device RGB colorspace
-        let cs = Some(crate::fitz::colorspace::Colorspace::device_rgb());
-        let Ok(pixmap) = crate::fitz::pixmap::Pixmap::new(cs, 10, 10, true) else {
-            panic!("Failed to create pixmap");
-        };
+        // Create a pixmap first using device RGB colorspace handle
+        use crate::ffi::colorspace::FZ_COLORSPACE_RGB;
+        use crate::ffi::pixmap::Pixmap;
+        let pixmap = Pixmap::new(FZ_COLORSPACE_RGB, 10, 10, true);
         let pixmap_handle = PIXMAPS.insert(pixmap);
 
         let image_handle = fz_new_image_from_pixmap(0, pixmap_handle, 0);
