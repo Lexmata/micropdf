@@ -47,7 +47,14 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "quality": "npm run lint && npm run format:check && npm run build:ts && npm run test",
     "clean": "node-gyp clean && rm -rf dist",
-    "prepublishOnly": "npm run build:ts"
+    "prepublishOnly": "npm run build:ts",
+    "fuzz": "npm run fuzz:pdf && npm run fuzz:buffer && npm run fuzz:geometry",
+    "fuzz:pdf": "jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 300",
+    "fuzz:buffer": "jazzer fuzz/targets/buffer.fuzz.ts --sync -t 300",
+    "fuzz:geometry": "jazzer fuzz/targets/geometry.fuzz.ts --sync -t 300",
+    "fuzz:quick": "jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 60 && jazzer fuzz/targets/buffer.fuzz.ts --sync -t 60 && jazzer fuzz/targets/geometry.fuzz.ts --sync -t 60",
+    "fuzz:extended": "jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 3600 && jazzer fuzz/targets/buffer.fuzz.ts --sync -t 3600 && jazzer fuzz/targets/geometry.fuzz.ts --sync -t 3600",
+    "fuzz:deep": "jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 86400"
   },
   "keywords": [
     "pdf",
@@ -76,6 +83,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@jazzer.js/core": "^2.2.0",
     "@types/node": "^22.10.1",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",

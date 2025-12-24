@@ -20,7 +20,7 @@ Fuzzing is an automated software testing technique that provides invalid, unexpe
 |---------|--------|---------|
 | **Rust** | cargo-fuzz (libFuzzer) | PDF parsing, buffers, streams, objects, filters |
 | **Go** | Native Go fuzzing | Document ops, buffers, text, metadata, geometry |
-| **Node.js** | Manual testing | Basic API fuzzing (future) |
+| **Node.js** | Jazzer.js (libFuzzer) | PDF parsing, buffers, geometry operations |
 
 ---
 
@@ -241,6 +241,165 @@ echo "%PDF-1.4" > testdata/fuzz/FuzzDocumentOpen/custom_seed
 
 # Clear corpus
 rm -rf testdata/fuzz/FuzzDocumentOpen/*
+```
+
+---
+
+## Node.js Fuzzing
+
+### Quick Start
+
+```bash
+cd nanopdf-js
+
+# Install dependencies (includes @jazzer.js/core)
+pnpm install
+
+# Run all fuzzers for 5 minutes each
+pnpm fuzz
+
+# Run specific fuzzer
+pnpm fuzz:pdf      # PDF parsing
+pnpm fuzz:buffer   # Buffer operations
+pnpm fuzz:geometry # Geometry operations
+```
+
+### Fuzz Targets
+
+#### 1. **pdf-parse** - PDF Document Parsing
+
+Tests: Document opening, page loading, metadata extraction
+
+```bash
+pnpm fuzz:pdf
+# or
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 300
+```
+
+**Finds:**
+- Parse errors in malformed PDFs
+- Crashes in document handling
+- Memory issues
+- Edge cases in PDF structure
+
+**Targets:**
+- `Document.open()`
+- `Document.openFromBuffer()`
+- `doc.getPage()`
+- `doc.getMetadata()`
+- Page bounds access
+
+#### 2. **buffer** - Buffer Operations
+
+Tests: Buffer creation, reading, writing
+
+```bash
+pnpm fuzz:buffer
+# or
+npx jazzer fuzz/targets/buffer.fuzz.ts --sync -t 300
+```
+
+**Finds:**
+- Buffer overflow/underflow
+- Read/write edge cases
+- Type conversion issues
+- Memory corruption
+
+**Targets:**
+- `Buffer.fromArrayBuffer()`
+- `Buffer.fromString()`
+- `BufferReader` operations
+- `BufferWriter` operations
+- Slice operations
+
+#### 3. **geometry** - Geometry Operations
+
+Tests: Point, Rect, Matrix, Quad operations with extreme values
+
+```bash
+pnpm fuzz:geometry
+# or
+npx jazzer fuzz/targets/geometry.fuzz.ts --sync -t 300
+```
+
+**Finds:**
+- Numerical overflow/underflow
+- NaN/Infinity handling
+- Matrix singularity issues
+- Invalid transformations
+
+**Targets:**
+- `Point` distance and transforms
+- `Rect` intersections and unions
+- `Matrix` inversions and concatenations
+- `Quad` transforms and bounding boxes
+
+### Advanced Usage
+
+```bash
+# Custom duration (10 minutes)
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync -t 600
+
+# Multiple workers
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync --workers=8
+
+# With specific corpus
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync \\
+  --corpus_dir=fuzz/corpus/pdf_parse
+```
+
+### Reproducing Crashes
+
+```bash
+# Crash file saved as: crash-<hash>
+# Reproduce:
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync \\
+  --reproducer=crash-<hash>
+
+# Minimize crash
+npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync \\
+  --minimize_crash=crash-<hash>
+```
+
+### Corpus Management
+
+```bash
+# View corpus
+ls nanopdf-js/fuzz/corpus/pdf_parse/
+
+# Add custom seed
+cp my-test.pdf fuzz/corpus/pdf_parse/
+
+# Create minimal PDF seed
+cat > fuzz/corpus/pdf_parse/minimal.pdf << 'EOF'
+%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj
+xref
+0 3
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+trailer<</Size 3/Root 1 0 R>>
+startxref
+110
+%%EOF
+EOF
+```
+
+### CI Integration
+
+Node.js fuzzing runs automatically via GitHub Actions:
+
+- **On Push/PR**: 5 minutes per target
+- **Nightly**: Extended fuzzing (configurable)
+- **Manual**: Custom duration via workflow dispatch
+
+**Workflow:** `.github/workflows/fuzz-nodejs.yml`
+
+```bash
+# Trigger manual fuzzing
+gh workflow run fuzz-nodejs.yml -f duration=600  # 10 minutes
 ```
 
 ---
