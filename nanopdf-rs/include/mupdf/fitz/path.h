@@ -14,11 +14,10 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Path Functions (34 total)
+// Path Functions (35 total)
 // ============================================================================
 
 fz_rect fz_bound_path(int32_t _ctx, int32_t path, int32_t _stroke, fz_matrix _transform);
-fz_rect fz_bound_path(int32_t _ctx, int32_t path, int32_t stroke);
 int32_t fz_clone_path(int32_t _ctx, int32_t path);
 int32_t fz_clone_stroke_state(int32_t _ctx, int32_t stroke);
 void fz_closepath(int32_t _ctx, int32_t path);
@@ -26,6 +25,7 @@ fz_point fz_currentpoint(int32_t _ctx, int32_t path);
 void fz_curveto(int32_t _ctx, int32_t path, float x1, float y1, float x2, float y2, float x3, float y3);
 void fz_drop_path(int32_t _ctx, int32_t path);
 void fz_drop_stroke_state(int32_t _ctx, int32_t stroke);
+int32_t fz_keep_path(int32_t _ctx, int32_t path);
 int32_t fz_keep_stroke_state(int32_t _ctx, int32_t stroke);
 void fz_lineto(int32_t _ctx, int32_t path, float x, float y);
 void fz_moveto(int32_t _ctx, int32_t path, float x, float y);
@@ -34,7 +34,7 @@ int32_t fz_new_stroke_state(int32_t _ctx);
 int32_t fz_new_stroke_state_with_len(int32_t _ctx, int32_t _len, float linewidth);
 int32_t fz_path_is_valid(int32_t _ctx, int32_t path);
 void fz_quadto(int32_t _ctx, int32_t path, float x1, float y1, float x2, float y2);
-void fz_rectto(int32_t _ctx, int32_t path, float x, float y, float w, float h);
+void fz_rectto(int32_t _ctx, int32_t path, float x0, float y0, float x1, float y1);
 int32_t fz_stroke_state_dash_len(int32_t _ctx, int32_t stroke);
 int32_t fz_stroke_state_dash_pattern(int32_t _ctx, int32_t stroke, float * dashes, int32_t len);
 float fz_stroke_state_dash_phase(int32_t _ctx, int32_t stroke);
@@ -43,6 +43,7 @@ int32_t fz_stroke_state_is_valid(int32_t _ctx, int32_t stroke);
 int32_t fz_stroke_state_linejoin(int32_t _ctx, int32_t stroke);
 float fz_stroke_state_linewidth(int32_t _ctx, int32_t stroke);
 float fz_stroke_state_miterlimit(int32_t _ctx, int32_t stroke);
+void fz_stroke_state_set_dash(int32_t _ctx, int32_t stroke, float phase, const float * dashes, int32_t len);
 void fz_stroke_state_set_end_cap(int32_t _ctx, int32_t stroke, int32_t cap);
 void fz_stroke_state_set_linejoin(int32_t _ctx, int32_t stroke, int32_t join);
 void fz_stroke_state_set_linewidth(int32_t _ctx, int32_t stroke, float linewidth);

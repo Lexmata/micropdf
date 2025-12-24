@@ -14,20 +14,15 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Text Functions (20 total)
+// Text Functions (15 total)
 // ============================================================================
 
-fz_rect fz_bound_stext_page(int32_t _ctx, int32_t stext);
 fz_rect fz_bound_text(int32_t _ctx, int32_t text, int32_t stroke, fz_matrix transform);
 void fz_clear_text(int32_t _ctx, int32_t text);
 int32_t fz_clone_text(int32_t _ctx, int32_t text);
-void fz_drop_stext_page(int32_t _ctx, int32_t stext);
 void fz_drop_text(int32_t _ctx, int32_t text);
 int32_t fz_keep_text(int32_t _ctx, int32_t text);
-int32_t fz_new_buffer_from_stext_page(int32_t _ctx, int32_t stext);
-int32_t fz_new_stext_page_from_page(int32_t _ctx, int32_t page, const void * _options);
 int32_t fz_new_text(int32_t _ctx);
-int fz_search_stext_page(int32_t _ctx, int32_t stext, const char * needle, int * _mark, fz_quad * hit_bbox, int hit_max);
 void fz_set_text_language(int32_t _ctx, int32_t text, const char * lang);
 void fz_show_glyph(int32_t _ctx, int32_t text, int32_t font, fz_matrix transform, int32_t glyph, int32_t unicode, int32_t wmode);
 void fz_show_string(int32_t _ctx, int32_t text, int32_t font, fz_matrix transform, const char * string, int32_t wmode);

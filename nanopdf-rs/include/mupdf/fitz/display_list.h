@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Display_list Functions (11 total)
+// Display_list Functions (10 total)
 // ============================================================================
 
 fz_rect fz_bound_display_list(int32_t _ctx, int32_t list);
@@ -24,10 +24,9 @@ int32_t fz_display_list_count_commands(int32_t _ctx, int32_t list);
 int32_t fz_display_list_is_empty(int32_t _ctx, int32_t list);
 int32_t fz_display_list_is_valid(int32_t _ctx, int32_t list);
 void fz_drop_display_list(int32_t _ctx, int32_t list);
-int32_t fz_new_display_list(int32_t _ctx, fz_rect rect);
-int32_t fz_new_display_list_from_page(int32_t _ctx, int32_t page);
+int32_t fz_keep_display_list(int32_t _ctx, int32_t list);
+int32_t fz_new_display_list(int32_t _ctx, float x0, float y0, float x1, float y1);
 void fz_run_display_list(int32_t _ctx, int32_t list, int32_t dev, fz_matrix ctm, fz_rect scissor);
-void fz_run_display_list(int32_t _ctx, int32_t list, int32_t _device, fz_matrix _matrix, fz_rect _rect);
 
 #ifdef __cplusplus
 }
