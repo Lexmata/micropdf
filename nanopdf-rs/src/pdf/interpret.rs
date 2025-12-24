@@ -179,11 +179,7 @@ impl Interpreter {
     }
 
     /// Interpret a content stream and call device methods
-    pub fn interpret<D: Device>(
-        &mut self,
-        stream: &[u8],
-        device: &mut D,
-    ) -> Result<(), String> {
+    pub fn interpret<D: Device>(&mut self, stream: &[u8], device: &mut D) -> Result<(), String> {
         let mut lexer = Lexer::new(stream);
         let mut buf = LexBuf::new();
         let mut operands: Vec<Object> = Vec::new();
@@ -252,9 +248,9 @@ impl Interpreter {
                 Ok(Token::Name) => {
                     array.push(Object::Name(crate::pdf::object::Name::new(buf.as_str())))
                 }
-                Ok(Token::String) => array.push(Object::String(crate::pdf::object::PdfString::new(
-                    buf.as_str().as_bytes().to_vec(),
-                ))),
+                Ok(Token::String) => array.push(Object::String(
+                    crate::pdf::object::PdfString::new(buf.as_str().as_bytes().to_vec()),
+                )),
                 Ok(Token::True) => array.push(Object::Bool(true)),
                 Ok(Token::False) => array.push(Object::Bool(false)),
                 Ok(Token::Null) => array.push(Object::Null),
@@ -445,7 +441,10 @@ impl Interpreter {
 
     fn op_concat_matrix(&mut self, operands: &[Object]) -> Result<(), String> {
         if operands.len() != 6 {
-            return Err(format!("cm operator requires 6 operands, got {}", operands.len()));
+            return Err(format!(
+                "cm operator requires 6 operands, got {}",
+                operands.len()
+            ));
         }
 
         let a = get_f32(&operands[0])?;
@@ -585,11 +584,7 @@ impl Interpreter {
         let y3 = get_f32(&operands[5])?;
 
         if let Some(ref mut path) = self.current_path {
-            path.curve_to(
-                Point::new(x1, y1),
-                Point::new(x2, y2),
-                Point::new(x3, y3),
-            );
+            path.curve_to(Point::new(x1, y1), Point::new(x2, y2), Point::new(x3, y3));
         }
 
         self.current_point = Some(Point::new(x3, y3));
@@ -602,7 +597,9 @@ impl Interpreter {
             return Err("v operator requires 4 operands".to_string());
         }
 
-        let current = self.current_point.ok_or("No current point for v operator")?;
+        let current = self
+            .current_point
+            .ok_or("No current point for v operator")?;
 
         let x2 = get_f32(&operands[0])?;
         let y2 = get_f32(&operands[1])?;
@@ -629,11 +626,7 @@ impl Interpreter {
         let y3 = get_f32(&operands[3])?;
 
         if let Some(ref mut path) = self.current_path {
-            path.curve_to(
-                Point::new(x1, y1),
-                Point::new(x3, y3),
-                Point::new(x3, y3),
-            );
+            path.curve_to(Point::new(x1, y1), Point::new(x3, y3), Point::new(x3, y3));
         }
 
         self.current_point = Some(Point::new(x3, y3));
@@ -883,7 +876,10 @@ impl Interpreter {
     }
 
     fn op_set_stroke_color(&mut self, operands: &[Object]) -> Result<(), String> {
-        let color: Vec<f32> = operands.iter().filter_map(|obj| get_f32(obj).ok()).collect();
+        let color: Vec<f32> = operands
+            .iter()
+            .filter_map(|obj| get_f32(obj).ok())
+            .collect();
 
         if !color.is_empty() {
             self.state_mut().stroke_color = color;
@@ -893,7 +889,10 @@ impl Interpreter {
     }
 
     fn op_set_fill_color(&mut self, operands: &[Object]) -> Result<(), String> {
-        let color: Vec<f32> = operands.iter().filter_map(|obj| get_f32(obj).ok()).collect();
+        let color: Vec<f32> = operands
+            .iter()
+            .filter_map(|obj| get_f32(obj).ok())
+            .collect();
 
         if !color.is_empty() {
             self.state_mut().fill_color = color;
@@ -1156,7 +1155,11 @@ impl Interpreter {
     // Text Showing Operators
     // ========================================================================
 
-    fn op_show_text<D: Device>(&mut self, operands: &[Object], _device: &mut D) -> Result<(), String> {
+    fn op_show_text<D: Device>(
+        &mut self,
+        operands: &[Object],
+        _device: &mut D,
+    ) -> Result<(), String> {
         if operands.len() != 1 {
             return Err("Tj operator requires 1 operand".to_string());
         }

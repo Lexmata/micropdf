@@ -1,12 +1,11 @@
+use crate::ffi::geometry::fz_rect;
 /**
  * Path FFI
  *
  * C-compatible FFI for path operations.
  * Paths represent vector graphics for stroking and filling.
  */
-
 use crate::ffi::{Handle, HandleStore};
-use crate::ffi::geometry::fz_rect;
 use crate::fitz::geometry::{Point, Rect};
 use crate::fitz::path::{Path, StrokeState};
 use std::ffi::c_float;
@@ -129,7 +128,14 @@ pub extern "C" fn fz_closepath(_ctx: Handle, path: Handle) {
 /// - ctx must be a valid context handle
 /// - path must be a valid path handle
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_rectto(_ctx: Handle, path: Handle, x: c_float, y: c_float, w: c_float, h: c_float) {
+pub extern "C" fn fz_rectto(
+    _ctx: Handle,
+    path: Handle,
+    x: c_float,
+    y: c_float,
+    w: c_float,
+    h: c_float,
+) {
     let Some(arc) = PATH_STORE.get(path) else {
         return;
     };
@@ -150,10 +156,20 @@ pub extern "C" fn fz_rectto(_ctx: Handle, path: Handle, x: c_float, y: c_float, 
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_bound_path(_ctx: Handle, path: Handle, stroke: Handle) -> fz_rect {
     let Some(arc) = PATH_STORE.get(path) else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
     let Ok(path_obj) = arc.lock() else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
 
     // For now, just use bounds() regardless of stroke

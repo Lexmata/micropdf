@@ -1,12 +1,11 @@
+use crate::ffi::geometry::{fz_matrix, fz_rect};
 /**
  * Device FFI
  *
  * C-compatible FFI for device operations.
  * Devices are the destination for rendering operations.
  */
-
 use crate::ffi::{Handle, HandleStore};
-use crate::ffi::geometry::{fz_matrix, fz_rect};
 use std::sync::LazyLock;
 
 // ============================================================================
@@ -22,8 +21,8 @@ pub struct FfiDevice {
 
 #[derive(Debug, Clone, Copy)]
 enum DeviceType {
-    Draw,   // Renders to pixmap
-    List,   // Records to display list
+    Draw, // Renders to pixmap
+    List, // Records to display list
 }
 
 impl FfiDevice {

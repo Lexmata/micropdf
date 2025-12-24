@@ -458,8 +458,7 @@ impl STextPage {
 }
 
 /// Global store for stext pages
-pub static STEXT_PAGES: LazyLock<HandleStore<STextPage>> =
-    LazyLock::new(HandleStore::default);
+pub static STEXT_PAGES: LazyLock<HandleStore<STextPage>> = LazyLock::new(HandleStore::default);
 
 /// Extract structured text from a page
 ///
@@ -641,10 +640,7 @@ pub extern "C" fn fz_search_stext_page(
 /// # Safety
 /// Caller must ensure `stext` is a valid handle.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_bound_stext_page(
-    _ctx: Handle,
-    stext: Handle,
-) -> super::geometry::fz_rect {
+pub extern "C" fn fz_bound_stext_page(_ctx: Handle, stext: Handle) -> super::geometry::fz_rect {
     let Some(stext_ref) = STEXT_PAGES.get(stext) else {
         return super::geometry::fz_rect {
             x0: 0.0,
@@ -656,12 +652,14 @@ pub extern "C" fn fz_bound_stext_page(
 
     let guard = match stext_ref.lock() {
         Ok(g) => g,
-        Err(_) => return super::geometry::fz_rect {
-            x0: 0.0,
-            y0: 0.0,
-            x1: 0.0,
-            y1: 0.0,
-        },
+        Err(_) => {
+            return super::geometry::fz_rect {
+                x0: 0.0,
+                y0: 0.0,
+                x1: 0.0,
+                y1: 0.0,
+            };
+        }
     };
 
     guard.bounds

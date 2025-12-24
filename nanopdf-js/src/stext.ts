@@ -7,7 +7,7 @@
 
 import type { Page } from './document.js';
 import { Rect } from './geometry.js';
-import { native_addon, type NativeContext, type NativePage, type NativeSTextPage } from './native.js';
+import { native_addon, type NativeContext, type NativePage } from './native.js';
 
 /**
  * Quad - four-corner bounding box for rotated text
@@ -118,13 +118,13 @@ export interface STextBlockData {
  * ```
  */
 export class STextPage {
-  private _ctx: bigint;
-  private _handle: bigint;
+  private _ctx: { _handle: number };
+  private _handle: { _handle: number };
   private _dropped = false;
 
-  private constructor(ctx: bigint, handle: bigint) {
-    this._ctx = ctx;
-    this._handle = handle;
+  private constructor(ctx: NativeContext | bigint, handle: bigint | { _handle: number }) {
+    this._ctx = typeof ctx === 'bigint' ? { _handle: Number(ctx) } : ctx;
+    this._handle = typeof handle === 'bigint' ? { _handle: Number(handle) } : handle;
   }
 
   /**
@@ -346,7 +346,7 @@ export class STextPage {
    *
    * @internal
    */
-  get handle(): bigint {
+  get handle(): { _handle: number } {
     return this._handle;
   }
 

@@ -36,10 +36,10 @@ impl Default for FormRenderOptions {
             highlight_required: true,
             show_borders: true,
             show_backgrounds: true,
-            border_color: [0.0, 0.0, 0.0], // Black
+            border_color: [0.0, 0.0, 0.0],     // Black
             background_color: [1.0, 1.0, 1.0], // White
-            text_color: [0.0, 0.0, 0.0], // Black
-            required_color: [1.0, 0.9, 0.9], // Light red
+            text_color: [0.0, 0.0, 0.0],       // Black
+            required_color: [1.0, 0.9, 0.9],   // Light red
         }
     }
 }
@@ -218,9 +218,18 @@ impl FormRenderer {
             let mut check_path = Path::new();
 
             // Draw checkmark
-            check_path.move_to(Point::new(checkbox_rect.x0 + inset, checkbox_rect.y0 + size * 0.5));
-            check_path.line_to(Point::new(checkbox_rect.x0 + size * 0.4, checkbox_rect.y0 + size - inset));
-            check_path.line_to(Point::new(checkbox_rect.x0 + size - inset, checkbox_rect.y0 + inset));
+            check_path.move_to(Point::new(
+                checkbox_rect.x0 + inset,
+                checkbox_rect.y0 + size * 0.5,
+            ));
+            check_path.line_to(Point::new(
+                checkbox_rect.x0 + size * 0.4,
+                checkbox_rect.y0 + size - inset,
+            ));
+            check_path.line_to(Point::new(
+                checkbox_rect.x0 + size - inset,
+                checkbox_rect.y0 + inset,
+            ));
 
             let mut check_stroke = StrokeState::new();
             check_stroke.linewidth = 2.0;
@@ -228,7 +237,14 @@ impl FormRenderer {
             check_stroke.linejoin = LineJoin::Round;
 
             let check_color = vec![0.0, 0.5, 0.0]; // Dark green
-            device.stroke_path(&check_path, &check_stroke, ctm, &colorspace, &check_color, 1.0);
+            device.stroke_path(
+                &check_path,
+                &check_stroke,
+                ctm,
+                &colorspace,
+                &check_color,
+                1.0,
+            );
         }
 
         Ok(())
@@ -260,7 +276,14 @@ impl FormRenderer {
         stroke_state.linewidth = 1.0;
 
         let border_color = self.options.border_color.to_vec();
-        device.stroke_path(&circle_path, &stroke_state, ctm, &colorspace, &border_color, 1.0);
+        device.stroke_path(
+            &circle_path,
+            &stroke_state,
+            ctm,
+            &colorspace,
+            &border_color,
+            1.0,
+        );
 
         // Draw inner circle if selected
         if field.is_checked() {
@@ -350,7 +373,14 @@ impl FormRenderer {
 
             let mut scrollbar_path = self.create_rect_path(&scrollbar_rect);
             let scrollbar_color = vec![0.8, 0.8, 0.8];
-            device.fill_path(&scrollbar_path, false, ctm, &colorspace, &scrollbar_color, 1.0);
+            device.fill_path(
+                &scrollbar_path,
+                false,
+                ctm,
+                &colorspace,
+                &scrollbar_color,
+                1.0,
+            );
         }
 
         Ok(())
@@ -480,4 +510,3 @@ mod tests {
         assert!(renderer.options.show_borders);
     }
 }
-

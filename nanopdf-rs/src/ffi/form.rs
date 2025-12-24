@@ -1,14 +1,13 @@
+use crate::ffi::geometry::fz_rect;
 /**
  * Form Field FFI
  *
  * C-compatible FFI for PDF interactive form (AcroForm) operations.
  * Provides functions for widget access, property management, and value manipulation.
  */
-
 use crate::ffi::{Handle, HandleStore};
-use crate::ffi::geometry::fz_rect;
 use crate::fitz::geometry::Rect;
-use crate::pdf::form::{FormField, WidgetType, FieldFlags};
+use crate::pdf::form::{FieldFlags, FormField, WidgetType};
 use std::ffi::{c_char, c_int};
 use std::sync::LazyLock;
 
@@ -144,10 +143,20 @@ pub unsafe extern "C" fn pdf_widget_name(
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_widget_rect(_ctx: Handle, widget: Handle) -> fz_rect {
     let Some(arc) = WIDGET_STORE.get(widget) else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
     let Ok(field) = arc.lock() else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
     fz_rect {
         x0: field.rect.x0,
@@ -249,7 +258,11 @@ pub extern "C" fn pdf_widget_is_readonly(_ctx: Handle, widget: Handle) -> c_int 
     let Ok(field) = arc.lock() else {
         return 0;
     };
-    if field.flags.has(FieldFlags::READ_ONLY) { 1 } else { 0 }
+    if field.flags.has(FieldFlags::READ_ONLY) {
+        1
+    } else {
+        0
+    }
 }
 
 /// Check if widget is required
@@ -265,7 +278,11 @@ pub extern "C" fn pdf_widget_is_required(_ctx: Handle, widget: Handle) -> c_int 
     let Ok(field) = arc.lock() else {
         return 0;
     };
-    if field.flags.has(FieldFlags::REQUIRED) { 1 } else { 0 }
+    if field.flags.has(FieldFlags::REQUIRED) {
+        1
+    } else {
+        0
+    }
 }
 
 /// Check if widget is valid
@@ -275,7 +292,11 @@ pub extern "C" fn pdf_widget_is_required(_ctx: Handle, widget: Handle) -> c_int 
 /// - widget must be a valid widget handle
 #[unsafe(no_mangle)]
 pub extern "C" fn pdf_widget_is_valid(_ctx: Handle, widget: Handle) -> c_int {
-    if WIDGET_STORE.get(widget).is_some() { 1 } else { 0 }
+    if WIDGET_STORE.get(widget).is_some() {
+        1
+    } else {
+        0
+    }
 }
 
 // ============================================================================
@@ -345,7 +366,11 @@ pub extern "C" fn pdf_widget_is_multiline(_ctx: Handle, widget: Handle) -> c_int
     let Ok(field) = arc.lock() else {
         return 0;
     };
-    if field.flags.has(FieldFlags::MULTILINE) { 1 } else { 0 }
+    if field.flags.has(FieldFlags::MULTILINE) {
+        1
+    } else {
+        0
+    }
 }
 
 // ============================================================================
@@ -366,7 +391,11 @@ pub extern "C" fn pdf_widget_is_checked(_ctx: Handle, widget: Handle) -> c_int {
         return 0;
     };
     let val = field.value.as_str();
-    if val == "Yes" || val == "On" || val == "true" { 1 } else { 0 }
+    if val == "Yes" || val == "On" || val == "true" {
+        1
+    } else {
+        0
+    }
 }
 
 /// Set checkbox/radio checked state
@@ -423,7 +452,8 @@ pub unsafe extern "C" fn pdf_widget_option(
 
     let option = if let Some(arc) = WIDGET_STORE.get(widget) {
         if let Ok(field) = arc.lock() {
-            field.options
+            field
+                .options
                 .get(index as usize)
                 .map(|opt| opt.label.clone())
                 .unwrap_or_default()

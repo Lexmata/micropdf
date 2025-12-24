@@ -31,5 +31,5 @@
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "native"]
+  "exclude": ["node_modules", "dist", "native", "src/easy.ts", "src/simple.ts"]
 }

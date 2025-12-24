@@ -186,7 +186,10 @@ pub enum WritingMode {
 
 impl WritingMode {
     pub fn is_horizontal(&self) -> bool {
-        matches!(self, WritingMode::HorizontalLtr | WritingMode::HorizontalRtl)
+        matches!(
+            self,
+            WritingMode::HorizontalLtr | WritingMode::HorizontalRtl
+        )
     }
 
     pub fn is_vertical(&self) -> bool {
@@ -657,4 +660,3 @@ mod tests {
         assert_eq!(words[1], "World");
     }
 }
-

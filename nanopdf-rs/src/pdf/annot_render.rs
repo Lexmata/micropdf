@@ -145,7 +145,10 @@ impl AnnotRenderer {
         path.close();
 
         // Yellow fill for sticky note
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 1.0, 0.0]); // Default yellow
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 1.0, 0.0]); // Default yellow
         let colorspace = Colorspace::device_rgb();
 
         device.fill_path(&path, false, ctm, &colorspace, &color, opacity);
@@ -227,7 +230,10 @@ impl AnnotRenderer {
         let mut stroke_state = StrokeState::new();
         stroke_state.linewidth = annot.border().width.max(1.0);
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 0.0, 0.0]); // Default red
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 0.0, 0.0]); // Default red
         let colorspace = Colorspace::device_rgb();
 
         device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
@@ -266,7 +272,10 @@ impl AnnotRenderer {
             let mut stroke_state = StrokeState::new();
             stroke_state.linewidth = annot.border().width;
 
-            let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![0.0, 0.0, 0.0]);
+            let color = annot
+                .color()
+                .map(|c| vec![c[0], c[1], c[2]])
+                .unwrap_or(vec![0.0, 0.0, 0.0]);
             device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
         }
 
@@ -330,7 +339,10 @@ impl AnnotRenderer {
             let mut stroke_state = StrokeState::new();
             stroke_state.linewidth = annot.border().width;
 
-            let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![0.0, 0.0, 0.0]);
+            let color = annot
+                .color()
+                .map(|c| vec![c[0], c[1], c[2]])
+                .unwrap_or(vec![0.0, 0.0, 0.0]);
             device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
         }
 
@@ -381,7 +393,10 @@ impl AnnotRenderer {
         path.line_to(Point::new(rect.x0, rect.y1));
         path.close();
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 1.0, 0.0]); // Yellow
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 1.0, 0.0]); // Yellow
         let colorspace = Colorspace::device_rgb();
 
         device.fill_path(&path, false, ctm, &colorspace, &color, opacity * 0.3);
@@ -408,7 +423,10 @@ impl AnnotRenderer {
         let mut stroke_state = StrokeState::new();
         stroke_state.linewidth = 1.0;
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![0.0, 0.0, 0.0]); // Black
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![0.0, 0.0, 0.0]); // Black
         let colorspace = Colorspace::device_rgb();
 
         device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
@@ -441,17 +459,16 @@ impl AnnotRenderer {
             let x2 = rect.x0 + (i as f32 + 1.0) * segment_width;
             let y2 = y;
 
-            path.curve_to(
-                Point::new(x1, y1),
-                Point::new(x1, y1),
-                Point::new(x2, y2),
-            );
+            path.curve_to(Point::new(x1, y1), Point::new(x1, y1), Point::new(x2, y2));
         }
 
         let mut stroke_state = StrokeState::new();
         stroke_state.linewidth = 1.0;
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 0.0, 0.0]); // Red
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 0.0, 0.0]); // Red
         let colorspace = Colorspace::device_rgb();
 
         device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
@@ -478,7 +495,10 @@ impl AnnotRenderer {
         let mut stroke_state = StrokeState::new();
         stroke_state.linewidth = 1.0;
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 0.0, 0.0]); // Red
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 0.0, 0.0]); // Red
         let colorspace = Colorspace::device_rgb();
 
         device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
@@ -507,7 +527,10 @@ impl AnnotRenderer {
         let colorspace = Colorspace::device_rgb();
 
         // Fill with stamp color
-        let fill_color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![1.0, 0.0, 0.0]); // Red
+        let fill_color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![1.0, 0.0, 0.0]); // Red
         device.fill_path(&path, false, ctm, &colorspace, &fill_color, opacity * 0.3);
 
         // Draw border
@@ -537,7 +560,10 @@ impl AnnotRenderer {
         let mut stroke_state = StrokeState::new();
         stroke_state.linewidth = annot.border().width.max(1.0);
 
-        let color = annot.color().map(|c| vec![c[0], c[1], c[2]]).unwrap_or(vec![0.0, 0.0, 0.0]); // Black
+        let color = annot
+            .color()
+            .map(|c| vec![c[0], c[1], c[2]])
+            .unwrap_or(vec![0.0, 0.0, 0.0]); // Black
         let colorspace = Colorspace::device_rgb();
 
         device.stroke_path(&path, &stroke_state, ctm, &colorspace, &color, opacity);
@@ -568,4 +594,3 @@ mod tests {
         assert!(renderer.options.render_print);
     }
 }
-

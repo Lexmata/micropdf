@@ -44,7 +44,6 @@ import { Pixmap } from './pixmap.js';
 import {
   type RenderOptions,
   type ExtendedRenderOptions,
-  AntiAliasLevel,
   mergeRenderOptions,
   validateRenderOptions,
   dpiToScale
@@ -490,7 +489,7 @@ export class Page {
    */
   async renderWithProgress(options: ExtendedRenderOptions = {}): Promise<Pixmap> {
     return new Promise((resolve, reject) => {
-      const startTime = Date.now();
+      // const startTime = Date.now(); // TODO: Use for progress tracking
       let timeoutId: NodeJS.Timeout | undefined;
 
       // Set up timeout if specified

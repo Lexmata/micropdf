@@ -4,7 +4,6 @@
  * C-compatible FFI for pixmap operations.
  * Pixmaps are pixel buffers for rendering output.
  */
-
 use crate::ffi::Handle;
 use crate::fitz::colorspace::Colorspace;
 pub use crate::fitz::pixmap::Pixmap;

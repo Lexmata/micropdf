@@ -168,7 +168,7 @@ impl Rasterizer {
         // Fill the stroked path
         self.fill_path(
             &stroked_path,
-            false, // Always use non-zero winding for strokes
+            false,             // Always use non-zero winding for strokes
             &Matrix::IDENTITY, // Already transformed
             colorspace,
             color,
@@ -190,10 +190,7 @@ impl Rasterizer {
                     result.line_to(ctm.transform_point(*p));
                 }
                 PathElement::QuadTo(p1, p2) => {
-                    result.quad_to(
-                        ctm.transform_point(*p1),
-                        ctm.transform_point(*p2),
-                    );
+                    result.quad_to(ctm.transform_point(*p1), ctm.transform_point(*p2));
                 }
                 PathElement::CurveTo(p1, p2, p3) => {
                     result.curve_to(
@@ -384,13 +381,7 @@ impl Rasterizer {
     }
 
     /// Scan-line conversion algorithm
-    fn scan_convert(
-        &self,
-        edges: &[Edge],
-        even_odd: bool,
-        color: &[u8],
-        dest: &mut Pixmap,
-    ) {
+    fn scan_convert(&self, edges: &[Edge], even_odd: bool, color: &[u8], dest: &mut Pixmap) {
         if edges.is_empty() {
             return;
         }
@@ -539,13 +530,7 @@ impl Rasterizer {
                     subpath_start = *p;
                 }
                 PathElement::LineTo(p) => {
-                    self.expand_line_segment(
-                        current_point,
-                        *p,
-                        width,
-                        stroke_state,
-                        &mut result,
-                    );
+                    self.expand_line_segment(current_point, *p, width, stroke_state, &mut result);
                     current_point = *p;
                 }
                 PathElement::QuadTo(p1, p2) => {
@@ -697,7 +682,8 @@ impl Rasterizer {
         match dest_cs.color_type() {
             crate::fitz::colorspace::ColorType::Gray => {
                 // RGB to grayscale
-                let gray = (0.299 * rgb[0] as f32 + 0.587 * rgb[1] as f32 + 0.114 * rgb[2] as f32) as u8;
+                let gray =
+                    (0.299 * rgb[0] as f32 + 0.587 * rgb[1] as f32 + 0.114 * rgb[2] as f32) as u8;
                 result.push(gray);
             }
             crate::fitz::colorspace::ColorType::RGB => {
@@ -710,9 +696,21 @@ impl Rasterizer {
                 let b = rgb[2] as f32 / 255.0;
 
                 let k = 1.0 - r.max(g).max(b);
-                let c = if k < 1.0 { (1.0 - r - k) / (1.0 - k) } else { 0.0 };
-                let m = if k < 1.0 { (1.0 - g - k) / (1.0 - k) } else { 0.0 };
-                let y = if k < 1.0 { (1.0 - b - k) / (1.0 - k) } else { 0.0 };
+                let c = if k < 1.0 {
+                    (1.0 - r - k) / (1.0 - k)
+                } else {
+                    0.0
+                };
+                let m = if k < 1.0 {
+                    (1.0 - g - k) / (1.0 - k)
+                } else {
+                    0.0
+                };
+                let y = if k < 1.0 {
+                    (1.0 - b - k) / (1.0 - k)
+                } else {
+                    0.0
+                };
 
                 result.push((c * 255.0) as u8);
                 result.push((m * 255.0) as u8);
@@ -778,4 +776,3 @@ mod tests {
         assert_eq!(rast.height, 100);
     }
 }
-

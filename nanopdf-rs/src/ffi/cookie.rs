@@ -4,7 +4,6 @@
  * C-compatible FFI for cookie operations.
  * Cookies provide progress tracking and cancellation for long-running operations.
  */
-
 use crate::ffi::{Handle, HandleStore};
 use crate::fitz::cookie::Cookie;
 use std::ffi::c_int;

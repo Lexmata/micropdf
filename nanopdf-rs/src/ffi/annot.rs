@@ -124,7 +124,7 @@ pub extern "C" fn pdf_annot_rect(_ctx: Handle, annot: Handle) -> super::geometry
                 y0: 0.0,
                 x1: 0.0,
                 y1: 0.0,
-            }
+            };
         }
     };
 
@@ -186,12 +186,7 @@ pub extern "C" fn pdf_set_annot_flags(_ctx: Handle, annot: Handle, flags: c_uint
 /// # Safety
 /// Caller must ensure `annot` is a valid handle and `buf` points to writable memory of at least `size` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_annot_contents(
-    _ctx: Handle,
-    annot: Handle,
-    buf: *mut c_char,
-    size: c_int,
-) {
+pub extern "C" fn pdf_annot_contents(_ctx: Handle, annot: Handle, buf: *mut c_char, size: c_int) {
     if buf.is_null() || size <= 0 {
         return;
     }
@@ -362,11 +357,7 @@ pub extern "C" fn pdf_annot_has_dirty(_ctx: Handle, annot: Handle) -> c_int {
         Err(_) => return 0,
     };
 
-    if guard.dirty {
-        1
-    } else {
-        0
-    }
+    if guard.dirty { 1 } else { 0 }
 }
 
 /// Clear annotation dirty flag

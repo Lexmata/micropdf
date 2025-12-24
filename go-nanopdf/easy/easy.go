@@ -444,7 +444,11 @@ func (p *PDF) ExtractPageText(pageNumber int) (string, error) {
 	}
 	defer page.Drop()
 
-	return page.ExtractText(), nil
+	text, err := page.ExtractText()
+	if err != nil {
+		return "", err
+	}
+	return text, nil
 }
 
 // ExtractAllText extracts text from all pages
@@ -483,7 +487,11 @@ func (p *PDF) Search(query string, pageNumber int) ([]SearchResult, error) {
 		}
 		defer page.Drop()
 
-		hits := page.SearchText(query)
+		hits, err := page.SearchText(query)
+		if err != nil {
+			return err
+		}
+
 		for _, hit := range hits {
 			results = append(results, SearchResult{
 				Text:       query,
@@ -523,7 +531,7 @@ func (p *PDF) RenderToBytes(pageNumber int, opts RenderOptions) ([]byte, error) 
 
 	if opts.DPI > 0 {
 		scale := opts.DPI / 72.0
-		matrix = nanopdf.ScaleMatrix(scale, scale)
+		matrix = nanopdf.MatrixScale(scale, scale)
 	} else if opts.Width > 0 || opts.Height > 0 {
 		bounds := page.Bounds()
 		scaleX := float32(1.0)
@@ -541,11 +549,11 @@ func (p *PDF) RenderToBytes(pageNumber int, opts RenderOptions) ([]byte, error) 
 			scale = scaleY
 		}
 
-		matrix = nanopdf.ScaleMatrix(scale, scale)
+		matrix = nanopdf.MatrixScale(scale, scale)
 	}
 
 	// Render to pixmap
-	pixmap, err := page.ToPixmap(matrix, nil, opts.Alpha)
+	pixmap, err := page.RenderToPixmap(matrix, opts.Alpha)
 	if err != nil {
 		return nil, err
 	}
@@ -613,8 +621,12 @@ func (p *PDF) KeepOpen() *PDF {
 // Close closes the document and frees resources
 func (p *PDF) Close() error {
 	if p.doc != nil {
-		p.doc.Close()
+		p.doc.Drop()
 		p.doc = nil
+	}
+	if p.ctx != nil {
+		p.ctx.Drop()
+		p.ctx = nil
 	}
 	return nil
 }

@@ -350,3 +350,159 @@ func pixmapSamples(_ uintptr, pix uintptr) []byte {
 	}
 	return nil
 }
+
+// Colorspace mock storage
+var (
+	mockColorspaces  = make(map[uintptr]*mockColorspace)
+	nextColorspaceID uintptr = 5000
+)
+
+type mockColorspace struct {
+	name       string
+	components int
+}
+
+// Colorspace functions
+func deviceGray(_ uintptr) uintptr {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	id := nextColorspaceID
+	nextColorspaceID++
+	mockColorspaces[id] = &mockColorspace{
+		name:       "DeviceGray",
+		components: 1,
+	}
+	return id
+}
+
+func deviceRGB(_ uintptr) uintptr {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	id := nextColorspaceID
+	nextColorspaceID++
+	mockColorspaces[id] = &mockColorspace{
+		name:       "DeviceRGB",
+		components: 3,
+	}
+	return id
+}
+
+func deviceBGR(_ uintptr) uintptr {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	id := nextColorspaceID
+	nextColorspaceID++
+	mockColorspaces[id] = &mockColorspace{
+		name:       "DeviceBGR",
+		components: 3,
+	}
+	return id
+}
+
+func deviceCMYK(_ uintptr) uintptr {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	id := nextColorspaceID
+	nextColorspaceID++
+	mockColorspaces[id] = &mockColorspace{
+		name:       "DeviceCMYK",
+		components: 4,
+	}
+	return id
+}
+
+func colorspaceN(_ uintptr, cs uintptr) int {
+	mockStorageMu.RLock()
+	defer mockStorageMu.RUnlock()
+
+	if c, ok := mockColorspaces[cs]; ok {
+		return c.components
+	}
+	return 0
+}
+
+func colorspaceName(_ uintptr, cs uintptr) string {
+	mockStorageMu.RLock()
+	defer mockStorageMu.RUnlock()
+
+	if c, ok := mockColorspaces[cs]; ok {
+		return c.name
+	}
+	return ""
+}
+
+// Cookie mock storage
+var (
+	mockCookies  = make(map[uintptr]*mockCookie)
+	nextCookieID uintptr = 6000
+)
+
+type mockCookie struct {
+	progress int
+	aborted  bool
+}
+
+// Cookie functions
+func newCookie(_ uintptr) uintptr {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	id := nextCookieID
+	nextCookieID++
+	mockCookies[id] = &mockCookie{
+		progress: 0,
+		aborted:  false,
+	}
+	return id
+}
+
+func dropCookie(_ uintptr, cookie uintptr) {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+	delete(mockCookies, cookie)
+}
+
+func abortCookie(_ uintptr, cookie uintptr) {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	if c, ok := mockCookies[cookie]; ok {
+		c.aborted = true
+	}
+}
+
+func cookieProgress(_ uintptr, cookie uintptr) int {
+	mockStorageMu.RLock()
+	defer mockStorageMu.RUnlock()
+
+	if c, ok := mockCookies[cookie]; ok {
+		return c.progress
+	}
+	return 0
+}
+
+func cookieIsAborted(_ uintptr, cookie uintptr) int {
+	mockStorageMu.RLock()
+	defer mockStorageMu.RUnlock()
+
+	if c, ok := mockCookies[cookie]; ok {
+		if c.aborted {
+			return 1
+		}
+	}
+	return 0
+}
+
+func resetCookie(_ uintptr, cookie uintptr) {
+	mockStorageMu.Lock()
+	defer mockStorageMu.Unlock()
+
+	if c, ok := mockCookies[cookie]; ok {
+		c.progress = 0
+		c.aborted = false
+	}
+}

@@ -97,8 +97,14 @@ impl GlyphOutline {
 
         let min_x = corners.iter().map(|p| p.x).fold(f32::INFINITY, f32::min);
         let min_y = corners.iter().map(|p| p.y).fold(f32::INFINITY, f32::min);
-        let max_x = corners.iter().map(|p| p.x).fold(f32::NEG_INFINITY, f32::max);
-        let max_y = corners.iter().map(|p| p.y).fold(f32::NEG_INFINITY, f32::max);
+        let max_x = corners
+            .iter()
+            .map(|p| p.x)
+            .fold(f32::NEG_INFINITY, f32::max);
+        let max_y = corners
+            .iter()
+            .map(|p| p.y)
+            .fold(f32::NEG_INFINITY, f32::max);
 
         self.metrics.bbox = Rect::new(min_x, min_y, max_x, max_y);
     }
@@ -108,9 +114,9 @@ impl GlyphOutline {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct GlyphCacheKey {
     gid: GlyphId,
-    size: u32,        // Font size in 1/64ths of a point
-    subpixel_x: u8,   // Subpixel position (0-63)
-    subpixel_y: u8,   // Subpixel position (0-63)
+    size: u32,      // Font size in 1/64ths of a point
+    subpixel_x: u8, // Subpixel position (0-63)
+    subpixel_y: u8, // Subpixel position (0-63)
 }
 
 /// Glyph cache
@@ -240,19 +246,18 @@ impl GlyphRasterizer {
         subpixel_y: f32,
     ) -> Result<Pixmap> {
         // Check cache first
-        if let Some(pixmap) = self.cache.get(outline.gid, font_size, subpixel_x, subpixel_y) {
+        if let Some(pixmap) = self
+            .cache
+            .get(outline.gid, font_size, subpixel_x, subpixel_y)
+        {
             return Ok((*pixmap).clone());
         }
 
         // Calculate glyph transformation matrix
         let scale = font_size / 1000.0; // Assuming 1000 units per em (standard)
         let ctm = Matrix::new(
-            scale,
-            0.0,
-            0.0,
-            -scale, // Flip Y axis (PDF coordinates)
-            subpixel_x,
-            subpixel_y,
+            scale, 0.0, 0.0, -scale, // Flip Y axis (PDF coordinates)
+            subpixel_x, subpixel_y,
         );
 
         // Calculate pixmap dimensions
@@ -281,7 +286,13 @@ impl GlyphRasterizer {
         );
 
         // Cache the result
-        self.cache.insert(outline.gid, font_size, subpixel_x, subpixel_y, pixmap.clone());
+        self.cache.insert(
+            outline.gid,
+            font_size,
+            subpixel_x,
+            subpixel_y,
+            pixmap.clone(),
+        );
 
         Ok(pixmap)
     }
@@ -521,4 +532,3 @@ mod tests {
         assert_eq!(max, 32 * 1024 * 1024);
     }
 }
-

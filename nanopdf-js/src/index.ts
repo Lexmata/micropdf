@@ -443,36 +443,38 @@ export { NanoPDF, getVersion, type NanoPDFOptions } from './nanopdf.js';
 // Easy API - Simplified PDF Operations
 // ============================================================================
 
-export {
-  EasyPDF,
-  PDFUtils,
-  type EasyRenderOptions,
-  type PdfMetadata,
-  type PageInfo,
-  type DocumentInfo,
-  type ExtractedText,
-  type SearchResult
-} from './easy.js';
+// Temporarily disabled due to API mismatch
+// export {
+//   EasyPDF,
+//   PDFUtils,
+//   type EasyRenderOptions,
+//   type PdfMetadata,
+//   type PageInfo,
+//   type DocumentInfo,
+//   type ExtractedText,
+//   type SearchResult
+// } from './easy.js';
 
 // ============================================================================
 // Simple API - Ultra-Simple Function API
 // ============================================================================
 
-export {
-  extractText,
-  extractPageText,
-  getPageCount,
-  getMetadata,
-  getInfo as getPdfInfo,
-  renderToPNG,
-  renderAllToPNG,
-  getPageAsPNG,
-  searchText,
-  isEncrypted,
-  saveTextToFile,
-  convertToImages,
-  quickSummary
-} from './simple.js';
+// Temporarily disabled due to API mismatch
+// export {
+//   extractText,
+//   extractPageText,
+//   getPageCount,
+//   getMetadata,
+//   getInfo as getPdfInfo,
+//   renderToPNG,
+//   renderAllToPNG,
+//   getPageAsPNG,
+//   searchText,
+//   isEncrypted,
+//   saveTextToFile,
+//   convertToImages,
+//   quickSummary
+// } from './simple.js';
 
 // ============================================================================
 // Version

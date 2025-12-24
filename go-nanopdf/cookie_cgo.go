@@ -1,3 +1,6 @@
+//go:build cgo && !mock
+// +build cgo,!mock
+
 package nanopdf
 
 // #include "include/nanopdf_ffi.h"

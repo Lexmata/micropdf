@@ -26,9 +26,6 @@
 import { Document } from './document.js';
 import { Matrix } from './geometry.js';
 import { Colorspace } from './colorspace.js';
-import { Pixmap } from './pixmap.js';
-import { Context } from './context.js';
-import type { RenderOptions } from './render-options.js';
 import { dpiToScale } from './render-options.js';
 import * as fs from 'fs/promises';
 
@@ -111,12 +108,10 @@ export interface SearchResult {
  */
 export class EasyPDF {
   private doc: Document | null = null;
-  private ctx: Context;
   private autoClose = true;
 
   private constructor(doc: Document) {
     this.doc = doc;
-    this.ctx = Context.getDefault();
   }
 
   /**
@@ -149,8 +144,8 @@ export class EasyPDF {
    * const pdf = EasyPDF.fromBuffer(buffer);
    * ```
    */
-  static fromBuffer(buffer: Buffer, password?: string): EasyPDF {
-    const doc = Document.fromBuffer(buffer, password);
+  static fromBuffer(buffer: Uint8Array | globalThis.Buffer, password?: string): EasyPDF {
+    const doc = Document.fromBuffer(buffer as any, password);
     return new EasyPDF(doc);
   }
 
@@ -278,7 +273,7 @@ export class EasyPDF {
    */
   get isEncrypted(): boolean {
     this.ensureOpen();
-    return this.doc!.needsPassword();
+    return this.doc!.needsPassword;
   }
 
   /**
@@ -305,12 +300,12 @@ export class EasyPDF {
         if (match) {
           const [, year, month, day, hour, min, sec] = match;
           return new Date(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
-            parseInt(hour),
-            parseInt(min),
-            parseInt(sec)
+            parseInt(year!),
+            parseInt(month!) - 1,
+            parseInt(day!),
+            parseInt(hour!),
+            parseInt(min!),
+            parseInt(sec!)
           );
         }
         return new Date(dateStr);
@@ -319,16 +314,33 @@ export class EasyPDF {
       }
     };
 
-    return {
-      title: doc.getMetadata('Title') || undefined,
-      author: doc.getMetadata('Author') || undefined,
-      subject: doc.getMetadata('Subject') || undefined,
-      keywords: doc.getMetadata('Keywords') || undefined,
-      creator: doc.getMetadata('Creator') || undefined,
-      producer: doc.getMetadata('Producer') || undefined,
-      creationDate: parseDate(doc.getMetadata('CreationDate')),
-      modDate: parseDate(doc.getMetadata('ModDate'))
-    };
+    const metadata: PdfMetadata = {};
+    
+    const title = doc.getMetadata('Title');
+    if (title) metadata.title = title;
+    
+    const author = doc.getMetadata('Author');
+    if (author) metadata.author = author;
+    
+    const subject = doc.getMetadata('Subject');
+    if (subject) metadata.subject = subject;
+    
+    const keywords = doc.getMetadata('Keywords');
+    if (keywords) metadata.keywords = keywords;
+    
+    const creator = doc.getMetadata('Creator');
+    if (creator) metadata.creator = creator;
+    
+    const producer = doc.getMetadata('Producer');
+    if (producer) metadata.producer = producer;
+    
+    const creationDate = parseDate(doc.getMetadata('CreationDate'));
+    if (creationDate) metadata.creationDate = creationDate;
+    
+    const modDate = parseDate(doc.getMetadata('ModDate'));
+    if (modDate) metadata.modDate = modDate;
+    
+    return metadata;
   }
 
   /**
@@ -351,7 +363,7 @@ export class EasyPDF {
 
     const pages: PageInfo[] = [];
     for (let i = 0; i < doc.pageCount; i++) {
-      const page = doc.loadPage(i);
+      const page = doc.getPage(i);
       try {
         const bounds = page.bounds();
         pages.push({
@@ -368,7 +380,7 @@ export class EasyPDF {
     return {
       pageCount: doc.pageCount,
       metadata: this.getMetadata(),
-      isEncrypted: doc.needsPassword(),
+      isEncrypted: doc.needsPassword,
       hasXfa: false, // TODO: Check for XFA forms
       pages
     };
@@ -388,7 +400,7 @@ export class EasyPDF {
    */
   extractPageText(pageNumber: number): string {
     this.ensureOpen();
-    const page = this.doc!.loadPage(pageNumber);
+    const page = this.doc!.getPage(pageNumber);
     try {
       return page.extractText();
     } finally {
@@ -438,7 +450,7 @@ export class EasyPDF {
     const results: ExtractedText[] = [];
 
     const processPage = (pNum: number) => {
-      const page = this.doc!.loadPage(pNum);
+      const page = this.doc!.getPage(pNum);
       try {
         const stext = page.extractStructuredText();
         const blocks = stext.blocks.map((block) => ({
@@ -492,7 +504,7 @@ export class EasyPDF {
     const results: SearchResult[] = [];
 
     const searchPage = (pNum: number) => {
-      const page = this.doc!.loadPage(pNum);
+      const page = this.doc!.getPage(pNum);
       try {
         const hits = page.searchText(query);
         hits.forEach((hit) => {
@@ -538,11 +550,11 @@ export class EasyPDF {
    */
   renderToBuffer(pageNumber: number, options: EasyRenderOptions = {}): Buffer {
     this.ensureOpen();
-    const page = this.doc!.loadPage(pageNumber);
+    const page = this.doc!.getPage(pageNumber);
 
     try {
       // Calculate transform matrix
-      let matrix = Matrix.identity();
+      let matrix = Matrix.IDENTITY;
 
       if (options.dpi) {
         const scale = dpiToScale(options.dpi);
@@ -678,10 +690,8 @@ export class EasyPDF {
    * ```
    */
   close(): void {
-    if (this.doc) {
-      this.doc.close();
-      this.doc = null;
-    }
+    // Documents don't require explicit cleanup in this implementation
+    this.doc = null;
   }
 
   /**

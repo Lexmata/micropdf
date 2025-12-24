@@ -855,11 +855,7 @@ pub extern "C" fn pdf_save_document(
 /// # Safety
 /// Caller must ensure name is a valid null-terminated C string.
 #[unsafe(no_mangle)]
-pub extern "C" fn pdf_lookup_named_dest(
-    _ctx: Handle,
-    doc: Handle,
-    name: *const c_char,
-) -> c_int {
+pub extern "C" fn pdf_lookup_named_dest(_ctx: Handle, doc: Handle, name: *const c_char) -> c_int {
     if name.is_null() {
         return -1;
     }

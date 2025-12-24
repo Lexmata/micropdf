@@ -128,10 +128,11 @@ func Example5_FluentAPI() {
 
 // Example6_ManualResourceManagement demonstrates manual cleanup
 func Example6_ManualResourceManagement() {
-	pdf, err := easy.Open("document.pdf").KeepOpen()
+	pdf, err := easy.Open("document.pdf")
 	if err != nil {
 		log.Fatal(err)
 	}
+	pdf.KeepOpen()
 	defer pdf.Close()
 
 	// Extract text from multiple pages
@@ -401,13 +402,34 @@ func Example16_ComparisonWithCoreAPI() {
 	fmt.Println(text)
 
 	// Core API - More verbose but maximum control
-	doc, _ := nanopdf.OpenDocument("document.pdf", "")
-	defer doc.Close()
+	ctx := nanopdf.NewContext()
+	if ctx == nil {
+		log.Fatal("failed to create context")
+	}
+	defer ctx.Drop()
 
-	pageCount := doc.PageCount()
+	doc, err := nanopdf.OpenDocument(ctx, "document.pdf")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer doc.Drop()
+
+	pageCount, err := doc.PageCount()
+	if err != nil {
+		log.Fatal(err)
+	}
 	for i := 0; i < pageCount; i++ {
-		page, _ := doc.LoadPage(i)
-		pageText := page.ExtractText()
+		page, err := doc.LoadPage(i)
+		if err != nil {
+			log.Printf("Error loading page %d: %v", i, err)
+			continue
+		}
+		pageText, err := page.ExtractText()
+		if err != nil {
+			log.Printf("Error extracting text from page %d: %v", i, err)
+			page.Drop()
+			continue
+		}
 		fmt.Println(pageText)
 		page.Drop()
 	}

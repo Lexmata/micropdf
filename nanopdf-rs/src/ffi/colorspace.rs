@@ -988,4 +988,3 @@ mod tests {
         assert_eq!(fz_device_cmyk(0), FZ_COLORSPACE_CMYK);
     }
 }
-

@@ -50,6 +50,16 @@ export class Context {
     return ctx;
   }
 
+  /**
+   * Get the global default context (alias for getDefaultContext())
+   */
+  static getDefault(): Context {
+    if (!defaultContext) {
+      defaultContext = Context.createDefault();
+    }
+    return defaultContext;
+  }
+
   // ============================================================================
   // Reference Counting
   // ============================================================================

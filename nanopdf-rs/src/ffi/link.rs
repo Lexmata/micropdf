@@ -1,14 +1,13 @@
+use crate::ffi::geometry::fz_rect;
 /**
  * Link FFI
  *
  * C-compatible FFI for link operations.
  * Links provide navigation within and between PDF documents.
  */
-
 use crate::ffi::{Handle, HandleStore};
-use crate::ffi::geometry::fz_rect;
-use crate::fitz::link::Link;
 use crate::fitz::geometry::Rect;
+use crate::fitz::link::Link;
 use std::ffi::{c_char, c_int};
 use std::sync::LazyLock;
 
@@ -73,10 +72,20 @@ pub extern "C" fn fz_drop_link(_ctx: Handle, link: Handle) {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_link_rect(_ctx: Handle, link: Handle) -> fz_rect {
     let Some(arc) = LINK_STORE.get(link) else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
     let Ok(link_obj) = arc.lock() else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
 
     let rect = &link_obj.rect;

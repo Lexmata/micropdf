@@ -1,12 +1,11 @@
+use crate::ffi::geometry::fz_rect;
 /**
  * Display List FFI
  *
  * C-compatible FFI for display list operations.
  * Display lists cache rendering commands for efficient repeated rendering.
  */
-
 use crate::ffi::{Handle, HandleStore};
-use crate::ffi::geometry::fz_rect;
 use crate::fitz::display_list::DisplayList;
 use crate::fitz::geometry::Rect;
 use std::sync::LazyLock;
@@ -52,10 +51,20 @@ pub extern "C" fn fz_drop_display_list(_ctx: Handle, list: Handle) {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_bound_display_list(_ctx: Handle, list: Handle) -> fz_rect {
     let Some(arc) = DISPLAY_LIST_STORE.get(list) else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
     let Ok(display_list) = arc.lock() else {
-        return fz_rect { x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0 };
+        return fz_rect {
+            x0: 0.0,
+            y0: 0.0,
+            x1: 0.0,
+            y1: 0.0,
+        };
     };
 
     let mediabox = display_list.mediabox();
