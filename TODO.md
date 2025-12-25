@@ -325,7 +325,8 @@ Current performance metrics (from `cargo bench`):
 
 ### Benchmarking Infrastructure
 
-- [x] Criterion benchmarks for core modules
+- [x] Criterion benchmarks for Rust core modules
+- [x] tinybench benchmarks for Node.js bindings
 - [ ] Add benchmarks for missing modules:
   - [ ] colorspace operations
   - [ ] device rendering
@@ -339,6 +340,121 @@ Current performance metrics (from `cargo bench`):
 - [ ] Add real-world PDF benchmarks
 - [ ] Memory usage profiling
 - [ ] Comparison benchmarks vs MuPDF
+
+---
+
+## Node.js Performance Optimization
+
+> Based on benchmark profiling conducted 2025-12-24
+
+### Node.js Benchmark Summary
+
+Current performance metrics (from `pnpm bench`):
+
+#### Buffer Operations
+
+| Operation | ops/sec | Latency (avg) | Notes |
+|-----------|---------|---------------|-------|
+| Buffer.create() - empty | 26.2M | 44.70 ns | Fast path |
+| Buffer.create(1024) | 3.08M | 1014.3 ns | Allocation overhead |
+| Buffer.fromUint8Array - 1KB | 13.6M | 187.74 ns | Zero-copy |
+| Buffer.fromUint8Array - 16KB | 867K | 2833.2 ns | Memory copy overhead |
+| Buffer.fromString - short | 15.2M | 79.21 ns | UTF-8 encoding |
+| Buffer.toUint8Array - 1KB | 3.68M | 942.35 ns | Copy required |
+| Buffer.toUint8Array - 16KB | 924K | 2843 ns | |
+| Buffer.toString - 1KB | 604K | 1952.5 ns | UTF-8 decoding |
+| Buffer.toBase64 - 1KB | 6.2M | 179.21 ns | Fast Node.js impl |
+| Buffer.toHex - 1KB | 1.8M | 914.45 ns | |
+| Buffer.slice - 1KB | 10.9M | 213.37 ns | |
+| Buffer.equals - 1KB | 34.2M | 30.29 ns | Native comparison |
+| Buffer.indexOf | 30.7M | 33.71 ns | Native search |
+| BufferReader - readUInt32BE x 64 | 4.94M | 266.65 ns | |
+| BufferWriter - write 256 bytes | 2.36M | 691.72 ns | |
+
+#### Geometry Operations
+
+| Operation | ops/sec | Latency (avg) | Notes |
+|-----------|---------|---------------|-------|
+| Point - constructor | 34.4M | 35.93 ns | |
+| Point.transform | 33.5M | 45.73 ns | |
+| Point.distanceTo | 33.5M | 31.22 ns | |
+| Point.add | 34.4M | 57.26 ns | |
+| Rect - constructor | 34.8M | 32.08 ns | |
+| Rect.containsPoint | 34.8M | 29.85 ns | |
+| Rect.transform | 20.4M | 91.38 ns | 4 point transforms |
+| Matrix - constructor | 34.9M | 30.27 ns | |
+| Matrix.concat | 31.0M | 33.68 ns | |
+| Matrix.invert | 30.1M | 65.23 ns | |
+| Matrix.rotate | 34.8M | 30.11 ns | Trig calculations |
+| Quad.fromRect | 30.5M | 44.21 ns | |
+| Quad.transform | 22.6M | 53.33 ns | |
+| Quad.containsPoint | 2.75M | 411.37 ns | **SLOW** - optimize |
+
+### Node.js High Priority Optimizations
+
+#### Performance Bottlenecks Identified
+
+- [ ] **Quad.containsPoint optimization**
+  - Currently 411ns avg vs ~30ns for other operations
+  - Cross-product calculations are expensive
+  - Consider: precomputed coefficients for axis-aligned quads
+  - Consider: bounding box early-exit optimization
+
+- [ ] **Buffer.toUint8Array overhead**
+  - 942ns for 1KB copy is slower than expected
+  - Current implementation creates new Uint8Array
+  - Consider: returning a view when safe
+  - Consider: pooling common buffer sizes
+
+- [ ] **Buffer.toString optimization**
+  - 1952ns for 1KB is relatively slow
+  - TextDecoder might be faster for large buffers
+  - Consider: caching decoded strings for immutable buffers
+
+- [ ] **BufferWriter efficiency**
+  - 691ns for 256 bytes suggests excessive resizing
+  - Consider: better initial capacity estimation
+  - Consider: doubling strategy tuning
+
+#### ESM/CJS Compatibility
+
+- [ ] **Fix crypto module usage**
+  - `require('node:crypto')` fails in ESM context
+  - Update to use `import` or dynamic `import()`
+  - Affects: md5Digest(), sha256Digest()
+
+### Node.js Medium Priority Optimizations
+
+#### Type System Optimizations
+
+- [ ] **Reduce object allocations in hot paths**
+  - Geometry operations create many temporary objects
+  - Consider: object pooling for Point, Rect, Matrix
+  - Consider: mutable variants for batch operations
+
+- [ ] **TypedArray optimization**
+  - Use Float64Array for bulk geometry operations
+  - SIMD.js polyfill for matrix operations
+
+#### Memory Management
+
+- [ ] **WeakRef for large objects**
+  - Consider WeakRef for document/page caches
+  - Allow GC to reclaim unused resources
+
+- [ ] **ArrayBuffer pooling**
+  - Reuse ArrayBuffers for common sizes
+  - Reduces GC pressure
+
+### Benchmarking TODOs
+
+- [x] Buffer benchmark suite
+- [x] Geometry benchmark suite
+- [ ] PDF parsing benchmarks
+- [ ] Document operations benchmarks
+- [ ] Rendering benchmarks (when implemented)
+- [ ] Memory usage tracking
+- [ ] Comparison with other PDF libraries (pdf-lib, pdf.js)
 
 ### Flamegraph Results
 

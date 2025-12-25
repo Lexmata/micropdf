@@ -6,3 +6,8 @@ node_modules/
 
 # MuPDF source directory (cloned submodule for reference)
 mupdf/
+
+# Profiling data
+perf.data
+perf.data.old
+*.svg.perf

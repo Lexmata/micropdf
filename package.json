@@ -1,0 +1,11 @@
+{
+  "name": "nanopdf",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.20.0",
+  "dependencies": {
+    "commitlint": "^20.2.0",
+    "husky": "^9.1.7"
+  }
+}
