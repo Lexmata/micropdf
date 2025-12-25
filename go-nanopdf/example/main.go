@@ -108,7 +108,7 @@ func exampleDocument() {
 		doc, err = nanopdf.OpenDocument(ctx, "mock.pdf")
 	} else {
 		// Try to open a real PDF if it exists
-		if _, err := os.Stat("test.pdf"); err == nil {
+		if _, statErr := os.Stat("test.pdf"); statErr == nil {
 			doc, err = nanopdf.OpenDocument(ctx, "test.pdf")
 		} else {
 			fmt.Println("No test.pdf found, creating minimal PDF")
