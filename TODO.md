@@ -456,6 +456,162 @@ Current performance metrics (from `pnpm bench`):
 - [ ] Memory usage tracking
 - [ ] Comparison with other PDF libraries (pdf-lib, pdf.js)
 
+---
+
+## Go Performance Optimization
+
+> Based on benchmark profiling conducted 2025-12-24
+
+### Go Benchmark Summary
+
+Current performance metrics (from `go test -bench=.`):
+
+#### Buffer Operations
+
+| Operation | ns/op | B/op | allocs/op | Notes |
+|-----------|-------|------|-----------|-------|
+| BufferNew | 58.88 | 24 | 1 | Fast empty buffer |
+| BufferNewWithCapacity | 190.9 | 1048 | 2 | Pre-allocation |
+| BufferFromBytes1KB | 195.2 | 1056 | 3 | Data copy |
+| BufferFromBytes16KB | 1950 | 16416 | 3 | Scales linearly |
+| BufferFromString | 70.88 | 48 | 3 | String conversion |
+| BufferBytes1KB | 150.2 | 1024 | 1 | Data extraction |
+| BufferString1KB | 284.4 | 2048 | 2 | UTF-8 conversion |
+| BufferLen | 9.156 | 0 | 0 | O(1) access |
+| BufferAppend (100x10B) | 2107 | 1048 | 2 | Batch append |
+| BufferClone1KB | 369.0 | 2080 | 4 | Full copy |
+
+#### Geometry Operations (Zero Allocations!)
+
+| Operation | ns/op | Notes |
+|-----------|-------|-------|
+| PointNew | 0.10 | Struct literal |
+| PointTransform | 0.11 | Matrix multiply |
+| PointTransformComplex | 0.10 | Same perf! |
+| PointDistance | 0.10 | sqrt calculation |
+| PointAdd | 0.09 | Vector add |
+| PointSub | 0.10 | Vector sub |
+| PointScale | 0.10 | Scalar multiply |
+| PointEquals | 0.12 | Comparison |
+| RectNew | 0.10 | Struct literal |
+| RectFromXYWH | 0.10 | With calculation |
+| RectContains | 0.11 | Bounds check |
+| RectContainsXY | 0.11 | Direct coords |
+| RectUnion | 0.10 | 4x min/max |
+| RectIntersect | 0.11 | 4x min/max |
+| RectIncludePoint | 0.12 | Bounds expand |
+| RectTranslate | 0.10 | 4 adds |
+| RectScale | 0.11 | 4 multiplies |
+| RectToIRect | 0.45 | math.Floor/Ceil |
+| RectWidth | 0.09 | Subtraction |
+| RectHeight | 0.10 | Subtraction |
+| IRectNew | 0.11 | Struct literal |
+| MatrixNew | 0.10 | Struct literal |
+| MatrixIdentity | 0.10 | Return copy |
+| MatrixTranslate | 0.11 | Struct literal |
+| MatrixScale | 0.10 | Struct literal |
+| MatrixRotate | 10.36 | **Trig functions** |
+| MatrixShear | 0.11 | Struct literal |
+| MatrixConcat | 0.12 | 12 multiply-adds |
+| MatrixConcatChain (3x) | 17.31 | Includes rotate |
+| MatrixPreTranslate | 12.68 | Create + concat |
+| MatrixPostTranslate | 12.77 | Concat + create |
+| MatrixTransformPoint | 0.10 | 6 multiply-adds |
+| MatrixTransformRect | 10.96 | 4 point transforms |
+| QuadNew | 0.11 | Struct literal |
+| QuadFromRect | 0.11 | 4 point creates |
+| QuadTransform | 9.49 | 4 transforms |
+| QuadBounds | 3.39 | 4x IncludePoint |
+
+### Go Performance Analysis
+
+#### Excellent Performance Areas ✅
+
+The Go implementation achieves **sub-nanosecond** performance for most geometry operations:
+- All struct creation: ~0.1 ns (CPU register operations)
+- Point/Rect operations: ~0.1 ns (zero allocations)
+- Matrix operations without trig: ~0.1 ns
+
+#### Performance Bottlenecks Identified
+
+- [ ] **MatrixRotate** - 10.36 ns (100x slower than other matrix ops)
+  - Uses `math.Sin` and `math.Cos` which are expensive
+  - Consider: lookup tables for common angles (0, 90, 180, 270)
+  - Consider: CORDIC algorithm for faster trig
+  - Consider: caching rotation matrices
+
+- [ ] **MatrixTransformRect** - 10.96 ns
+  - Transforms 4 corners (calls Transform 4 times)
+  - For axis-aligned transforms, could optimize to direct calculation
+  - Consider: special case for scale/translate-only matrices
+
+- [ ] **QuadTransform** - 9.49 ns
+  - Similar issue - 4 point transforms
+  - Consider: SIMD for parallel transform of 4 points
+
+- [ ] **QuadBounds** - 3.39 ns
+  - Calls IncludePoint 4 times
+  - Consider: inline the min/max calculations
+
+- [ ] **RectToIRect** - 0.45 ns (4.5x slower than other rect ops)
+  - Uses math.Floor and math.Ceil
+  - Consider: int conversion with manual rounding
+
+### Go High Priority Optimizations
+
+#### Trigonometry Optimization
+- [ ] **Rotation matrix caching**
+  - Cache commonly used rotation matrices (0°, 90°, 180°, 270°)
+  - Use sync.Pool for frequently rotated angles
+  
+- [ ] **Trig lookup tables**
+  - For applications with limited angle precision needs
+  - 1° resolution table: 360 entries × 8 bytes = 2.8KB
+
+#### SIMD Acceleration
+- [ ] **Use SIMD for batch transforms**
+  - Go 1.21+ has better compiler SIMD support
+  - Consider: assembly for critical paths (arm64, amd64)
+  - Package: `golang.org/x/sys/cpu` for feature detection
+
+#### Allocation Reduction (Buffer Operations)
+- [ ] **sync.Pool for Buffers**
+  - Pool commonly sized buffers (1KB, 4KB, 16KB, 64KB)
+  - Reduces GC pressure in high-throughput scenarios
+
+- [ ] **Reduce string allocations**
+  - BufferString1KB does 2 allocations (284.4 ns)
+  - Consider: unsafe.String for zero-copy when safe
+
+### Go Medium Priority Optimizations
+
+#### Interface Optimizations
+- [ ] **Avoid interface{} in hot paths**
+  - Type assertions add overhead
+  - Use generics (Go 1.18+) where appropriate
+
+#### Memory Layout
+- [ ] **Struct field ordering**
+  - Ensure optimal alignment
+  - Group frequently accessed fields together
+
+#### CGO Considerations (for native backend)
+- [ ] **Minimize CGO boundary crossings**
+  - CGO calls have ~100ns overhead
+  - Batch operations where possible
+  - Consider: keep data on Go side when possible
+
+### Benchmarking TODOs
+
+- [x] Buffer benchmark suite
+- [x] Geometry benchmark suite
+- [ ] Document loading benchmarks
+- [ ] Page rendering benchmarks
+- [ ] PDF parsing benchmarks
+- [ ] Memory allocation profiling
+- [ ] Comparison with other Go PDF libraries (pdfcpu, unipdf)
+- [ ] CGO overhead analysis
+
 ### Flamegraph Results
 
 Profiling artifacts generated:
