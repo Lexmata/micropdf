@@ -2,8 +2,8 @@
  * Pixmap operations for rendering
  */
 
-import type { Context } from "./context.ts";
-import type { Page } from "./document.ts";
+import type { Context } from './context.ts';
+import type { Page } from './document.ts';
 import {
   fz_new_pixmap_from_page,
   fz_drop_pixmap,
@@ -16,8 +16,8 @@ import {
   fz_drop_buffer,
   fz_device_rgb,
   fz_scale,
-  readBuffer,
-} from "./ffi.ts";
+  readBuffer
+} from './ffi.ts';
 
 export interface Matrix {
   a: number;
@@ -39,23 +39,11 @@ export class Pixmap {
     this.handle = handle;
   }
 
-  static fromPage(
-    ctx: Context,
-    page: Page,
-    matrix: Matrix,
-    alpha = false
-  ): Pixmap {
+  static fromPage(ctx: Context, page: Page, matrix: Matrix, alpha = false): Pixmap {
     const colorspace = fz_device_rgb(ctx.getHandle());
 
     // Convert matrix to struct
-    const matrixStruct = [
-      matrix.a,
-      matrix.b,
-      matrix.c,
-      matrix.d,
-      matrix.e,
-      matrix.f,
-    ];
+    const matrixStruct = [matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f];
 
     const handle = fz_new_pixmap_from_page(
       ctx.getHandle(),
@@ -66,7 +54,7 @@ export class Pixmap {
     );
 
     if (handle === 0n) {
-      throw new Error("Failed to create pixmap from page");
+      throw new Error('Failed to create pixmap from page');
     }
 
     return new Pixmap(ctx, handle);
@@ -74,7 +62,7 @@ export class Pixmap {
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Pixmap has been dropped");
+      throw new Error('Pixmap has been dropped');
     }
     return this.handle;
   }
@@ -111,7 +99,7 @@ export class Pixmap {
     // Create PNG buffer
     const bufferHandle = fz_new_buffer_from_pixmap_as_png(ctxHandle, this.handle, 0);
     if (bufferHandle === 0n) {
-      throw new Error("Failed to convert pixmap to PNG");
+      throw new Error('Failed to convert pixmap to PNG');
     }
 
     try {
@@ -151,9 +139,12 @@ export class Pixmap {
 export class MatrixHelper {
   static identity(): Matrix {
     return {
-      a: 1, b: 0,
-      c: 0, d: 1,
-      e: 0, f: 0,
+      a: 1,
+      b: 0,
+      c: 0,
+      d: 1,
+      e: 0,
+      f: 0
     };
   }
 
@@ -165,7 +156,7 @@ export class MatrixHelper {
       c: result[2],
       d: result[3],
       e: result[4],
-      f: result[5],
+      f: result[5]
     };
   }
 
@@ -174,4 +165,3 @@ export class MatrixHelper {
     return MatrixHelper.scale(scale, scale);
   }
 }
-

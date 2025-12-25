@@ -90,6 +90,7 @@ The system consists of 4 distinct layers:
 **Purpose**: Provide a clean, type-safe, idiomatic Node.js API.
 
 **Responsibilities**:
+
 - Class-based object-oriented interface
 - Type definitions and validation
 - Error wrapping and user-friendly messages
@@ -98,6 +99,7 @@ The system consists of 4 distinct layers:
 - Default parameter values
 
 **Key Files**:
+
 - `src/document.ts` - PDF document operations
 - `src/page.ts` - Page rendering and text
 - `src/geometry.ts` - Point, Rect, Matrix, Quad
@@ -110,6 +112,7 @@ The system consists of 4 distinct layers:
 **Purpose**: Bridge JavaScript/TypeScript to C/Rust.
 
 **Responsibilities**:
+
 - Convert JavaScript values to C types
 - Convert C types to JavaScript values
 - Manage Node.js object lifecycle
@@ -118,6 +121,7 @@ The system consists of 4 distinct layers:
 - Memory safety
 
 **Key Files**:
+
 - `native/nanopdf.cc` - Main entry point, module registration
 - `native/context.cc` - Context FFI bindings
 - `native/document.cc` - Document FFI bindings
@@ -131,6 +135,7 @@ The system consists of 4 distinct layers:
 **Purpose**: Provide C-compatible FFI for MuPDF operations.
 
 **Responsibilities**:
+
 - Expose MuPDF functionality via C FFI
 - Handle-based memory management
 - Thread-safe handle stores
@@ -138,6 +143,7 @@ The system consists of 4 distinct layers:
 - Zero-cost abstractions
 
 **Key Files**:
+
 - `nanopdf-rs/src/ffi/mod.rs` - FFI module root
 - `nanopdf-rs/src/ffi/context.rs` - Context operations
 - `nanopdf-rs/src/ffi/document.rs` - Document operations
@@ -154,6 +160,7 @@ The system consists of 4 distinct layers:
 **Purpose**: Core PDF processing engine.
 
 **Responsibilities**:
+
 - PDF parsing and rendering
 - Content stream processing
 - Font handling
@@ -510,6 +517,7 @@ Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
 ### Build Configuration
 
 **TypeScript** (`tsconfig.json`):
+
 ```json
 {
   "compilerOptions": {
@@ -525,6 +533,7 @@ Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
 ```
 
 **Node-gyp** (`binding.gyp`):
+
 ```python
 {
   'targets': [{
@@ -574,18 +583,21 @@ Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
 ### Test Categories
 
 **Unit Tests** (`test/*.test.ts`):
+
 - Test individual classes and functions
 - Mock native bindings
 - Fast execution (~1s total)
 - High coverage target (>90%)
 
 **Integration Tests** (`test/integration/*.integration.test.ts`):
+
 - Test with real PDF files
 - Real native bindings
 - Moderate execution (~5-10s)
 - Focus on real-world scenarios
 
 **Docker Tests** (`docker/Dockerfile.test`):
+
 - Complete environment testing
 - Multi-architecture (AMD64, ARM64)
 - Includes build verification
@@ -593,15 +605,15 @@ Napi::Value OpenDocument(const Napi::CallbackInfo& info) {
 
 ### Test Coverage
 
-| Module | Unit | Integration | Total |
-|--------|------|-------------|-------|
-| **geometry** | 95% | 100% | 97% |
-| **buffer** | 92% | 95% | 93% |
-| **document** | 85% | 90% | 87% |
-| **page** | 80% | 85% | 82% |
-| **pixmap** | 75% | 80% | 77% |
-| **text** | 70% | 75% | 72% |
-| **Overall** | 82% | 87% | 84% |
+| Module       | Unit | Integration | Total |
+| ------------ | ---- | ----------- | ----- |
+| **geometry** | 95%  | 100%        | 97%   |
+| **buffer**   | 92%  | 95%         | 93%   |
+| **document** | 85%  | 90%         | 87%   |
+| **page**     | 80%  | 85%         | 82%   |
+| **pixmap**   | 75%  | 80%         | 77%   |
+| **text**     | 70%  | 75%         | 72%   |
+| **Overall**  | 82%  | 87%         | 84%   |
 
 ---
 
@@ -649,9 +661,9 @@ for (let i = 0; i < 100; i++) {
 }
 
 // Good: Batch processing
-const pages = Array.from({length: 100}, (_, i) => doc.loadPage(i));
+const pages = Array.from({ length: 100 }, (_, i) => doc.loadPage(i));
 // Process all pages...
-pages.forEach(p => p.drop()); // Single cleanup
+pages.forEach((p) => p.drop()); // Single cleanup
 ```
 
 ---
@@ -697,4 +709,3 @@ pages.forEach(p => p.drop()); // Single cleanup
 **For questions or clarifications, please open an issue on GitHub.**
 
 </div>
-

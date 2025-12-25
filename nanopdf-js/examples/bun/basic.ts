@@ -2,11 +2,11 @@
  * Basic usage examples for NanoPDF with Bun
  */
 
-import { Context, Document, Pixmap, MatrixHelper } from "../../bun";
+import { Context, Document, Pixmap, MatrixHelper } from '../../bun';
 
 // Example 1: Extract text from PDF
 async function extractText(pdfPath: string): Promise<string> {
-  console.log("📄 Extracting text from PDF...");
+  console.log('📄 Extracting text from PDF...');
 
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
@@ -14,7 +14,7 @@ async function extractText(pdfPath: string): Promise<string> {
   const pageCount = doc.pageCount();
   console.log(`   Pages: ${pageCount}`);
 
-  let fullText = "";
+  let fullText = '';
 
   for (let i = 0; i < pageCount; i++) {
     using page = doc.loadPage(i);
@@ -49,19 +49,12 @@ async function renderToPng(
 
 // Example 3: Get document metadata
 function getMetadata(pdfPath: string): void {
-  console.log("\n📋 Document Metadata:");
+  console.log('\n📋 Document Metadata:');
 
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
 
-  const metadata = [
-    "Title",
-    "Author",
-    "Subject",
-    "Keywords",
-    "Creator",
-    "Producer",
-  ];
+  const metadata = ['Title', 'Author', 'Subject', 'Keywords', 'Creator', 'Producer'];
 
   for (const key of metadata) {
     const value = doc.getMetadata(key);
@@ -93,15 +86,11 @@ function getPageBounds(pdfPath: string, pageNum: number): void {
 }
 
 // Example 5: Render all pages
-async function renderAllPages(
-  pdfPath: string,
-  outputDir: string,
-  dpi = 150
-): Promise<void> {
+async function renderAllPages(pdfPath: string, outputDir: string, dpi = 150): Promise<void> {
   console.log(`\n📚 Rendering all pages to ${outputDir}/...`);
 
   // Create output directory
-  await Bun.write(`${outputDir}/.keep`, "");
+  await Bun.write(`${outputDir}/.keep`, '');
 
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
@@ -113,7 +102,7 @@ async function renderAllPages(
     using page = doc.loadPage(i);
     using pixmap = Pixmap.fromPage(ctx, page, matrix);
 
-    const outputPath = `${outputDir}/page_${String(i + 1).padStart(3, "0")}.png`;
+    const outputPath = `${outputDir}/page_${String(i + 1).padStart(3, '0')}.png`;
     await pixmap.savePng(outputPath);
 
     console.log(`   ✓ Page ${i + 1}/${pageCount}: ${outputPath}`);
@@ -122,23 +111,23 @@ async function renderAllPages(
 
 // Example 6: Password-protected PDF
 function openPasswordProtected(pdfPath: string, password: string): void {
-  console.log("\n🔒 Opening password-protected PDF...");
+  console.log('\n🔒 Opening password-protected PDF...');
 
   using ctx = new Context();
   using doc = Document.open(ctx, pdfPath);
 
   if (doc.needsPassword()) {
-    console.log("   Password required!");
+    console.log('   Password required!');
     const success = doc.authenticate(password);
 
     if (success) {
-      console.log("   ✓ Authentication successful");
+      console.log('   ✓ Authentication successful');
       console.log(`   Pages: ${doc.pageCount()}`);
     } else {
-      console.log("   ✗ Authentication failed");
+      console.log('   ✗ Authentication failed');
     }
   } else {
-    console.log("   No password required");
+    console.log('   No password required');
   }
 }
 
@@ -147,51 +136,51 @@ async function main() {
   const args = Bun.argv.slice(2);
 
   if (args.length === 0) {
-    console.log("Usage: bun run examples/bun/basic.ts <pdf-file> [command]");
-    console.log("\nCommands:");
-    console.log("  text         - Extract text from PDF");
-    console.log("  render       - Render first page to PNG");
-    console.log("  metadata     - Show document metadata");
-    console.log("  bounds       - Show page bounds");
-    console.log("  render-all   - Render all pages to PNG");
-    console.log("\nExample:");
-    console.log("  bun run examples/bun/basic.ts sample.pdf text");
+    console.log('Usage: bun run examples/bun/basic.ts <pdf-file> [command]');
+    console.log('\nCommands:');
+    console.log('  text         - Extract text from PDF');
+    console.log('  render       - Render first page to PNG');
+    console.log('  metadata     - Show document metadata');
+    console.log('  bounds       - Show page bounds');
+    console.log('  render-all   - Render all pages to PNG');
+    console.log('\nExample:');
+    console.log('  bun run examples/bun/basic.ts sample.pdf text');
     process.exit(1);
   }
 
   const pdfPath = args[0];
-  const command = args[1] || "text";
+  const command = args[1] || 'text';
 
-  console.log("╔════════════════════════════════════════════════════════╗");
-  console.log("║  NanoPDF for Bun - Usage Examples                     ║");
-  console.log("╚════════════════════════════════════════════════════════╝");
+  console.log('╔════════════════════════════════════════════════════════╗');
+  console.log('║  NanoPDF for Bun - Usage Examples                     ║');
+  console.log('╚════════════════════════════════════════════════════════╝');
 
   try {
     switch (command) {
-      case "text": {
+      case 'text': {
         const text = await extractText(pdfPath);
-        console.log("\n📄 Extracted Text:");
-        console.log(text.substring(0, 500) + "...");
+        console.log('\n📄 Extracted Text:');
+        console.log(text.substring(0, 500) + '...');
         break;
       }
 
-      case "render": {
-        await renderToPng(pdfPath, 0, "output.png", 300);
+      case 'render': {
+        await renderToPng(pdfPath, 0, 'output.png', 300);
         break;
       }
 
-      case "metadata": {
+      case 'metadata': {
         getMetadata(pdfPath);
         break;
       }
 
-      case "bounds": {
+      case 'bounds': {
         getPageBounds(pdfPath, 0);
         break;
       }
 
-      case "render-all": {
-        await renderAllPages(pdfPath, "output_pages", 150);
+      case 'render-all': {
+        await renderAllPages(pdfPath, 'output_pages', 150);
         break;
       }
 
@@ -200,9 +189,9 @@ async function main() {
         process.exit(1);
     }
 
-    console.log("\n✅ Complete!");
+    console.log('\n✅ Complete!');
   } catch (error) {
-    console.error("\n❌ Error:", (error as Error).message);
+    console.error('\n❌ Error:', (error as Error).message);
     process.exit(1);
   }
 }
@@ -211,4 +200,3 @@ async function main() {
 if (import.meta.main) {
   await main();
 }
-

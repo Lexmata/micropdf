@@ -2,8 +2,8 @@
  * Document and Page operations
  */
 
-import type { Context } from "./context";
-import { ptr } from "bun:ffi";
+import type { Context } from './context';
+import { ptr } from 'bun:ffi';
 import {
   fz_open_document,
   fz_open_document_with_buffer,
@@ -22,8 +22,8 @@ import {
   fz_drop_buffer,
   toCString,
   readFloats,
-  readBuffer,
-} from "./ffi";
+  readBuffer
+} from './ffi';
 
 export interface Rect {
   x0: number;
@@ -45,7 +45,7 @@ export class Page {
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Page has been dropped");
+      throw new Error('Page has been dropped');
     }
     return this.handle;
   }
@@ -57,7 +57,7 @@ export class Page {
       x0: floats[0],
       y0: floats[1],
       x1: floats[2],
-      y1: floats[3],
+      y1: floats[3]
     };
   }
 
@@ -67,14 +67,14 @@ export class Page {
     // Create text page
     const stextHandle = fz_new_stext_page_from_page(ctxHandle, this.handle, null);
     if (stextHandle === 0n) {
-      return "";
+      return '';
     }
 
     try {
       // Convert to buffer
       const bufferHandle = fz_new_buffer_from_stext_page(ctxHandle, stextHandle);
       if (bufferHandle === 0n) {
-        return "";
+        return '';
       }
 
       try {
@@ -83,16 +83,16 @@ export class Page {
         const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, ptr(sizePtr));
 
         if (!dataPtr) {
-          return "";
+          return '';
         }
 
         const size = sizePtr.readBigUInt64LE(0);
         if (size === 0n) {
-          return "";
+          return '';
         }
 
         const textData = readBuffer(Number(dataPtr), Number(size));
-        return Buffer.from(textData).toString("utf-8");
+        return Buffer.from(textData).toString('utf-8');
       } finally {
         fz_drop_buffer(ctxHandle, bufferHandle);
       }
@@ -135,7 +135,7 @@ export class Document {
     return new Document(ctx, handle);
   }
 
-  static fromBytes(ctx: Context, data: Uint8Array, magic = ".pdf"): Document {
+  static fromBytes(ctx: Context, data: Uint8Array, magic = '.pdf'): Document {
     const magicBytes = toCString(magic);
     const handle = fz_open_document_with_buffer(
       ctx.getHandle(),
@@ -145,7 +145,7 @@ export class Document {
     );
 
     if (handle === 0n) {
-      throw new Error("Failed to open document from bytes");
+      throw new Error('Failed to open document from bytes');
     }
 
     return new Document(ctx, handle);
@@ -153,7 +153,7 @@ export class Document {
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Document has been dropped");
+      throw new Error('Document has been dropped');
     }
     return this.handle;
   }
@@ -168,11 +168,7 @@ export class Document {
 
   authenticate(password: string): boolean {
     const passwordBytes = toCString(password);
-    return fz_authenticate_password(
-      this.ctx.getHandle(),
-      this.handle,
-      ptr(passwordBytes)
-    ) !== 0;
+    return fz_authenticate_password(this.ctx.getHandle(), this.handle, ptr(passwordBytes)) !== 0;
   }
 
   getMetadata(key: string): string {
@@ -188,10 +184,10 @@ export class Document {
     );
 
     if (length <= 0) {
-      return "";
+      return '';
     }
 
-    return buffer.toString("utf-8", 0, length);
+    return buffer.toString('utf-8', 0, length);
   }
 
   loadPage(pageNum: number): Page {
@@ -219,4 +215,3 @@ export class Document {
     this.drop();
   }
 }
-

@@ -529,4 +529,3 @@ describe('Structured Text Integration', () => {
     });
   });
 });
-

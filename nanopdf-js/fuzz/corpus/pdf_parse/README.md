@@ -15,8 +15,8 @@ cp your-test.pdf fuzz/corpus/pdf_parse/
 ```
 
 Good seeds include:
+
 - PDFs with different versions (1.0-1.7, 2.0)
 - PDFs with various features (images, fonts, forms, annotations)
 - Edge cases (empty, malformed, encrypted)
 - Real-world documents
-

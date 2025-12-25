@@ -1,14 +1,14 @@
 /**
  * Buffer Operations Fuzzer
- * 
+ *
  * Tests the robustness of buffer operations with random data.
- * 
+ *
  * Targets:
  * - Buffer.fromString()
  * - Buffer.fromArrayBuffer()
  * - BufferReader operations
  * - BufferWriter operations
- * 
+ *
  * Run:
  *   npx jazzer fuzz/targets/buffer.fuzz.ts
  */
@@ -18,7 +18,7 @@ import { Buffer as NanoBuffer, BufferReader, BufferWriter } from '../../src/buff
 
 export function fuzz(data: Buffer): void {
   const provider = new FuzzedDataProvider(data);
-  
+
   // Skip empty inputs
   if (data.length === 0) {
     return;
@@ -28,10 +28,10 @@ export function fuzz(data: Buffer): void {
     // Test 1: Create buffer from fuzzed data
     try {
       const buf = NanoBuffer.fromArrayBuffer(data.buffer);
-      
+
       // Try to get size
       const size = buf.size;
-      
+
       // Try to slice if size > 0
       if (size > 0) {
         const sliceEnd = Math.min(size, provider.consumeIntegralInRange(1, Math.max(1, size)));
@@ -41,21 +41,20 @@ export function fuzz(data: Buffer): void {
           // Slice failed - acceptable
         }
       }
-      
     } catch (e) {
       // Buffer creation failed - acceptable
     }
-    
+
     // Test 2: BufferWriter operations
     try {
       const writer = new BufferWriter();
-      
+
       // Write various data types with fuzzed values
       const writeOps = provider.consumeIntegralInRange(1, 10);
-      
+
       for (let i = 0; i < writeOps; i++) {
         const op = provider.consumeIntegralInRange(0, 5);
-        
+
         switch (op) {
           case 0: // Write string
             try {
@@ -65,7 +64,7 @@ export function fuzz(data: Buffer): void {
               // Write failed - acceptable
             }
             break;
-            
+
           case 1: // Write byte
             try {
               writer.writeByte(provider.consumeIntegral(1, false));
@@ -73,7 +72,7 @@ export function fuzz(data: Buffer): void {
               // Write failed - acceptable
             }
             break;
-            
+
           case 2: // Write int16
             try {
               writer.writeInt16(provider.consumeIntegral(2, true));
@@ -81,7 +80,7 @@ export function fuzz(data: Buffer): void {
               // Write failed - acceptable
             }
             break;
-            
+
           case 3: // Write int32
             try {
               writer.writeInt32(provider.consumeIntegral(4, true));
@@ -89,7 +88,7 @@ export function fuzz(data: Buffer): void {
               // Write failed - acceptable
             }
             break;
-            
+
           case 4: // Write float
             try {
               writer.writeFloat(provider.consumeProbability());
@@ -97,7 +96,7 @@ export function fuzz(data: Buffer): void {
               // Write failed - acceptable
             }
             break;
-            
+
           case 5: // Write bytes
             try {
               const bytes = provider.consumeBytes(provider.consumeIntegralInRange(0, 50));
@@ -108,29 +107,28 @@ export function fuzz(data: Buffer): void {
             break;
         }
       }
-      
+
       // Try to get buffer
       try {
         writer.toBuffer();
       } catch (e) {
         // toBuffer failed - acceptable
       }
-      
     } catch (e) {
       // BufferWriter operations failed - acceptable
     }
-    
+
     // Test 3: BufferReader operations
     try {
       const buf = NanoBuffer.fromArrayBuffer(data.buffer);
       const reader = new BufferReader(buf);
-      
+
       // Try various read operations
       const readOps = provider.consumeIntegralInRange(1, 10);
-      
+
       for (let i = 0; i < readOps; i++) {
         const op = provider.consumeIntegralInRange(0, 5);
-        
+
         try {
           switch (op) {
             case 0: // Read byte
@@ -157,13 +155,10 @@ export function fuzz(data: Buffer): void {
           break;
         }
       }
-      
     } catch (e) {
       // BufferReader operations failed - acceptable
     }
-    
   } catch (e) {
     // Overall fuzzing failed - acceptable
   }
 }
-

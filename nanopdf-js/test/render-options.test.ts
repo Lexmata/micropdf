@@ -82,9 +82,7 @@ describe('validateRenderOptions', () => {
   it('should accept valid options', () => {
     expect(() => validateRenderOptions({ dpi: 300 })).not.toThrow();
     expect(() => validateRenderOptions({ alpha: true })).not.toThrow();
-    expect(() =>
-      validateRenderOptions({ antiAlias: AntiAliasLevel.Medium })
-    ).not.toThrow();
+    expect(() => validateRenderOptions({ antiAlias: AntiAliasLevel.Medium })).not.toThrow();
   });
 
   it('should reject negative DPI', () => {
@@ -108,18 +106,10 @@ describe('validateRenderOptions', () => {
   });
 
   it('should accept valid anti-alias levels', () => {
-    expect(() =>
-      validateRenderOptions({ antiAlias: AntiAliasLevel.None })
-    ).not.toThrow();
-    expect(() =>
-      validateRenderOptions({ antiAlias: AntiAliasLevel.Low })
-    ).not.toThrow();
-    expect(() =>
-      validateRenderOptions({ antiAlias: AntiAliasLevel.Medium })
-    ).not.toThrow();
-    expect(() =>
-      validateRenderOptions({ antiAlias: AntiAliasLevel.High })
-    ).not.toThrow();
+    expect(() => validateRenderOptions({ antiAlias: AntiAliasLevel.None })).not.toThrow();
+    expect(() => validateRenderOptions({ antiAlias: AntiAliasLevel.Low })).not.toThrow();
+    expect(() => validateRenderOptions({ antiAlias: AntiAliasLevel.Medium })).not.toThrow();
+    expect(() => validateRenderOptions({ antiAlias: AntiAliasLevel.High })).not.toThrow();
   });
 });
 
@@ -279,4 +269,3 @@ describe('Common Use Cases', () => {
     expect(options.antiAlias).toBe(AntiAliasLevel.High);
   });
 });
-

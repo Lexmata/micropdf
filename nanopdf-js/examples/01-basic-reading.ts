@@ -37,7 +37,9 @@ function basicReading() {
   console.log('\n=== First Page ===');
   const page = doc.loadPage(0);
   console.log(`Page Number: ${page.pageNumber}`);
-  console.log(`Bounds: [${page.bounds.x0}, ${page.bounds.y0}, ${page.bounds.x1}, ${page.bounds.y1}]`);
+  console.log(
+    `Bounds: [${page.bounds.x0}, ${page.bounds.y0}, ${page.bounds.x1}, ${page.bounds.y1}]`
+  );
   console.log(`Width: ${page.bounds.width} points`);
   console.log(`Height: ${page.bounds.height} points`);
   console.log(`Rotation: ${page.rotation} degrees`);
@@ -65,4 +67,3 @@ if (require.main === module) {
 }
 
 export { basicReading };
-

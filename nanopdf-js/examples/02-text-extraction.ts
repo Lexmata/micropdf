@@ -58,7 +58,9 @@ function searchText() {
       console.log(`Page ${i + 1}: Found ${hits.length} occurrence(s)`);
 
       hits.forEach((rect, index) => {
-        console.log(`  Hit ${index + 1}: [${rect.x0.toFixed(1)}, ${rect.y0.toFixed(1)}, ${rect.x1.toFixed(1)}, ${rect.y1.toFixed(1)}]`);
+        console.log(
+          `  Hit ${index + 1}: [${rect.x0.toFixed(1)}, ${rect.y0.toFixed(1)}, ${rect.x1.toFixed(1)}, ${rect.y1.toFixed(1)}]`
+        );
       });
     }
 
@@ -82,11 +84,13 @@ function extractTextBlocks() {
 
   blocks.forEach((block, index) => {
     console.log(`Block ${index + 1}:`);
-    console.log(`  Bounds: [${block.bbox[0].toFixed(1)}, ${block.bbox[1].toFixed(1)}, ${block.bbox[2].toFixed(1)}, ${block.bbox[3].toFixed(1)}]`);
+    console.log(
+      `  Bounds: [${block.bbox[0].toFixed(1)}, ${block.bbox[1].toFixed(1)}, ${block.bbox[2].toFixed(1)}, ${block.bbox[3].toFixed(1)}]`
+    );
     console.log(`  Lines: ${block.lines.length}`);
 
     block.lines.forEach((line, lineIdx) => {
-      const text = line.spans.map(s => s.text).join('');
+      const text = line.spans.map((s) => s.text).join('');
       console.log(`    Line ${lineIdx + 1}: "${text}"`);
     });
 
@@ -112,4 +116,3 @@ if (require.main === module) {
 }
 
 export { extractAllText, searchText, extractTextBlocks };
-

@@ -34,12 +34,14 @@ pnpm fuzz:pdf
 ```
 
 **Finds:**
+
 - Parse errors in malformed PDFs
 - Crashes in document handling
 - Memory issues
 - Edge cases in PDF structure
 
 **Targets:**
+
 - `Document.open()`
 - `Document.openFromBuffer()`
 - `doc.getPage()`
@@ -55,12 +57,14 @@ pnpm fuzz:buffer
 ```
 
 **Finds:**
+
 - Buffer overflow/underflow
 - Read/write edge cases
 - Type conversion issues
 - Memory corruption
 
 **Targets:**
+
 - `Buffer.fromArrayBuffer()`
 - `Buffer.fromString()`
 - `BufferReader` operations
@@ -76,12 +80,14 @@ pnpm fuzz:geometry
 ```
 
 **Finds:**
+
 - Numerical overflow/underflow
 - NaN/Infinity handling
 - Matrix singularity issues
 - Invalid transformations
 
 **Targets:**
+
 - `Point` distance and transforms
 - `Rect` intersections and unions
 - `Matrix` inversions and concatenations
@@ -163,9 +169,9 @@ cat > fuzz/corpus/pdf_parse/minimal.pdf << 'EOF'
 2 0 obj<</Type/Pages/Count 0/Kids[]>>endobj
 xref
 0 3
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
 trailer<</Size 3/Root 1 0 R>>
 startxref
 110
@@ -194,7 +200,7 @@ jobs:
         with:
           node-version: '20'
       - run: pnpm install
-      - run: pnpm fuzz:quick  # Run all fuzzers for 60s each
+      - run: pnpm fuzz:quick # Run all fuzzers for 60s each
 ```
 
 ### Continuous Fuzzing
@@ -338,7 +344,7 @@ import { YourClass } from '../../src/your-module.js';
 
 export function fuzz(data: Buffer): void {
   const provider = new FuzzedDataProvider(data);
-  
+
   try {
     const input = provider.consumeRemainingAsBytes();
     YourClass.process(input);
@@ -351,4 +357,3 @@ export function fuzz(data: Buffer): void {
 ## License
 
 Same as NanoPDF - see LICENSE file.
-

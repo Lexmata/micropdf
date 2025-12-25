@@ -2,7 +2,7 @@
  * Context management for NanoPDF operations
  */
 
-import { fz_new_context, fz_drop_context, fz_clone_context, FZ_STORE_DEFAULT } from "./ffi";
+import { fz_new_context, fz_drop_context, fz_clone_context, FZ_STORE_DEFAULT } from './ffi';
 
 export class Context {
   private handle: bigint;
@@ -11,14 +11,14 @@ export class Context {
   constructor(maxStore: number = FZ_STORE_DEFAULT) {
     const handle = fz_new_context(null, null, BigInt(maxStore));
     if (handle === 0n) {
-      throw new Error("Failed to create context");
+      throw new Error('Failed to create context');
     }
     this.handle = handle;
   }
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Context has been dropped");
+      throw new Error('Context has been dropped');
     }
     return this.handle;
   }
@@ -26,7 +26,7 @@ export class Context {
   clone(): Context {
     const newHandle = fz_clone_context(this.handle);
     if (newHandle === 0n) {
-      throw new Error("Failed to clone context");
+      throw new Error('Failed to clone context');
     }
     const ctx = Object.create(Context.prototype);
     ctx.handle = newHandle;
@@ -45,4 +45,3 @@ export class Context {
     this.drop();
   }
 }
-

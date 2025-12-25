@@ -287,4 +287,3 @@ export function mergeRenderOptions(options: RenderOptions): Required<RenderOptio
     renderFormFields: options.renderFormFields ?? defaults.renderFormFields!
   };
 }
-

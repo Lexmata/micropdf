@@ -543,4 +543,3 @@ describe('Rendering Options Integration', () => {
     });
   });
 });
-

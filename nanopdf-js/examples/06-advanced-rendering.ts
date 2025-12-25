@@ -42,7 +42,9 @@ function highQualityPrintRendering() {
   console.log(`Output size: ${pixmap.width} x ${pixmap.height} pixels`);
   console.log(`Color components: ${pixmap.components}`);
   console.log(`Has alpha: ${pixmap.hasAlpha}`);
-  console.log(`Memory usage: ~${Math.round((pixmap.width * pixmap.height * pixmap.components) / 1024 / 1024)}MB`);
+  console.log(
+    `Memory usage: ~${Math.round((pixmap.width * pixmap.height * pixmap.components) / 1024 / 1024)}MB`
+  );
 
   // Save as PNG
   const pngPath = join(__dirname, 'output-print-300dpi.png');
@@ -339,4 +341,3 @@ if (require.main === module) {
 }
 
 export { runAll };
-

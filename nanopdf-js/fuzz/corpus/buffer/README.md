@@ -15,6 +15,7 @@ cp your-data.bin fuzz/corpus/buffer/
 ```
 
 Good seeds include:
+
 - Various data sizes (empty, small, large)
 - Different data types (text, binary, compressed)
 - Edge cases (null bytes, control characters)
