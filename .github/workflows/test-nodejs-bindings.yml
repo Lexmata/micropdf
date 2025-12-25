@@ -63,9 +63,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v4
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -145,9 +143,7 @@ jobs:
           node-version: '22'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v4
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -201,9 +197,7 @@ jobs:
           node-version: '22'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v4
 
       - name: Install dependencies
         run: |
@@ -245,9 +239,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
+        uses: pnpm/action-setup@v4
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable

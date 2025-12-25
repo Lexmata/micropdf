@@ -64,8 +64,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -138,8 +136,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install Go
         if: matrix.test_go
@@ -198,8 +194,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Build Rust library (release)
         working-directory: nanopdf-rs
