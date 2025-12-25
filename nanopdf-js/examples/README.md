@@ -35,6 +35,7 @@ node dist/examples/01-basic-reading.js
 ### 1. Basic PDF Reading (`01-basic-reading.ts`)
 
 **What it demonstrates:**
+
 - Opening PDF documents
 - Reading basic properties (page count, format)
 - Accessing document metadata
@@ -42,11 +43,13 @@ node dist/examples/01-basic-reading.js
 - Getting page dimensions
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/01-basic-reading.ts
 ```
 
 **Output:**
+
 ```
 === Basic PDF Information ===
 File: /path/to/hello-world.pdf
@@ -73,22 +76,26 @@ Size: 8.50" × 11.00"
 ### 2. Text Extraction (`02-text-extraction.ts`)
 
 **What it demonstrates:**
+
 - Extracting text from all pages
 - Searching for specific text
 - Getting text with layout information (blocks, lines, spans)
 - Saving extracted text to file
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/02-text-extraction.ts
 ```
 
 **Functions:**
+
 - `extractAllText()` - Extract and save all text
 - `searchText()` - Search for specific keywords
 - `extractTextBlocks()` - Get structured text with layout
 
 **Output:**
+
 - `extracted-text.txt` - All extracted text
 - Console output showing search results and text blocks
 
@@ -97,6 +104,7 @@ pnpm exec ts-node examples/02-text-extraction.ts
 ### 3. Page Rendering (`03-rendering.ts`)
 
 **What it demonstrates:**
+
 - Rendering pages to images at different resolutions
 - Creating thumbnails
 - Using different colorspaces (RGB, Gray, CMYK)
@@ -104,17 +112,20 @@ pnpm exec ts-node examples/02-text-extraction.ts
 - Saving as PNG files
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/03-rendering.ts
 ```
 
 **Functions:**
+
 - `renderSinglePage()` - Render at multiple DPIs
 - `createThumbnails()` - Generate thumbnail images
 - `renderWithColorspace()` - Render in different colorspaces
 - `renderWithAlpha()` - Render with transparency
 
 **Output:**
+
 - `output-thumbnail.png` - 36 DPI thumbnail
 - `output-screen.png` - 96 DPI screen quality
 - `output-print.png` - 300 DPI print quality
@@ -126,6 +137,7 @@ pnpm exec ts-node examples/03-rendering.ts
 ### 4. Batch Processing (`04-batch-processing.ts`)
 
 **What it demonstrates:**
+
 - Processing multiple PDF files in a directory
 - Extracting metadata from all files
 - Generating reports (Markdown format)
@@ -133,17 +145,20 @@ pnpm exec ts-node examples/03-rendering.ts
 - Error handling for corrupted/invalid files
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/04-batch-processing.ts
 ```
 
 **Functions:**
+
 - `processPDFDirectory()` - Scan directory and collect info
 - `generateReport()` - Create formatted report
 - `extractAllTextFromDirectory()` - Extract text from all PDFs
 - `searchInMultiplePDFs()` - Search term across files
 
 **Output:**
+
 - `pdf-report.md` - Markdown report with statistics
 - `all-text.txt` - Combined text from all PDFs
 - Console output with search results
@@ -169,13 +184,13 @@ Generated: 2024-01-15T10:30:00.000Z
 
 ## Files
 
-| Filename | Pages | Size | Title | Author | Encrypted | Status |
-|----------|-------|------|-------|--------|-----------|--------|
-| hello-world.pdf | 1 | 612×792 | Hello World | John Doe | - | ✅ |
-| multi-page.pdf | 3 | 612×792 | Multi-Page | Jane Smith | - | ✅ |
-| with-metadata.pdf | 2 | 612×792 | Metadata Example | Bob Johnson | - | ✅ |
-| with-links.pdf | 2 | 612×792 | Links Demo | Alice Brown | - | ✅ |
-| encrypted.pdf | 4 | 612×792 | Secure Document | Security Team | 🔒 | ✅ |
+| Filename          | Pages | Size    | Title            | Author        | Encrypted | Status |
+| ----------------- | ----- | ------- | ---------------- | ------------- | --------- | ------ |
+| hello-world.pdf   | 1     | 612×792 | Hello World      | John Doe      | -         | ✅     |
+| multi-page.pdf    | 3     | 612×792 | Multi-Page       | Jane Smith    | -         | ✅     |
+| with-metadata.pdf | 2     | 612×792 | Metadata Example | Bob Johnson   | -         | ✅     |
+| with-links.pdf    | 2     | 612×792 | Links Demo       | Alice Brown   | -         | ✅     |
+| encrypted.pdf     | 4     | 612×792 | Secure Document  | Security Team | 🔒        | ✅     |
 ```
 
 ---
@@ -260,12 +275,14 @@ const pngData = page.toPNG(targetDPI);
 ### Performance
 
 1. **Always clean up resources**:
+
    ```typescript
    page.drop();
    doc.close();
    ```
 
 2. **Process pages one at a time** for large documents:
+
    ```typescript
    // Good: Process and release
    for (let i = 0; i < doc.pageCount; i++) {
@@ -275,7 +292,7 @@ const pngData = page.toPNG(targetDPI);
    }
 
    // Bad: Load all pages at once
-   const pages = Array.from({length: doc.pageCount}, (_, i) => doc.loadPage(i));
+   const pages = Array.from({ length: doc.pageCount }, (_, i) => doc.loadPage(i));
    // ... uses too much memory!
    ```
 
@@ -372,7 +389,7 @@ function processPageInWorker(pdfPath: string, pageNum: number): Promise<string> 
 
 // Process all pages in parallel
 const doc = Document.open('file.pdf');
-const promises = Array.from({length: doc.pageCount}, (_, i) =>
+const promises = Array.from({ length: doc.pageCount }, (_, i) =>
   processPageInWorker('file.pdf', i)
 );
 
@@ -385,6 +402,7 @@ console.log('All pages processed:', results.length);
 ### 5. Structured Text Extraction (`05-structured-text.ts`) 🆕
 
 **What it demonstrates:**
+
 - Layout-aware text extraction with blocks, lines, and characters
 - Text search with precise quad bounding boxes
 - Hierarchical text navigation (blocks → lines → chars)
@@ -394,11 +412,13 @@ console.log('All pages processed:', results.length);
 - Multi-page structured text extraction
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/05-structured-text.ts
 ```
 
 **Functions:**
+
 - `basicTextExtraction()` - Extract text with layout preservation
 - `textSearchWithPositions()` - Search with quad bounding boxes
 - `hierarchicalTextNavigation()` - Navigate block/line/char hierarchy
@@ -408,6 +428,7 @@ pnpm exec ts-node examples/05-structured-text.ts
 - `multiPageTextExtraction()` - Process multiple pages
 
 **Output:**
+
 ```
 === Example 1: Basic Text Extraction ===
 Extracted text: Hello World
@@ -435,6 +456,7 @@ Block 1:
 ### 6. Advanced Rendering Options (`06-advanced-rendering.ts`) 🆕
 
 **What it demonstrates:**
+
 - Fine-grained control over rendering quality
 - High-quality print rendering (300-600 DPI)
 - Fast preview rendering (72 DPI)
@@ -446,11 +468,13 @@ Block 1:
 - Batch rendering with options
 
 **Usage:**
+
 ```bash
 pnpm exec ts-node examples/06-advanced-rendering.ts
 ```
 
 **Functions:**
+
 - `highQualityPrintRendering()` - 300 DPI print-ready output
 - `fastPreviewRendering()` - 72 DPI quick preview
 - `multipleDPIRenderings()` - Compare different DPI levels
@@ -461,6 +485,7 @@ pnpm exec ts-node examples/06-advanced-rendering.ts
 - `batchRenderingWithOptions()` - Multi-page batch rendering
 
 **Output:**
+
 ```
 === Example 1: High-Quality Print Rendering ===
 Rendering at 300 DPI for print...
@@ -490,6 +515,7 @@ DPI  | Width  | Height | Scale | Time
 **Error**: `Cannot find module 'nanopdf'`
 
 **Solution**:
+
 ```bash
 cd nanopdf-js
 pnpm install
@@ -501,6 +527,7 @@ pnpm run build
 **Error**: `ENOENT: no such file or directory`
 
 **Solution**:
+
 ```bash
 # Install Git LFS
 git lfs install
@@ -518,6 +545,7 @@ cd test-pdfs
 **Error**: `JavaScript heap out of memory`
 
 **Solution**:
+
 ```bash
 # Increase Node.js memory limit
 NODE_OPTIONS="--max-old-space-size=4096" pnpm exec ts-node examples/04-batch-processing.ts
@@ -553,4 +581,3 @@ Have a useful example? Please contribute!
 **Happy Coding! 🚀**
 
 </div>
-

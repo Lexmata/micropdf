@@ -243,7 +243,9 @@ async function example11_CompleteInfo() {
 
     console.log('\nPages:');
     info.pages.forEach((page) => {
-      console.log(`  Page ${page.pageNumber}: ${page.width}x${page.height} (rotation: ${page.rotation}°)`);
+      console.log(
+        `  Page ${page.pageNumber}: ${page.width}x${page.height} (rotation: ${page.rotation}°)`
+      );
     });
   });
 }
@@ -412,4 +414,3 @@ export {
   example15_BufferOperations,
   example16_CoreAPI
 };
-

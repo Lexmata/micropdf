@@ -13,6 +13,7 @@ cp seed.bin fuzz/corpus/geometry/
 ```
 
 Good seeds include:
+
 - Extreme values (0, Infinity, NaN)
 - Edge cases (very small, very large)
 - Special combinations (identity matrices, empty rects)

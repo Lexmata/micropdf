@@ -111,7 +111,9 @@ const rect1 = new Rect(0, 0, 100, 100);
 const rect2 = new Rect(50, 50, 150, 150);
 const matrix = Matrix.scale(2, 2);
 const rotateMatrix = Matrix.rotate(45);
-const complexMatrix = Matrix.translate(10, 20).concat(Matrix.scale(1.5, 1.5)).concat(Matrix.rotate(30));
+const complexMatrix = Matrix.translate(10, 20)
+  .concat(Matrix.scale(1.5, 1.5))
+  .concat(Matrix.rotate(30));
 const quad = Quad.fromRect(rect1);
 
 geomBench
@@ -212,16 +214,18 @@ console.log('  Summary');
 console.log(`${'='.repeat(80)}\n`);
 
 function getSummary(bench: Bench, name: string) {
-  const results = bench.tasks.filter(t => t.result).map(t => ({
-    name: t.name,
-    hz: t.result!.hz,
-    mean: t.result!.mean
-  }));
+  const results = bench.tasks
+    .filter((t) => t.result)
+    .map((t) => ({
+      name: t.name,
+      hz: t.result!.hz,
+      mean: t.result!.mean
+    }));
 
   if (results.length === 0) return;
 
-  const fastest = results.reduce((a, b) => a.hz > b.hz ? a : b);
-  const slowest = results.reduce((a, b) => a.hz < b.hz ? a : b);
+  const fastest = results.reduce((a, b) => (a.hz > b.hz ? a : b));
+  const slowest = results.reduce((a, b) => (a.hz < b.hz ? a : b));
 
   console.log(`${name}:`);
   console.log(`  Fastest: ${fastest.name} (${(fastest.hz / 1e6).toFixed(2)}M ops/sec)`);

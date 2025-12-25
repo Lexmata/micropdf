@@ -466,11 +466,7 @@ describe('Hierarchical Text Structure', () => {
       }
 
       const blocks = stext.getBlocks();
-      if (
-        blocks.length > 0 &&
-        blocks[0].lines.length > 0 &&
-        blocks[0].lines[0].chars.length > 0
-      ) {
+      if (blocks.length > 0 && blocks[0].lines.length > 0 && blocks[0].lines[0].chars.length > 0) {
         const char = blocks[0].lines[0].chars[0];
 
         expect(char).toHaveProperty('c');
@@ -567,4 +563,3 @@ describe('Hierarchical Text Structure', () => {
     });
   });
 });
-

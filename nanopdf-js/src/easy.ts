@@ -243,11 +243,7 @@ export class EasyPDF {
    * console.log(`Found ${results.length} occurrences`);
    * ```
    */
-  static async search(
-    path: string,
-    query: string,
-    pageNumber?: number
-  ): Promise<SearchResult[]> {
+  static async search(path: string, query: string, pageNumber?: number): Promise<SearchResult[]> {
     const pdf = EasyPDF.open(path);
     try {
       return pdf.search(query, pageNumber);
@@ -315,31 +311,31 @@ export class EasyPDF {
     };
 
     const metadata: PdfMetadata = {};
-    
+
     const title = doc.getMetadata('Title');
     if (title) metadata.title = title;
-    
+
     const author = doc.getMetadata('Author');
     if (author) metadata.author = author;
-    
+
     const subject = doc.getMetadata('Subject');
     if (subject) metadata.subject = subject;
-    
+
     const keywords = doc.getMetadata('Keywords');
     if (keywords) metadata.keywords = keywords;
-    
+
     const creator = doc.getMetadata('Creator');
     if (creator) metadata.creator = creator;
-    
+
     const producer = doc.getMetadata('Producer');
     if (producer) metadata.producer = producer;
-    
+
     const creationDate = parseDate(doc.getMetadata('CreationDate'));
     if (creationDate) metadata.creationDate = creationDate;
-    
+
     const modDate = parseDate(doc.getMetadata('ModDate'));
     if (modDate) metadata.modDate = modDate;
-    
+
     return metadata;
   }
 
@@ -654,10 +650,7 @@ export class EasyPDF {
    * await pdf.renderAllToFiles('output/page-{page}.png', { dpi: 150 });
    * ```
    */
-  async renderAllToFiles(
-    outputPattern: string,
-    options: EasyRenderOptions = {}
-  ): Promise<void> {
+  async renderAllToFiles(outputPattern: string, options: EasyRenderOptions = {}): Promise<void> {
     this.ensureOpen();
 
     for (let i = 0; i < this.doc!.pageCount; i++) {
@@ -771,4 +764,3 @@ export namespace PDFUtils {
    */
   export const search = EasyPDF.search;
 }
-

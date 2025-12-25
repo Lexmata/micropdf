@@ -37,29 +37,34 @@ NanoPDF is a powerful PDF manipulation library for Node.js, built on a **100% Mu
 ### What You Can Do
 
 #### ✅ Document Operations
+
 - Open PDFs from files, buffers, or URLs
 - Save and write PDF documents
 - Read and write metadata (title, author, keywords, etc.)
 - Password protection and permission checking
 
 #### ✅ Advanced Rendering
+
 - Render pages to images (PNG, pixmaps) at any DPI
 - Custom colorspaces (RGB, CMYK, Grayscale)
 - Anti-aliasing and high-quality output
 - Alpha channel support
 
 #### ✅ Smart Text Extraction
+
 - Extract text with full layout preservation
 - Structured text (blocks, lines, characters)
 - Search with bounding boxes
 - Multi-language support (LTR, RTL, vertical)
 
 #### ✅ Interactive Features
+
 - Read and render 14 annotation types
 - Work with 7 form field types
 - Display interactive elements
 
 #### ✅ Graphics & Geometry
+
 - Path construction and manipulation
 - Stroke and fill operations
 - Matrix transformations
@@ -91,13 +96,13 @@ The package will automatically download prebuilt binaries for your platform. If 
 
 ### Supported Platforms
 
-| Platform | Architecture | Status |
-|----------|-------------|---------|
-| Linux | x64 | ✅ Supported |
-| Linux | ARM64 | ✅ Supported |
-| macOS | x64 | ✅ Supported |
-| macOS | ARM64 (M1/M2) | ✅ Supported |
-| Windows | x64 | ✅ Supported |
+| Platform | Architecture  | Status       |
+| -------- | ------------- | ------------ |
+| Linux    | x64           | ✅ Supported |
+| Linux    | ARM64         | ✅ Supported |
+| macOS    | x64           | ✅ Supported |
+| macOS    | ARM64 (M1/M2) | ✅ Supported |
+| Windows  | x64           | ✅ Supported |
 
 ---
 
@@ -108,11 +113,11 @@ NanoPDF now supports Deno with native FFI bindings! 🦕
 ### Quick Start with Deno
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "jsr:@nanopdf/deno";
+import { Context, Document, Pixmap, MatrixHelper } from 'jsr:@nanopdf/deno';
 
 // Extract text
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 using page = doc.loadPage(0);
 const text = page.extractText();
 console.log(text);
@@ -120,7 +125,7 @@ console.log(text);
 // Render to PNG
 const matrix = MatrixHelper.dpi(300);
 using pixmap = Pixmap.fromPage(ctx, page, matrix);
-await pixmap.savePng("output.png");
+await pixmap.savePng('output.png');
 ```
 
 ### Run Examples
@@ -155,11 +160,11 @@ NanoPDF now supports Bun with native FFI bindings! 🥟
 ### Quick Start with Bun
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "./bun";
+import { Context, Document, Pixmap, MatrixHelper } from './bun';
 
 // Extract text
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 using page = doc.loadPage(0);
 const text = page.extractText();
 console.log(text);
@@ -167,7 +172,7 @@ console.log(text);
 // Render to PNG
 const matrix = MatrixHelper.dpi(300);
 using pixmap = Pixmap.fromPage(ctx, page, matrix);
-await pixmap.savePng("output.png");
+await pixmap.savePng('output.png');
 ```
 
 ### Run Examples
@@ -284,7 +289,8 @@ if (doc.needsPassword()) {
 }
 
 // Check permissions
-if (doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
+if (doc.hasPermission(4)) {
+  // FZ_PERMISSION_PRINT
   console.log('Printing is allowed');
 }
 ```
@@ -328,20 +334,20 @@ All classes, methods, and properties are fully documented with JSDoc comments. Y
 
 ### Module Overview
 
-| Module | Description | Status |
-|--------|-------------|---------|
-| **document** | PDF document operations | ✅ Complete |
-| **page** | Page rendering and text extraction | ✅ Complete |
-| **geometry** | 2D geometry (Point, Rect, Matrix) | ✅ Complete |
-| **buffer** | Binary data handling | ✅ Complete |
-| **colorspace** | Color space management | ✅ Complete |
-| **pixmap** | Raster image manipulation | ⚠️ Partial |
-| **text** | Text layout and extraction | ⚠️ Partial |
-| **path** | Vector graphics | ⚠️ Partial |
-| **font** | Font handling | ⚠️ Partial |
-| **image** | Image operations | ⚠️ Partial |
-| **forms** | PDF forms | ❌ Not yet |
-| **annotations** | PDF annotations | ❌ Not yet |
+| Module          | Description                        | Status      |
+| --------------- | ---------------------------------- | ----------- |
+| **document**    | PDF document operations            | ✅ Complete |
+| **page**        | Page rendering and text extraction | ✅ Complete |
+| **geometry**    | 2D geometry (Point, Rect, Matrix)  | ✅ Complete |
+| **buffer**      | Binary data handling               | ✅ Complete |
+| **colorspace**  | Color space management             | ✅ Complete |
+| **pixmap**      | Raster image manipulation          | ⚠️ Partial  |
+| **text**        | Text layout and extraction         | ⚠️ Partial  |
+| **path**        | Vector graphics                    | ⚠️ Partial  |
+| **font**        | Font handling                      | ⚠️ Partial  |
+| **image**       | Image operations                   | ⚠️ Partial  |
+| **forms**       | PDF forms                          | ❌ Not yet  |
+| **annotations** | PDF annotations                    | ❌ Not yet  |
 
 See [FFI_IMPLEMENTATION_STATUS.md](FFI_IMPLEMENTATION_STATUS.md) for detailed implementation status.
 
@@ -426,7 +432,7 @@ function findTextWithContext(doc: Document, searchTerm: string) {
 const doc = Document.open('document.pdf');
 const results = findTextWithContext(doc, 'confidential');
 
-results.forEach(r => {
+results.forEach((r) => {
   console.log(`Page ${r.page}: ${r.hits} occurrences`);
   console.log(`Context: ${r.text}...`);
 });
@@ -441,8 +447,7 @@ import { Document } from 'nanopdf';
 import { readdirSync } from 'fs';
 
 function processPDFs(directory: string) {
-  const files = readdirSync(directory)
-    .filter(f => f.endsWith('.pdf'));
+  const files = readdirSync(directory).filter((f) => f.endsWith('.pdf'));
 
   const stats = [];
 
@@ -642,7 +647,13 @@ class Colorspace {
 class Pixmap {
   static create(colorspace: Colorspace, width: number, height: number, alpha?: boolean): Pixmap;
   static createWithBbox(colorspace: Colorspace, bbox: IRectLike, alpha?: boolean): Pixmap;
-  static fromSamples(colorspace: Colorspace, width: number, height: number, alpha: boolean, samples: Uint8Array): Pixmap;
+  static fromSamples(
+    colorspace: Colorspace,
+    width: number,
+    height: number,
+    alpha: boolean,
+    samples: Uint8Array
+  ): Pixmap;
 
   get width(): number;
   get height(): number;
@@ -794,6 +805,7 @@ cargo build --release
 If `node-gyp` fails to build the native addon:
 
 **Linux/macOS**:
+
 ```bash
 # Install build tools
 sudo apt-get install build-essential  # Ubuntu/Debian
@@ -801,6 +813,7 @@ xcode-select --install                 # macOS
 ```
 
 **Windows**:
+
 ```bash
 npm install --global windows-build-tools
 ```
@@ -832,7 +845,8 @@ if (doc.needsPassword()) {
 }
 
 // Check specific permission
-if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
+if (!doc.hasPermission(4)) {
+  // FZ_PERMISSION_PRINT
   console.warn('Document does not allow printing');
 }
 ```
@@ -842,6 +856,7 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
 ## Performance Tips
 
 1. **Always clean up resources**:
+
    ```typescript
    const page = doc.loadPage(0);
    try {
@@ -852,6 +867,7 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
    ```
 
 2. **Use appropriate DPI for rendering**:
+
    ```typescript
    // For thumbnails: 36-72 DPI
    const thumb = page.toPNG(72);
@@ -864,6 +880,7 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
    ```
 
 3. **Batch process efficiently**:
+
    ```typescript
    // Bad: Opens/closes document repeatedly
    for (const file of files) {
@@ -873,11 +890,11 @@ if (!doc.hasPermission(4)) { // FZ_PERMISSION_PRINT
    }
 
    // Good: Reuse context when possible
-   const docs = files.map(f => Document.open(f));
+   const docs = files.map((f) => Document.open(f));
    for (const doc of docs) {
      // process...
    }
-   docs.forEach(d => d.close());
+   docs.forEach((d) => d.close());
    ```
 
 ---

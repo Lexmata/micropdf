@@ -341,4 +341,3 @@ export async function quickSummary(pdfPath: string, password?: string): Promise<
     return lines.filter((l) => l !== null).join('\n');
   });
 }
-

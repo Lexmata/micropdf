@@ -32,8 +32,8 @@ function processPDFDirectory(directory: string): PDFInfo[] {
   }
 
   const files = readdirSync(directory)
-    .filter(f => f.endsWith('.pdf'))
-    .map(f => resolve(directory, f));
+    .filter((f) => f.endsWith('.pdf'))
+    .map((f) => resolve(directory, f));
 
   console.log(`Found ${files.length} PDF file(s)\n`);
 
@@ -92,10 +92,10 @@ function generateReport(results: PDFInfo[]): string {
   report += `Generated: ${new Date().toISOString()}\n\n`;
   report += `## Summary\n\n`;
   report += `- Total Files: ${results.length}\n`;
-  report += `- Successful: ${results.filter(r => !r.error).length}\n`;
-  report += `- Errors: ${results.filter(r => r.error).length}\n`;
+  report += `- Successful: ${results.filter((r) => !r.error).length}\n`;
+  report += `- Errors: ${results.filter((r) => r.error).length}\n`;
   report += `- Total Pages: ${results.reduce((sum, r) => sum + r.pages, 0)}\n`;
-  report += `- Encrypted: ${results.filter(r => r.encrypted).length}\n\n`;
+  report += `- Encrypted: ${results.filter((r) => r.encrypted).length}\n\n`;
 
   report += `## Files\n\n`;
   report += `| Filename | Pages | Size | Title | Author | Encrypted | Status |\n`;
@@ -114,8 +114,8 @@ function extractAllTextFromDirectory(directory: string, outputFile: string) {
   console.log(`\n=== Extracting Text from All PDFs ===\n`);
 
   const files = readdirSync(directory)
-    .filter(f => f.endsWith('.pdf'))
-    .map(f => resolve(directory, f));
+    .filter((f) => f.endsWith('.pdf'))
+    .map((f) => resolve(directory, f));
 
   let combinedText = '';
 
@@ -152,8 +152,8 @@ function searchInMultiplePDFs(directory: string, searchTerm: string) {
   console.log(`\n=== Searching for "${searchTerm}" in PDFs ===\n`);
 
   const files = readdirSync(directory)
-    .filter(f => f.endsWith('.pdf'))
-    .map(f => resolve(directory, f));
+    .filter((f) => f.endsWith('.pdf'))
+    .map((f) => resolve(directory, f));
 
   const searchResults = [];
 
@@ -224,4 +224,3 @@ if (require.main === module) {
 }
 
 export { processPDFDirectory, generateReport, extractAllTextFromDirectory, searchInMultiplePDFs };
-

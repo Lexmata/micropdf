@@ -2,7 +2,7 @@
  * Document and Page operations
  */
 
-import type { Context } from "./context.ts";
+import type { Context } from './context.ts';
 import {
   fz_open_document,
   fz_open_document_with_buffer,
@@ -21,8 +21,8 @@ import {
   fz_drop_buffer,
   toCString,
   fromCString,
-  readBuffer,
-} from "./ffi.ts";
+  readBuffer
+} from './ffi.ts';
 
 export interface Rect {
   x0: number;
@@ -44,7 +44,7 @@ export class Page {
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Page has been dropped");
+      throw new Error('Page has been dropped');
     }
     return this.handle;
   }
@@ -55,7 +55,7 @@ export class Page {
       x0: rect[0],
       y0: rect[1],
       x1: rect[2],
-      y1: rect[3],
+      y1: rect[3]
     };
   }
 
@@ -65,14 +65,14 @@ export class Page {
     // Create text page
     const stextHandle = fz_new_stext_page_from_page(ctxHandle, this.handle, null);
     if (stextHandle === 0n) {
-      return "";
+      return '';
     }
 
     try {
       // Convert to buffer
       const bufferHandle = fz_new_buffer_from_stext_page(ctxHandle, stextHandle);
       if (bufferHandle === 0n) {
-        return "";
+        return '';
       }
 
       try {
@@ -81,7 +81,7 @@ export class Page {
         const dataPtr = fz_buffer_data(ctxHandle, bufferHandle, Deno.UnsafePointer.of(sizePtr));
 
         if (!dataPtr || sizePtr[0] === 0n) {
-          return "";
+          return '';
         }
 
         const size = Number(sizePtr[0]);
@@ -130,7 +130,7 @@ export class Document {
     return new Document(ctx, handle);
   }
 
-  static fromBytes(ctx: Context, data: Uint8Array, magic = ".pdf"): Document {
+  static fromBytes(ctx: Context, data: Uint8Array, magic = '.pdf'): Document {
     const magicBytes = toCString(magic);
     const handle = fz_open_document_with_buffer(
       ctx.getHandle(),
@@ -140,7 +140,7 @@ export class Document {
     );
 
     if (handle === 0n) {
-      throw new Error("Failed to open document from bytes");
+      throw new Error('Failed to open document from bytes');
     }
 
     return new Document(ctx, handle);
@@ -148,7 +148,7 @@ export class Document {
 
   getHandle(): bigint {
     if (this.dropped) {
-      throw new Error("Document has been dropped");
+      throw new Error('Document has been dropped');
     }
     return this.handle;
   }
@@ -163,11 +163,13 @@ export class Document {
 
   authenticate(password: string): boolean {
     const passwordBytes = toCString(password);
-    return fz_authenticate_password(
-      this.ctx.getHandle(),
-      this.handle,
-      Deno.UnsafePointer.of(passwordBytes)
-    ) !== 0;
+    return (
+      fz_authenticate_password(
+        this.ctx.getHandle(),
+        this.handle,
+        Deno.UnsafePointer.of(passwordBytes)
+      ) !== 0
+    );
   }
 
   getMetadata(key: string): string {
@@ -183,7 +185,7 @@ export class Document {
     );
 
     if (length <= 0) {
-      return "";
+      return '';
     }
 
     const decoder = new TextDecoder();
@@ -215,4 +217,3 @@ export class Document {
     this.drop();
   }
 }
-

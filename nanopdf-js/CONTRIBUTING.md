@@ -62,6 +62,7 @@ Before you begin, ensure you have the following installed:
 
 1. Fork the repository on GitHub
 2. Clone your fork:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/nanopdf.git
    cd nanopdf
@@ -212,6 +213,7 @@ We use **Conventional Commits**:
 ```
 
 **Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation only
@@ -278,20 +280,20 @@ export function extractText(page: any): any {
 
 ```typescript
 // Classes: PascalCase
-class Document { }
-class PageRenderer { }
+class Document {}
+class PageRenderer {}
 
 // Functions/methods: camelCase
-function extractText() { }
-function renderPage() { }
+function extractText() {}
+function renderPage() {}
 
 // Constants: UPPER_SNAKE_CASE
 const MAX_PAGE_SIZE = 1000;
 const DEFAULT_DPI = 96;
 
 // Interfaces: PascalCase with descriptive names
-interface DocumentOptions { }
-interface RenderSettings { }
+interface DocumentOptions {}
+interface RenderSettings {}
 
 // Type aliases: PascalCase
 type Handle = bigint;
@@ -308,7 +310,7 @@ class Page {
 
 All public APIs must have JSDoc comments:
 
-```typescript
+````typescript
 /**
  * Renders a page to a pixmap at the specified resolution.
  *
@@ -333,7 +335,7 @@ toPixmap(
 ): Pixmap {
   // Implementation...
 }
-```
+````
 
 ### Error Handling
 
@@ -344,9 +346,7 @@ if (!fs.existsSync(path)) {
 }
 
 if (pageNum < 0 || pageNum >= this.pageCount) {
-  throw NanoPDFError.range(
-    `Page number ${pageNum} out of range [0, ${this.pageCount})`
-  );
+  throw NanoPDFError.range(`Page number ${pageNum} out of range [0, ${this.pageCount})`);
 }
 
 // ❌ Bad: Generic errors, vague messages
@@ -446,16 +446,19 @@ pnpm test:watch
 ### Before Submitting
 
 1. **Run all quality checks**:
+
    ```bash
    pnpm quality
    ```
 
 2. **Ensure tests pass**:
+
    ```bash
    pnpm test
    ```
 
 3. **Check test coverage**:
+
    ```bash
    pnpm test:coverage
    ```
@@ -467,6 +470,7 @@ pnpm test:watch
 ### Creating a Pull Request
 
 1. **Push your branch** to your fork:
+
    ```bash
    git push origin feature/my-feature
    ```
@@ -478,23 +482,29 @@ pnpm test:watch
    - Add screenshots/examples if applicable
 
 3. **PR Template**:
+
    ```markdown
    ## Description
+
    Brief description of what this PR does.
 
    ## Motivation and Context
+
    Why is this change needed? What problem does it solve?
 
    ## Type of Change
+
    - [ ] Bug fix (non-breaking change which fixes an issue)
    - [ ] New feature (non-breaking change which adds functionality)
    - [ ] Breaking change (fix or feature that would cause existing functionality to change)
    - [ ] Documentation update
 
    ## How Has This Been Tested?
+
    Describe the tests you ran and how to reproduce them.
 
    ## Checklist
+
    - [ ] My code follows the code style of this project
    - [ ] I have updated the documentation accordingly
    - [ ] I have added tests to cover my changes
@@ -642,4 +652,3 @@ Thank you to all contributors who have helped make NanoPDF better!
 **Happy Coding! 🚀**
 
 </div>
-

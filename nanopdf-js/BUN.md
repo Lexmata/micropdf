@@ -31,7 +31,7 @@ cargo build --release
 ### Import
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "./bun";
+import { Context, Document, Pixmap, MatrixHelper } from './bun';
 ```
 
 ## Quick Start
@@ -39,10 +39,10 @@ import { Context, Document, Pixmap, MatrixHelper } from "./bun";
 ### Extract Text
 
 ```typescript
-import { Context, Document } from "./bun";
+import { Context, Document } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 
 console.log(`Pages: ${doc.pageCount()}`);
 
@@ -54,30 +54,30 @@ console.log(text);
 ### Render to PNG
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "./bun";
+import { Context, Document, Pixmap, MatrixHelper } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 using page = doc.loadPage(0);
 
 const matrix = MatrixHelper.dpi(300); // 300 DPI
 using pixmap = Pixmap.fromPage(ctx, page, matrix);
 
-await pixmap.savePng("output.png");
+await pixmap.savePng('output.png');
 ```
 
 ### Document Metadata
 
 ```typescript
-import { Context, Document } from "./bun";
+import { Context, Document } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 
-console.log("Title:", doc.getMetadata("Title"));
-console.log("Author:", doc.getMetadata("Author"));
-console.log("Pages:", doc.pageCount());
-console.log("Encrypted:", doc.needsPassword());
+console.log('Title:', doc.getMetadata('Title'));
+console.log('Author:', doc.getMetadata('Author'));
+console.log('Pages:', doc.pageCount());
+console.log('Encrypted:', doc.needsPassword());
 ```
 
 ## API Reference
@@ -93,6 +93,7 @@ const ctx = new Context(512 * 1024 * 1024); // 512 MB
 ```
 
 **Methods:**
+
 - `getHandle(): bigint` - Get native handle
 - `clone(): Context` - Clone context
 - `drop(): void` - Free resources
@@ -104,14 +105,15 @@ Represents a PDF document.
 
 ```typescript
 // Open from file
-const doc = Document.open(ctx, "file.pdf");
+const doc = Document.open(ctx, 'file.pdf');
 
 // Open from bytes
-const data = await Bun.file("file.pdf").arrayBuffer();
+const data = await Bun.file('file.pdf').arrayBuffer();
 const doc = Document.fromBytes(ctx, new Uint8Array(data));
 ```
 
 **Methods:**
+
 - `pageCount(): number` - Get number of pages
 - `needsPassword(): boolean` - Check if encrypted
 - `authenticate(password: string): boolean` - Authenticate
@@ -128,11 +130,13 @@ const page = doc.loadPage(0);
 ```
 
 **Methods:**
+
 - `bounds(): Rect` - Get page bounds
 - `extractText(): string` - Extract text
 - `drop(): void` - Free resources
 
 **Types:**
+
 ```typescript
 interface Rect {
   x0: number;
@@ -151,6 +155,7 @@ const pixmap = Pixmap.fromPage(ctx, page, matrix);
 ```
 
 **Methods:**
+
 - `width(): number` - Get width in pixels
 - `height(): number` - Get height in pixels
 - `stride(): number` - Get stride (bytes per row)
@@ -175,11 +180,15 @@ const m = MatrixHelper.dpi(300);
 ```
 
 **Types:**
+
 ```typescript
 interface Matrix {
-  a: number; b: number;
-  c: number; d: number;
-  e: number; f: number;
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
 }
 ```
 
@@ -188,10 +197,10 @@ interface Matrix {
 ### Extract Text from All Pages
 
 ```typescript
-import { Context, Document } from "./bun";
+import { Context, Document } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 
 for (let i = 0; i < doc.pageCount(); i++) {
   using page = doc.loadPage(i);
@@ -204,10 +213,10 @@ for (let i = 0; i < doc.pageCount(); i++) {
 ### Render All Pages
 
 ```typescript
-import { Context, Document, Pixmap, MatrixHelper } from "./bun";
+import { Context, Document, Pixmap, MatrixHelper } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 
 const matrix = MatrixHelper.dpi(150);
 
@@ -224,17 +233,17 @@ for (let i = 0; i < doc.pageCount(); i++) {
 ### Password-Protected PDF
 
 ```typescript
-import { Context, Document } from "./bun";
+import { Context, Document } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "secure.pdf");
+using doc = Document.open(ctx, 'secure.pdf');
 
 if (doc.needsPassword()) {
-  const success = doc.authenticate("password123");
+  const success = doc.authenticate('password123');
   if (success) {
-    console.log("Authenticated successfully!");
+    console.log('Authenticated successfully!');
   } else {
-    throw new Error("Invalid password");
+    throw new Error('Invalid password');
   }
 }
 ```
@@ -242,20 +251,20 @@ if (doc.needsPassword()) {
 ### Custom Rendering
 
 ```typescript
-import { Context, Document, Pixmap } from "./bun";
+import { Context, Document, Pixmap } from './bun';
 
 using ctx = new Context();
-using doc = Document.open(ctx, "document.pdf");
+using doc = Document.open(ctx, 'document.pdf');
 using page = doc.loadPage(0);
 
 // Custom transformation matrix
 const matrix = {
-  a: 2.0,  // Scale X
+  a: 2.0, // Scale X
   b: 0.0,
   c: 0.0,
-  d: 2.0,  // Scale Y
-  e: 0.0,  // Translate X
-  f: 0.0,  // Translate Y
+  d: 2.0, // Scale Y
+  e: 0.0, // Translate X
+  f: 0.0 // Translate Y
 };
 
 using pixmap = Pixmap.fromPage(ctx, page, matrix);
@@ -287,14 +296,14 @@ NanoPDF for Bun supports automatic resource cleanup using the `using` keyword (T
 ```typescript
 // Automatic cleanup
 using ctx = new Context();
-using doc = Document.open(ctx, "file.pdf");
+using doc = Document.open(ctx, 'file.pdf');
 using page = doc.loadPage(0);
 // Resources automatically freed at end of scope
 
 // Or manual cleanup
 const ctx = new Context();
 try {
-  const doc = Document.open(ctx, "file.pdf");
+  const doc = Document.open(ctx, 'file.pdf');
   try {
     // ... use doc ...
   } finally {
@@ -320,21 +329,21 @@ NanoPDF for Bun provides exceptional performance through:
 Bun is typically **2-3x faster** than Node.js for startup and overall execution:
 
 | Runtime | Startup | Text Extract | Render |
-|---------|---------|--------------|--------|
-| Bun | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
-| Node.js | ⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
-| Deno | ⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
+| ------- | ------- | ------------ | ------ |
+| Bun     | ⚡⚡⚡  | ⚡⚡⚡       | ⚡⚡⚡ |
+| Node.js | ⚡⚡    | ⚡⚡⚡       | ⚡⚡⚡ |
+| Deno    | ⚡⚡    | ⚡⚡⚡       | ⚡⚡⚡ |
 
 ## Comparison
 
-| Feature | Bun | Node.js | Deno |
-|---------|-----|---------|------|
-| FFI Type | Bun.dlopen | N-API | Deno.dlopen |
-| Build Step | No | Yes (node-gyp) | No |
-| Dependencies | 0 | 2 | 0 |
-| TypeScript | Native | Compiled | Native |
-| Performance | ⚡⚡⚡ | ⚡⚡⚡ | ⚡⚡⚡ |
-| Startup | **Fastest** | Slower | Medium |
+| Feature      | Bun         | Node.js        | Deno        |
+| ------------ | ----------- | -------------- | ----------- |
+| FFI Type     | Bun.dlopen  | N-API          | Deno.dlopen |
+| Build Step   | No          | Yes (node-gyp) | No          |
+| Dependencies | 0           | 2              | 0           |
+| TypeScript   | Native      | Compiled       | Native      |
+| Performance  | ⚡⚡⚡      | ⚡⚡⚡         | ⚡⚡⚡      |
+| Startup      | **Fastest** | Slower         | Medium      |
 
 ## Why Bun?
 
@@ -351,6 +360,7 @@ Bun is typically **2-3x faster** than Node.js for startup and overall execution:
 If you get "Could not find libnanopdf library":
 
 1. Build the Rust library:
+
    ```bash
    cd nanopdf-rs && cargo build --release
    ```
@@ -365,6 +375,7 @@ If you get "Could not find libnanopdf library":
 If you get FFI-related errors:
 
 1. Ensure you have the latest Bun version:
+
    ```bash
    bun upgrade
    ```
@@ -385,4 +396,3 @@ If you get FFI-related errors:
 ## License
 
 Apache 2.0
-

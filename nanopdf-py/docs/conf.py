@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath('../src'))
 project = 'NanoPDF Python'
 copyright = '2024, Lexmata'
 author = 'Lexmata'
-version = '0.1.0'
+version = '0.1.3'
 release = '0.1.0'
 
 # General configuration

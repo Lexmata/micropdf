@@ -35,7 +35,9 @@ function renderSinglePage() {
 
     console.log(`  Size: ${pixmap.width} × ${pixmap.height} pixels`);
     console.log(`  Components: ${pixmap.components}`);
-    console.log(`  Memory: ${(pixmap.width * pixmap.height * pixmap.components / 1024 / 1024).toFixed(2)} MB`);
+    console.log(
+      `  Memory: ${((pixmap.width * pixmap.height * pixmap.components) / 1024 / 1024).toFixed(2)} MB`
+    );
 
     const pngData = page.toPNG(res.dpi);
     const outputPath = resolve(__dirname, `output-${res.name.toLowerCase()}.png`);
@@ -150,4 +152,3 @@ if (require.main === module) {
 }
 
 export { renderSinglePage, createThumbnails, renderWithColorspace, renderWithAlpha };
-

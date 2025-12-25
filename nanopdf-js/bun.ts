@@ -20,12 +20,11 @@
  * @module
  */
 
-export { Context } from "./bun/context";
-export { Document, Page } from "./bun/document";
-export { Pixmap, MatrixHelper } from "./bun/pixmap";
-export type { Rect } from "./bun/document";
-export type { Matrix } from "./bun/pixmap";
+export { Context } from './bun/context';
+export { Document, Page } from './bun/document';
+export { Pixmap, MatrixHelper } from './bun/pixmap';
+export type { Rect } from './bun/document';
+export type { Matrix } from './bun/pixmap';
 
 // Re-export FFI for advanced users
-export * as FFI from "./bun/ffi";
-
+export * as FFI from './bun/ffi';

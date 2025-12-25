@@ -20,12 +20,11 @@
  * @module
  */
 
-export { Context } from "./deno/context.ts";
-export { Document, Page } from "./deno/document.ts";
-export { Pixmap, MatrixHelper } from "./deno/pixmap.ts";
-export type { Rect } from "./deno/document.ts";
-export type { Matrix } from "./deno/pixmap.ts";
+export { Context } from './deno/context.ts';
+export { Document, Page } from './deno/document.ts';
+export { Pixmap, MatrixHelper } from './deno/pixmap.ts';
+export type { Rect } from './deno/document.ts';
+export type { Matrix } from './deno/pixmap.ts';
 
 // Re-export FFI for advanced users
-export * as FFI from "./deno/ffi.ts";
-
+export * as FFI from './deno/ffi.ts';

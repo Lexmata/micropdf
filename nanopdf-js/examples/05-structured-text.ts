@@ -79,7 +79,9 @@ function hierarchicalTextNavigation() {
     const block = blocks[i];
     console.log(`Block ${i + 1}:`);
     console.log(`  Type: ${STextBlockType[block.blockType]}`);
-    console.log(`  Bounds: (${block.bbox.x0.toFixed(1)}, ${block.bbox.y0.toFixed(1)}) to (${block.bbox.x1.toFixed(1)}, ${block.bbox.y1.toFixed(1)})`);
+    console.log(
+      `  Bounds: (${block.bbox.x0.toFixed(1)}, ${block.bbox.y0.toFixed(1)}) to (${block.bbox.x1.toFixed(1)}, ${block.bbox.y1.toFixed(1)})`
+    );
     console.log(`  Lines: ${block.lines.length}`);
 
     // Show first few lines
@@ -124,9 +126,7 @@ function characterLevelAnalysis() {
       console.log(`Character ${i + 1}: '${char.c}'`);
       console.log(`  Font: ${char.fontName}`);
       console.log(`  Size: ${char.size.toFixed(1)}pt`);
-      console.log(
-        `  Position: (${char.quad.ul.x.toFixed(1)}, ${char.quad.ul.y.toFixed(1)})`
-      );
+      console.log(`  Position: (${char.quad.ul.x.toFixed(1)}, ${char.quad.ul.y.toFixed(1)})`);
       console.log();
     }
   }
@@ -268,4 +268,3 @@ if (require.main === module) {
 }
 
 export { main };
-
