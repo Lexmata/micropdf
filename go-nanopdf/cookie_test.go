@@ -77,4 +77,3 @@ func TestCookieReset(t *testing.T) {
 		t.Error("Cookie should not be aborted after Reset()")
 	}
 }
-

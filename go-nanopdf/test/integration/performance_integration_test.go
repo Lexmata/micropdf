@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -555,4 +556,3 @@ func TestResourceCleanup(t *testing.T) {
 			baselineGoroutines, finalGoroutines)
 	}
 }
-

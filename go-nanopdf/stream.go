@@ -102,4 +102,3 @@ func (s *Stream) Seek(offset int64, whence int) {
 func (s *Stream) Tell() int64 {
 	return int64(C.fz_tell(C.fz_context(s.ctx.Handle()), s.handle))
 }
-

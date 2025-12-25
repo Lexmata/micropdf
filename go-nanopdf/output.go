@@ -117,4 +117,3 @@ func (o *Output) Close() error {
 func (o *Output) Tell() int64 {
 	return int64(C.fz_tell_output(C.fz_context(o.ctx.Handle()), o.handle))
 }
-

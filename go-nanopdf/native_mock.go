@@ -351,9 +351,23 @@ func pixmapSamples(_ uintptr, pix uintptr) []byte {
 	return nil
 }
 
+func pixmapToBytes(_ uintptr, pix uintptr, format string) []byte {
+	mockStorageMu.RLock()
+	defer mockStorageMu.RUnlock()
+
+	if p, ok := mockPixmaps[pix]; ok {
+		// Mock implementation - return raw data for now
+		// In real implementation, this would encode to PNG, PNM, etc.
+		result := make([]byte, len(p.data))
+		copy(result, p.data)
+		return result
+	}
+	return nil
+}
+
 // Colorspace mock storage
 var (
-	mockColorspaces  = make(map[uintptr]*mockColorspace)
+	mockColorspaces          = make(map[uintptr]*mockColorspace)
 	nextColorspaceID uintptr = 5000
 )
 
@@ -437,7 +451,7 @@ func colorspaceName(_ uintptr, cs uintptr) string {
 
 // Cookie mock storage
 var (
-	mockCookies  = make(map[uintptr]*mockCookie)
+	mockCookies          = make(map[uintptr]*mockCookie)
 	nextCookieID uintptr = 6000
 )
 

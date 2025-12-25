@@ -1,3 +1,6 @@
+//go:build cgo && !mock
+// +build cgo,!mock
+
 package nanopdf
 
 import (
@@ -108,4 +111,3 @@ func TestStreamEmptyData(t *testing.T) {
 		t.Error("Expected error for empty data")
 	}
 }
-

@@ -110,4 +110,3 @@ func main() {
 	fmt.Printf("\nTotal: %d occurrences found\n", totalHits)
 	fmt.Println("\n✅ Done!")
 }
-

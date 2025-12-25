@@ -45,4 +45,3 @@ func (c *Cookie) IsAborted() bool {
 func (c *Cookie) Reset() {
 	resetCookie(c.ctx.Handle(), c.handle)
 }
-

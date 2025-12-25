@@ -519,4 +519,3 @@ func BenchmarkQuadBounds(b *testing.B) {
 		_ = q.Bounds()
 	}
 }
-

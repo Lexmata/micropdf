@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -211,4 +212,3 @@ startxref
 
 	return pdfPath
 }
-

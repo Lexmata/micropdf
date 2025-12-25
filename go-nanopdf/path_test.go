@@ -1,3 +1,6 @@
+//go:build cgo && !mock
+// +build cgo,!mock
+
 package nanopdf
 
 import (
@@ -61,7 +64,7 @@ func TestPathRectTo(t *testing.T) {
 	path.RectTo(10, 10, 80, 60)
 
 	// Get bounds with identity transform
-	bounds := path.Bounds(IdentityMatrix())
+	bounds := path.Bounds(MatrixIdentity())
 
 	// Check that bounds are reasonable (not zero)
 	if bounds.X0 >= bounds.X1 || bounds.Y0 >= bounds.Y1 {
@@ -89,9 +92,8 @@ func TestPathCurveTo(t *testing.T) {
 		ClosePath()
 
 	// Verify path is not nil (basic sanity check)
-	bounds := path.Bounds(IdentityMatrix())
+	bounds := path.Bounds(MatrixIdentity())
 	if bounds.X0 == 0 && bounds.X1 == 0 && bounds.Y0 == 0 && bounds.Y1 == 0 {
 		t.Error("Path bounds should not all be zero")
 	}
 }
-

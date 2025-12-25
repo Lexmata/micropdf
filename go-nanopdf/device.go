@@ -106,4 +106,3 @@ func (dl *DisplayList) Drop() {
 	// Note: We would need fz_drop_display_list in the FFI header
 	// For now, display lists are handled differently
 }
-

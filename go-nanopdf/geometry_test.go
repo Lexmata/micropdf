@@ -242,7 +242,7 @@ func TestRect_Additional(t *testing.T) {
 		}{
 			{50, 50, true},
 			{0, 0, true},
-			{99, 99, true},    // Inside bounds
+			{99, 99, true}, // Inside bounds
 			{-10, 50, false},
 			{50, 150, false},
 		}
@@ -435,4 +435,3 @@ func TestMatrix_Additional(t *testing.T) {
 		}
 	})
 }
-

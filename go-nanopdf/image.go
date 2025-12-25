@@ -121,4 +121,3 @@ func (img *Image) ToPixmap() (*Pixmap, error) {
 		ctx: img.ctx,
 	}, nil
 }
-

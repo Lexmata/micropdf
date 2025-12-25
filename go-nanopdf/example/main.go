@@ -2,7 +2,8 @@
 //
 // This example demonstrates the core functionality of the Go bindings.
 // To run with mock implementation:
-//   go run -tags=mock main.go
+//
+//	go run -tags=mock main.go
 package main
 
 import (
@@ -250,4 +251,3 @@ startxref
 %%EOF`
 	return []byte(pdf)
 }
-

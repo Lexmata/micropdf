@@ -68,3 +68,16 @@ func (p *Pixmap) IsValid() bool {
 	defer p.mu.Unlock()
 	return !p.dropped && p.ptr != 0
 }
+
+// ToBytes encodes the pixmap to the specified format.
+// Supported formats: "png", "pnm", "pam", "pbm"
+func (p *Pixmap) ToBytes(format string) ([]byte, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.dropped || p.ptr == 0 {
+		return nil, ErrInvalidHandle
+	}
+
+	return pixmapToBytes(p.ctx.Handle(), p.ptr, format), nil
+}

@@ -48,4 +48,3 @@ func (c *Cookie) IsAborted() bool {
 func (c *Cookie) Reset() {
 	C.fz_reset_cookie(C.fz_context(c.ctx.Handle()), c.handle)
 }
-

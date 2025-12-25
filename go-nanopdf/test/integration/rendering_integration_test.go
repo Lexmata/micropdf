@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -210,4 +211,3 @@ func TestPageRenderingWithAlpha(t *testing.T) {
 
 	t.Logf("Rendered with alpha: %dx%d (%d bytes)", width, height, len(samples))
 }
-

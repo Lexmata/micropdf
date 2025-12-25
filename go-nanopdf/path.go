@@ -107,4 +107,3 @@ func (p *Path) Bounds(transform Matrix) Rect {
 		Y1: float32(cRect.y1),
 	}
 }
-

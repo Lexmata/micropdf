@@ -137,4 +137,3 @@
 //
 // For detailed API documentation, see: https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf
 package nanopdf
-

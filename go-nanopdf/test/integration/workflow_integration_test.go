@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -519,4 +520,3 @@ func TestTextSearchWorkflow(t *testing.T) {
 		searchCount++
 	}
 }
-

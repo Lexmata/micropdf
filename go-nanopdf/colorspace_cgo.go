@@ -81,4 +81,3 @@ func (cs *Colorspace) IsRGB() bool {
 func (cs *Colorspace) IsCMYK() bool {
 	return cs.Components() == 4
 }
-

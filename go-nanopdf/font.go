@@ -145,4 +145,3 @@ func (f *Font) AdvanceGlyph(glyphID int) float32 {
 		0,
 	))
 }
-

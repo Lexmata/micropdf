@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -529,4 +530,3 @@ func TestConcurrentPixmapAccess(t *testing.T) {
 		t.Errorf("Too many pixmap operation failures: %d/%d", successCount, numGoroutines)
 	}
 }
-

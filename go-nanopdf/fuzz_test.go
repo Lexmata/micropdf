@@ -22,36 +22,33 @@ func FuzzDocumentOpen(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		// Test opening document from bytes
-		buf := NewBufferFromBytes(data)
-		if buf == nil {
+		if len(data) == 0 {
 			return
 		}
-		defer buf.Free()
 
 		// Try to open document (should not crash)
 		ctx := NewContext()
 		if ctx == nil {
 			return
 		}
-		defer ctx.Free()
+		defer ctx.Drop()
 
-		doc, err := OpenFromBuffer(ctx, buf)
+		doc, err := OpenDocumentFromBytes(ctx, data, "")
 		if err != nil {
 			return // Error is expected for invalid data
 		}
-		defer doc.Free()
+		defer doc.Drop()
 
 		// If document opened, try basic operations
-		_ = doc.PageCount()
-		_ = doc.NeedsPassword()
+		_, _ = doc.PageCount()
+		_, _ = doc.NeedsPassword()
 
 		// Try to load first page
 		page, err := doc.LoadPage(0)
 		if err != nil {
 			return
 		}
-		defer page.Free()
+		defer page.Drop()
 
 		// Get page bounds
 		_ = page.Bounds()
@@ -73,7 +70,7 @@ func FuzzBuffer(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, data []byte) {
 		// Test buffer creation and operations
-		buf := NewBufferWithCapacity(len(data))
+		buf := NewBuffer(len(data))
 		if buf == nil {
 			return
 		}
@@ -91,7 +88,7 @@ func FuzzBuffer(f *testing.F) {
 		}
 
 		// Get data back
-		_ = buf.Data()
+		_ = buf.Bytes()
 		_ = buf.Len()
 
 		// Clear and append again
@@ -132,36 +129,33 @@ startxref
 	f.Add([]byte(""))
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		buf := NewBufferFromBytes(data)
-		if buf == nil {
+		if len(data) == 0 {
 			return
 		}
-		defer buf.Free()
 
 		ctx := NewContext()
 		if ctx == nil {
 			return
 		}
-		defer ctx.Free()
+		defer ctx.Drop()
 
-		doc, err := OpenFromBuffer(ctx, buf)
+		doc, err := OpenDocumentFromBytes(ctx, data, "")
 		if err != nil {
 			return
 		}
-		defer doc.Free()
+		defer doc.Drop()
 
 		page, err := doc.LoadPage(0)
 		if err != nil {
 			return
 		}
-		defer page.Free()
+		defer page.Drop()
 
 		// Try text extraction (should not crash)
 		_, _ = page.ExtractText()
-		_, _ = page.ExtractTextBlocks()
 
 		// Try text search
-		_, _ = page.SearchText("test", 10)
+		_, _ = page.SearchText("test")
 	})
 }
 
@@ -190,29 +184,27 @@ startxref
 	f.Add([]byte("%PDF-1.4\ntrailer<</Info<</Title(Test)>>>>"))
 
 	f.Fuzz(func(t *testing.T, data []byte) {
-		buf := NewBufferFromBytes(data)
-		if buf == nil {
+		if len(data) == 0 {
 			return
 		}
-		defer buf.Free()
 
 		ctx := NewContext()
 		if ctx == nil {
 			return
 		}
-		defer ctx.Free()
+		defer ctx.Drop()
 
-		doc, err := OpenFromBuffer(ctx, buf)
+		doc, err := OpenDocumentFromBytes(ctx, data, "")
 		if err != nil {
 			return
 		}
-		defer doc.Free()
+		defer doc.Drop()
 
 		// Try metadata operations (should not crash)
-		_, _ = doc.LookupMetadata("Title")
-		_, _ = doc.LookupMetadata("Author")
-		_, _ = doc.LookupMetadata("Subject")
-		_, _ = doc.LookupMetadata("Creator")
+		_, _ = doc.GetMetadata("Title")
+		_, _ = doc.GetMetadata("Author")
+		_, _ = doc.GetMetadata("Subject")
+		_, _ = doc.GetMetadata("Creator")
 	})
 }
 
@@ -228,30 +220,26 @@ func FuzzGeometry(f *testing.F) {
 
 		_ = r.IsEmpty()
 		_ = r.IsInfinite()
-		_ = r.IsValid()
 		_ = r.Width()
 		_ = r.Height()
-		_ = r.Area()
 
 		// Test with another rect
 		r2 := Rect{X0: 0, Y0: 0, X1: 50, Y1: 50}
 		_ = r.Union(r2)
 		_ = r.Intersect(r2)
-		_ = r.Contains(r2)
-		_ = r.Intersects(r2)
 
 		// Test Point operations
 		p := Point{X: x0, Y: y0}
+		_ = r.Contains(p)
 		_ = r.ContainsXY(p.X, p.Y)
 
 		// Test Matrix operations
-		m := MatrixIdentity
-		m = m.Translate(x0, y0)
-		m = m.Scale(x1, y1)
-		m = m.Rotate(45.0)
+		m := MatrixIdentity()
+		m = m.Concat(MatrixTranslate(x0, y0))
+		m = m.Concat(MatrixScale(x1, y1))
+		m = m.Concat(MatrixRotate(45.0))
 
 		_ = m.TransformPoint(p)
 		_ = m.TransformRect(r)
 	})
 }
-

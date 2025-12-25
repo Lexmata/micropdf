@@ -77,4 +77,3 @@ func TestColorspaceProperties(t *testing.T) {
 		t.Error("Gray colorspace should return false for IsCMYK()")
 	}
 }
-

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package integration
@@ -133,4 +134,3 @@ func TestTextSearchCaseSensitive(t *testing.T) {
 		t.Logf("Search %q: %d result(s)", needle, len(results))
 	}
 }
-

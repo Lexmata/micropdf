@@ -49,4 +49,3 @@ func Version() string {
 func IsMock() bool {
 	return isMock()
 }
-

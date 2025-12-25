@@ -1,3 +1,6 @@
+//go:build cgo && !mock
+// +build cgo,!mock
+
 package nanopdf
 
 import (
@@ -17,7 +20,7 @@ func TestOutputWithBuffer(t *testing.T) {
 	if buf == nil {
 		t.Fatal("Failed to create buffer")
 	}
-	defer buf.Drop()
+	defer buf.Free()
 
 	output, err := NewOutputWithBuffer(ctx, buf)
 	if err != nil {
@@ -95,7 +98,7 @@ func TestOutputTell(t *testing.T) {
 	defer ctx.Drop()
 
 	buf := NewBuffer(256)
-	defer buf.Drop()
+	defer buf.Free()
 
 	output, err := NewOutputWithBuffer(ctx, buf)
 	if err != nil {
@@ -116,4 +119,3 @@ func TestOutputTell(t *testing.T) {
 		t.Errorf("Position after 10 bytes = %d, expected 10", pos)
 	}
 }
-

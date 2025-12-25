@@ -18,7 +18,6 @@
 //	defer pdf.Close()
 //	info := pdf.GetInfo()
 //	text := pdf.ExtractAllText()
-//
 package easy
 
 import (
@@ -682,4 +681,3 @@ func parsePDFDate(dateStr string) (time.Time, error) {
 	dateString := fmt.Sprintf("%s-%s-%sT%s:%s:%sZ", year, month, day, hour, minute, second)
 	return time.Parse(time.RFC3339, dateString)
 }
-
