@@ -180,6 +180,7 @@ pub extern "C" fn fz_get_pixmap_from_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
+            // Use colorspace handle directly with Pixmap
             let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
@@ -205,6 +206,7 @@ pub extern "C" fn fz_decode_image(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
+            // Use colorspace handle directly with Pixmap
             let pixmap = super::pixmap::Pixmap::new(cs_handle, img_w, img_h, true);
             return PIXMAPS.insert(pixmap);
         }
@@ -229,6 +231,7 @@ pub extern "C" fn fz_decode_image_scaled(
                 Some(cs) => colorspace_to_handle(cs),
                 None => 0,
             };
+            // Use colorspace handle directly with Pixmap
             let pixmap = super::pixmap::Pixmap::new(cs_handle, w, h, true);
             return PIXMAPS.insert(pixmap);
         }
@@ -325,15 +328,59 @@ pub extern "C" fn fz_image_orientation(_ctx: Handle, _image: Handle) -> i32 {
     0 // 0 = normal orientation
 }
 
+/// Get image width
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_image_width(_ctx: Handle, image: Handle) -> i32 {
+    if let Some(img) = IMAGES.get(image) {
+        if let Ok(guard) = img.lock() {
+            return guard.width();
+        }
+    }
+    0
+}
+
+/// Get image height
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_image_height(_ctx: Handle, image: Handle) -> i32 {
+    if let Some(img) = IMAGES.get(image) {
+        if let Ok(guard) = img.lock() {
+            return guard.height();
+        }
+    }
+    0
+}
+
+/// Load image from raw buffer data
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn fz_new_image_from_buffer_data(
+    _ctx: Handle,
+    data: *const u8,
+    len: usize,
+) -> Handle {
+    if data.is_null() || len == 0 {
+        return 0;
+    }
+
+    // SAFETY: Caller guarantees data points to readable memory of len bytes
+    let slice = unsafe { std::slice::from_raw_parts(data, len) };
+
+    // Try to decode image
+    match Image::from_data(slice) {
+        Ok(image) => IMAGES.insert(image),
+        Err(_) => 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_new_image_from_pixmap() {
-        // Create a pixmap first using FFI colorspace
-        let cs_handle = super::super::colorspace::fz_device_rgb(0);
-        let pixmap = super::super::pixmap::Pixmap::new(cs_handle, 10, 10, true);
+        // Create a pixmap first using device RGB colorspace handle
+        use crate::ffi::colorspace::FZ_COLORSPACE_RGB;
+        use crate::ffi::pixmap::Pixmap;
+        let pixmap = Pixmap::new(FZ_COLORSPACE_RGB, 10, 10, true);
         let pixmap_handle = PIXMAPS.insert(pixmap);
 
         let image_handle = fz_new_image_from_pixmap(0, pixmap_handle, 0);

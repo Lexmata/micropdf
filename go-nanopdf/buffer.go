@@ -109,4 +109,3 @@ func (b *Buffer) Clone() *Buffer {
 	}
 	return NewBufferFromBytes(b.Bytes())
 }
-

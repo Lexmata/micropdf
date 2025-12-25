@@ -135,6 +135,45 @@ pub extern "C" fn fz_buffer_storage(_ctx: Handle, buf: Handle, datap: *mut *mut 
     len
 }
 
+/// Get pointer to buffer data (Alternative API compatible with MuPDF)
+///
+/// Returns a pointer to the buffer's internal data and optionally sets
+/// the length pointer if provided. This is compatible with MuPDF's fz_buffer_data.
+///
+/// # Safety
+/// The returned pointer is only valid until the next operation that might
+/// modify the buffer. The caller must copy the data if it needs to be retained.
+///
+/// # Warning
+/// This function returns a direct pointer to internal buffer data. The pointer
+/// may be invalidated if the buffer is modified or reallocated.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_data(_ctx: Handle, buf: Handle, len: *mut usize) -> *const u8 {
+    let Some(buffer) = BUFFERS.get(buf) else {
+        if !len.is_null() {
+            unsafe {
+                *len = 0;
+            }
+        }
+        return std::ptr::null();
+    };
+
+    let guard = buffer.lock().unwrap();
+    let data_len = guard.len();
+
+    if !len.is_null() {
+        unsafe {
+            *len = data_len;
+        }
+    }
+
+    // Return pointer to internal data
+    // SAFETY: The pointer is valid as long as the buffer is not modified
+    // and the guard is held. The caller must not hold this pointer
+    // after any operation that might modify the buffer.
+    guard.data.as_ptr()
+}
+
 /// Get buffer as null-terminated C string
 ///
 /// Note: This function cannot safely return a pointer to internal buffer data

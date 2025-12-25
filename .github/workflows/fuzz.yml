@@ -1,0 +1,225 @@
+name: Fuzzing
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'nanopdf-rs/**'
+      - 'go-nanopdf/**'
+      - '.github/workflows/fuzz.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'nanopdf-rs/**'
+      - 'go-nanopdf/**'
+  schedule:
+    # Run nightly fuzzing at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Fuzzing duration in seconds'
+        required: false
+        default: '300'
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fuzz-rust:
+    name: Fuzz Rust (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - fuzz_pdf_parse
+          - fuzz_buffer
+          - fuzz_stream
+          - fuzz_pdf_objects
+          - fuzz_filters
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz || true
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            nanopdf-rs/fuzz/target/
+          key: ${{ runner.os }}-fuzz-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup seed corpus
+        run: |
+          cd nanopdf-rs/fuzz
+          # Ensure corpus directories exist with seeds
+          mkdir -p corpus/${{ matrix.target }}
+          
+          # Copy test PDFs as seeds for PDF fuzzers
+          if [[ "${{ matrix.target }}" == "fuzz_pdf_parse" ]] || [[ "${{ matrix.target }}" == "fuzz_pdf_objects" ]]; then
+            cp ../../test-pdfs/*/*.pdf corpus/${{ matrix.target }}/ 2>/dev/null || true
+          fi
+          
+          # Create basic seeds if corpus is empty
+          if [ -z "$(ls -A corpus/${{ matrix.target }})" ]; then
+            echo "test" > corpus/${{ matrix.target }}/seed1.txt
+          fi
+
+      - name: Run fuzzer
+        timeout-minutes: 10
+        run: |
+          cd nanopdf-rs
+          DURATION="${{ github.event.inputs.duration || '300' }}"
+          
+          # Run fuzzer with time limit
+          cargo +nightly fuzz run ${{ matrix.target }} -- \
+            -max_total_time=$DURATION \
+            -timeout=5 \
+            -rss_limit_mb=2048 \
+            -max_len=1048576 \
+            -print_final_stats=1 \
+            || true
+
+      - name: Check for crashes
+        id: check_crashes
+        run: |
+          cd nanopdf-rs/fuzz
+          if [ -d "artifacts/${{ matrix.target }}" ] && [ -n "$(ls -A artifacts/${{ matrix.target }})" ]; then
+            echo "crash_found=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Crashes found in ${{ matrix.target }}!" >> $GITHUB_STEP_SUMMARY
+            ls -lh artifacts/${{ matrix.target }} >> $GITHUB_STEP_SUMMARY
+          else
+            echo "crash_found=false" >> $GITHUB_OUTPUT
+            echo "✅ No crashes in ${{ matrix.target }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload crash artifacts
+        if: steps.check_crashes.outputs.crash_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-${{ matrix.target }}
+          path: nanopdf-rs/fuzz/artifacts/${{ matrix.target }}/
+          retention-days: 30
+
+      - name: Fail if crashes found
+        if: steps.check_crashes.outputs.crash_found == 'true'
+        run: |
+          echo "::error::Fuzzing crashes found in ${{ matrix.target }}"
+          exit 1
+
+  fuzz-go:
+    name: Fuzz Go
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust library
+        run: |
+          cd nanopdf-rs
+          cargo build --release
+
+      - name: Install Rust library
+        run: |
+          cd nanopdf-rs
+          sudo make install PREFIX=/usr
+
+      - name: Run Go fuzz tests
+        timeout-minutes: 10
+        run: |
+          cd go-nanopdf
+          DURATION="${{ github.event.inputs.duration || '300' }}"
+          
+          # Run each fuzz test with time limit
+          go test -fuzz=FuzzDocumentOpen -fuzztime=${DURATION}s -parallel=1 || true
+          go test -fuzz=FuzzBuffer -fuzztime=${DURATION}s -parallel=1 || true
+          go test -fuzz=FuzzPageText -fuzztime=${DURATION}s -parallel=1 || true
+          go test -fuzz=FuzzMetadata -fuzztime=${DURATION}s -parallel=1 || true
+          go test -fuzz=FuzzGeometry -fuzztime=${DURATION}s -parallel=1 || true
+
+      - name: Check for Go fuzz crashes
+        id: check_go_crashes
+        run: |
+          cd go-nanopdf
+          if [ -d "testdata/fuzz" ] && find testdata/fuzz -name "*.crash" | grep -q .; then
+            echo "crash_found=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Go fuzzing crashes found!" >> $GITHUB_STEP_SUMMARY
+            find testdata/fuzz -name "*.crash" -exec ls -lh {} \; >> $GITHUB_STEP_SUMMARY
+          else
+            echo "crash_found=false" >> $GITHUB_OUTPUT
+            echo "✅ No Go fuzzing crashes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Go crash artifacts
+        if: steps.check_go_crashes.outputs.crash_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-go
+          path: go-nanopdf/testdata/fuzz/
+          retention-days: 30
+
+      - name: Fail if crashes found
+        if: steps.check_go_crashes.outputs.crash_found == 'true'
+        run: |
+          echo "::error::Go fuzzing crashes found"
+          exit 1
+
+  fuzz-summary:
+    name: Fuzzing Summary
+    if: always()
+    needs: [fuzz-rust, fuzz-go]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 🐛 Fuzzing Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Rust Fuzzing" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.fuzz-rust.result }}" == "success" ]]; then
+            echo "✅ All Rust fuzz targets passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Rust fuzzing found crashes" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Go Fuzzing" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.fuzz-go.result }}" == "success" ]]; then
+            echo "✅ Go fuzzing passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Go fuzzing found crashes" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check overall status
+        run: |
+          if [[ "${{ needs.fuzz-rust.result }}" != "success" ]] || [[ "${{ needs.fuzz-go.result }}" != "success" ]]; then
+            echo "::warning::Fuzzing found crashes. Review artifacts and fix bugs."
+          fi
+

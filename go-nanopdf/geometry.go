@@ -212,6 +212,11 @@ type Matrix struct {
 // Identity is the identity matrix.
 var Identity = Matrix{A: 1, B: 0, C: 0, D: 1, E: 0, F: 0}
 
+// MatrixIdentity returns the identity matrix.
+func MatrixIdentity() Matrix {
+	return Identity
+}
+
 // NewMatrix creates a new matrix.
 func NewMatrix(a, b, c, d, e, f float32) Matrix {
 	return Matrix{A: a, B: b, C: c, D: d, E: e, F: f}
@@ -357,4 +362,3 @@ func max32(a, b float32) float32 {
 	}
 	return b
 }
-

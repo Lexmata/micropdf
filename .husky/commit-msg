@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Husky v9 commit-msg hook
+# Validates commit message format using commitlint
+
+npx --no -- commitlint --edit "$1"
+

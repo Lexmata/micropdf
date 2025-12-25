@@ -96,6 +96,7 @@ impl Default for StrokeState {
 }
 
 /// Vector path
+#[derive(Debug)]
 pub struct Path {
     elements: Vec<PathElement>,
 }

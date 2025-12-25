@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+*No unreleased changes yet.*
+
+## [0.1.3] - 2025-12-25
+
 ### Added - MuPDF 100% API Compatibility (15/15 modules)
 
 #### Core Layer (fitz)
@@ -161,22 +165,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolved `Image` cloning and `Pixmap` masking issues
 - Updated error types and colorspace methods
 
-## Project Statistics
+### Project Statistics (v0.1.3)
 
 - **Total Lines of Code**: ~25,000+ (Rust)
-- **Total Tests**: 789 (all passing)
+- **Total Tests**: 1,074 (all passing)
 - **Test Coverage**: 82.09% (with all features)
 - **Modules Implemented**: 15 major modules
 - **MuPDF API Compatibility**: 100%
 - **Supported Platforms**: Linux, macOS, Windows
 - **Language Editions**: Rust 2024
 
-## Contributors
+### Contributors
 
 - Lexmata Team
 - AI-assisted development with Claude (Anthropic)
 
+## [0.1.2] - 2025-12-23
+
+- Initial public release with core PDF functionality
+- Basic FFI layer for C interoperability
+
+## [0.1.1] - 2025-12-22
+
+- Bug fixes and stability improvements
+
+## [0.1.0] - 2025-12-21
+
+- Initial development release
+
 ---
 
 For more details on each change, see the git commit history.
+
+[Unreleased]: https://github.com/lexmata/nanopdf/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/lexmata/nanopdf/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/lexmata/nanopdf/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/lexmata/nanopdf/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/lexmata/nanopdf/releases/tag/v0.1.0
 

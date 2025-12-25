@@ -6,8 +6,23 @@
       "cflags_cc!": ["-fno-exceptions"],
       "sources": [
         "native/nanopdf.cc",
-        "native/buffer.cc",
-        "native/geometry.cc"
+        "native/context.cc",
+        "native/document.cc",
+        "native/page.cc",
+        "native/stext.cc",
+        "native/annot.cc",
+        "native/form.cc",
+        "native/display_list.cc",
+        "native/link.cc",
+        "native/cookie.cc",
+        "native/device.cc",
+        "native/path.cc",
+        "native/pixmap.cc",
+        "native/image.cc",
+        "native/colorspace.cc",
+        "native/font.cc",
+        "native/stream.cc",
+        "native/output.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

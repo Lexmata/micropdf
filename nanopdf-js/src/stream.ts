@@ -4,8 +4,9 @@
  * This implementation mirrors the Rust `fitz::stream::Stream` for 100% API compatibility.
  */
 
-import { readFile, readFileSync } from 'fs';
-import { promisify } from 'util';
+import { readFile, readFileSync } from 'node:fs';
+import { promisify } from 'node:util';
+
 import { Buffer } from './buffer.js';
 import { NanoPDFError, SeekOrigin } from './types.js';
 
@@ -368,7 +369,9 @@ export class Stream {
   readUInt32(): number {
     const buf = new Uint8Array(4);
     this.readExact(buf);
-    return (((buf[0] ?? 0) << 24) | ((buf[1] ?? 0) << 16) | ((buf[2] ?? 0) << 8) | (buf[3] ?? 0)) >>> 0;
+    return (
+      (((buf[0] ?? 0) << 24) | ((buf[1] ?? 0) << 16) | ((buf[2] ?? 0) << 8) | (buf[3] ?? 0)) >>> 0
+    );
   }
 
   /**
@@ -405,7 +408,9 @@ export class Stream {
   readUInt32LE(): number {
     const buf = new Uint8Array(4);
     this.readExact(buf);
-    return ((buf[0] ?? 0) | ((buf[1] ?? 0) << 8) | ((buf[2] ?? 0) << 16) | ((buf[3] ?? 0) << 24)) >>> 0;
+    return (
+      ((buf[0] ?? 0) | ((buf[1] ?? 0) << 8) | ((buf[2] ?? 0) << 16) | ((buf[3] ?? 0) << 24)) >>> 0
+    );
   }
 
   // ============================================================================
@@ -537,4 +542,3 @@ export class AsyncStream {
     return this.data.length;
   }
 }
-

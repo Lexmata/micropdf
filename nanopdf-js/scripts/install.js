@@ -20,9 +20,7 @@ const rootDir = join(__dirname, '..');
 
 // Package info
 const pkg = JSON.parse(
-  await import('node:fs/promises').then(fs =>
-    fs.readFile(join(rootDir, 'package.json'), 'utf-8')
-  )
+  await import('node:fs/promises').then((fs) => fs.readFile(join(rootDir, 'package.json'), 'utf-8'))
 );
 
 const version = pkg.version;
@@ -39,12 +37,12 @@ function getPrebuildFilename() {
   const platformMap = {
     linux: 'linux',
     darwin: 'macos',
-    win32: 'windows',
+    win32: 'windows'
   };
 
   const archMap = {
     x64: 'x86_64',
-    arm64: 'aarch64',
+    arm64: 'aarch64'
   };
 
   const p = platformMap[platform];
@@ -111,11 +109,7 @@ async function downloadFile(url, dest) {
 async function extractTarGz(archivePath, destDir) {
   const { createReadStream } = await import('node:fs');
 
-  await pipeline(
-    createReadStream(archivePath),
-    createGunzip(),
-    extract({ cwd: destDir })
-  );
+  await pipeline(createReadStream(archivePath), createGunzip(), extract({ cwd: destDir }));
 }
 
 /**
@@ -165,7 +159,6 @@ async function tryDownloadPrebuilt() {
     unlinkSync(tempFile);
     console.log('Prebuilt binary installed successfully');
     return true;
-
   } catch (error) {
     console.log(`Failed to download prebuilt: ${error.message}`);
 
@@ -211,7 +204,7 @@ async function buildFromSource() {
   console.log('Running cargo build...');
   execSync('cargo build --release', {
     cwd: rustDir,
-    stdio: 'inherit',
+    stdio: 'inherit'
   });
 
   // Create lib directory
@@ -250,7 +243,7 @@ async function buildNativeAddon() {
   try {
     execSync('npx node-gyp rebuild', {
       cwd: rootDir,
-      stdio: 'inherit',
+      stdio: 'inherit'
     });
     console.log('Native addon built successfully');
   } catch (error) {
@@ -312,4 +305,3 @@ main().catch((error) => {
   console.error('Installation failed:', error.message);
   process.exit(1);
 });
-

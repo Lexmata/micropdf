@@ -1,0 +1,53 @@
+[package]
+name = "nanopdf-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.nanopdf]
+path = ".."
+
+[[bin]]
+name = "fuzz_pdf_parse"
+path = "fuzz_targets/fuzz_pdf_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_buffer"
+path = "fuzz_targets/fuzz_buffer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_stream"
+path = "fuzz_targets/fuzz_stream.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_pdf_objects"
+path = "fuzz_targets/fuzz_pdf_objects.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_filters"
+path = "fuzz_targets/fuzz_filters.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = true
+

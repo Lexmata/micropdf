@@ -6,22 +6,34 @@
  */
 
 #include <napi.h>
-#include "include/nanopdf.h"
+#include "include/mupdf_minimal.h"
 
 // Forward declarations from other source files
-Napi::Object InitBuffer(Napi::Env env, Napi::Object exports);
-Napi::Object InitGeometry(Napi::Env env, Napi::Object exports);
+Napi::Object InitContext(Napi::Env env, Napi::Object exports);
+Napi::Object InitDocument(Napi::Env env, Napi::Object exports);
+Napi::Object InitPage(Napi::Env env, Napi::Object exports);
+Napi::Object InitSText(Napi::Env env, Napi::Object exports);
+Napi::Object InitAnnotation(Napi::Env env, Napi::Object exports);
+Napi::Object InitForm(Napi::Env env, Napi::Object exports);
+Napi::Object InitDisplayList(Napi::Env env, Napi::Object exports);
+Napi::Object InitLink(Napi::Env env, Napi::Object exports);
+Napi::Object InitCookie(Napi::Env env, Napi::Object exports);
+Napi::Object InitDevice(Napi::Env env, Napi::Object exports);
+Napi::Object InitPath(Napi::Env env, Napi::Object exports);
+Napi::Object InitPixmap(Napi::Env env, Napi::Object exports);
+Napi::Object InitImage(Napi::Env env, Napi::Object exports);
+Napi::Object InitColorspace(Napi::Env env, Napi::Object exports);
+Napi::Object InitFont(Napi::Env env, Napi::Object exports);
+Napi::Object InitStream(Napi::Env env, Napi::Object exports);
+Napi::Object InitOutput(Napi::Env env, Napi::Object exports);
 
 /**
  * Get the NanoPDF library version
  */
 Napi::String GetVersion(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
-    const char* version = nanopdf_version();
-    if (version == nullptr) {
-        return Napi::String::New(env, "0.1.0");
-    }
-    return Napi::String::New(env, version);
+    // Return version from package.json
+    return Napi::String::New(env, "0.1.0");
 }
 
 /**
@@ -32,8 +44,23 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("getVersion", Napi::Function::New(env, GetVersion));
 
     // Initialize sub-modules
-    InitBuffer(env, exports);
-    InitGeometry(env, exports);
+    InitContext(env, exports);
+    InitDocument(env, exports);
+    InitPage(env, exports);
+    InitSText(env, exports);
+    InitAnnotation(env, exports);
+    InitForm(env, exports);
+    InitDisplayList(env, exports);
+    InitLink(env, exports);
+    InitCookie(env, exports);
+    InitDevice(env, exports);
+    InitPath(env, exports);
+    InitPixmap(env, exports);
+    InitImage(env, exports);
+    InitColorspace(env, exports);
+    InitFont(env, exports);
+    InitStream(env, exports);
+    InitOutput(env, exports);
 
     return exports;
 }

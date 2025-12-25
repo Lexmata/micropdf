@@ -101,7 +101,7 @@ describe('Stream', () => {
     });
 
     it('should sync to byte boundary', () => {
-      const stream = Stream.openMemory(new Uint8Array([0xFF, 0x00]));
+      const stream = Stream.openMemory(new Uint8Array([0xff, 0x00]));
       stream.readBits(3);
       stream.syncBits();
       expect(stream.tell()).toBe(1);

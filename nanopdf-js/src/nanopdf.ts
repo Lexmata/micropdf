@@ -64,4 +64,3 @@ export class NanoPDF {
     return NanoPDF.initialized;
   }
 }
-

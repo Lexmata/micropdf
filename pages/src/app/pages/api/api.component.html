@@ -138,20 +138,82 @@
 
     <!-- Full Documentation Links -->
     <section>
-      <h2 class="text-xl font-semibold mb-6">Full Documentation</h2>
-      <div class="grid sm:grid-cols-3 gap-4">
-        <a href="https://docs.rs/nanopdf" target="_blank" class="link-card">
-          <span class="px-2 py-1 bg-orange-400/15 text-orange-400 rounded-full text-xs font-medium">Rust</span>
-          <span class="text-text-secondary text-sm">docs.rs/nanopdf</span>
+      <h2 class="text-xl font-semibold mb-6">Complete API Documentation</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <a href="/nanopdf/api/index.html" class="link-card group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-gradient-to-r from-purple-500/15 to-pink-500/15 text-purple-400 rounded-full text-xs font-medium">All Languages</span>
+          </div>
+          <span class="text-text-secondary text-sm group-hover:text-accent-primary transition-colors">API Documentation Hub</span>
+          <p class="text-xs text-text-muted mt-1">Central hub for all API docs</p>
         </a>
-        <a href="https://www.npmjs.com/package/nanopdf" target="_blank" class="link-card">
-          <span class="px-2 py-1 bg-yellow-400/15 text-yellow-400 rounded-full text-xs font-medium">JavaScript</span>
-          <span class="text-text-secondary text-sm">npm: nanopdf</span>
+
+        <a href="https://docs.rs/nanopdf" target="_blank" rel="noopener" class="link-card group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-orange-400/15 text-orange-400 rounded-full text-xs font-medium">Rust</span>
+          </div>
+          <span class="text-text-secondary text-sm group-hover:text-accent-primary transition-colors">docs.rs/nanopdf</span>
+          <p class="text-xs text-text-muted mt-1">Complete Rust API reference</p>
         </a>
-        <a href="https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf" target="_blank" class="link-card">
-          <span class="px-2 py-1 bg-cyan-400/15 text-cyan-400 rounded-full text-xs font-medium">Go</span>
-          <span class="text-text-secondary text-sm">pkg.go.dev</span>
+
+        <a href="/nanopdf/api/nodejs/index.html" class="link-card group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-green-400/15 text-green-400 rounded-full text-xs font-medium">Node.js</span>
+            <span class="px-2 py-1 bg-blue-400/15 text-blue-400 rounded-full text-xs font-medium">TypeScript</span>
+          </div>
+          <span class="text-text-secondary text-sm group-hover:text-accent-primary transition-colors">TypeDoc API Reference</span>
+          <p class="text-xs text-text-muted mt-1">Full TypeScript definitions & examples</p>
         </a>
+
+        <a href="/nanopdf/api/python/index.html" class="link-card group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-yellow-400/15 text-yellow-400 rounded-full text-xs font-medium">Python</span>
+          </div>
+          <span class="text-text-secondary text-sm group-hover:text-accent-primary transition-colors">Sphinx Documentation</span>
+          <p class="text-xs text-text-muted mt-1">Complete Python API with guides</p>
+        </a>
+
+        <a href="https://pkg.go.dev/github.com/lexmata/nanopdf/go-nanopdf" target="_blank" rel="noopener" class="link-card group">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-1 bg-cyan-400/15 text-cyan-400 rounded-full text-xs font-medium">Go</span>
+          </div>
+          <span class="text-text-secondary text-sm group-hover:text-accent-primary transition-colors">pkg.go.dev</span>
+          <p class="text-xs text-text-muted mt-1">Complete godoc reference</p>
+        </a>
+      </div>
+
+      <!-- Interactive TypeDoc Preview -->
+      <div class="bg-bg-secondary rounded-lg p-6 border border-bg-tertiary">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Node.js/TypeScript API Documentation</h3>
+          <a href="/nanopdf/api/nodejs/index.html" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all">
+            View Full Documentation →
+          </a>
+        </div>
+        <p class="text-text-muted text-sm mb-4">
+          Complete interactive API documentation with TypeScript definitions, inline examples, and source code links.
+          Features include full-text search, hierarchical navigation, and dark mode support.
+        </p>
+        <div class="grid sm:grid-cols-3 gap-4 text-sm">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>25+ Modules</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>50+ Classes</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>100+ Functions</span>
+          </div>
+        </div>
       </div>
     </section>
   </div>

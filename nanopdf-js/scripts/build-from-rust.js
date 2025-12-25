@@ -45,7 +45,7 @@ async function main() {
   try {
     execSync('cargo build --release', {
       cwd: rustDir,
-      stdio: 'inherit',
+      stdio: 'inherit'
     });
   } catch (error) {
     console.error('Rust build failed');
@@ -95,4 +95,3 @@ main().catch((error) => {
   console.error('Build failed:', error.message);
   process.exit(1);
 });
-

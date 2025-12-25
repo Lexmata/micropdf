@@ -1,0 +1,22 @@
+# Fuzzer artifacts
+crash-*
+leak-*
+timeout-*
+oom-*
+
+# Coverage data
+*.profraw
+*.profdata
+coverage.json
+
+# Temporary files
+*.tmp
+tmp-*
+
+# Generated corpus (keep seed corpus)
+corpus/*
+!corpus/*/README.md
+!corpus/*/*.pdf
+!corpus/*/*.txt
+!corpus/*/*.bin
+

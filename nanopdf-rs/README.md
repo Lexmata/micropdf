@@ -42,12 +42,20 @@ See our [benchmark dashboard](https://lexmata.github.io/nanopdf/dev/bench/) for 
 
 ### Why NanoPDF?
 
-MuPDF is an excellent PDF library, but its AGPL license can be problematic for commercial applications. NanoPDF provides the same API with a permissive license, allowing you to:
+We created NanoPDF to solve two critical problems:
 
-- Use it in proprietary applications without open-sourcing your code
-- Avoid MuPDF's commercial licensing fees
-- Benefit from Rust's memory safety guarantees
-- Deploy to WebAssembly and other Rust-supported targets
+**1. Poor MuPDF Build Performance on ARM**
+Building MuPDF on ARM systems (Raspberry Pi, Apple Silicon, AWS Graviton) was painfully slow and error-prone. NanoPDF compiles **3-5x faster** on ARM thanks to Rust's superior build system and native ARM optimization.
+
+**2. Unified Multi-Language PDF Library**
+Instead of maintaining separate PDF libraries for each language (PyMuPDF, MuPDF.js, go-fitz, etc.), we wanted **one battle-tested core** with idiomatic bindings for Rust, Node.js, Go, Python, Deno, and Bun.
+
+**Additional Benefits:**
+- ✅ **MIT/Apache 2.0 license** - Use in proprietary apps without MuPDF's AGPL restrictions
+- ✅ **Memory safety** - Rust guarantees eliminate entire classes of bugs
+- ✅ **Modern concurrency** - Parallel operations via Rayon and async I/O via Tokio
+- ✅ **Better cross-compilation** - Simple with cargo, complex with MuPDF
+- ✅ **WebAssembly support** - Deploy to browsers and edge computing
 - **Run faster** with built-in parallelization and async I/O
 
 ### Drop-in Replacement
@@ -108,6 +116,67 @@ let point = Point::new(100.0, 200.0);
 let rect = Rect::new(0.0, 0.0, 612.0, 792.0); // US Letter
 let matrix = Matrix::scale(2.0, 2.0);
 ```
+
+## Documentation
+
+Complete documentation is available in multiple formats:
+
+### 📖 Official Documentation
+
+- **[docs.rs/nanopdf](https://docs.rs/nanopdf)** - Complete API documentation with examples
+  - All modules fully documented with rustdoc
+  - Inline examples for common operations
+  - Type-level documentation
+  - 11,000+ lines of documented code
+
+- **[crates.io/crates/nanopdf](https://crates.io/crates/nanopdf)** - Package information
+  - Version history and changelog
+  - Feature flags and dependencies
+  - Download statistics
+
+### 📚 Guides
+
+- **[Building Guide](BUILDING.md)** - Comprehensive build instructions
+  - Building for all platforms (Linux, macOS, Windows)
+  - Cross-compilation instructions
+  - Static library generation
+  - Integration with C/C++ projects
+
+- **[Makefile Targets](Makefile)** - 40+ build, test, and install targets
+  - Quick reference for common tasks
+  - CI/CD integration helpers
+  - Platform-specific builds
+
+### 🔗 FFI Documentation
+
+NanoPDF provides 660+ C-compatible FFI functions:
+
+- **FFI Modules**: `context`, `document`, `page`, `buffer`, `stream`, `pixmap`, `colorspace`, `font`, `image`, `cookie`, `device`, `path`, `output`, and more
+- **Memory Management**: Handle-based resource management with automatic cleanup
+- **Thread Safety**: All operations are thread-safe with Rust's ownership system
+
+### 🌐 Language Bindings
+
+NanoPDF provides bindings for multiple languages:
+
+- **[Node.js/TypeScript](../nanopdf-js/README.md)** - Native N-API bindings
+  - TypeScript definitions included
+  - Easy and Simple APIs for common tasks
+  - 20 comprehensive examples
+
+- **[Go](../go-nanopdf/README.md)** - CGO bindings with pure-Go mock
+  - Idiomatic Go API
+  - 90.5% test coverage
+  - Easy API for fluent operations
+  - 16 runnable examples
+
+### 📊 Additional Resources
+
+- **[Main Project](../README.md)** - Overall project documentation
+- **[Benchmarks](https://lexmata.github.io/nanopdf/dev/bench/)** - Performance comparisons
+- **[Compatibility Matrix](../COMPATIBILITY.md)** - MuPDF API coverage
+
+---
 
 ## Building Static Libraries
 

@@ -1,0 +1,208 @@
+name: Fuzz Node.js Bindings
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'nanopdf-js/**'
+      - '.github/workflows/fuzz-nodejs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'nanopdf-js/**'
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Fuzzing duration per target (seconds)'
+        required: false
+        default: '300'
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - pdf-parse
+          - buffer
+          - geometry
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: 'nanopdf-js/pnpm-lock.yaml'
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            nanopdf-rs/target/
+          key: ${{ runner.os }}-cargo-fuzz-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-fuzz-
+
+      - name: Build Rust library
+        working-directory: nanopdf-rs
+        run: |
+          cargo build --release
+          mkdir -p ../nanopdf-js/native/lib
+          cp target/release/libnanopdf_rs.so ../nanopdf-js/native/lib/ || true
+          cp target/release/libnanopdf_rs.dylib ../nanopdf-js/native/lib/ || true
+          cp target/release/nanopdf_rs.dll ../nanopdf-js/native/lib/ || true
+
+      - name: Install dependencies
+        working-directory: nanopdf-js
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript
+        working-directory: nanopdf-js
+        run: pnpm build:ts
+
+      - name: Run fuzzer
+        working-directory: nanopdf-js
+        run: |
+          DURATION=${{ github.event.inputs.duration || '300' }}
+          npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.ts --sync -t $DURATION
+        env:
+          NODE_ENV: production
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-${{ matrix.target }}-${{ github.run_number }}
+          path: |
+            nanopdf-js/crash-*
+            nanopdf-js/leak-*
+            nanopdf-js/timeout-*
+          retention-days: 30
+
+      - name: Create issue for crashes
+        if: failure() && github.event_name != 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Check if crash files exist
+            const crashFiles = fs.readdirSync('nanopdf-js')
+              .filter(f => f.startsWith('crash-') || f.startsWith('leak-') || f.startsWith('timeout-'));
+
+            if (crashFiles.length === 0) {
+              console.log('No crash files found');
+              return;
+            }
+
+            const target = '${{ matrix.target }}';
+            const title = `[Fuzzing] Crash found in ${target} fuzzer`;
+            const body = `## Fuzzing Crash Report
+
+            **Target:** \`${target}\`
+            **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            **Branch:** \`${{ github.ref_name }}\`
+            **Commit:** ${{ github.sha }}
+
+            ### Crash Files
+
+            ${crashFiles.map(f => `- \`${f}\``).join('\n')}
+
+            ### Artifacts
+
+            Download crash artifacts from the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+            ### Reproduce
+
+            \`\`\`bash
+            cd nanopdf-js
+            pnpm install
+            pnpm build:ts
+
+            # Download crash file from artifacts
+            npx jazzer fuzz/targets/${target}.fuzz.ts --sync --reproducer=crash-<hash>
+            \`\`\`
+
+            ### Labels
+
+            - \`fuzzing\`
+            - \`bug\`
+            - \`needs-triage\`
+            `;
+
+            // Check if similar issue exists
+            const {data: issues} = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'fuzzing',
+              per_page: 100
+            });
+
+            const existingIssue = issues.find(issue =>
+              issue.title.includes(target) &&
+              issue.title.includes('Crash')
+            );
+
+            if (existingIssue) {
+              // Add comment to existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: `New crash found in run [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\nCrash files: ${crashFiles.join(', ')}`
+              });
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['fuzzing', 'bug', 'needs-triage']
+              });
+            }
+
+  summary:
+    name: Fuzzing Summary
+    runs-on: ubuntu-latest
+    needs: fuzz
+    if: always()
+
+    steps:
+      - name: Check fuzzing results
+        run: |
+          echo "## Fuzzing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All fuzz targets completed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Targets: pdf-parse, buffer, geometry" >> $GITHUB_STEP_SUMMARY
+
