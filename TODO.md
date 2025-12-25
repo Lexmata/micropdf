@@ -563,7 +563,7 @@ The Go implementation achieves **sub-nanosecond** performance for most geometry 
 - [ ] **Rotation matrix caching**
   - Cache commonly used rotation matrices (0°, 90°, 180°, 270°)
   - Use sync.Pool for frequently rotated angles
-  
+
 - [ ] **Trig lookup tables**
   - For applications with limited angle precision needs
   - 1° resolution table: 360 entries × 8 bytes = 2.8KB
@@ -611,6 +611,178 @@ The Go implementation achieves **sub-nanosecond** performance for most geometry 
 - [ ] Memory allocation profiling
 - [ ] Comparison with other Go PDF libraries (pdfcpu, unipdf)
 - [ ] CGO overhead analysis
+
+---
+
+## Python Performance Optimization
+
+> Based on benchmark profiling conducted 2025-12-24
+
+### Python Benchmark Summary
+
+Current performance metrics (from `python benchmarks/benchmark.py`):
+
+#### Point Operations
+
+| Operation | Mean | ops/sec | Notes |
+|-----------|------|---------|-------|
+| Point constructor | 112.51 ns | 8.89M | Object allocation |
+| Point.transform | 155.75 ns | 6.42M | Matrix multiply |
+| Point.distance | 101.90 ns | 9.81M | sqrt calculation |
+| Point.__eq__ | 68.70 ns | 14.56M | Comparison |
+
+#### Rect Operations
+
+| Operation | Mean | ops/sec | Notes |
+|-----------|------|---------|-------|
+| Rect constructor | 135.59 ns | 7.38M | 4 floats |
+| Rect.width | 71.02 ns | 14.08M | Subtraction |
+| Rect.height | 71.76 ns | 13.94M | Subtraction |
+| Rect.contains | 95.28 ns | 10.50M | 4 comparisons |
+| Rect.union | 202.08 ns | 4.95M | 4x min/max |
+| Rect.intersect | 199.82 ns | 5.00M | 4x min/max |
+| **Rect.transform** | **1.22 µs** | **818K** | **SLOW** |
+
+#### IRect Operations
+
+| Operation | Mean | ops/sec | Notes |
+|-----------|------|---------|-------|
+| IRect constructor | 118.38 ns | 8.45M | 4 ints |
+| IRect.width | 60.32 ns | 16.58M | Fastest |
+| IRect.height | 60.41 ns | 16.55M | |
+
+#### Matrix Operations
+
+| Operation | Mean | ops/sec | Notes |
+|-----------|------|---------|-------|
+| Matrix constructor | 167.08 ns | 5.99M | 6 floats |
+| Matrix.identity | 188.69 ns | 5.30M | Static factory |
+| Matrix.scale | 197.03 ns | 5.08M | |
+| Matrix.translate | 195.60 ns | 5.11M | |
+| Matrix.rotate | 236.40 ns | 4.23M | Trig functions |
+| Matrix.concat | 275.53 ns | 3.63M | 12 multiply-adds |
+| **Matrix chain (3x)** | **1.12 µs** | **896K** | **SLOW** |
+
+#### Quad Operations
+
+| Operation | Mean | ops/sec | Notes |
+|-----------|------|---------|-------|
+| Quad.from_rect | 390.28 ns | 2.56M | 4 Point objects |
+| Quad.to_rect | 382.20 ns | 2.62M | min/max of 4 |
+| Quad.transform | 617.94 ns | 1.62M | 4 transforms |
+
+### Python Performance Analysis
+
+#### Comparison with Other Languages
+
+| Language | Point.transform | Rect.transform | Matrix.concat |
+|----------|-----------------|----------------|---------------|
+| **Python** | 155.75 ns | 1.22 µs | 275.53 ns |
+| **Go** | 0.11 ns | 10.96 ns | 0.12 ns |
+| **Node.js** | 45.73 ns | 91.38 ns | 33.68 ns |
+| **Rust** | 0.59 ns | ~1 ns | 1.07 ns |
+
+Python is **~1400x slower than Go** for simple geometry operations due to:
+- Dynamic typing overhead
+- Object allocation for every operation
+- Interpreter dispatch
+- No SIMD vectorization
+
+#### Performance Bottlenecks Identified
+
+- [ ] **Rect.transform** - 1.22 µs (slowest single operation)
+  - Creates 4 Point objects for corners
+  - Transforms each point (4 transforms)
+  - Creates lists for min/max calculation
+  - Consider: NumPy vectorization or Cython
+
+- [ ] **Matrix concat chain** - 1.12 µs
+  - Creates 3 intermediate Matrix objects
+  - 3x concat operations
+  - Consider: fused multiply-add operation
+
+- [ ] **Quad operations** - 390-618 ns
+  - Heavy object allocation (4 Points per Quad)
+  - Consider: __slots__ to reduce memory overhead
+  - Consider: storing as flat tuple internally
+
+- [ ] **Object allocation overhead**
+  - Every operation creates new objects
+  - Consider: mutable in-place variants
+  - Consider: object pooling for hot paths
+
+### Python High Priority Optimizations
+
+#### Use __slots__ for Memory Efficiency
+- [ ] Add `__slots__` to Point, Rect, Matrix, Quad
+  - Reduces memory by ~40%
+  - Faster attribute access
+  - Example: `__slots__ = ('x', 'y')`
+
+#### NumPy Acceleration
+- [ ] **NumPy-backed geometry types**
+  - Use `numpy.ndarray` for internal storage
+  - Vectorized operations for batches
+  - SIMD acceleration for matrix ops
+  
+- [ ] **Batch transform API**
+  - `transform_points(points: np.ndarray, matrix: Matrix)`
+  - Process thousands of points in one call
+  - 100-1000x faster for bulk operations
+
+#### Cython Optimization
+- [ ] **Cython extension for geometry**
+  - Compile critical paths to C
+  - Type declarations for speedup
+  - Estimated 10-50x improvement
+
+- [ ] **Critical functions to optimize**:
+  - `Point.transform()`
+  - `Matrix.concat()`
+  - `Rect.transform()`
+
+### Python Medium Priority Optimizations
+
+#### Reduce Object Allocation
+- [ ] **In-place operations**
+  - `point.transform_inplace(matrix)` - modifies self
+  - `matrix.concat_inplace(other)` - modifies self
+  - Avoid creating temporary objects
+
+- [ ] **Object pooling**
+  - Reuse Point/Matrix objects in hot loops
+  - Thread-local pools to avoid locking
+
+#### Cache Common Values
+- [ ] **Cache identity matrix**
+  - `Matrix._IDENTITY = Matrix(1, 0, 0, 1, 0, 0)`
+  - Return same instance for `Matrix.identity()`
+
+- [ ] **Cache common rotations**
+  - Pre-compute 0°, 90°, 180°, 270° matrices
+  - Avoid trig for common angles
+
+### Python Lower Priority Optimizations
+
+#### PyPy Compatibility
+- [ ] Ensure code runs on PyPy
+  - PyPy JIT can give 10-50x speedup
+  - Avoid C extensions that break PyPy
+
+#### Lazy Evaluation
+- [ ] **Lazy transform chains**
+  - Don't compute until result needed
+  - Fuse multiple transforms into one
+
+### Benchmarking TODOs
+
+- [x] Geometry benchmark suite
+- [ ] Buffer benchmark suite (requires native library)
+- [ ] Document operations benchmarks
+- [ ] PDF parsing benchmarks
+- [ ] Memory usage profiling
+- [ ] Comparison with PyMuPDF, pikepdf, PyPDF2
+- [ ] NumPy-accelerated benchmarks
 
 ### Flamegraph Results
 
