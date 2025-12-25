@@ -116,7 +116,7 @@ jobs:
             cp -r nanopdf-rs/target/criterion gh-pages-criterion/
 
             # Create index page for criterion reports
-            cat > gh-pages-criterion/index.html << 'EOF'
+            cat > gh-pages-criterion/index.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
