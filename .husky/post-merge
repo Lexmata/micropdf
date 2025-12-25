@@ -1,3 +1,26 @@
 #!/bin/sh
-command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'post-merge' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
-git lfs post-merge "$@"
+
+# Husky v9 post-merge hook
+# Runs after git merge
+
+# Git LFS post-merge (if available)
+if command -v git-lfs >/dev/null 2>&1; then
+  git lfs post-merge "$@"
+fi
+
+# Remind to install dependencies if package files changed
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "package.json\|pnpm-lock.yaml"; then
+  echo "📦 Package files changed. Consider running 'pnpm install'"
+fi
+
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "Cargo.toml\|Cargo.lock"; then
+  echo "📦 Cargo files changed. Consider running 'cargo build'"
+fi
+
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "go.mod\|go.sum"; then
+  echo "📦 Go module files changed. Consider running 'go mod download'"
+fi
+
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "pyproject.toml\|requirements"; then
+  echo "📦 Python package files changed. Consider running 'pip install -e .'"
+fi

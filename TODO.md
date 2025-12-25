@@ -724,7 +724,7 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
   - Use `numpy.ndarray` for internal storage
   - Vectorized operations for batches
   - SIMD acceleration for matrix ops
-  
+
 - [ ] **Batch transform API**
   - `transform_points(points: np.ndarray, matrix: Matrix)`
   - Process thousands of points in one call

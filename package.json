@@ -1,11 +1,19 @@
 {
-  "name": "nanopdf",
+  "name": "nanopdf-monorepo",
   "version": "1.0.0",
   "private": true,
-  "license": "MIT",
+  "description": "NanoPDF Monorepo - High-performance PDF manipulation library",
+  "license": "Apache-2.0",
   "packageManager": "pnpm@10.20.0",
-  "dependencies": {
-    "commitlint": "^20.2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
     "husky": "^9.1.7"
   }
 }
