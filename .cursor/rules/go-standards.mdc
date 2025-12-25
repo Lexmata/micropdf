@@ -99,7 +99,7 @@ type UrlParser struct { ... }    // Url should be URL
 // ✅ CORRECT: Clear field ordering (exported first, then unexported)
 type Buffer struct {
     // Exported fields (if any)
-    
+
     // Unexported fields
     data     []byte
     capacity int
@@ -226,12 +226,12 @@ func LoadDocument(path string) (*Document, error) {
     if err != nil {
         return nil, fmt.Errorf("load document %s: %w", path, err)
     }
-    
+
     doc, err := parseDocument(data)
     if err != nil {
         return nil, fmt.Errorf("parse document %s: %w", path, err)
     }
-    
+
     return doc, nil
 }
 
@@ -329,7 +329,7 @@ var bufferPool = sync.Pool{
 func ProcessData(r io.Reader) error {
     buf := bufferPool.Get().([]byte)
     defer bufferPool.Put(buf)
-    
+
     // Use buf...
 }
 
@@ -356,7 +356,7 @@ func ProcessFile(path string) error {
         return err
     }
     defer f.Close()
-    
+
     // Process file...
     return nil
 }
@@ -381,12 +381,12 @@ func WriteDocument(doc *Document, path string) error {
     if err != nil {
         return err
     }
-    
+
     if err := doc.WriteTo(f); err != nil {
         f.Close()  // Ignore close error, write error is more important
         return err
     }
-    
+
     return f.Close()  // Check close error for writes!
 }
 ```
@@ -418,14 +418,14 @@ func (b *Buffer) Append(data []byte) {
 // ✅ CORRECT: Use channels for communication
 func ProcessAsync(items []Item) <-chan Result {
     results := make(chan Result, len(items))
-    
+
     go func() {
         defer close(results)
         for _, item := range items {
             results <- process(item)
         }
     }()
-    
+
     return results
 }
 ```
@@ -441,7 +441,7 @@ func (d *Document) Load(ctx context.Context, path string) error {
         return ctx.Err()
     default:
     }
-    
+
     // Long operation...
 }
 
@@ -495,7 +495,7 @@ func TestBufferAppend(t *testing.T) {
         {"append to empty", nil, []byte{1, 2}, []byte{1, 2}},
         {"append to existing", []byte{1}, []byte{2, 3}, []byte{1, 2, 3}},
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             buf := NewBufferFromBytes(tt.initial)
@@ -514,7 +514,7 @@ func TestBufferAppend(t *testing.T) {
 // ✅ CORRECT: Table-driven tests for multiple cases
 func TestRectContains(t *testing.T) {
     rect := NewRect(0, 0, 100, 100)
-    
+
     tests := []struct {
         name     string
         point    Point
@@ -528,7 +528,7 @@ func TestRectContains(t *testing.T) {
         {"outside top", NewPoint(50, -1), false},
         {"outside bottom", NewPoint(50, 101), false},
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             got := rect.Contains(tt.point)
@@ -547,7 +547,7 @@ func TestRectContains(t *testing.T) {
 func BenchmarkBufferAppend(b *testing.B) {
     data := make([]byte, 100)
     b.ResetTimer()
-    
+
     for i := 0; i < b.N; i++ {
         buf := NewBuffer(0)
         for j := 0; j < 100; j++ {
@@ -560,7 +560,7 @@ func BenchmarkPointTransform(b *testing.B) {
     p := NewPoint(100, 200)
     m := MatrixScale(2, 2)
     b.ResetTimer()
-    
+
     for i := 0; i < b.N; i++ {
         _ = p.Transform(m)
     }
@@ -571,7 +571,7 @@ func BenchmarkBufferFromBytes(b *testing.B) {
     data := make([]byte, 1024)
     b.ReportAllocs()
     b.ResetTimer()
-    
+
     for i := 0; i < b.N; i++ {
         buf := NewBufferFromBytes(data)
         buf.Free()
@@ -597,7 +597,7 @@ func BenchmarkBufferFromBytes(b *testing.B) {
 //	    log.Fatal(err)
 //	}
 //	defer doc.Close()
-//	
+//
 //	fmt.Printf("Pages: %d\n", doc.PageCount())
 //
 // # Thread Safety
@@ -659,10 +659,10 @@ import (
     "context"
     "fmt"
     "io"
-    
+
     // External packages
     "github.com/pkg/errors"
-    
+
     // Internal packages
     "github.com/lexmata/nanopdf/internal/parser"
 )
