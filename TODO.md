@@ -4,122 +4,48 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 15/15 core modules** (as documented in CHANGELOG)
+**Implemented: 34 modules** ✅
 
-| Module | Status | Notes |
-|--------|--------|-------|
-| fz_buffer | ✅ Complete | 36 functions |
-| fz_colorspace | ✅ Complete | Device colorspaces |
-| fz_context | ✅ Complete | Context management |
-| fz_cookie | ✅ Complete | Progress/cancellation |
-| fz_device | ✅ Complete | 26 blend modes |
-| fz_display_list | ✅ Complete | 12 command types |
-| fz_font | ✅ Complete | 8 font types, Base 14 |
-| fz_geometry | ✅ Complete | Point, Rect, Matrix |
-| fz_hash | ✅ Complete | Hash tables |
-| fz_image | ✅ Complete | 8 formats |
-| fz_link | ✅ Complete | Hyperlinks |
-| fz_output | ✅ Complete | Output streams |
-| fz_path | ✅ Complete | Vector paths |
-| fz_pixmap | ✅ Complete | Pixel buffers |
-| fz_text | ✅ Complete | Text handling |
-| fz_archive | ✅ Complete | ZIP/TAR archives |
-| fz_stream | ✅ Complete | Input streams |
-| pdf_annot | ✅ Complete | 28 annotation types |
-| pdf_crypt | ✅ Complete | AES/RC4 encryption |
-| pdf_form | ✅ Complete | 7 widget types |
-| pdf_lexer | ✅ Complete | 12 token types |
-| pdf_object | ✅ Complete | PDF objects |
-| pdf_xref | ✅ Complete | Cross-reference |
-
----
-
-## Missing Fitz (Core) Modules
-
-### High Priority
-
-#### fz_shade (Gradients/Shading) ✅ Complete
-- [x] Linear gradients
-- [x] Radial gradients
-- [x] Coons patch meshes
-- [x] Tensor-product patch meshes
-- [x] Function-based shading
-- [x] Axial shading
-- [x] Type 1-7 shading patterns
-
-#### fz_separation (Spot Colors) ✅ Complete
-- [x] Spot color handling
-- [x] Separation colorspaces
-- [x] DeviceN colorspace support
-- [x] ICC profile integration
-- [x] Color management for print production
-
-#### fz_glyph (Advanced Glyph Handling) ✅ Complete
-- [x] Glyph caching
-- [x] Subpixel positioning
-- [x] Glyph scaling and transformation
-- [x] Color font support (COLR/CPAL)
-- [x] Variable font support
-
-#### fz_store (Resource Caching) ✅ Complete
-- [x] Memory cache for rendered objects
-- [x] LRU eviction policy
-- [x] Cache size limits
-- [x] Per-document caching
-- [x] Thread-safe cache access
-
-### Medium Priority
-
-#### fz_draw_device (Rendering Device)
-- [x] Anti-aliased path rendering
-- [x] Subpixel text rendering
-- [x] Alpha compositing
-- [x] Clip path handling
-- [x] Pattern fills
-- [x] Overprint simulation
-
-#### fz_bitmap (1-bit Images)
-- [x] 1-bit bitmap creation
-- [x] Halftoning algorithms
-- [x] Threshold conversion from pixmap
-- [x] RLE compression
-- [x] Fax encoding (CCITT Group 4)
-
-#### fz_band_writer (Band-based Output)
-- [x] Band-by-band rendering
-- [x] Memory-efficient large document output
-- [x] Multiple output format support
-- [x] Progress callbacks
-
-#### fz_pool (Memory Pool)
-- [x] Block memory allocation
-- [x] Pool-based object lifetimes
-- [x] Memory usage tracking
-- [x] Custom allocator support
-
-### Lower Priority
-
-#### fz_xml (XML Parsing)
-- [x] XML DOM parsing
-- [x] XPath queries
-- [x] XML namespace support
-- [x] Used for XPS/EPUB formats
-
-#### fz_tree (Structured Content)
-- [x] Tree structure for text
-- [x] Reading order detection
-- [x] Logical structure tree
-- [x] Tagged PDF support
-
-#### fz_string (Advanced String Handling)
-- [x] Unicode normalization
-- [x] BiDi text processing
-- [x] Text segmentation
-- [x] Language-aware sorting
+| Module | Functions | Notes |
+|--------|-----------|-------|
+| fz_buffer | 36 | Buffer operations |
+| fz_colorspace | - | Device colorspaces |
+| fz_context | - | Context management |
+| fz_cookie | - | Progress/cancellation |
+| fz_device | 26 | Blend modes |
+| fz_display_list | 12 | Command types |
+| fz_font | 8 | Font types, Base 14 |
+| fz_geometry | - | Point, Rect, Matrix, Quad |
+| fz_hash | - | Hash tables |
+| fz_image | 8 | Image formats |
+| fz_link | - | Hyperlinks |
+| fz_output | - | Output streams |
+| fz_path | - | Vector paths |
+| fz_pixmap | - | Pixel buffers |
+| fz_text | - | Text handling |
+| fz_archive | - | ZIP/TAR archives |
+| fz_stream | - | Input streams |
+| fz_shade | 22 | Gradients/shading |
+| fz_separation | 23 | Spot colors |
+| fz_glyph | 36 | Glyph handling |
+| fz_store | 32 | Resource caching |
+| fz_draw_device | - | Rendering device |
+| fz_bitmap | - | 1-bit images |
+| fz_band_writer | - | Band-based output |
+| fz_pool | - | Memory pool |
+| fz_xml | - | XML parsing |
+| fz_tree | - | Structured content |
+| fz_string | - | String handling |
+| pdf_annot | 28 | Annotation types |
+| pdf_crypt | - | AES/RC4 encryption |
+| pdf_form | 7 | Widget types |
+| pdf_lexer | 12 | Token types |
+| pdf_object | - | PDF objects |
+| pdf_xref | - | Cross-reference |
 
 ---
 
-## Missing PDF Modules
+## Remaining PDF Modules
 
 ### High Priority
 
@@ -143,8 +69,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [ ] Pattern colorspaces
 - [ ] Pattern transformations
 
-### Medium Priority
-
 #### pdf_signature (Digital Signatures)
 - [ ] Signature field handling
 - [ ] PKCS#7 signature creation
@@ -152,6 +76,8 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [ ] Certificate chain validation
 - [ ] Timestamp support
 - [ ] PAdES compliance
+
+### Medium Priority
 
 #### pdf_redact (Redaction)
 - [ ] Redaction annotation creation
@@ -166,14 +92,14 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [ ] Navigator support
 - [ ] Schema handling
 
-### Lower Priority
-
 #### pdf_tagged (Tagged PDF / Accessibility)
 - [ ] Structure tree parsing
 - [ ] Role mapping
 - [ ] Alternative text extraction
 - [ ] Reading order
 - [ ] PDF/UA compliance checking
+
+### Lower Priority
 
 #### pdf_3d (3D Content)
 - [ ] 3D annotation support
@@ -325,9 +251,7 @@ Current performance metrics (from `cargo bench`):
 
 ### Benchmarking Infrastructure
 
-- [x] Criterion benchmarks for Rust core modules
-- [x] tinybench benchmarks for Node.js bindings
-- [ ] Add benchmarks for missing modules:
+- [ ] Add benchmarks for more modules:
   - [ ] colorspace operations
   - [ ] device rendering
   - [ ] filter encode/decode (flate, lzw, etc.)
@@ -448,11 +372,9 @@ Current performance metrics (from `pnpm bench`):
 
 ### Benchmarking TODOs
 
-- [x] Buffer benchmark suite
-- [x] Geometry benchmark suite
 - [ ] PDF parsing benchmarks
 - [ ] Document operations benchmarks
-- [ ] Rendering benchmarks (when implemented)
+- [ ] Rendering benchmarks
 - [ ] Memory usage tracking
 - [ ] Comparison with other PDF libraries (pdf-lib, pdf.js)
 
@@ -603,8 +525,6 @@ The Go implementation achieves **sub-nanosecond** performance for most geometry 
 
 ### Benchmarking TODOs
 
-- [x] Buffer benchmark suite
-- [x] Geometry benchmark suite
 - [ ] Document loading benchmarks
 - [ ] Page rendering benchmarks
 - [ ] PDF parsing benchmarks
@@ -776,26 +696,12 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 
 ### Benchmarking TODOs
 
-- [x] Geometry benchmark suite
 - [ ] Buffer benchmark suite (requires native library)
 - [ ] Document operations benchmarks
 - [ ] PDF parsing benchmarks
 - [ ] Memory usage profiling
 - [ ] Comparison with PyMuPDF, pikepdf, PyPDF2
 - [ ] NumPy-accelerated benchmarks
-
-### Flamegraph Results
-
-Profiling artifacts generated:
-- `flamegraph_pdf_objects.svg` - PDF object operations
-- `flamegraph_geometry.svg` - Geometry operations
-
-Key findings:
-1. `rayon` parallel infrastructure shows expected overhead
-2. `hashbrown` hash table operations are significant
-3. Allocation functions (`__rust_alloc`, `__rust_dealloc`) visible
-4. `nanopdf::pdf::object::Name::new` is a hot path
-5. Criterion benchmark overhead is visible (expected)
 
 ---
 
@@ -810,7 +716,6 @@ Key findings:
   - [ ] DirectX rendering path (Windows)
 
 - [ ] **Multi-threaded Rendering**
-  - [x] Parallel page rendering (partial - `rayon` feature)
   - [ ] Tile-based parallel rendering
   - [ ] Asynchronous I/O rendering
 
@@ -841,14 +746,6 @@ Key findings:
 
 ## FFI/Bindings Enhancements
 
-### Completed
-
-- [x] C header generation (660+ functions)
-- [x] Handle-based resource management
-- [x] Thread-safe stores
-
-### Needed
-
 - [ ] **Callback Support**
   - [ ] Progress callbacks
   - [ ] Error callbacks
@@ -869,14 +766,6 @@ Key findings:
 
 ## Platform Support
 
-### Current
-
-- [x] Linux (x86_64, aarch64)
-- [x] macOS (x86_64, Apple Silicon)
-- [x] Windows (x86_64, MSVC, GNU)
-
-### Needed
-
 - [ ] **Mobile Platforms**
   - [ ] Android (arm64-v8a, armeabi-v7a)
   - [ ] iOS (arm64)
@@ -895,14 +784,6 @@ Key findings:
 ---
 
 ## Testing & Quality
-
-### Current
-
-- [x] 789+ unit tests
-- [x] 82%+ code coverage
-- [x] Integration tests with PDF fixtures
-
-### Needed
 
 - [ ] **Fuzzing**
   - [ ] PDF parser fuzzing
@@ -923,20 +804,19 @@ Key findings:
 
 ## Priority Roadmap
 
-### v0.2.0 - Rendering Focus
-1. fz_shade (gradients)
-2. fz_separation (spot colors)
-3. pdf_pattern (patterns)
-4. fz_draw_device improvements
+### v0.2.0 - Patterns & Layers
+1. pdf_pattern (tiling/shading patterns)
+2. pdf_layer (optional content groups)
+3. Enhanced rendering device
 
 ### v0.3.0 - Security & Signatures
 1. pdf_signature (digital signatures)
 2. pdf_redact (redaction)
 3. Enhanced encryption (AES-256)
 
-### v0.4.0 - JavaScript & Interactivity
+### v0.4.0 - JavaScript & Accessibility
 1. pdf_js (JavaScript)
-2. pdf_layer (OCG)
+2. pdf_tagged (accessibility/PDF-UA)
 3. Enhanced form support
 
 ### v0.5.0 - Additional Formats
@@ -963,5 +843,5 @@ Priority should be given to items that:
 
 ---
 
-*Last updated: 2025-12-24*
+*Last updated: 2025-12-26*
 
