@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 36/70+ modules** (~51%)
+**Implemented: 37/70+ modules** (~53%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -46,6 +46,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_xref | - | Cross-reference |
 | fz_outline | 30+ | Document TOC/outlines |
 | fz_stext | 50+ | Structured text extraction |
+| fz_filter | 18+ | Stream filters |
 
 ---
 
@@ -54,26 +55,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### High Priority
-
-#### fz_filter (Stream Filters)
-- [ ] `fz_open_null_filter` - null filter
-- [ ] `fz_open_range_filter` - range filter
-- [ ] `fz_open_endstream_filter` - PDF endstream
-- [ ] `fz_open_concat` - concatenate streams
-- [ ] `fz_open_arc4` - RC4 decryption
-- [ ] `fz_open_aesd` - AES decryption
-- [ ] `fz_open_a85d` - ASCII85 decode
-- [ ] `fz_open_ahxd` - ASCII Hex decode
-- [ ] `fz_open_rld` - Run Length decode
-- [ ] `fz_open_dctd` - DCT/JPEG decode
-- [ ] `fz_open_faxd` - Fax/CCITT decode
-- [ ] `fz_open_flated` - Flate/zlib decode
-- [ ] `fz_open_lzwd` - LZW decode
-- [ ] `fz_open_predict` - predictor decode
-- [ ] `fz_open_jbig2d` - JBIG2 decode
-- [ ] `fz_open_brotlid` - Brotli decode
-- [ ] `fz_open_sgilog16/24/32` - SGI Log decode
-- [ ] `fz_open_thunder` - Thunderscan decode
 
 #### fz_writer (Document Writers)
 - [ ] `fz_document_writer` - base writer structure

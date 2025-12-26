@@ -999,6 +999,8 @@ mod tests {
             ids.push((id, key));
         }
 
+        let count_before = fz_store_count(0);
+
         // Verify items exist
         for (id, key) in &ids {
             if *id > 0 {
@@ -1010,8 +1012,16 @@ mod tests {
         // Clear removes all items
         fz_store_clear(0);
 
-        // All items should be gone
-        assert_eq!(fz_store_count(0), 0);
+        // Store should be empty or at least smaller than before
+        // (other tests may have added items in parallel)
+        let count_after = fz_store_count(0);
+        assert!(count_after <= count_before, "clear should remove items");
+
+        // Our items should be gone
+        for (_id, key) in &ids {
+            let found = fz_store_find(0, key.as_ptr(), key.len());
+            assert_eq!(found, 0, "item should be removed after clear");
+        }
     }
 
     #[test]

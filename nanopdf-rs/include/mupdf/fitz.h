@@ -18,6 +18,7 @@ extern "C" {
 #include "mupdf/fitz/device.h"
 #include "mupdf/fitz/display_list.h"
 #include "mupdf/fitz/draw_device.h"
+#include "mupdf/fitz/filter.h"
 #include "mupdf/fitz/font.h"
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/glyph.h"

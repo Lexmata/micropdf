@@ -33,8 +33,8 @@ pub enum StextFlag {
     TableHunt = 16384,
     CollectStyles = 32768,
     UseGidForUnknownUnicode = 65536,
-    ClipRect = 131072,          // 1 << 17
-    AccurateAscenders = 262144, // 1 << 18
+    ClipRect = 131072,             // 1 << 17
+    AccurateAscenders = 262144,    // 1 << 18
     AccurateSideBearings = 524288, // 1 << 19
 }
 
@@ -141,10 +141,10 @@ pub struct Rect {
 /// Structured text character
 #[derive(Debug, Clone)]
 pub struct StextChar {
-    pub c: i32,      // Unicode character value
-    pub bidi: u16,   // BiDi level (even=LTR, odd=RTL)
-    pub flags: u16,  // Character flags
-    pub argb: u32,   // sRGB color (alpha, r, g, b)
+    pub c: i32,     // Unicode character value
+    pub bidi: u16,  // BiDi level (even=LTR, odd=RTL)
+    pub flags: u16, // Character flags
+    pub argb: u32,  // sRGB color (alpha, r, g, b)
     pub origin: Point,
     pub quad: Quad,
     pub size: f32,
@@ -169,9 +169,9 @@ impl Default for StextChar {
 /// Structured text line
 #[derive(Debug, Clone, Default)]
 pub struct StextLine {
-    pub wmode: u8,   // 0 = horizontal, 1 = vertical
+    pub wmode: u8, // 0 = horizontal, 1 = vertical
     pub flags: u8,
-    pub dir: Point,  // Normalized baseline direction
+    pub dir: Point, // Normalized baseline direction
     pub bbox: Rect,
     pub chars: Vec<StextChar>,
 }
@@ -182,8 +182,8 @@ pub struct StextBlock {
     pub block_type: StextBlockType,
     pub id: i32,
     pub bbox: Rect,
-    pub lines: Vec<StextLine>,   // For text blocks
-    pub image: Option<Handle>,   // For image blocks
+    pub lines: Vec<StextLine>,       // For text blocks
+    pub image: Option<Handle>,       // For image blocks
     pub struct_down: Option<Handle>, // For struct blocks
     pub struct_index: i32,
     pub text_flags: i32,
@@ -1216,7 +1216,8 @@ pub extern "C" fn fz_table_hunt(_ctx: Handle, page: Handle) {
                 // (This is a simplified heuristic)
                 if x_positions.len() > 10 {
                     // Sort and look for clusters
-                    x_positions.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                    x_positions
+                        .sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
                     // Count positions within tolerance
                     let tolerance = 5.0;
@@ -1259,12 +1260,8 @@ pub extern "C" fn fz_parse_stext_options(
             for part in s.split(',') {
                 let part = part.trim();
                 match part {
-                    "preserve-ligatures" => {
-                        options.flags |= StextFlag::PreserveLigatures as i32
-                    }
-                    "preserve-whitespace" => {
-                        options.flags |= StextFlag::PreserveWhitespace as i32
-                    }
+                    "preserve-ligatures" => options.flags |= StextFlag::PreserveLigatures as i32,
+                    "preserve-whitespace" => options.flags |= StextFlag::PreserveWhitespace as i32,
                     "preserve-images" => options.flags |= StextFlag::PreserveImages as i32,
                     "inhibit-spaces" => options.flags |= StextFlag::InhibitSpaces as i32,
                     "dehyphenate" => options.flags |= StextFlag::Dehyphenate as i32,
@@ -1292,7 +1289,10 @@ pub extern "C" fn fz_parse_stext_options(
 
 /// Create default stext options
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_default_stext_options(_ctx: Handle, opts: *mut StextOptions) -> *mut StextOptions {
+pub extern "C" fn fz_default_stext_options(
+    _ctx: Handle,
+    opts: *mut StextOptions,
+) -> *mut StextOptions {
     if opts.is_null() {
         return std::ptr::null_mut();
     }
@@ -1490,10 +1490,12 @@ mod tests {
         let line_idx = fz_add_stext_line(ctx, page, block_idx, 0.0, 0.0, 100.0, 12.0);
         assert_eq!(line_idx, 0);
 
-        let char_idx = fz_add_stext_char(ctx, page, block_idx, line_idx, 'H' as i32, 0.0, 12.0, 12.0);
+        let char_idx =
+            fz_add_stext_char(ctx, page, block_idx, line_idx, 'H' as i32, 0.0, 12.0, 12.0);
         assert_eq!(char_idx, 0);
 
-        let char_idx = fz_add_stext_char(ctx, page, block_idx, line_idx, 'i' as i32, 8.0, 12.0, 12.0);
+        let char_idx =
+            fz_add_stext_char(ctx, page, block_idx, line_idx, 'i' as i32, 8.0, 12.0, 12.0);
         assert_eq!(char_idx, 1);
 
         assert_eq!(fz_stext_block_count(ctx, page), 1);
@@ -1630,4 +1632,3 @@ mod tests {
         fz_drop_stext_page(ctx, page);
     }
 }
-
