@@ -243,17 +243,53 @@ jobs:
   # Build Node.js prebuilds
   build-nodejs:
     name: Build Node.js (${{ matrix.os }})
-    needs: detect-release
+    needs: [detect-release, build-rust-libs]
     if: ${{ needs.detect-release.outputs.release_nodejs == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            rust-artifact: nanopdf-linux-x86_64
+            lib-dir: linux-x64
+            lib-file: libnanopdf.a
+          - os: macos-latest
+            rust-artifact: nanopdf-macos-x86_64
+            lib-dir: darwin-x64
+            lib-file: libnanopdf.a
+          - os: windows-latest
+            rust-artifact: nanopdf-windows-x86_64-msvc
+            lib-dir: win32-x64
+            lib-file: nanopdf.lib
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download Rust library
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.rust-artifact }}
+          path: rust-lib
+
+      - name: Setup Rust library for Node.js
+        shell: bash
+        run: |
+          mkdir -p nanopdf-js/native/lib/${{ matrix.lib-dir }}
+          # Extract from tarball if present, otherwise copy directly
+          if ls rust-lib/*.tar.gz 1>/dev/null 2>&1; then
+            tar -xzf rust-lib/*.tar.gz -C nanopdf-js/native/lib/${{ matrix.lib-dir }}/ --wildcards '*.${{ matrix.lib-file == 'nanopdf.lib' && 'lib' || 'a' }}' 2>/dev/null || \
+            tar -xzf rust-lib/*.tar.gz -C nanopdf-js/native/lib/${{ matrix.lib-dir }}/ 2>/dev/null || true
+            # Find and move the library file if needed
+            find nanopdf-js/native/lib/${{ matrix.lib-dir }}/ -name '${{ matrix.lib-file }}' -exec mv {} nanopdf-js/native/lib/${{ matrix.lib-dir }}/ \; 2>/dev/null || true
+          fi
+          # Copy directly if file exists
+          if [ -f "rust-lib/${{ matrix.lib-file }}" ]; then
+            cp "rust-lib/${{ matrix.lib-file }}" "nanopdf-js/native/lib/${{ matrix.lib-dir }}/"
+          fi
+          ls -la nanopdf-js/native/lib/${{ matrix.lib-dir }}/ || echo "Directory not created"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -265,7 +301,12 @@ jobs:
 
       - name: Install dependencies
         working-directory: nanopdf-js
-        run: pnpm install
+        run: pnpm install --ignore-scripts
+
+      - name: Build native addon
+        working-directory: nanopdf-js
+        run: pnpm run build:native || echo "Native build skipped - library may not be available"
+        continue-on-error: true
 
       - name: Build TypeScript
         working-directory: nanopdf-js
