@@ -91,7 +91,7 @@ jobs:
         working-directory: nanopdf-js
         run: |
           DURATION=${{ github.event.inputs.duration || '300' }}
-          npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.ts --sync -t $DURATION
+          npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.ts --sync --timeout=${DURATION}s
         env:
           NODE_ENV: production
 
