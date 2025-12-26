@@ -969,9 +969,9 @@ mod tests {
         let key1 = unique_key("font");
         let key2 = unique_key("image");
 
-        // Use unique type IDs unlikely to conflict
-        let font_type = 1001;
-        let image_type = 1002;
+        // Use standard type IDs: 1=Font, 2=Image
+        let font_type = 1;
+        let image_type = 2;
 
         let id1 = fz_store_item(0, font_type, 1, 100, key1.as_ptr(), key1.len());
         let id2 = fz_store_item(0, image_type, 2, 200, key2.as_ptr(), key2.len());

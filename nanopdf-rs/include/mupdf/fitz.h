@@ -14,6 +14,7 @@ extern "C" {
 #include "mupdf/fitz/buffer.h"
 #include "mupdf/fitz/color.h"
 #include "mupdf/fitz/colorspace.h"
+#include "mupdf/fitz/compress.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/cookie.h"
 #include "mupdf/fitz/device.h"

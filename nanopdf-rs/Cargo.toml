@@ -41,6 +41,7 @@ crate-type = ["lib", "staticlib", "cdylib"]
 [dependencies]
 thiserror = "2"
 flate2 = "1"
+brotli = "7"
 aes = "0.8"
 cbc = "0.1"
 md-5 = "0.10"

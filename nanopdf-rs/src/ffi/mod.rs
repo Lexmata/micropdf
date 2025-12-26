@@ -14,6 +14,7 @@ pub mod bitmap;
 pub mod buffer;
 pub mod color;
 pub mod colorspace;
+pub mod compress;
 pub mod context;
 pub mod cookie;
 pub mod device;

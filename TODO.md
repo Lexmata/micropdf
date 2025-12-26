@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 41/70+ modules** (~59%)
+**Implemented: 42/70+ modules** (~60%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -51,6 +51,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_story | 13+ | HTML story layout |
 | fz_transition | 19+ | Page transitions |
 | fz_color | 25+ | Color management |
+| fz_compress | 30+ | Deflate/Brotli/Fax compression |
 
 ---
 
@@ -59,16 +60,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Medium Priority
-
-#### fz_compress (Compression)
-- [ ] `fz_deflate` / `fz_deflate_bound` - zlib compression
-- [ ] `fz_compress_ccitt_fax_g3` / `fz_compress_ccitt_fax_g4`
-- [ ] Compression level options
-
-#### fz_compressed_buffer
-- [ ] `fz_compressed_buffer` - compressed data + params
-- [ ] `fz_keep_compressed_buffer` / `fz_drop_compressed_buffer`
-- [ ] `fz_compressed_buffer_size`
 
 #### fz_glyph_cache
 - [ ] Glyph cache management (beyond basic fz_glyph)
