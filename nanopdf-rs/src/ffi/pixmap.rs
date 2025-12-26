@@ -108,6 +108,46 @@ impl Pixmap {
     pub fn h(&self) -> i32 {
         self.height
     }
+
+    /// Get x origin
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    /// Get y origin
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+
+    /// Get number of components (including alpha)
+    pub fn n(&self) -> i32 {
+        self.n
+    }
+
+    /// Get stride (bytes per row)
+    pub fn stride(&self) -> i32 {
+        self.stride
+    }
+
+    /// Check if pixmap has alpha channel
+    pub fn has_alpha(&self) -> bool {
+        self.alpha
+    }
+
+    /// Get colorspace handle
+    pub fn colorspace(&self) -> ColorspaceHandle {
+        self.colorspace
+    }
+
+    /// Get immutable reference to samples
+    pub fn samples(&self) -> &[u8] {
+        &self.samples
+    }
+
+    /// Get mutable reference to samples
+    pub fn samples_mut(&mut self) -> &mut [u8] {
+        &mut self.samples
+    }
 }
 
 /// Create a new pixmap

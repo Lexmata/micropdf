@@ -9,6 +9,8 @@
 
 pub mod annot;
 pub mod archive;
+pub mod band_writer;
+pub mod bitmap;
 pub mod buffer;
 pub mod colorspace;
 pub mod context;
@@ -16,6 +18,7 @@ pub mod cookie;
 pub mod device;
 pub mod display_list;
 pub mod document;
+pub mod draw_device;
 pub mod enhanced;
 pub mod font;
 pub mod form;
@@ -27,11 +30,15 @@ pub mod output;
 pub mod path;
 pub mod pdf_object;
 pub mod pixmap;
+pub mod pool;
 pub mod separation;
 pub mod shade;
 pub mod store;
 pub mod stream;
+pub mod string_util;
 pub mod text;
+pub mod tree;
+pub mod xml;
 
 // Safe helper functions for common FFI patterns
 mod safe_helpers;

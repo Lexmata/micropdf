@@ -71,51 +71,51 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 ### Medium Priority
 
 #### fz_draw_device (Rendering Device)
-- [ ] Anti-aliased path rendering
-- [ ] Subpixel text rendering
-- [ ] Alpha compositing
-- [ ] Clip path handling
-- [ ] Pattern fills
-- [ ] Overprint simulation
+- [x] Anti-aliased path rendering
+- [x] Subpixel text rendering
+- [x] Alpha compositing
+- [x] Clip path handling
+- [x] Pattern fills
+- [x] Overprint simulation
 
 #### fz_bitmap (1-bit Images)
-- [ ] 1-bit bitmap creation
-- [ ] Halftoning algorithms
-- [ ] Threshold conversion from pixmap
-- [ ] RLE compression
-- [ ] Fax encoding (CCITT Group 4)
+- [x] 1-bit bitmap creation
+- [x] Halftoning algorithms
+- [x] Threshold conversion from pixmap
+- [x] RLE compression
+- [x] Fax encoding (CCITT Group 4)
 
 #### fz_band_writer (Band-based Output)
-- [ ] Band-by-band rendering
-- [ ] Memory-efficient large document output
-- [ ] Multiple output format support
-- [ ] Progress callbacks
+- [x] Band-by-band rendering
+- [x] Memory-efficient large document output
+- [x] Multiple output format support
+- [x] Progress callbacks
 
 #### fz_pool (Memory Pool)
-- [ ] Block memory allocation
-- [ ] Pool-based object lifetimes
-- [ ] Memory usage tracking
-- [ ] Custom allocator support
+- [x] Block memory allocation
+- [x] Pool-based object lifetimes
+- [x] Memory usage tracking
+- [x] Custom allocator support
 
 ### Lower Priority
 
 #### fz_xml (XML Parsing)
-- [ ] XML DOM parsing
-- [ ] XPath queries
-- [ ] XML namespace support
-- [ ] Used for XPS/EPUB formats
+- [x] XML DOM parsing
+- [x] XPath queries
+- [x] XML namespace support
+- [x] Used for XPS/EPUB formats
 
 #### fz_tree (Structured Content)
-- [ ] Tree structure for text
-- [ ] Reading order detection
-- [ ] Logical structure tree
-- [ ] Tagged PDF support
+- [x] Tree structure for text
+- [x] Reading order detection
+- [x] Logical structure tree
+- [x] Tagged PDF support
 
 #### fz_string (Advanced String Handling)
-- [ ] Unicode normalization
-- [ ] BiDi text processing
-- [ ] Text segmentation
-- [ ] Language-aware sorting
+- [x] Unicode normalization
+- [x] BiDi text processing
+- [x] Text segmentation
+- [x] Language-aware sorting
 
 ---
 
