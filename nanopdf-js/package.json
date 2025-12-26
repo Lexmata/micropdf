@@ -118,6 +118,9 @@
     "package_name": "nanopdf-{platform}-{arch}.tar.gz"
   },
   "pnpm": {
-    "onlyBuiltDependencies": []
+    "onlyBuiltDependencies": [
+      "@jazzer.js/fuzzer",
+      "esbuild"
+    ]
   }
 }
