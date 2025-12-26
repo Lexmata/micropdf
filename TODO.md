@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 39/70+ modules** (~56%)
+**Implemented: 40/70+ modules** (~57%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -49,6 +49,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_filter | 18+ | Stream filters |
 | fz_writer | 50+ | Document writers |
 | fz_story | 13+ | HTML story layout |
+| fz_transition | 19+ | Page transitions |
 
 ---
 
@@ -57,11 +58,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Medium Priority
-
-#### fz_transition (Page Transitions)
-- [ ] `fz_transition` structure - type, duration, direction
-- [ ] `fz_generate_transition` - generate transition frame
-- [ ] Transition types: Split, Blinds, Box, Wipe, Dissolve, Glitter, Fly, Push, Cover, Uncover, Fade
 
 #### fz_color (Color Management)
 - [ ] `fz_color_params` - rendering intent, black point compensation

@@ -41,6 +41,7 @@ pub mod story;
 pub mod stream;
 pub mod string_util;
 pub mod text;
+pub mod transition;
 pub mod tree;
 pub mod writer;
 pub mod xml;
