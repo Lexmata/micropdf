@@ -147,7 +147,8 @@ jobs:
       - name: Install Rust library
         run: |
           cd nanopdf-rs
-          sudo make install PREFIX=/usr
+          # Use sudo -E to preserve PATH with cargo
+          sudo -E env "PATH=$PATH" make install PREFIX=/usr
 
       - name: Run Go fuzz tests
         timeout-minutes: 10
