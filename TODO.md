@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 40/70+ modules** (~57%)
+**Implemented: 41/70+ modules** (~59%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -50,6 +50,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_writer | 50+ | Document writers |
 | fz_story | 13+ | HTML story layout |
 | fz_transition | 19+ | Page transitions |
+| fz_color | 25+ | Color management |
 
 ---
 
@@ -58,12 +59,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Medium Priority
-
-#### fz_color (Color Management)
-- [ ] `fz_color_params` - rendering intent, black point compensation
-- [ ] `fz_default_color_params` - default color handling
-- [ ] ICC profile loading and management
-- [ ] Color space conversions beyond basic
 
 #### fz_compress (Compression)
 - [ ] `fz_deflate` / `fz_deflate_bound` - zlib compression

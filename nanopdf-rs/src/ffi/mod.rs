@@ -12,6 +12,7 @@ pub mod archive;
 pub mod band_writer;
 pub mod bitmap;
 pub mod buffer;
+pub mod color;
 pub mod colorspace;
 pub mod context;
 pub mod cookie;
