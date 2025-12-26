@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 35/70+ modules** (~50%)
+**Implemented: 36/70+ modules** (~51%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -45,6 +45,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_object | - | PDF objects |
 | pdf_xref | - | Cross-reference |
 | fz_outline | 30+ | Document TOC/outlines |
+| fz_stext | 50+ | Structured text extraction |
 
 ---
 
@@ -53,22 +54,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### High Priority
-
-#### fz_stext (Structured Text Extraction)
-- [ ] `fz_stext_page` - text page structure
-- [ ] `fz_stext_block` - text/image/struct blocks
-- [ ] `fz_stext_line` - text lines with baseline
-- [ ] `fz_stext_char` - unicode chars with position/font
-- [ ] `fz_new_stext_page` / `fz_drop_stext_page`
-- [ ] `fz_new_stext_device` - text extraction device
-- [ ] `fz_search_stext_page` - text search
-- [ ] `fz_highlight_selection` - selection highlighting
-- [ ] `fz_copy_selection` - copy text from selection
-- [ ] `fz_print_stext_page_as_html/xhtml/xml/json/text` - output formats
-- [ ] `fz_segment_stext_page` - page segmentation analysis
-- [ ] `fz_paragraph_break` - paragraph detection
-- [ ] `fz_table_hunt` - table detection
-- [ ] `fz_new_ocr_device` - OCR integration
 
 #### fz_filter (Stream Filters)
 - [ ] `fz_open_null_filter` - null filter

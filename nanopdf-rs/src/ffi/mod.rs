@@ -35,6 +35,7 @@ pub mod pool;
 pub mod separation;
 pub mod shade;
 pub mod store;
+pub mod stext;
 pub mod stream;
 pub mod string_util;
 pub mod text;
