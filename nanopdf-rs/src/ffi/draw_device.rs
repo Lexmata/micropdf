@@ -246,12 +246,12 @@ pub extern "C" fn fz_new_draw_device_with_matrix(
         target: target_pixmap,
         ..Default::default()
     };
-    
+
     if !matrix.is_null() {
         let m = unsafe { std::slice::from_raw_parts(matrix, 6) };
         device.current_state.ctm.copy_from_slice(m);
     }
-    
+
     DRAW_DEVICES.insert(device)
 }
 
@@ -269,7 +269,7 @@ pub extern "C" fn fz_new_draw_device_with_options(
         3 => AntiAliasLevel::High,
         _ => AntiAliasLevel::Medium,
     };
-    
+
     let device = DrawDevice {
         target: target_pixmap,
         aa_level: aa,
@@ -311,15 +311,11 @@ pub extern "C" fn fz_draw_device_restore(_ctx: Handle, device: Handle) {
 
 /// Set transformation matrix
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_draw_device_set_ctm(
-    _ctx: Handle,
-    device: Handle,
-    matrix: *const f32,
-) {
+pub extern "C" fn fz_draw_device_set_ctm(_ctx: Handle, device: Handle, matrix: *const f32) {
     if matrix.is_null() {
         return;
     }
-    
+
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             let m = unsafe { std::slice::from_raw_parts(matrix, 6) };
@@ -330,20 +326,16 @@ pub extern "C" fn fz_draw_device_set_ctm(
 
 /// Concatenate transformation matrix
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_draw_device_concat_ctm(
-    _ctx: Handle,
-    device: Handle,
-    matrix: *const f32,
-) {
+pub extern "C" fn fz_draw_device_concat_ctm(_ctx: Handle, device: Handle, matrix: *const f32) {
     if matrix.is_null() {
         return;
     }
-    
+
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             let m = unsafe { std::slice::from_raw_parts(matrix, 6) };
             let ctm = &guard.current_state.ctm;
-            
+
             // Matrix multiplication: result = ctm * m
             let new_ctm = [
                 ctm[0] * m[0] + ctm[1] * m[2],
@@ -485,7 +477,7 @@ pub extern "C" fn fz_draw_device_set_blend_mode(_ctx: Handle, device: Handle, mo
         15 => BlendMode::Luminosity,
         _ => BlendMode::Normal,
     };
-    
+
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             guard.current_state.blend_mode = blend;
@@ -512,7 +504,7 @@ pub extern "C" fn fz_draw_device_set_overprint(_ctx: Handle, device: Handle, mod
         3 => OverprintMode::Both,
         _ => OverprintMode::Off,
     };
-    
+
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             guard.current_state.overprint = op;
@@ -568,7 +560,9 @@ pub extern "C" fn fz_draw_device_curve_to(
 ) {
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
-            guard.current_path.push(PathOp::CurveTo(x1, y1, x2, y2, x3, y3));
+            guard
+                .current_path
+                .push(PathOp::CurveTo(x1, y1, x2, y2, x3, y3));
         }
     }
 }
@@ -608,7 +602,7 @@ pub extern "C" fn fz_draw_device_fill(_ctx: Handle, device: Handle, rule: i32) -
             } else {
                 ClipRule::NonZero
             };
-            
+
             let path_len = guard.current_path.len();
             guard.current_path.clear();
             return path_len as i32;
@@ -623,11 +617,7 @@ pub extern "C" fn fz_draw_device_fill(_ctx: Handle, device: Handle, rule: i32) -
 
 /// Push clip path
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_draw_device_clip(
-    _ctx: Handle,
-    device: Handle,
-    rule: i32,
-) {
+pub extern "C" fn fz_draw_device_clip(_ctx: Handle, device: Handle, rule: i32) {
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             // Convert path to points for clip region
@@ -639,7 +629,7 @@ pub extern "C" fn fz_draw_device_clip(
                     PathOp::ClosePath => {}
                 }
             }
-            
+
             let clip = ClipRegion {
                 path: points,
                 rule: if rule == 1 {
@@ -649,7 +639,7 @@ pub extern "C" fn fz_draw_device_clip(
                 },
                 bbox: [0.0, 0.0, guard.width as f32, guard.height as f32],
             };
-            
+
             guard.clip_stack.push(clip);
             guard.current_path.clear();
         }
@@ -795,7 +785,7 @@ pub extern "C" fn fz_draw_device_set_aa_level(_ctx: Handle, device: Handle, leve
         3 => AntiAliasLevel::High,
         _ => AntiAliasLevel::Medium,
     };
-    
+
     if let Some(dev) = DRAW_DEVICES.get(device) {
         if let Ok(mut guard) = dev.lock() {
             guard.aa_level = aa;
@@ -868,62 +858,61 @@ mod tests {
     #[test]
     fn test_graphics_state() {
         let dev = fz_new_draw_device_with_size(0, 1, 100, 100);
-        
+
         fz_draw_device_set_fill_color(0, dev, 1.0, 0.0, 0.0, 1.0);
         fz_draw_device_set_line_width(0, dev, 2.5);
-        
+
         fz_draw_device_save(0, dev);
         fz_draw_device_set_fill_color(0, dev, 0.0, 1.0, 0.0, 1.0);
         fz_draw_device_restore(0, dev);
-        
+
         fz_drop_draw_device(0, dev);
     }
 
     #[test]
     fn test_path_operations() {
         let dev = fz_new_draw_device_with_size(0, 1, 100, 100);
-        
+
         fz_draw_device_begin_path(0, dev);
         fz_draw_device_move_to(0, dev, 10.0, 10.0);
         fz_draw_device_line_to(0, dev, 90.0, 10.0);
         fz_draw_device_line_to(0, dev, 90.0, 90.0);
         fz_draw_device_line_to(0, dev, 10.0, 90.0);
         fz_draw_device_close_path(0, dev);
-        
+
         let ops = fz_draw_device_fill(0, dev, 0);
         assert_eq!(ops, 5); // 1 move + 3 lines + 1 close
-        
+
         fz_drop_draw_device(0, dev);
     }
 
     #[test]
     fn test_clipping() {
         let dev = fz_new_draw_device_with_size(0, 1, 100, 100);
-        
+
         assert_eq!(fz_draw_device_clip_depth(0, dev), 0);
-        
+
         fz_draw_device_begin_path(0, dev);
         fz_draw_device_move_to(0, dev, 0.0, 0.0);
         fz_draw_device_line_to(0, dev, 100.0, 100.0);
         fz_draw_device_clip(0, dev, 0);
-        
+
         assert_eq!(fz_draw_device_clip_depth(0, dev), 1);
-        
+
         fz_draw_device_pop_clip(0, dev);
         assert_eq!(fz_draw_device_clip_depth(0, dev), 0);
-        
+
         fz_drop_draw_device(0, dev);
     }
 
     #[test]
     fn test_blend_modes() {
         let dev = fz_new_draw_device_with_size(0, 1, 100, 100);
-        
+
         for mode in 0..16 {
             fz_draw_device_set_blend_mode(0, dev, mode);
         }
-        
+
         fz_drop_draw_device(0, dev);
     }
 }
-

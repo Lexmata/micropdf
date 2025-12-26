@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 34/70+ modules** (~49%)
+**Implemented: 35/70+ modules** (~50%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -44,6 +44,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_lexer | 12 | Token types |
 | pdf_object | - | PDF objects |
 | pdf_xref | - | Cross-reference |
+| fz_outline | 30+ | Document TOC/outlines |
 
 ---
 
@@ -52,16 +53,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### High Priority
-
-#### fz_outline (Document Outlines/TOC)
-- [ ] `fz_outline` structure - tree of outline entries
-- [ ] `fz_outline_iterator` - iterator for traversal
-- [ ] `fz_new_outline` - create outline entry
-- [ ] `fz_keep_outline` / `fz_drop_outline` - reference counting
-- [ ] `fz_outline_iterator_item` - get current item
-- [ ] `fz_outline_iterator_next/prev/up/down` - navigation
-- [ ] `fz_outline_iterator_insert/delete/update` - modification
-- [ ] `fz_load_outline_from_iterator` - structure API
 
 #### fz_stext (Structured Text Extraction)
 - [ ] `fz_stext_page` - text page structure
@@ -1061,7 +1052,7 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 
 ### v0.6.0 - Additional Formats
 1. XPS support
-2. EPUB support  
+2. EPUB support
 3. SVG support
 4. fz_barcode (barcodes)
 

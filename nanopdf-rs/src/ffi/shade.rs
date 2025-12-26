@@ -322,9 +322,11 @@ pub extern "C" fn fz_shade_add_color_stop(
             };
             stop.color[..n as usize].copy_from_slice(color_slice);
             guard.color_stops.push(stop);
-            
+
             // Keep stops sorted by offset
-            guard.color_stops.sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap());
+            guard
+                .color_stops
+                .sort_by(|a, b| a.offset.partial_cmp(&b.offset).unwrap());
             return 1;
         }
     }
@@ -379,11 +381,11 @@ pub extern "C" fn fz_shade_add_patch(
         if let Ok(mut guard) = shade_arc.lock() {
             let points_slice = unsafe { std::slice::from_raw_parts(points, 16) };
             let colors_slice = unsafe { std::slice::from_raw_parts(colors, 4) };
-            
+
             let mut patch = ShadePatch::default();
             patch.points.copy_from_slice(points_slice);
             patch.colors.copy_from_slice(colors_slice);
-            
+
             guard.patches.push(patch);
             return 1;
         }
@@ -413,11 +415,7 @@ pub extern "C" fn fz_shade_set_bbox(
 /// # Safety
 /// `color` must point to at least 4 floats.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_shade_set_background(
-    _ctx: Handle,
-    shade: Handle,
-    color: *const f32,
-) {
+pub extern "C" fn fz_shade_set_background(_ctx: Handle, shade: Handle, color: *const f32) {
     if color.is_null() {
         return;
     }
@@ -582,12 +580,7 @@ pub extern "C" fn fz_shade_has_background(_ctx: Handle, shade: Handle) -> i32 {
 /// # Safety
 /// `color` must point to at least 4 floats.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_shade_sample(
-    _ctx: Handle,
-    shade: Handle,
-    t: f32,
-    color: *mut f32,
-) {
+pub extern "C" fn fz_shade_sample(_ctx: Handle, shade: Handle, t: f32, color: *mut f32) {
     if color.is_null() {
         return;
     }
@@ -595,20 +588,20 @@ pub extern "C" fn fz_shade_sample(
     if let Some(shade_arc) = SHADES.get(shade) {
         if let Ok(guard) = shade_arc.lock() {
             let color_slice = unsafe { std::slice::from_raw_parts_mut(color, 4) };
-            
+
             // Default to black
             color_slice.fill(0.0);
-            
+
             if guard.color_stops.is_empty() {
                 return;
             }
 
             let t = t.clamp(0.0, 1.0);
-            
+
             // Find bounding stops
             let mut prev_stop = &guard.color_stops[0];
             let mut next_stop = &guard.color_stops[guard.color_stops.len() - 1];
-            
+
             for stop in &guard.color_stops {
                 if stop.offset <= t {
                     prev_stop = stop;
@@ -618,14 +611,15 @@ pub extern "C" fn fz_shade_sample(
                     break;
                 }
             }
-            
+
             // Interpolate between stops
             if (next_stop.offset - prev_stop.offset).abs() < f32::EPSILON {
                 color_slice.copy_from_slice(&prev_stop.color);
             } else {
                 let blend = (t - prev_stop.offset) / (next_stop.offset - prev_stop.offset);
                 for i in 0..4 {
-                    color_slice[i] = prev_stop.color[i] + blend * (next_stop.color[i] - prev_stop.color[i]);
+                    color_slice[i] =
+                        prev_stop.color[i] + blend * (next_stop.color[i] - prev_stop.color[i]);
                 }
             }
         }
@@ -660,11 +654,11 @@ mod tests {
     fn test_linear_gradient_creation() {
         let shade = fz_new_linear_shade(0, 2, 0.0, 0.0, 100.0, 0.0, 1, 1);
         assert!(shade > 0);
-        
+
         assert_eq!(fz_shade_type(0, shade), ShadeType::Linear as i32);
         assert_eq!(fz_shade_extend_start(0, shade), 1);
         assert_eq!(fz_shade_extend_end(0, shade), 1);
-        
+
         fz_drop_shade(0, shade);
     }
 
@@ -672,42 +666,42 @@ mod tests {
     fn test_radial_gradient_creation() {
         let shade = fz_new_radial_shade(0, 2, 50.0, 50.0, 0.0, 50.0, 50.0, 100.0, 0, 1);
         assert!(shade > 0);
-        
+
         assert_eq!(fz_shade_type(0, shade), ShadeType::Radial as i32);
-        
+
         fz_drop_shade(0, shade);
     }
 
     #[test]
     fn test_color_stops() {
         let shade = fz_new_linear_shade(0, 2, 0.0, 0.0, 100.0, 0.0, 0, 0);
-        
+
         let red = [1.0f32, 0.0, 0.0, 1.0];
         let blue = [0.0f32, 0.0, 1.0, 1.0];
-        
+
         fz_shade_add_color_stop(0, shade, 0.0, red.as_ptr(), 4);
         fz_shade_add_color_stop(0, shade, 1.0, blue.as_ptr(), 4);
-        
+
         assert_eq!(fz_shade_color_stop_count(0, shade), 2);
-        
+
         // Sample at midpoint
         let mut color = [0.0f32; 4];
         fz_shade_sample(0, shade, 0.5, color.as_mut_ptr());
-        
+
         // Should be purple-ish (mix of red and blue)
         assert!((color[0] - 0.5).abs() < 0.1);
         assert!((color[2] - 0.5).abs() < 0.1);
-        
+
         fz_drop_shade(0, shade);
     }
 
     #[test]
     fn test_mesh_shade() {
-        let shade = fz_new_mesh_shade(0, 2, 6, 8, 8, 2);  // Coons patch
+        let shade = fz_new_mesh_shade(0, 2, 6, 8, 8, 2); // Coons patch
         assert!(shade > 0);
-        
+
         assert_eq!(fz_shade_type(0, shade), ShadeType::CoonsPatch as i32);
-        
+
         fz_drop_shade(0, shade);
     }
 
@@ -720,29 +714,28 @@ mod tests {
     #[test]
     fn test_bounding_box() {
         let shade = fz_new_linear_shade(0, 2, 0.0, 0.0, 100.0, 100.0, 0, 0);
-        
+
         fz_shade_set_bbox(0, shade, 10.0, 20.0, 90.0, 80.0);
-        
+
         let mut bbox = [0.0f32; 4];
         fz_shade_bbox(0, shade, bbox.as_mut_ptr());
-        
+
         assert_eq!(bbox, [10.0, 20.0, 90.0, 80.0]);
-        
+
         fz_drop_shade(0, shade);
     }
 
     #[test]
     fn test_background() {
         let shade = fz_new_linear_shade(0, 2, 0.0, 0.0, 100.0, 0.0, 0, 0);
-        
+
         assert_eq!(fz_shade_has_background(0, shade), 0);
-        
+
         let bg = [1.0f32, 1.0, 1.0, 1.0];
         fz_shade_set_background(0, shade, bg.as_ptr());
-        
+
         assert_eq!(fz_shade_has_background(0, shade), 1);
-        
+
         fz_drop_shade(0, shade);
     }
 }
-

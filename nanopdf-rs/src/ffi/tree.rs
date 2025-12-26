@@ -215,13 +215,13 @@ pub extern "C" fn fz_new_structure_tree(_ctx: Handle) -> Handle {
         ..Default::default()
     };
     let root_handle = TREE_NODES.insert(root_node);
-    
+
     let tree = StructureTree {
         root: root_handle,
         nodes: vec![root_handle],
         ..Default::default()
     };
-    
+
     STRUCTURE_TREES.insert(tree)
 }
 
@@ -260,29 +260,29 @@ pub extern "C" fn fz_tree_add_node(
         60 => StructureType::Figure,
         _ => StructureType::Unknown,
     };
-    
+
     let node = TreeNode {
         struct_type: st,
         parent,
         ..Default::default()
     };
-    
+
     let node_handle = TREE_NODES.insert(node);
-    
+
     // Link to parent
     if let Some(p) = TREE_NODES.get(parent) {
         if let Ok(mut guard) = p.lock() {
             guard.children.push(node_handle);
         }
     }
-    
+
     // Add to tree
     if let Some(t) = STRUCTURE_TREES.get(tree) {
         if let Ok(mut guard) = t.lock() {
             guard.nodes.push(node_handle);
         }
     }
-    
+
     node_handle
 }
 
@@ -305,7 +305,7 @@ pub extern "C" fn fz_tree_node_type(_ctx: Handle, node: Handle) -> i32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_tree_node_type_name(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.type_name.is_empty() {
@@ -318,18 +318,14 @@ pub extern "C" fn fz_tree_node_type_name(_ctx: Handle, node: Handle) -> *const c
 
 /// Set node title
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_tree_node_set_title(
-    _ctx: Handle,
-    node: Handle,
-    title: *const c_char,
-) {
+pub extern "C" fn fz_tree_node_set_title(_ctx: Handle, node: Handle, title: *const c_char) {
     if title.is_null() {
         return;
     }
-    
+
     let title_str = unsafe { CStr::from_ptr(title) };
     let title_text = title_str.to_str().unwrap_or("").to_string();
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(mut guard) = n.lock() {
             guard.title = title_text;
@@ -341,7 +337,7 @@ pub extern "C" fn fz_tree_node_set_title(
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_tree_node_title(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.title.is_empty() {
@@ -358,10 +354,10 @@ pub extern "C" fn fz_tree_node_set_alt(_ctx: Handle, node: Handle, alt: *const c
     if alt.is_null() {
         return;
     }
-    
+
     let alt_str = unsafe { CStr::from_ptr(alt) };
     let alt_text = alt_str.to_str().unwrap_or("").to_string();
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(mut guard) = n.lock() {
             guard.alt_text = alt_text;
@@ -373,7 +369,7 @@ pub extern "C" fn fz_tree_node_set_alt(_ctx: Handle, node: Handle, alt: *const c
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_tree_node_alt(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.alt_text.is_empty() {
@@ -386,18 +382,14 @@ pub extern "C" fn fz_tree_node_alt(_ctx: Handle, node: Handle) -> *const c_char 
 
 /// Set actual text (replacement text)
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_tree_node_set_actual_text(
-    _ctx: Handle,
-    node: Handle,
-    text: *const c_char,
-) {
+pub extern "C" fn fz_tree_node_set_actual_text(_ctx: Handle, node: Handle, text: *const c_char) {
     if text.is_null() {
         return;
     }
-    
+
     let text_str = unsafe { CStr::from_ptr(text) };
     let actual = text_str.to_str().unwrap_or("").to_string();
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(mut guard) = n.lock() {
             guard.actual_text = actual;
@@ -409,7 +401,7 @@ pub extern "C" fn fz_tree_node_set_actual_text(
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_tree_node_actual_text(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.actual_text.is_empty() {
@@ -426,10 +418,10 @@ pub extern "C" fn fz_tree_node_set_lang(_ctx: Handle, node: Handle, lang: *const
     if lang.is_null() {
         return;
     }
-    
+
     let lang_str = unsafe { CStr::from_ptr(lang) };
     let language = lang_str.to_str().unwrap_or("").to_string();
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(mut guard) = n.lock() {
             guard.lang = language;
@@ -441,7 +433,7 @@ pub extern "C" fn fz_tree_node_set_lang(_ctx: Handle, node: Handle, lang: *const
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_tree_node_lang(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.lang.is_empty() {
@@ -454,25 +446,20 @@ pub extern "C" fn fz_tree_node_lang(_ctx: Handle, node: Handle) -> *const c_char
 
 /// Set ID
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_tree_node_set_id(
-    _ctx: Handle,
-    tree: Handle,
-    node: Handle,
-    id: *const c_char,
-) {
+pub extern "C" fn fz_tree_node_set_id(_ctx: Handle, tree: Handle, node: Handle, id: *const c_char) {
     if id.is_null() {
         return;
     }
-    
+
     let id_str = unsafe { CStr::from_ptr(id) };
     let id_text = id_str.to_str().unwrap_or("").to_string();
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(mut guard) = n.lock() {
             guard.id = id_text.clone();
         }
     }
-    
+
     // Update ID map
     if let Some(t) = STRUCTURE_TREES.get(tree) {
         if let Ok(mut guard) = t.lock() {
@@ -517,7 +504,7 @@ pub extern "C" fn fz_tree_node_bbox(_ctx: Handle, node: Handle, bbox: *mut f32) 
     if bbox.is_null() {
         return;
     }
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             let bbox_slice = unsafe { std::slice::from_raw_parts_mut(bbox, 4) };
@@ -590,7 +577,7 @@ pub extern "C" fn fz_tree_node_child(_ctx: Handle, node: Handle, index: i32) -> 
     if index < 0 {
         return 0;
     }
-    
+
     if let Some(n) = TREE_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             return guard.children.get(index as usize).copied().unwrap_or(0);
@@ -612,18 +599,14 @@ pub extern "C" fn fz_tree_node_parent(_ctx: Handle, node: Handle) -> Handle {
 
 /// Find node by ID
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_tree_find_by_id(
-    _ctx: Handle,
-    tree: Handle,
-    id: *const c_char,
-) -> Handle {
+pub extern "C" fn fz_tree_find_by_id(_ctx: Handle, tree: Handle, id: *const c_char) -> Handle {
     if id.is_null() {
         return 0;
     }
-    
+
     let id_str = unsafe { CStr::from_ptr(id) };
     let id_text = id_str.to_str().unwrap_or("");
-    
+
     if let Some(t) = STRUCTURE_TREES.get(tree) {
         if let Ok(guard) = t.lock() {
             return guard.id_map.get(id_text).copied().unwrap_or(0);
@@ -647,17 +630,17 @@ pub extern "C" fn fz_tree_get_text_in_order(
     if buffer.is_null() || buffer_size == 0 {
         return 0;
     }
-    
+
     let mut text = String::new();
     collect_text_recursive(node, &mut text);
-    
+
     let bytes = text.as_bytes();
     let copy_len = bytes.len().min(buffer_size - 1);
-    
+
     let buffer_slice = unsafe { std::slice::from_raw_parts_mut(buffer as *mut u8, copy_len + 1) };
     buffer_slice[..copy_len].copy_from_slice(&bytes[..copy_len]);
     buffer_slice[copy_len] = 0;
-    
+
     copy_len
 }
 
@@ -669,7 +652,7 @@ fn collect_text_recursive(node: Handle, text: &mut String) {
                 text.push_str(&guard.actual_text);
                 text.push(' ');
             }
-            
+
             // Recurse into children
             for &child in &guard.children {
                 collect_text_recursive(child, text);
@@ -713,11 +696,11 @@ mod tests {
     fn test_create_tree() {
         let tree = fz_new_structure_tree(0);
         assert!(tree > 0);
-        
+
         let root = fz_tree_root(0, tree);
         assert!(root > 0);
         assert_eq!(fz_tree_node_type(0, root), StructureType::Document as i32);
-        
+
         fz_drop_structure_tree(0, tree);
     }
 
@@ -725,14 +708,14 @@ mod tests {
     fn test_add_nodes() {
         let tree = fz_new_structure_tree(0);
         let root = fz_tree_root(0, tree);
-        
+
         let sect = fz_tree_add_node(0, tree, root, StructureType::Sect as i32);
         let para = fz_tree_add_node(0, tree, sect, StructureType::P as i32);
-        
+
         assert_eq!(fz_tree_node_child_count(0, root), 1);
         assert_eq!(fz_tree_node_child_count(0, sect), 1);
         assert_eq!(fz_tree_node_parent(0, para), sect);
-        
+
         fz_drop_structure_tree(0, tree);
     }
 
@@ -741,17 +724,17 @@ mod tests {
         let tree = fz_new_structure_tree(0);
         let root = fz_tree_root(0, tree);
         let fig = fz_tree_add_node(0, tree, root, StructureType::Figure as i32);
-        
+
         fz_tree_node_set_alt(0, fig, c"A beautiful image".as_ptr());
         fz_tree_node_set_title(0, fig, c"Figure 1".as_ptr());
         fz_tree_node_set_page(0, fig, 5, 100.0, 200.0, 400.0, 500.0);
-        
+
         assert_eq!(fz_tree_node_page(0, fig), 5);
-        
+
         let mut bbox = [0.0f32; 4];
         fz_tree_node_bbox(0, fig, bbox.as_mut_ptr());
         assert_eq!(bbox, [100.0, 200.0, 400.0, 500.0]);
-        
+
         fz_drop_structure_tree(0, tree);
     }
 
@@ -760,16 +743,15 @@ mod tests {
         let tree = fz_new_structure_tree(0);
         let root = fz_tree_root(0, tree);
         let node = fz_tree_add_node(0, tree, root, StructureType::P as i32);
-        
+
         fz_tree_node_set_id(0, tree, node, c"para-1".as_ptr());
-        
+
         let found = fz_tree_find_by_id(0, tree, c"para-1".as_ptr());
         assert_eq!(found, node);
-        
+
         let not_found = fz_tree_find_by_id(0, tree, c"nonexistent".as_ptr());
         assert_eq!(not_found, 0);
-        
+
         fz_drop_structure_tree(0, tree);
     }
 }
-

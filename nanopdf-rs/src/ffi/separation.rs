@@ -109,7 +109,7 @@ pub extern "C" fn fz_add_separation(
             if guard.seps.len() >= FZ_MAX_SEPARATIONS {
                 return -1;
             }
-            
+
             let index = guard.seps.len() as i32;
             let sep = Separation {
                 name: sep_name,
@@ -138,7 +138,7 @@ pub extern "C" fn fz_add_separation_all(_ctx: Handle, seps: Handle) -> i32 {
             if guard.seps.len() >= FZ_MAX_SEPARATIONS {
                 return -1;
             }
-            
+
             let index = guard.seps.len() as i32;
             let sep = Separation {
                 name: "All".to_string(),
@@ -162,7 +162,7 @@ pub extern "C" fn fz_add_separation_none(_ctx: Handle, seps: Handle) -> i32 {
             if guard.seps.len() >= FZ_MAX_SEPARATIONS {
                 return -1;
             }
-            
+
             let index = guard.seps.len() as i32;
             let sep = Separation {
                 name: "None".to_string(),
@@ -199,7 +199,7 @@ pub extern "C" fn fz_count_separations(_ctx: Handle, seps: Handle) -> i32 {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_separation_name(_ctx: Handle, seps: Handle, idx: i32) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if idx < 0 {
         return EMPTY.as_ptr().cast();
     }
@@ -229,11 +229,7 @@ pub extern "C" fn fz_separations_controllable(_ctx: Handle, seps: Handle) -> i32
 
 /// Get separation behavior
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_separation_current_behavior(
-    _ctx: Handle,
-    seps: Handle,
-    idx: i32,
-) -> i32 {
+pub extern "C" fn fz_separation_current_behavior(_ctx: Handle, seps: Handle, idx: i32) -> i32 {
     if idx < 0 {
         return SeparationBehavior::Disabled as i32;
     }
@@ -250,12 +246,7 @@ pub extern "C" fn fz_separation_current_behavior(
 
 /// Set separation behavior
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_set_separation_behavior(
-    _ctx: Handle,
-    seps: Handle,
-    idx: i32,
-    behavior: i32,
-) {
+pub extern "C" fn fz_set_separation_behavior(_ctx: Handle, seps: Handle, idx: i32, behavior: i32) {
     if idx < 0 {
         return;
     }
@@ -321,12 +312,7 @@ pub extern "C" fn fz_separation_is_none(_ctx: Handle, seps: Handle, idx: i32) ->
 /// # Safety
 /// `cmyk` must point to at least 4 floats.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_separation_equivalent(
-    _ctx: Handle,
-    seps: Handle,
-    idx: i32,
-    cmyk: *mut f32,
-) {
+pub extern "C" fn fz_separation_equivalent(_ctx: Handle, seps: Handle, idx: i32, cmyk: *mut f32) {
     if cmyk.is_null() || idx < 0 {
         return;
     }
@@ -386,7 +372,7 @@ pub extern "C" fn fz_convert_separation_colors(
 
     let src_slice = unsafe { std::slice::from_raw_parts(src, src_n as usize) };
     let dst_slice = unsafe { std::slice::from_raw_parts_mut(dst, dst_n as usize) };
-    
+
     // Initialize destination to 0
     dst_slice.fill(0.0);
 
@@ -397,16 +383,16 @@ pub extern "C" fn fz_convert_separation_colors(
                 if i >= src_n as usize {
                     break;
                 }
-                
+
                 if sep.behavior == SeparationBehavior::Disabled {
                     continue;
                 }
-                
+
                 let intensity = src_slice[i];
                 if intensity <= 0.0 {
                     continue;
                 }
-                
+
                 // Add this separation's CMYK contribution
                 if dst_n >= 4 {
                     // Output is CMYK
@@ -419,7 +405,7 @@ pub extern "C" fn fz_convert_separation_colors(
                     let m = sep.cmyk[1] * intensity;
                     let y = sep.cmyk[2] * intensity;
                     let k = sep.cmyk[3] * intensity;
-                    
+
                     dst_slice[0] = (1.0 - dst_slice[0] - (1.0 - c) * (1.0 - k)).max(0.0);
                     dst_slice[1] = (1.0 - dst_slice[1] - (1.0 - m) * (1.0 - k)).max(0.0);
                     dst_slice[2] = (1.0 - dst_slice[2] - (1.0 - y) * (1.0 - k)).max(0.0);
@@ -454,18 +440,18 @@ pub extern "C" fn fz_separations_equal(_ctx: Handle, seps1: Handle, seps2: Handl
 
     let s1 = SEPARATIONS.get(seps1);
     let s2 = SEPARATIONS.get(seps2);
-    
+
     match (s1, s2) {
         (Some(arc1), Some(arc2)) => {
             let (g1, g2) = match (arc1.lock(), arc2.lock()) {
                 (Ok(g1), Ok(g2)) => (g1, g2),
                 _ => return 0,
             };
-            
+
             if g1.seps.len() != g2.seps.len() {
                 return 0;
             }
-            
+
             for (s1, s2) in g1.seps.iter().zip(g2.seps.iter()) {
                 if s1.name != s2.name || s1.cmyk != s2.cmyk {
                     return 0;
@@ -594,107 +580,107 @@ mod tests {
     #[test]
     fn test_add_separation() {
         let seps = fz_new_separations(0, 1);
-        
+
         let name = c"PANTONE 185 C";
         let idx = fz_add_separation(0, seps, name.as_ptr(), 0, 0.0, 1.0, 0.9, 0.0);
         assert_eq!(idx, 0);
         assert_eq!(fz_count_separations(0, seps), 1);
-        
+
         // Check behavior
         assert_eq!(
             fz_separation_current_behavior(0, seps, 0),
             SeparationBehavior::Composite as i32
         );
-        
+
         fz_drop_separations(0, seps);
     }
 
     #[test]
     fn test_special_separations() {
         let seps = fz_new_separations(0, 1);
-        
+
         let all_idx = fz_add_separation_all(0, seps);
         let none_idx = fz_add_separation_none(0, seps);
-        
+
         assert_eq!(fz_count_separations(0, seps), 2);
         assert_eq!(fz_separation_is_all(0, seps, all_idx), 1);
         assert_eq!(fz_separation_is_none(0, seps, none_idx), 1);
-        
+
         fz_drop_separations(0, seps);
     }
 
     #[test]
     fn test_separation_behavior() {
         let seps = fz_new_separations(0, 1);
-        
+
         let name = c"Spot1";
         fz_add_separation(0, seps, name.as_ptr(), 0, 1.0, 0.0, 0.0, 0.0);
-        
+
         // Default is composite
         assert_eq!(
             fz_separation_current_behavior(0, seps, 0),
             SeparationBehavior::Composite as i32
         );
-        
+
         // Change to spot
         fz_set_separation_behavior(0, seps, 0, SeparationBehavior::Spot as i32);
         assert_eq!(
             fz_separation_current_behavior(0, seps, 0),
             SeparationBehavior::Spot as i32
         );
-        
+
         // Should have spots now
         assert_eq!(fz_separations_have_spots(0, seps), 1);
-        
+
         fz_drop_separations(0, seps);
     }
 
     #[test]
     fn test_non_controllable() {
         let seps = fz_new_separations(0, 0); // Not controllable
-        
+
         let name = c"Spot1";
         fz_add_separation(0, seps, name.as_ptr(), 0, 1.0, 0.0, 0.0, 0.0);
-        
+
         // Try to change behavior - should be ignored
         fz_set_separation_behavior(0, seps, 0, SeparationBehavior::Spot as i32);
-        
+
         // Should still be composite
         assert_eq!(
             fz_separation_current_behavior(0, seps, 0),
             SeparationBehavior::Composite as i32
         );
-        
+
         fz_drop_separations(0, seps);
     }
 
     #[test]
     fn test_cmyk_equivalent() {
         let seps = fz_new_separations(0, 1);
-        
+
         let name = c"Spot1";
         fz_add_separation(0, seps, name.as_ptr(), 0, 0.1, 0.2, 0.3, 0.4);
-        
+
         let mut cmyk = [0.0f32; 4];
         fz_separation_equivalent(0, seps, 0, cmyk.as_mut_ptr());
-        
+
         assert_eq!(cmyk, [0.1, 0.2, 0.3, 0.4]);
-        
+
         fz_drop_separations(0, seps);
     }
 
     #[test]
     fn test_clone_separations() {
         let seps = fz_new_separations(0, 1);
-        
+
         let name = c"Spot1";
         fz_add_separation(0, seps, name.as_ptr(), 0, 1.0, 0.0, 0.0, 0.0);
-        
+
         let cloned = fz_clone_separations(0, seps);
         assert!(cloned > 0);
         assert_eq!(fz_count_separations(0, cloned), 1);
         assert_eq!(fz_separations_equal(0, seps, cloned), 1);
-        
+
         fz_drop_separations(0, seps);
         fz_drop_separations(0, cloned);
     }
@@ -702,26 +688,25 @@ mod tests {
     #[test]
     fn test_bulk_behavior_changes() {
         let seps = fz_new_separations(0, 1);
-        
+
         let name1 = c"Spot1";
         let name2 = c"Spot2";
         fz_add_separation(0, seps, name1.as_ptr(), 0, 1.0, 0.0, 0.0, 0.0);
         fz_add_separation(0, seps, name2.as_ptr(), 0, 0.0, 1.0, 0.0, 0.0);
-        
+
         // Set all to spot
         fz_set_all_separations_to_spot(0, seps);
         assert_eq!(fz_separations_have_spots(0, seps), 1);
         assert_eq!(fz_count_active_separations(0, seps), 2);
-        
+
         // Disable all
         fz_disable_all_separations(0, seps);
         assert_eq!(fz_count_active_separations(0, seps), 0);
-        
+
         // Reset to composite
         fz_set_all_separations_to_composite(0, seps);
         assert_eq!(fz_count_active_separations(0, seps), 2);
-        
+
         fz_drop_separations(0, seps);
     }
 }
-

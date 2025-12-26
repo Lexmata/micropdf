@@ -1,15 +1,13 @@
 //! C FFI for document - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
 
+use super::outline::OUTLINES;
 use super::{DOCUMENTS, Handle, HandleStore, STREAMS};
 use std::ffi::{c_char, c_float};
 use std::sync::LazyLock;
 
 /// Page storage
 pub static PAGES: LazyLock<HandleStore<Page>> = LazyLock::new(HandleStore::default);
-
-/// Outline storage
-pub static OUTLINES: LazyLock<HandleStore<Outline>> = LazyLock::new(HandleStore::default);
 
 /// Internal page state
 pub struct Page {
@@ -82,20 +80,6 @@ impl Page {
             None
         }
     }
-}
-
-/// Outline item (bookmark)
-pub struct OutlineItem {
-    pub title: String,
-    pub uri: String,
-    pub page: i32,
-    pub children: Vec<OutlineItem>,
-}
-
-/// Document outline (table of contents)
-#[derive(Default)]
-pub struct Outline {
-    pub items: Vec<OutlineItem>,
 }
 
 /// Internal document state
@@ -560,14 +544,10 @@ pub extern "C" fn fz_load_outline(_ctx: Handle, doc: Handle) -> Handle {
 
     // For now, return an empty outline
     // Real implementation would parse the PDF outline tree
-    OUTLINES.insert(Outline::default())
+    OUTLINES.insert(super::outline::Outline::default())
 }
 
-/// Drop outline
-#[unsafe(no_mangle)]
-pub extern "C" fn fz_drop_outline(_ctx: Handle, outline: Handle) {
-    let _ = OUTLINES.remove(outline);
-}
+// Note: fz_drop_outline is defined in outline.rs
 
 // ============================================================================
 // Link Resolution
@@ -1082,7 +1062,7 @@ mod tests {
         let outline_handle = fz_load_outline(0, doc_handle);
         assert_ne!(outline_handle, 0);
 
-        fz_drop_outline(0, outline_handle);
+        crate::ffi::outline::fz_drop_outline(0, outline_handle);
         fz_drop_document(0, doc_handle);
     }
 

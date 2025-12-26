@@ -3,8 +3,11 @@
 
 use super::Handle;
 use std::collections::HashMap;
-use std::sync::{LazyLock, Mutex, atomic::{AtomicUsize, Ordering}};
-use std::time::{Instant, Duration};
+use std::sync::{
+    LazyLock, Mutex,
+    atomic::{AtomicUsize, Ordering},
+};
+use std::time::{Duration, Instant};
 
 /// Store item type enumeration
 #[repr(C)]
@@ -199,7 +202,7 @@ pub extern "C" fn fz_store_set_policy(_ctx: Handle, policy: i32) {
         3 => EvictionPolicy::Random,
         _ => EvictionPolicy::LRU,
     };
-    
+
     if let Ok(mut store) = STORE.lock() {
         store.policy = p;
     }
@@ -220,7 +223,7 @@ pub extern "C" fn fz_store_set_type_limit(_ctx: Handle, item_type: i32, max_size
         9 => StoreType::Page,
         _ => StoreType::Generic,
     };
-    
+
     if let Ok(mut store) = STORE.lock() {
         if max_size > 0 {
             store.type_limits.insert(t, max_size);
@@ -259,20 +262,20 @@ pub extern "C" fn fz_store_item(
         9 => StoreType::Page,
         _ => StoreType::Generic,
     };
-    
+
     let key_data = if key.is_null() || key_len == 0 {
         Vec::new()
     } else {
         unsafe { std::slice::from_raw_parts(key, key_len) }.to_vec()
     };
-    
+
     if let Ok(mut store) = STORE.lock() {
         // Check if we need to evict items first
         if store.current_size + size > store.max_size {
             let target_size = store.max_size.saturating_sub(size);
             evict_to_size(&mut store, target_size);
         }
-        
+
         // Check type limit
         if let Some(&limit) = store.type_limits.get(&t) {
             let current = store.type_sizes.get(&t).copied().unwrap_or(0);
@@ -280,10 +283,10 @@ pub extern "C" fn fz_store_item(
                 evict_type_to_size(&mut store, t, limit.saturating_sub(size));
             }
         }
-        
+
         // Generate item ID
         let id = new_store_id();
-        
+
         // Create item
         let item = StoreItem {
             item_type: t,
@@ -296,22 +299,22 @@ pub extern "C" fn fz_store_item(
             evictable: true,
             refs: 1,
         };
-        
+
         // Update size tracking
         store.current_size += size;
         *store.type_sizes.entry(t).or_insert(0) += size;
-        
+
         // Store item
         store.items.insert(id, item);
         if !key_data.is_empty() {
             store.key_map.insert(key_data, id);
         }
-        
+
         store.total_stored += 1;
-        
+
         return id;
     }
-    
+
     0
 }
 
@@ -320,17 +323,13 @@ pub extern "C" fn fz_store_item(
 /// # Safety
 /// `key` must point to valid memory of `key_len` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_store_find(
-    _ctx: Handle,
-    key: *const u8,
-    key_len: usize,
-) -> Handle {
+pub extern "C" fn fz_store_find(_ctx: Handle, key: *const u8, key_len: usize) -> Handle {
     if key.is_null() || key_len == 0 {
         return 0;
     }
-    
+
     let key_data = unsafe { std::slice::from_raw_parts(key, key_len) };
-    
+
     if let Ok(mut store) = STORE.lock() {
         if let Some(&id) = store.key_map.get(key_data) {
             let result = if let Some(item) = store.items.get_mut(&id) {
@@ -341,7 +340,7 @@ pub extern "C" fn fz_store_find(
             } else {
                 None
             };
-            
+
             if let Some(handle) = result {
                 store.hits += 1;
                 return handle;
@@ -349,7 +348,7 @@ pub extern "C" fn fz_store_find(
         }
         store.misses += 1;
     }
-    
+
     0
 }
 
@@ -364,7 +363,7 @@ pub extern "C" fn fz_store_find_by_id(_ctx: Handle, id: u64) -> Handle {
         } else {
             None
         };
-        
+
         if let Some(handle) = result {
             store.hits += 1;
             return handle;
@@ -383,13 +382,13 @@ pub extern "C" fn fz_store_remove(_ctx: Handle, id: u64) -> Handle {
             if !item.key.is_empty() {
                 store.key_map.remove(&item.key);
             }
-            
+
             // Update sizes
             store.current_size = store.current_size.saturating_sub(item.size);
             if let Some(type_size) = store.type_sizes.get_mut(&item.item_type) {
                 *type_size = type_size.saturating_sub(item.size);
             }
-            
+
             return item.handle;
         }
     }
@@ -401,17 +400,13 @@ pub extern "C" fn fz_store_remove(_ctx: Handle, id: u64) -> Handle {
 /// # Safety
 /// `key` must point to valid memory of `key_len` bytes.
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_store_remove_by_key(
-    _ctx: Handle,
-    key: *const u8,
-    key_len: usize,
-) -> Handle {
+pub extern "C" fn fz_store_remove_by_key(_ctx: Handle, key: *const u8, key_len: usize) -> Handle {
     if key.is_null() || key_len == 0 {
         return 0;
     }
-    
+
     let key_data = unsafe { std::slice::from_raw_parts(key, key_len) };
-    
+
     if let Ok(mut store) = STORE.lock() {
         if let Some(id) = store.key_map.remove(key_data) {
             if let Some(item) = store.items.remove(&id) {
@@ -450,7 +445,7 @@ pub extern "C" fn fz_store_drop(_ctx: Handle, id: u64) {
                 false
             }
         };
-        
+
         if should_remove {
             if let Some(item) = store.items.remove(&id) {
                 if !item.key.is_empty() {
@@ -600,7 +595,7 @@ pub extern "C" fn fz_store_type_size(_ctx: Handle, item_type: i32) -> usize {
         9 => StoreType::Page,
         _ => StoreType::Generic,
     };
-    
+
     if let Ok(store) = STORE.lock() {
         return store.type_sizes.get(&t).copied().unwrap_or(0);
     }
@@ -622,7 +617,7 @@ pub extern "C" fn fz_store_type_count(_ctx: Handle, item_type: i32) -> usize {
         9 => StoreType::Page,
         _ => StoreType::Generic,
     };
-    
+
     if let Ok(store) = STORE.lock() {
         return store.items.values().filter(|i| i.item_type == t).count();
     }
@@ -640,7 +635,7 @@ fn evict_to_size(store: &mut Store, target_size: usize) {
         if victim_id == 0 {
             break;
         }
-        
+
         if let Some(item) = store.items.remove(&victim_id) {
             if !item.key.is_empty() {
                 store.key_map.remove(&item.key);
@@ -660,7 +655,7 @@ fn evict_type_to_size(store: &mut Store, item_type: StoreType, target_size: usiz
     if current <= target_size {
         return;
     }
-    
+
     // Collect victims
     let mut victims: Vec<u64> = store
         .items
@@ -668,7 +663,7 @@ fn evict_type_to_size(store: &mut Store, item_type: StoreType, target_size: usiz
         .filter(|(_, item)| item.item_type == item_type && item.evictable && item.refs <= 1)
         .map(|(&id, _)| id)
         .collect();
-    
+
     // Sort by eviction policy
     victims.sort_by(|&a, &b| {
         let item_a = store.items.get(&a).unwrap();
@@ -680,16 +675,16 @@ fn evict_type_to_size(store: &mut Store, item_type: StoreType, target_size: usiz
             EvictionPolicy::Random => std::cmp::Ordering::Equal,
         }
     });
-    
+
     // Evict until under target
     let mut evicted_size = 0;
     let needed = current.saturating_sub(target_size);
-    
+
     for victim_id in victims {
         if evicted_size >= needed {
             break;
         }
-        
+
         if let Some(item) = store.items.remove(&victim_id) {
             if !item.key.is_empty() {
                 store.key_map.remove(&item.key);
@@ -711,33 +706,27 @@ fn select_victim(store: &Store) -> u64 {
         .iter()
         .filter(|(_, item)| item.evictable && item.refs <= 1)
         .collect();
-    
+
     if evictable.is_empty() {
         return 0;
     }
-    
+
     match store.policy {
-        EvictionPolicy::LRU => {
-            evictable
-                .iter()
-                .min_by_key(|(_, item)| item.last_access)
-                .map(|(id, _)| **id)
-                .unwrap_or(0)
-        }
-        EvictionPolicy::LFU => {
-            evictable
-                .iter()
-                .min_by_key(|(_, item)| item.access_count)
-                .map(|(id, _)| **id)
-                .unwrap_or(0)
-        }
-        EvictionPolicy::FIFO => {
-            evictable
-                .iter()
-                .min_by_key(|(_, item)| item.created)
-                .map(|(id, _)| **id)
-                .unwrap_or(0)
-        }
+        EvictionPolicy::LRU => evictable
+            .iter()
+            .min_by_key(|(_, item)| item.last_access)
+            .map(|(id, _)| **id)
+            .unwrap_or(0),
+        EvictionPolicy::LFU => evictable
+            .iter()
+            .min_by_key(|(_, item)| item.access_count)
+            .map(|(id, _)| **id)
+            .unwrap_or(0),
+        EvictionPolicy::FIFO => evictable
+            .iter()
+            .min_by_key(|(_, item)| item.created)
+            .map(|(id, _)| **id)
+            .unwrap_or(0),
         EvictionPolicy::Random => {
             // Use simple deterministic selection for reproducibility
             evictable.first().map(|(id, _)| **id).unwrap_or(0)
@@ -771,7 +760,7 @@ pub extern "C" fn fz_store_evict_type(_ctx: Handle, item_type: i32) -> usize {
         9 => StoreType::Page,
         _ => StoreType::Generic,
     };
-    
+
     if let Ok(mut store) = STORE.lock() {
         let before = store.items.len();
         evict_type_to_size(&mut store, t, 0);
@@ -786,19 +775,18 @@ pub extern "C" fn fz_store_evict_old(_ctx: Handle, max_age_ms: u64) -> usize {
     if let Ok(mut store) = STORE.lock() {
         let max_age = Duration::from_millis(max_age_ms);
         let now = Instant::now();
-        
+
         let victims: Vec<u64> = store
             .items
             .iter()
             .filter(|(_, item)| {
-                item.evictable && item.refs <= 1 && 
-                now.duration_since(item.last_access) > max_age
+                item.evictable && item.refs <= 1 && now.duration_since(item.last_access) > max_age
             })
             .map(|(&id, _)| id)
             .collect();
-        
+
         let count = victims.len();
-        
+
         for id in victims {
             if let Some(item) = store.items.remove(&id) {
                 if !item.key.is_empty() {
@@ -811,7 +799,7 @@ pub extern "C" fn fz_store_evict_old(_ctx: Handle, max_age_ms: u64) -> usize {
                 store.total_evicted += 1;
             }
         }
-        
+
         return count;
     }
     0
@@ -849,13 +837,15 @@ pub extern "C" fn fz_store_reset_stats(_ctx: Handle) {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_store_debug(_ctx: Handle) {
     if let Ok(store) = STORE.lock() {
-        eprintln!("Store: {} items, {} / {} bytes", 
-            store.items.len(), 
-            store.current_size, 
+        eprintln!(
+            "Store: {} items, {} / {} bytes",
+            store.items.len(),
+            store.current_size,
             store.max_size
         );
-        eprintln!("  Hits: {}, Misses: {}, Rate: {:.1}%",
-            store.hits, 
+        eprintln!(
+            "  Hits: {}, Misses: {}, Rate: {:.1}%",
+            store.hits,
             store.misses,
             fz_store_hit_rate(0) * 100.0
         );
@@ -871,10 +861,10 @@ mod tests {
     use super::*;
 
     use std::sync::atomic::{AtomicU64, Ordering};
-    
+
     // Unique test ID generator for parallel-safe keys
     static TEST_COUNTER: AtomicU64 = AtomicU64::new(0);
-    
+
     fn unique_key(prefix: &str) -> Vec<u8> {
         let id = TEST_COUNTER.fetch_add(1, Ordering::SeqCst);
         format!("{}_{}", prefix, id).into_bytes()
@@ -885,13 +875,13 @@ mod tests {
         let key = unique_key("store_item");
         let size_before = fz_store_current_size(0);
         let count_before = fz_store_count(0);
-        
+
         let id = fz_store_item(0, 2, 100, 1024, key.as_ptr(), key.len());
-        
+
         assert!(id > 0);
         assert!(fz_store_count(0) > count_before);
         assert!(fz_store_current_size(0) >= size_before + 1024);
-        
+
         // Cleanup
         fz_store_remove(0, id);
     }
@@ -900,12 +890,12 @@ mod tests {
     fn test_store_find() {
         let key = unique_key("find_test");
         let handle: Handle = 42424242; // Unique handle unlikely to conflict
-        
+
         let id = fz_store_item(0, 1, handle, 100, key.as_ptr(), key.len());
-        
+
         let found = fz_store_find(0, key.as_ptr(), key.len());
         assert_eq!(found, handle);
-        
+
         // Cleanup
         fz_store_remove(0, id);
     }
@@ -913,7 +903,7 @@ mod tests {
     #[test]
     fn test_store_miss() {
         let key = unique_key("nonexistent_key_that_was_never_added");
-        
+
         let found = fz_store_find(0, key.as_ptr(), key.len());
         assert_eq!(found, 0);
     }
@@ -923,14 +913,14 @@ mod tests {
         // Use a separate "namespace" for eviction test items
         let prefix = unique_key("evict");
         let prefix_str = String::from_utf8_lossy(&prefix);
-        
+
         // Store original max size
         let original_max = if let Ok(store) = STORE.lock() {
             store.max_size
         } else {
             return;
         };
-        
+
         // Create items with size that will trigger eviction
         let mut ids = Vec::new();
         for i in 0..10 {
@@ -938,17 +928,17 @@ mod tests {
             let id = fz_store_item(0, 2, (i + 1000) as Handle, 100, key.as_ptr(), key.len());
             ids.push(id);
         }
-        
+
         // Verify at least some items were stored
         assert!(!ids.iter().all(|&id| id == 0));
-        
+
         // Cleanup
         for id in ids {
             if id > 0 {
                 fz_store_remove(0, id);
             }
         }
-        
+
         // Restore original max size
         fz_store_set_max_size(0, original_max);
     }
@@ -957,18 +947,18 @@ mod tests {
     fn test_store_remove() {
         let key = unique_key("remove_test");
         let handle: Handle = 99999999;
-        
+
         let id = fz_store_item(0, 1, handle, 50, key.as_ptr(), key.len());
         assert!(id > 0);
-        
+
         // Verify item exists
         let found_before = fz_store_find(0, key.as_ptr(), key.len());
         assert_eq!(found_before, handle);
-        
+
         // Remove and verify
         let removed = fz_store_remove(0, id);
         assert_eq!(removed, handle);
-        
+
         // Item should no longer be found
         let found_after = fz_store_find(0, key.as_ptr(), key.len());
         assert_eq!(found_after, 0);
@@ -978,19 +968,19 @@ mod tests {
     fn test_store_type_tracking() {
         let key1 = unique_key("font");
         let key2 = unique_key("image");
-        
+
         // Use unique type IDs unlikely to conflict
         let font_type = 1001;
         let image_type = 1002;
-        
+
         let id1 = fz_store_item(0, font_type, 1, 100, key1.as_ptr(), key1.len());
         let id2 = fz_store_item(0, image_type, 2, 200, key2.as_ptr(), key2.len());
-        
+
         assert!(fz_store_type_size(0, font_type) >= 100);
         assert!(fz_store_type_size(0, image_type) >= 200);
         assert!(fz_store_type_count(0, font_type) >= 1);
         assert!(fz_store_type_count(0, image_type) >= 1);
-        
+
         // Cleanup
         fz_store_remove(0, id1);
         fz_store_remove(0, id2);
@@ -1001,14 +991,14 @@ mod tests {
         // Add items with unique prefix
         let prefix = unique_key("clear");
         let prefix_str = String::from_utf8_lossy(&prefix);
-        
+
         let mut ids = Vec::new();
         for i in 0..5 {
             let key = format!("{}_{}", prefix_str, i).into_bytes();
             let id = fz_store_item(0, 0, (i + 2000) as Handle, 10, key.as_ptr(), key.len());
             ids.push((id, key));
         }
-        
+
         // Verify items exist
         for (id, key) in &ids {
             if *id > 0 {
@@ -1016,10 +1006,10 @@ mod tests {
                 assert!(found > 0);
             }
         }
-        
+
         // Clear removes all items
         fz_store_clear(0);
-        
+
         // All items should be gone
         assert_eq!(fz_store_count(0), 0);
     }
@@ -1031,23 +1021,23 @@ mod tests {
             store.hits = 0;
             store.misses = 0;
         }
-        
+
         let key = unique_key("hit_rate");
         let id = fz_store_item(0, 0, 1, 10, key.as_ptr(), key.len());
-        
+
         // 2 hits
         fz_store_find(0, key.as_ptr(), key.len());
         fz_store_find(0, key.as_ptr(), key.len());
-        
+
         // 1 miss
         let miss_key = unique_key("miss_key_not_stored");
         fz_store_find(0, miss_key.as_ptr(), miss_key.len());
-        
+
         let rate = fz_store_hit_rate(0);
         // Rate should be around 66% (2 hits / 3 total), but may vary due to other tests
         // Just verify it's a valid ratio
         assert!(rate >= 0.0 && rate <= 1.0);
-        
+
         // Cleanup
         fz_store_remove(0, id);
     }
@@ -1056,17 +1046,16 @@ mod tests {
     fn test_non_evictable() {
         let key1 = unique_key("pinned");
         let handle1: Handle = 88888888;
-        
+
         let id1 = fz_store_item(0, 0, handle1, 150, key1.as_ptr(), key1.len());
         fz_store_set_evictable(0, id1, 0); // Mark as non-evictable
-        
+
         // Verify item is stored and findable
         let found = fz_store_find(0, key1.as_ptr(), key1.len());
         assert_eq!(found, handle1);
-        
+
         // Mark as evictable again for cleanup
         fz_store_set_evictable(0, id1, 1);
         fz_store_remove(0, id1);
     }
 }
-

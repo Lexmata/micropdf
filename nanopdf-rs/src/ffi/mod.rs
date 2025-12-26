@@ -26,6 +26,7 @@ pub mod geometry;
 pub mod glyph;
 pub mod image;
 pub mod link;
+pub mod outline;
 pub mod output;
 pub mod path;
 pub mod pdf_object;

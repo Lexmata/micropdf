@@ -14,11 +14,11 @@ impl SendPtr {
     pub fn new(ptr: *mut std::ffi::c_void) -> Self {
         Self(ptr as usize)
     }
-    
+
     pub fn as_ptr(&self) -> *mut std::ffi::c_void {
         self.0 as *mut std::ffi::c_void
     }
-    
+
     pub fn is_null(&self) -> bool {
         self.0 == 0
     }
@@ -54,7 +54,8 @@ pub enum BandFormat {
 }
 
 /// Progress callback signature
-pub type ProgressCallback = extern "C" fn(current: i32, total: i32, user_data: *mut std::ffi::c_void);
+pub type ProgressCallback =
+    extern "C" fn(current: i32, total: i32, user_data: *mut std::ffi::c_void);
 
 /// Band writer state
 #[repr(C)]
@@ -170,11 +171,7 @@ pub static BAND_WRITERS: LazyLock<HandleStore<BandWriter>> = LazyLock::new(Handl
 
 /// Create a new band writer
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_band_writer(
-    _ctx: Handle,
-    output: Handle,
-    format: i32,
-) -> Handle {
+pub extern "C" fn fz_new_band_writer(_ctx: Handle, output: Handle, format: i32) -> Handle {
     let fmt = match format {
         1 => BandFormat::JPEG,
         2 => BandFormat::PNM,
@@ -186,7 +183,7 @@ pub extern "C" fn fz_new_band_writer(
         8 => BandFormat::Raw,
         _ => BandFormat::PNG,
     };
-    
+
     let writer = BandWriter {
         output,
         config: BandWriterConfig {
@@ -195,7 +192,7 @@ pub extern "C" fn fz_new_band_writer(
         },
         ..Default::default()
     };
-    
+
     BAND_WRITERS.insert(writer)
 }
 
@@ -221,10 +218,10 @@ pub extern "C" fn fz_new_band_writer_with_config(
         8 => BandFormat::Raw,
         _ => BandFormat::PNG,
     };
-    
+
     let rows_per_band = 16;
     let total_bands = (height + rows_per_band - 1) / rows_per_band;
-    
+
     let writer = BandWriter {
         output,
         config: BandWriterConfig {
@@ -239,7 +236,7 @@ pub extern "C" fn fz_new_band_writer_with_config(
         total_bands,
         ..Default::default()
     };
-    
+
     BAND_WRITERS.insert(writer)
 }
 
@@ -266,12 +263,7 @@ pub extern "C" fn fz_band_writer_set_dimensions(
 
 /// Set color components
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_band_writer_set_components(
-    _ctx: Handle,
-    writer: Handle,
-    n: i32,
-    alpha: i32,
-) {
+pub extern "C" fn fz_band_writer_set_components(_ctx: Handle, writer: Handle, n: i32, alpha: i32) {
     if let Some(w) = BAND_WRITERS.get(writer) {
         if let Ok(mut guard) = w.lock() {
             guard.config.n = n;
@@ -282,12 +274,7 @@ pub extern "C" fn fz_band_writer_set_components(
 
 /// Set resolution
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_band_writer_set_res(
-    _ctx: Handle,
-    writer: Handle,
-    x_res: i32,
-    y_res: i32,
-) {
+pub extern "C" fn fz_band_writer_set_res(_ctx: Handle, writer: Handle, x_res: i32, y_res: i32) {
     if let Some(w) = BAND_WRITERS.get(writer) {
         if let Ok(mut guard) = w.lock() {
             guard.config.x_res = x_res.max(1);
@@ -374,7 +361,7 @@ pub extern "C" fn fz_band_writer_write_header(_ctx: Handle, writer: Handle) -> i
             if guard.state != BandWriterState::Ready {
                 return 0;
             }
-            
+
             // Generate header based on format
             let header = match guard.config.format {
                 BandFormat::PNG => generate_png_header(&guard.config),
@@ -382,11 +369,11 @@ pub extern "C" fn fz_band_writer_write_header(_ctx: Handle, writer: Handle) -> i
                 BandFormat::PAM => generate_pam_header(&guard.config),
                 _ => Vec::new(),
             };
-            
+
             guard.output_buffer.extend_from_slice(&header);
             guard.bytes_written += header.len();
             guard.state = BandWriterState::HeaderWritten;
-            
+
             return 1;
         }
     }
@@ -407,7 +394,7 @@ pub extern "C" fn fz_band_writer_write_band(
     if data.is_null() || band_rows <= 0 {
         return 0;
     }
-    
+
     if let Some(w) = BAND_WRITERS.get(writer) {
         if let Ok(mut guard) = w.lock() {
             if guard.state != BandWriterState::HeaderWritten
@@ -415,30 +402,34 @@ pub extern "C" fn fz_band_writer_write_band(
             {
                 return 0;
             }
-            
+
             guard.state = BandWriterState::WritingBands;
-            
+
             let components = guard.config.n + if guard.config.alpha { 1 } else { 0 };
             let row_size = (guard.config.width * components) as usize;
             let band_size = row_size * band_rows as usize;
-            
+
             let band_data = unsafe { std::slice::from_raw_parts(data, band_size) };
-            
+
             // For raw format, just append data
             // For other formats, encoding would happen here
             guard.output_buffer.extend_from_slice(band_data);
             guard.bytes_written += band_size;
             guard.current_band += 1;
-            
+
             // Call progress callback
             if let Some(callback) = guard.progress_fn {
-                callback(guard.current_band, guard.total_bands, guard.progress_data.as_ptr());
+                callback(
+                    guard.current_band,
+                    guard.total_bands,
+                    guard.progress_data.as_ptr(),
+                );
             }
-            
+
             if guard.current_band >= guard.total_bands {
                 guard.state = BandWriterState::BandsComplete;
             }
-            
+
             return 1;
         }
     }
@@ -453,17 +444,17 @@ pub extern "C" fn fz_band_writer_write_trailer(_ctx: Handle, writer: Handle) -> 
             if guard.state != BandWriterState::BandsComplete {
                 return 0;
             }
-            
+
             // Generate trailer based on format
             let trailer = match guard.config.format {
                 BandFormat::PNG => generate_png_trailer(),
                 _ => Vec::new(),
             };
-            
+
             guard.output_buffer.extend_from_slice(&trailer);
             guard.bytes_written += trailer.len();
             guard.state = BandWriterState::Complete;
-            
+
             return 1;
         }
     }
@@ -559,16 +550,16 @@ pub extern "C" fn fz_band_writer_get_output(
 
 fn generate_png_header(config: &BandWriterConfig) -> Vec<u8> {
     let mut header = Vec::new();
-    
+
     // PNG signature
     header.extend_from_slice(&[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-    
+
     // IHDR chunk (simplified)
     let mut ihdr = Vec::new();
     ihdr.extend_from_slice(&(config.width as u32).to_be_bytes());
     ihdr.extend_from_slice(&(config.height as u32).to_be_bytes());
     ihdr.push(8); // Bit depth
-    
+
     // Color type: 0=gray, 2=RGB, 4=gray+alpha, 6=RGBA
     let color_type = match (config.n, config.alpha) {
         (1, false) => 0,
@@ -581,10 +572,10 @@ fn generate_png_header(config: &BandWriterConfig) -> Vec<u8> {
     ihdr.push(0); // Compression method
     ihdr.push(0); // Filter method
     ihdr.push(0); // Interlace method
-    
+
     // Write IHDR chunk
     write_png_chunk(&mut header, b"IHDR", &ihdr);
-    
+
     header
 }
 
@@ -598,7 +589,7 @@ fn write_png_chunk(output: &mut Vec<u8>, chunk_type: &[u8; 4], data: &[u8]) {
     output.extend_from_slice(&(data.len() as u32).to_be_bytes());
     output.extend_from_slice(chunk_type);
     output.extend_from_slice(data);
-    
+
     // CRC (simplified - just use 0 for now)
     let crc = 0u32;
     output.extend_from_slice(&crc.to_be_bytes());
@@ -606,11 +597,7 @@ fn write_png_chunk(output: &mut Vec<u8>, chunk_type: &[u8; 4], data: &[u8]) {
 
 fn generate_pnm_header(config: &BandWriterConfig) -> Vec<u8> {
     let magic = if config.n == 1 { "P5" } else { "P6" };
-    format!(
-        "{}\n{} {}\n255\n",
-        magic, config.width, config.height
-    )
-    .into_bytes()
+    format!("{}\n{} {}\n255\n", magic, config.width, config.height).into_bytes()
 }
 
 fn generate_pam_header(config: &BandWriterConfig) -> Vec<u8> {
@@ -621,9 +608,9 @@ fn generate_pam_header(config: &BandWriterConfig) -> Vec<u8> {
         (3, true) => "RGB_ALPHA",
         _ => "RGB",
     };
-    
+
     let depth = config.n + if config.alpha { 1 } else { 0 };
-    
+
     format!(
         "P7\nWIDTH {}\nHEIGHT {}\nDEPTH {}\nMAXVAL 255\nTUPLTYPE {}\nENDHDR\n",
         config.width, config.height, depth, tupltype
@@ -659,22 +646,25 @@ mod tests {
     fn test_create_band_writer() {
         let writer = fz_new_band_writer(0, 1, 0); // PNG
         assert!(writer > 0);
-        
-        assert_eq!(fz_band_writer_state(0, writer), BandWriterState::Ready as i32);
-        
+
+        assert_eq!(
+            fz_band_writer_state(0, writer),
+            BandWriterState::Ready as i32
+        );
+
         fz_drop_band_writer(0, writer);
     }
 
     #[test]
     fn test_band_writer_config() {
         let writer = fz_new_band_writer_with_config(0, 1, 0, 100, 200, 3, 0);
-        
+
         fz_band_writer_set_res(0, writer, 300, 300);
         fz_band_writer_set_rows_per_band(0, writer, 32);
-        
+
         // 200 rows / 32 rows per band = 7 bands (rounded up)
         assert_eq!(fz_band_writer_total_bands(0, writer), 7);
-        
+
         fz_drop_band_writer(0, writer);
     }
 
@@ -682,25 +672,40 @@ mod tests {
     fn test_write_sequence() {
         let writer = fz_new_band_writer_with_config(0, 1, 8, 10, 20, 3, 0); // Raw format
         fz_band_writer_set_rows_per_band(0, writer, 10);
-        
+
         // Write header
         assert_eq!(fz_band_writer_write_header(0, writer), 1);
-        assert_eq!(fz_band_writer_state(0, writer), BandWriterState::HeaderWritten as i32);
-        
+        assert_eq!(
+            fz_band_writer_state(0, writer),
+            BandWriterState::HeaderWritten as i32
+        );
+
         // Write bands
         let band_data = vec![128u8; 10 * 10 * 3];
-        assert_eq!(fz_band_writer_write_band(0, writer, 10, band_data.as_ptr()), 1);
-        assert_eq!(fz_band_writer_write_band(0, writer, 10, band_data.as_ptr()), 1);
-        
-        assert_eq!(fz_band_writer_state(0, writer), BandWriterState::BandsComplete as i32);
-        
+        assert_eq!(
+            fz_band_writer_write_band(0, writer, 10, band_data.as_ptr()),
+            1
+        );
+        assert_eq!(
+            fz_band_writer_write_band(0, writer, 10, band_data.as_ptr()),
+            1
+        );
+
+        assert_eq!(
+            fz_band_writer_state(0, writer),
+            BandWriterState::BandsComplete as i32
+        );
+
         // Write trailer
         assert_eq!(fz_band_writer_write_trailer(0, writer), 1);
-        assert_eq!(fz_band_writer_state(0, writer), BandWriterState::Complete as i32);
-        
+        assert_eq!(
+            fz_band_writer_state(0, writer),
+            BandWriterState::Complete as i32
+        );
+
         // Check output
         assert!(fz_band_writer_bytes_written(0, writer) > 0);
-        
+
         fz_drop_band_writer(0, writer);
     }
 
@@ -708,19 +713,18 @@ mod tests {
     fn test_progress() {
         let writer = fz_new_band_writer_with_config(0, 1, 8, 10, 40, 3, 0);
         fz_band_writer_set_rows_per_band(0, writer, 10);
-        
+
         assert_eq!(fz_band_writer_progress(0, writer), 0.0);
-        
+
         fz_band_writer_write_header(0, writer);
-        
+
         let band_data = vec![0u8; 10 * 10 * 3];
         fz_band_writer_write_band(0, writer, 10, band_data.as_ptr());
         assert_eq!(fz_band_writer_progress(0, writer), 0.25); // 1/4
-        
+
         fz_band_writer_write_band(0, writer, 10, band_data.as_ptr());
         assert_eq!(fz_band_writer_progress(0, writer), 0.5); // 2/4
-        
+
         fz_drop_band_writer(0, writer);
     }
 }
-

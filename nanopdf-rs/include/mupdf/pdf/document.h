@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Document Functions (31 total)
+// Document Functions (30 total)
 // ============================================================================
 
 int32_t fz_authenticate_password(int32_t _ctx, int32_t doc, const char * password);
@@ -27,7 +27,6 @@ int32_t fz_count_pages(int32_t _ctx, int32_t doc);
 int32_t fz_document_format(int32_t _ctx, int32_t doc, char * buf, int32_t size);
 int32_t fz_document_is_valid(int32_t _ctx, int32_t doc);
 void fz_drop_document(int32_t _ctx, int32_t doc);
-void fz_drop_outline(int32_t _ctx, int32_t outline);
 void fz_drop_page(int32_t _ctx, int32_t page);
 int32_t fz_has_permission(int32_t _ctx, int32_t doc, int32_t _permission);
 int32_t fz_is_document_reflowable(int32_t _ctx, int32_t doc);

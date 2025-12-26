@@ -194,12 +194,7 @@ pub static GLYPH_CACHE: LazyLock<std::sync::Mutex<GlyphCache>> = LazyLock::new(|
 
 /// Create a new glyph
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_new_glyph(
-    _ctx: Handle,
-    font: Handle,
-    glyph_id: u32,
-    unicode: u32,
-) -> Handle {
+pub extern "C" fn fz_new_glyph(_ctx: Handle, font: Handle, glyph_id: u32, unicode: u32) -> Handle {
     let glyph = Glyph {
         font,
         glyph_id,
@@ -240,12 +235,12 @@ pub extern "C" fn fz_new_glyph_with_matrix(
         glyph_id,
         ..Default::default()
     };
-    
+
     if !matrix.is_null() {
         let m = unsafe { std::slice::from_raw_parts(matrix, 6) };
         glyph.matrix.copy_from_slice(m);
     }
-    
+
     GLYPHS.insert(glyph)
 }
 
@@ -321,7 +316,7 @@ pub extern "C" fn fz_glyph_matrix(_ctx: Handle, glyph: Handle, matrix: *mut f32)
     if matrix.is_null() {
         return;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             let m = unsafe { std::slice::from_raw_parts_mut(matrix, 6) };
@@ -339,7 +334,7 @@ pub extern "C" fn fz_set_glyph_matrix(_ctx: Handle, glyph: Handle, matrix: *cons
     if matrix.is_null() {
         return;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(mut guard) = g.lock() {
             let m = unsafe { std::slice::from_raw_parts(matrix, 6) };
@@ -392,7 +387,7 @@ pub extern "C" fn fz_glyph_bbox(_ctx: Handle, glyph: Handle, bbox: *mut f32) {
     if bbox.is_null() {
         return;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             let b = unsafe { std::slice::from_raw_parts_mut(bbox, 4) };
@@ -427,7 +422,7 @@ pub extern "C" fn fz_glyph_metrics(_ctx: Handle, glyph: Handle, metrics: *mut Gl
     if metrics.is_null() {
         return;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             unsafe { *metrics = guard.metrics };
@@ -441,12 +436,7 @@ pub extern "C" fn fz_glyph_metrics(_ctx: Handle, glyph: Handle, metrics: *mut Gl
 
 /// Get subpixel position
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_glyph_subpixel(
-    _ctx: Handle,
-    glyph: Handle,
-    x: *mut u8,
-    y: *mut u8,
-) {
+pub extern "C" fn fz_glyph_subpixel(_ctx: Handle, glyph: Handle, x: *mut u8, y: *mut u8) {
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             if !x.is_null() {
@@ -483,24 +473,24 @@ pub extern "C" fn fz_subpixel_adjust(
     if x.is_null() || y.is_null() {
         return;
     }
-    
+
     let px = unsafe { *x };
     let py = unsafe { *y };
-    
+
     // Get integer part
     let ix = px.floor();
     let iy = py.floor();
-    
+
     // Get fractional part (0-255)
     let fx = ((px - ix) * 256.0) as u8;
     let fy = ((py - iy) * 256.0) as u8;
-    
+
     // Store adjusted integer position
     unsafe {
         *x = ix;
         *y = iy;
     }
-    
+
     // Store subpixel based on mode
     match mode {
         0 => {
@@ -603,7 +593,7 @@ pub extern "C" fn fz_glyph_color_layer(
     if idx < 0 {
         return 0;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             if let Some(layer) = guard.color_layers.get(idx as usize) {
@@ -637,16 +627,11 @@ pub extern "C" fn fz_glyph_variation_count(_ctx: Handle, glyph: Handle) -> i32 {
 
 /// Set variation axis value
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_set_glyph_variation(
-    _ctx: Handle,
-    glyph: Handle,
-    axis_index: i32,
-    value: f32,
-) {
+pub extern "C" fn fz_set_glyph_variation(_ctx: Handle, glyph: Handle, axis_index: i32, value: f32) {
     if axis_index < 0 {
         return;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(mut guard) = g.lock() {
             let idx = axis_index as usize;
@@ -664,7 +649,7 @@ pub extern "C" fn fz_glyph_variation(_ctx: Handle, glyph: Handle, axis_index: i3
     if axis_index < 0 {
         return 0.0;
     }
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(guard) = g.lock() {
             if let Some(v) = guard.variations.get(axis_index as usize) {
@@ -715,7 +700,7 @@ pub extern "C" fn fz_glyph_cache_insert(
 ) {
     if let Ok(mut cache) = GLYPH_CACHE.lock() {
         let key = (font, glyph_id, scale_key);
-        
+
         // Evict if at capacity
         while cache.entries.len() >= cache.max_entries && !cache.lru.is_empty() {
             let oldest = cache.lru.remove(0);
@@ -723,7 +708,7 @@ pub extern "C" fn fz_glyph_cache_insert(
                 GLYPHS.remove(old_handle);
             }
         }
-        
+
         // Insert new entry
         cache.entries.insert(key, glyph);
         cache.lru.push(key);
@@ -747,10 +732,10 @@ pub extern "C" fn fz_glyph_cache_set_size(_ctx: Handle, max_entries: i32) {
     if max_entries <= 0 {
         return;
     }
-    
+
     if let Ok(mut cache) = GLYPH_CACHE.lock() {
         cache.max_entries = max_entries as usize;
-        
+
         // Evict excess entries
         while cache.entries.len() > cache.max_entries && !cache.lru.is_empty() {
             let oldest = cache.lru.remove(0);
@@ -794,7 +779,7 @@ pub extern "C" fn fz_set_glyph_hinting(_ctx: Handle, glyph: Handle, hinting: i32
         3 => GlyphHints::StrongHint,
         _ => GlyphHints::NormalHint,
     };
-    
+
     if let Some(g) = GLYPHS.get(glyph) {
         if let Ok(mut guard) = g.lock() {
             guard.hinting = h;
@@ -830,31 +815,31 @@ mod tests {
     fn test_new_glyph() {
         let glyph = fz_new_glyph(0, 1, 65, 0x41); // Font 1, glyph 65, 'A'
         assert!(glyph > 0);
-        
+
         assert_eq!(fz_glyph_id(0, glyph), 65);
         assert_eq!(fz_glyph_unicode(0, glyph), 0x41);
         assert_eq!(fz_glyph_font(0, glyph), 1);
-        
+
         fz_drop_glyph(0, glyph);
     }
 
     #[test]
     fn test_glyph_origin() {
         let glyph = fz_new_glyph_at(0, 1, 65, 10.0, 20.0);
-        
+
         let mut x = 0.0f32;
         let mut y = 0.0f32;
         fz_glyph_origin(0, glyph, &mut x, &mut y);
-        
+
         assert_eq!(x, 10.0);
         assert_eq!(y, 20.0);
-        
+
         fz_set_glyph_origin(0, glyph, 30.0, 40.0);
         fz_glyph_origin(0, glyph, &mut x, &mut y);
-        
+
         assert_eq!(x, 30.0);
         assert_eq!(y, 40.0);
-        
+
         fz_drop_glyph(0, glyph);
     }
 
@@ -862,24 +847,24 @@ mod tests {
     fn test_glyph_matrix() {
         let matrix = [2.0f32, 0.0, 0.0, 2.0, 100.0, 100.0];
         let glyph = fz_new_glyph_with_matrix(0, 1, 65, matrix.as_ptr());
-        
+
         let mut out = [0.0f32; 6];
         fz_glyph_matrix(0, glyph, out.as_mut_ptr());
-        
+
         assert_eq!(out, matrix);
-        
+
         fz_drop_glyph(0, glyph);
     }
 
     #[test]
     fn test_glyph_advance() {
         let glyph = fz_new_glyph(0, 1, 65, 0x41);
-        
+
         fz_set_glyph_advance(0, glyph, 600.0, 1000.0);
-        
+
         assert_eq!(fz_glyph_advance(0, glyph, 1), 600.0); // Horizontal
         assert_eq!(fz_glyph_advance(0, glyph, 0), 1000.0); // Vertical
-        
+
         fz_drop_glyph(0, glyph);
     }
 
@@ -889,9 +874,9 @@ mod tests {
         let mut y = 20.25f32;
         let mut sx = 0u8;
         let mut sy = 0u8;
-        
+
         fz_subpixel_adjust(0, &mut x, &mut y, &mut sx, &mut sy, 2); // Full mode
-        
+
         assert_eq!(x, 10.0);
         assert_eq!(y, 20.0);
         assert!(sx > 0); // Should have subpixel info
@@ -900,54 +885,54 @@ mod tests {
     #[test]
     fn test_color_layers() {
         let glyph = fz_new_glyph(0, 1, 65, 0x41);
-        
+
         assert_eq!(fz_glyph_is_color(0, glyph), 0);
-        
+
         fz_glyph_add_color_layer(0, glyph, 100, 0);
         fz_glyph_add_color_layer(0, glyph, 101, 1);
-        
+
         assert_eq!(fz_glyph_is_color(0, glyph), 1);
         assert_eq!(fz_glyph_color_layer_count(0, glyph), 2);
-        
+
         let mut gid = 0u32;
         let mut pal = 0u16;
         fz_glyph_color_layer(0, glyph, 1, &mut gid, &mut pal);
-        
+
         assert_eq!(gid, 101);
         assert_eq!(pal, 1);
-        
+
         fz_drop_glyph(0, glyph);
     }
 
     #[test]
     fn test_variations() {
         let glyph = fz_new_glyph(0, 1, 65, 0x41);
-        
+
         fz_set_glyph_variation(0, glyph, 0, 400.0); // Weight
         fz_set_glyph_variation(0, glyph, 1, 100.0); // Width
-        
+
         assert_eq!(fz_glyph_variation_count(0, glyph), 2);
         assert_eq!(fz_glyph_variation(0, glyph, 0), 400.0);
         assert_eq!(fz_glyph_variation(0, glyph, 1), 100.0);
-        
+
         fz_drop_glyph(0, glyph);
     }
 
     #[test]
     fn test_glyph_cache() {
         fz_glyph_cache_clear(0);
-        
+
         let glyph1 = fz_new_glyph(0, 1, 65, 0x41);
         let glyph2 = fz_new_glyph(0, 1, 66, 0x42);
-        
+
         fz_glyph_cache_insert(0, 1, 65, 100, glyph1);
         fz_glyph_cache_insert(0, 1, 66, 100, glyph2);
-        
+
         assert_eq!(fz_glyph_cache_size(0), 2);
-        
+
         let found = fz_glyph_cache_lookup(0, 1, 65, 100);
         assert_eq!(found, glyph1);
-        
+
         fz_glyph_cache_clear(0);
         assert_eq!(fz_glyph_cache_size(0), 0);
     }
@@ -955,14 +940,13 @@ mod tests {
     #[test]
     fn test_hinting() {
         let glyph = fz_new_glyph(0, 1, 65, 0x41);
-        
+
         // Default is normal
         assert_eq!(fz_glyph_hinting(0, glyph), GlyphHints::NormalHint as i32);
-        
+
         fz_set_glyph_hinting(0, glyph, GlyphHints::NoHint as i32);
         assert_eq!(fz_glyph_hinting(0, glyph), GlyphHints::NoHint as i32);
-        
+
         fz_drop_glyph(0, glyph);
     }
 }
-

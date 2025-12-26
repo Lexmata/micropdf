@@ -23,6 +23,7 @@ extern "C" {
 #include "mupdf/fitz/glyph.h"
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/link.h"
+#include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/path.h"
 #include "mupdf/fitz/pixmap.h"

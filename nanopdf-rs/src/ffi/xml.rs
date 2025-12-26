@@ -125,13 +125,13 @@ pub extern "C" fn fz_parse_xml(
     if xml_string.is_null() {
         return 0;
     }
-    
+
     let xml_str = unsafe { CStr::from_ptr(xml_string) };
     let xml = match xml_str.to_str() {
         Ok(s) => s,
         Err(_) => return 0,
     };
-    
+
     // Simple XML parser
     match parse_xml_string(xml) {
         Some(doc_handle) => doc_handle,
@@ -159,7 +159,7 @@ pub extern "C" fn fz_parse_xml_from_buffer(
 /// Simple XML parser
 fn parse_xml_string(xml: &str) -> Option<Handle> {
     let mut doc = XmlDocument::default();
-    
+
     // Create root document node
     let root_node = XmlNode {
         node_type: XmlNodeType::Document,
@@ -168,22 +168,22 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
     let root_handle = XML_NODES.insert(root_node);
     doc.root = root_handle;
     doc.nodes.push(root_handle);
-    
+
     // Simple recursive descent parser
     let mut chars = xml.chars().peekable();
     let mut current_parent = root_handle;
-    
+
     while chars.peek().is_some() {
         skip_whitespace(&mut chars);
-        
+
         if chars.peek() == Some(&'<') {
             chars.next(); // consume '<'
-            
+
             if chars.peek() == Some(&'/') {
                 // Closing tag
                 chars.next();
                 let _tag_name = read_until(&mut chars, '>');
-                
+
                 // Move up to parent
                 if let Some(node) = XML_NODES.get(current_parent) {
                     if let Ok(guard) = node.lock() {
@@ -209,19 +209,19 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
             } else {
                 // Opening tag
                 let (tag_name, attributes, self_closing) = parse_start_tag(&mut chars);
-                
+
                 let mut new_node = XmlNode {
                     node_type: XmlNodeType::Element,
                     name: tag_name,
                     parent: current_parent,
                     ..Default::default()
                 };
-                
+
                 // Parse attributes
                 for (key, mut value) in attributes {
                     // Append null terminator for C string compatibility
                     value.push('\0');
-                    
+
                     if key.starts_with("xmlns") {
                         // Namespace declaration
                         if key == "xmlns" {
@@ -233,10 +233,10 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
                         new_node.attributes.insert(key, value);
                     }
                 }
-                
+
                 let new_handle = XML_NODES.insert(new_node);
                 doc.nodes.push(new_handle);
-                
+
                 // Link to parent
                 if let Some(parent_node) = XML_NODES.get(current_parent) {
                     if let Ok(mut guard) = parent_node.lock() {
@@ -256,7 +256,7 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
                         guard.children.push(new_handle);
                     }
                 }
-                
+
                 if !self_closing {
                     current_parent = new_handle;
                 }
@@ -265,7 +265,7 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
             // Text content
             let text = read_until_char(&mut chars, '<');
             let trimmed = text.trim();
-            
+
             if !trimmed.is_empty() {
                 let text_node = XmlNode {
                     node_type: XmlNodeType::Text,
@@ -275,7 +275,7 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
                 };
                 let text_handle = XML_NODES.insert(text_node);
                 doc.nodes.push(text_handle);
-                
+
                 if let Some(parent_node) = XML_NODES.get(current_parent) {
                     if let Ok(mut guard) = parent_node.lock() {
                         guard.children.push(text_handle);
@@ -284,7 +284,7 @@ fn parse_xml_string(xml: &str) -> Option<Handle> {
             }
         }
     }
-    
+
     Some(XML_DOCS.insert(doc))
 }
 
@@ -324,7 +324,7 @@ fn parse_start_tag(
     let mut tag_name = String::new();
     let mut attributes = Vec::new();
     let mut self_closing = false;
-    
+
     // Read tag name
     while let Some(&c) = chars.peek() {
         if c.is_whitespace() || c == '>' || c == '/' {
@@ -333,11 +333,11 @@ fn parse_start_tag(
         chars.next();
         tag_name.push(c);
     }
-    
+
     // Read attributes
     loop {
         skip_whitespace(chars);
-        
+
         match chars.peek() {
             Some(&'>') => {
                 chars.next();
@@ -355,11 +355,11 @@ fn parse_start_tag(
                 // Read attribute name
                 let attr_name = read_until_chars(chars, &['=', '>', '/', ' ']);
                 skip_whitespace(chars);
-                
+
                 if chars.peek() == Some(&'=') {
                     chars.next();
                     skip_whitespace(chars);
-                    
+
                     // Read attribute value
                     let quote = chars.next().unwrap_or('"');
                     let attr_value = read_until(chars, quote);
@@ -369,7 +369,7 @@ fn parse_start_tag(
             None => break,
         }
     }
-    
+
     (tag_name, attributes, self_closing)
 }
 
@@ -457,7 +457,7 @@ pub extern "C" fn fz_xml_up(_ctx: Handle, node: Handle) -> Handle {
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_xml_tag(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = XML_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if !guard.name.is_empty() {
@@ -474,10 +474,10 @@ pub extern "C" fn fz_xml_is_tag(_ctx: Handle, node: Handle, tag: *const c_char) 
     if tag.is_null() {
         return 0;
     }
-    
+
     let tag_str = unsafe { CStr::from_ptr(tag) };
     let tag_name = tag_str.to_str().unwrap_or("");
-    
+
     if let Some(n) = XML_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             return i32::from(guard.name == tag_name);
@@ -490,7 +490,7 @@ pub extern "C" fn fz_xml_is_tag(_ctx: Handle, node: Handle, tag: *const c_char) 
 #[unsafe(no_mangle)]
 pub extern "C" fn fz_xml_text(_ctx: Handle, node: Handle) -> *const c_char {
     static EMPTY: &[u8] = b"\0";
-    
+
     if let Some(n) = XML_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if guard.node_type == XmlNodeType::Text && !guard.content.is_empty() {
@@ -503,18 +503,14 @@ pub extern "C" fn fz_xml_text(_ctx: Handle, node: Handle) -> *const c_char {
 
 /// Get attribute value
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_xml_att(
-    _ctx: Handle,
-    node: Handle,
-    name: *const c_char,
-) -> *const c_char {
+pub extern "C" fn fz_xml_att(_ctx: Handle, node: Handle, name: *const c_char) -> *const c_char {
     if name.is_null() {
         return std::ptr::null();
     }
-    
+
     let name_str = unsafe { CStr::from_ptr(name) };
     let attr_name = name_str.to_str().unwrap_or("");
-    
+
     if let Some(n) = XML_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if let Some(value) = guard.attributes.get(attr_name) {
@@ -564,30 +560,26 @@ pub extern "C" fn fz_xml_node_type(_ctx: Handle, node: Handle) -> i32 {
 
 /// Find element by simple path (e.g., "root/child/grandchild")
 #[unsafe(no_mangle)]
-pub extern "C" fn fz_xml_find(
-    _ctx: Handle,
-    node: Handle,
-    path: *const c_char,
-) -> Handle {
+pub extern "C" fn fz_xml_find(_ctx: Handle, node: Handle, path: *const c_char) -> Handle {
     if path.is_null() {
         return 0;
     }
-    
+
     let path_str = unsafe { CStr::from_ptr(path) };
     let xpath = path_str.to_str().unwrap_or("");
-    
+
     let mut current = node;
     for segment in xpath.split('/') {
         if segment.is_empty() {
             continue;
         }
-        
+
         current = find_child_by_tag(current, segment);
         if current == 0 {
             return 0;
         }
     }
-    
+
     current
 }
 
@@ -620,17 +612,17 @@ pub extern "C" fn fz_xml_find_all(
     if tag.is_null() || results.is_null() || max_results <= 0 {
         return 0;
     }
-    
+
     let tag_str = unsafe { CStr::from_ptr(tag) };
     let tag_name = tag_str.to_str().unwrap_or("");
-    
+
     let mut found = Vec::new();
     find_all_recursive(node, tag_name, &mut found, max_results as usize);
-    
+
     let count = found.len().min(max_results as usize);
     let result_slice = unsafe { std::slice::from_raw_parts_mut(results, count) };
     result_slice.copy_from_slice(&found[..count]);
-    
+
     count as i32
 }
 
@@ -638,13 +630,13 @@ fn find_all_recursive(node: Handle, tag: &str, results: &mut Vec<Handle>, max: u
     if results.len() >= max {
         return;
     }
-    
+
     if let Some(n) = XML_NODES.get(node) {
         if let Ok(guard) = n.lock() {
             if guard.name == tag {
                 results.push(node);
             }
-            
+
             for &child in &guard.children {
                 find_all_recursive(child, tag, results, max);
             }
@@ -683,15 +675,15 @@ mod tests {
         let xml = c"<root><child>text</child></root>";
         let doc = fz_parse_xml(0, xml.as_ptr(), 0);
         assert!(doc > 0);
-        
+
         let root = fz_xml_root(0, doc);
         assert!(root > 0);
         assert_eq!(fz_xml_is_tag(0, root, c"root".as_ptr()), 1);
-        
+
         let child = fz_xml_down(0, root);
         assert!(child > 0);
         assert_eq!(fz_xml_is_tag(0, child, c"child".as_ptr()), 1);
-        
+
         fz_drop_xml(0, doc);
     }
 
@@ -700,14 +692,14 @@ mod tests {
         let xml = c"<elem attr=\"value\" num=\"42\"/>";
         let doc = fz_parse_xml(0, xml.as_ptr(), 0);
         let root = fz_xml_root(0, doc);
-        
+
         assert_eq!(fz_xml_att_count(0, root), 2);
-        
+
         let attr = fz_xml_att(0, root, c"attr".as_ptr());
         assert!(!attr.is_null());
         let attr_str = unsafe { CStr::from_ptr(attr) };
         assert_eq!(attr_str.to_str().unwrap(), "value");
-        
+
         fz_drop_xml(0, doc);
     }
 
@@ -716,20 +708,20 @@ mod tests {
         let xml = c"<root><a/><b/><c/></root>";
         let doc = fz_parse_xml(0, xml.as_ptr(), 0);
         let root = fz_xml_root(0, doc);
-        
+
         let a = fz_xml_down(0, root);
         assert_eq!(fz_xml_is_tag(0, a, c"a".as_ptr()), 1);
-        
+
         let b = fz_xml_next(0, a);
         assert_eq!(fz_xml_is_tag(0, b, c"b".as_ptr()), 1);
-        
+
         let c = fz_xml_next(0, b);
         assert_eq!(fz_xml_is_tag(0, c, c"c".as_ptr()), 1);
-        
+
         // Navigate back
         let b_again = fz_xml_prev(0, c);
         assert_eq!(fz_xml_is_tag(0, b_again, c"b".as_ptr()), 1);
-        
+
         fz_drop_xml(0, doc);
     }
 
@@ -738,12 +730,11 @@ mod tests {
         let xml = c"<root><level1><level2>deep</level2></level1></root>";
         let doc = fz_parse_xml(0, xml.as_ptr(), 0);
         let root = fz_xml_root(0, doc);
-        
+
         let level2 = fz_xml_find(0, root, c"level1/level2".as_ptr());
         assert!(level2 > 0);
         assert_eq!(fz_xml_is_tag(0, level2, c"level2".as_ptr()), 1);
-        
+
         fz_drop_xml(0, doc);
     }
 }
-
