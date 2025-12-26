@@ -41,6 +41,7 @@ pub mod stream;
 pub mod string_util;
 pub mod text;
 pub mod tree;
+pub mod writer;
 pub mod xml;
 
 // Safe helper functions for common FFI patterns

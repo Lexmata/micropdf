@@ -37,6 +37,7 @@ extern "C" {
 #include "mupdf/fitz/string_util.h"
 #include "mupdf/fitz/text.h"
 #include "mupdf/fitz/tree.h"
+#include "mupdf/fitz/writer.h"
 #include "mupdf/fitz/xml.h"
 
 #ifdef __cplusplus

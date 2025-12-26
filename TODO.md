@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 37/70+ modules** (~53%)
+**Implemented: 38/70+ modules** (~54%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -47,29 +47,13 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_outline | 30+ | Document TOC/outlines |
 | fz_stext | 50+ | Structured text extraction |
 | fz_filter | 18+ | Stream filters |
+| fz_writer | 50+ | Document writers |
 
 ---
 
 ## Missing Fitz (Core) Modules
 
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
-
-### High Priority
-
-#### fz_writer (Document Writers)
-- [ ] `fz_document_writer` - base writer structure
-- [ ] `fz_new_document_writer` - create by format
-- [ ] `fz_begin_page` / `fz_end_page` - page lifecycle
-- [ ] `fz_close_document_writer` / `fz_drop_document_writer`
-- [ ] `fz_write_document` - write full document
-- [ ] `fz_new_pdf_writer` - PDF output
-- [ ] `fz_new_svg_writer` - SVG output
-- [ ] `fz_new_text_writer` - text output
-- [ ] `fz_new_odt_writer` / `fz_new_docx_writer` - Office formats
-- [ ] `fz_new_ps_writer` / `fz_new_pcl_writer` - print formats
-- [ ] `fz_new_cbz_writer` - comic book archive
-- [ ] `fz_new_pdfocr_writer` - PDF with OCR
-- [ ] `fz_new_png/jpeg/pam/pnm_pixmap_writer` - image writers
 
 ### Medium Priority
 
