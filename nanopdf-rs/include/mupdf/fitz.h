@@ -33,6 +33,7 @@ extern "C" {
 #include "mupdf/fitz/shade.h"
 #include "mupdf/fitz/stext.h"
 #include "mupdf/fitz/store.h"
+#include "mupdf/fitz/story.h"
 #include "mupdf/fitz/stream.h"
 #include "mupdf/fitz/string_util.h"
 #include "mupdf/fitz/text.h"

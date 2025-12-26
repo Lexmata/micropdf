@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 38/70+ modules** (~54%)
+**Implemented: 39/70+ modules** (~56%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -48,6 +48,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_stext | 50+ | Structured text extraction |
 | fz_filter | 18+ | Stream filters |
 | fz_writer | 50+ | Document writers |
+| fz_story | 13+ | HTML story layout |
 
 ---
 
@@ -56,17 +57,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Medium Priority
-
-#### fz_story (HTML Story Layout)
-- [ ] `fz_story` - styled HTML story
-- [ ] `fz_new_story` - create from HTML buffer
-- [ ] `fz_place_story` - layout into rectangle
-- [ ] `fz_draw_story` - render to device
-- [ ] `fz_reset_story` - reset layout position
-- [ ] `fz_drop_story`
-- [ ] `fz_story_document` - get DOM for manipulation
-- [ ] `fz_story_positions` - enumerate element positions
-- [ ] `fz_story_warnings` - get parsing warnings
 
 #### fz_transition (Page Transitions)
 - [ ] `fz_transition` structure - type, duration, direction

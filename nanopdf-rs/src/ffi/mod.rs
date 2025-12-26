@@ -37,6 +37,7 @@ pub mod separation;
 pub mod shade;
 pub mod stext;
 pub mod store;
+pub mod story;
 pub mod stream;
 pub mod string_util;
 pub mod text;
