@@ -52,19 +52,13 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_transition | 19+ | Page transitions |
 | fz_color | 25+ | Color management |
 | fz_compress | 30+ | Deflate/Brotli/Fax compression |
+| fz_glyph_cache | 25+ | Cache statistics, eviction policies |
 
 ---
 
 ## Missing Fitz (Core) Modules
 
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
-
-### Medium Priority
-
-#### fz_glyph_cache
-- [ ] Glyph cache management (beyond basic fz_glyph)
-- [ ] Cache statistics
-- [ ] Cache eviction policies
 
 ### Lower Priority
 
