@@ -633,8 +633,8 @@ export class Page {
     // Clean up native resources if available
     if (this._ctx && this._page) {
       // Native cleanup would go here
-      this._page = undefined;
-      this._ctx = undefined;
+      delete this._page;
+      delete this._ctx;
     }
   }
 }
@@ -1025,8 +1025,8 @@ export class Document {
     // Clean up native resources if available
     if (this._ctx && this._doc) {
       // Native cleanup would go here
-      this._doc = undefined;
-      this._ctx = undefined;
+      delete this._doc;
+      delete this._ctx;
     }
     this._pages = [];
   }
