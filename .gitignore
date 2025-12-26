@@ -11,3 +11,6 @@ mupdf/
 perf.data
 perf.data.old
 *.svg.perf
+
+# MuPDF source reference
+mupdf-source/

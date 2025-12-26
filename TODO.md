@@ -2,9 +2,11 @@
 
 This document tracks remaining work needed for complete MuPDF API compatibility.
 
+> **Source**: Analysis based on MuPDF source headers (cloned 2025-12-26)
+
 ## Current Status
 
-**Implemented: 34 modules** ✅
+**Implemented: 34/70+ modules** (~49%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -45,67 +47,296 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ---
 
-## Remaining PDF Modules
+## Missing Fitz (Core) Modules
+
+> Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### High Priority
 
-#### pdf_js (JavaScript Support)
-- [ ] JavaScript interpreter integration
-- [ ] Action scripting
-- [ ] Form calculation scripts
-- [ ] Document-level scripts
-- [ ] Event handling (open, close, etc.)
+#### fz_outline (Document Outlines/TOC)
+- [ ] `fz_outline` structure - tree of outline entries
+- [ ] `fz_outline_iterator` - iterator for traversal
+- [ ] `fz_new_outline` - create outline entry
+- [ ] `fz_keep_outline` / `fz_drop_outline` - reference counting
+- [ ] `fz_outline_iterator_item` - get current item
+- [ ] `fz_outline_iterator_next/prev/up/down` - navigation
+- [ ] `fz_outline_iterator_insert/delete/update` - modification
+- [ ] `fz_load_outline_from_iterator` - structure API
 
-#### pdf_layer (Optional Content Groups)
-- [ ] OCG (Optional Content Group) parsing
-- [ ] Layer visibility control
-- [ ] OCMD (Optional Content Membership Dictionary)
-- [ ] Default layer states
-- [ ] Layer ordering
+#### fz_stext (Structured Text Extraction)
+- [ ] `fz_stext_page` - text page structure
+- [ ] `fz_stext_block` - text/image/struct blocks
+- [ ] `fz_stext_line` - text lines with baseline
+- [ ] `fz_stext_char` - unicode chars with position/font
+- [ ] `fz_new_stext_page` / `fz_drop_stext_page`
+- [ ] `fz_new_stext_device` - text extraction device
+- [ ] `fz_search_stext_page` - text search
+- [ ] `fz_highlight_selection` - selection highlighting
+- [ ] `fz_copy_selection` - copy text from selection
+- [ ] `fz_print_stext_page_as_html/xhtml/xml/json/text` - output formats
+- [ ] `fz_segment_stext_page` - page segmentation analysis
+- [ ] `fz_paragraph_break` - paragraph detection
+- [ ] `fz_table_hunt` - table detection
+- [ ] `fz_new_ocr_device` - OCR integration
 
-#### pdf_pattern (Pattern Support)
-- [ ] Tiling patterns (Type 1)
-- [ ] Shading patterns (Type 2)
-- [ ] Pattern colorspaces
-- [ ] Pattern transformations
+#### fz_filter (Stream Filters)
+- [ ] `fz_open_null_filter` - null filter
+- [ ] `fz_open_range_filter` - range filter
+- [ ] `fz_open_endstream_filter` - PDF endstream
+- [ ] `fz_open_concat` - concatenate streams
+- [ ] `fz_open_arc4` - RC4 decryption
+- [ ] `fz_open_aesd` - AES decryption
+- [ ] `fz_open_a85d` - ASCII85 decode
+- [ ] `fz_open_ahxd` - ASCII Hex decode
+- [ ] `fz_open_rld` - Run Length decode
+- [ ] `fz_open_dctd` - DCT/JPEG decode
+- [ ] `fz_open_faxd` - Fax/CCITT decode
+- [ ] `fz_open_flated` - Flate/zlib decode
+- [ ] `fz_open_lzwd` - LZW decode
+- [ ] `fz_open_predict` - predictor decode
+- [ ] `fz_open_jbig2d` - JBIG2 decode
+- [ ] `fz_open_brotlid` - Brotli decode
+- [ ] `fz_open_sgilog16/24/32` - SGI Log decode
+- [ ] `fz_open_thunder` - Thunderscan decode
 
-#### pdf_signature (Digital Signatures)
-- [ ] Signature field handling
-- [ ] PKCS#7 signature creation
-- [ ] Signature verification
-- [ ] Certificate chain validation
-- [ ] Timestamp support
-- [ ] PAdES compliance
+#### fz_writer (Document Writers)
+- [ ] `fz_document_writer` - base writer structure
+- [ ] `fz_new_document_writer` - create by format
+- [ ] `fz_begin_page` / `fz_end_page` - page lifecycle
+- [ ] `fz_close_document_writer` / `fz_drop_document_writer`
+- [ ] `fz_write_document` - write full document
+- [ ] `fz_new_pdf_writer` - PDF output
+- [ ] `fz_new_svg_writer` - SVG output
+- [ ] `fz_new_text_writer` - text output
+- [ ] `fz_new_odt_writer` / `fz_new_docx_writer` - Office formats
+- [ ] `fz_new_ps_writer` / `fz_new_pcl_writer` - print formats
+- [ ] `fz_new_cbz_writer` - comic book archive
+- [ ] `fz_new_pdfocr_writer` - PDF with OCR
+- [ ] `fz_new_png/jpeg/pam/pnm_pixmap_writer` - image writers
 
 ### Medium Priority
 
-#### pdf_redact (Redaction)
-- [ ] Redaction annotation creation
-- [ ] Redaction application (content removal)
-- [ ] Text content removal
-- [ ] Image content removal
-- [ ] Sanitization of metadata
+#### fz_story (HTML Story Layout)
+- [ ] `fz_story` - styled HTML story
+- [ ] `fz_new_story` - create from HTML buffer
+- [ ] `fz_place_story` - layout into rectangle
+- [ ] `fz_draw_story` - render to device
+- [ ] `fz_reset_story` - reset layout position
+- [ ] `fz_drop_story`
+- [ ] `fz_story_document` - get DOM for manipulation
+- [ ] `fz_story_positions` - enumerate element positions
+- [ ] `fz_story_warnings` - get parsing warnings
 
-#### pdf_portfolio (PDF Portfolios)
-- [ ] Portfolio structure parsing
-- [ ] Embedded file extraction
-- [ ] Navigator support
-- [ ] Schema handling
+#### fz_transition (Page Transitions)
+- [ ] `fz_transition` structure - type, duration, direction
+- [ ] `fz_generate_transition` - generate transition frame
+- [ ] Transition types: Split, Blinds, Box, Wipe, Dissolve, Glitter, Fly, Push, Cover, Uncover, Fade
 
-#### pdf_tagged (Tagged PDF / Accessibility)
-- [ ] Structure tree parsing
-- [ ] Role mapping
-- [ ] Alternative text extraction
-- [ ] Reading order
-- [ ] PDF/UA compliance checking
+#### fz_color (Color Management)
+- [ ] `fz_color_params` - rendering intent, black point compensation
+- [ ] `fz_default_color_params` - default color handling
+- [ ] ICC profile loading and management
+- [ ] Color space conversions beyond basic
+
+#### fz_compress (Compression)
+- [ ] `fz_deflate` / `fz_deflate_bound` - zlib compression
+- [ ] `fz_compress_ccitt_fax_g3` / `fz_compress_ccitt_fax_g4`
+- [ ] Compression level options
+
+#### fz_compressed_buffer
+- [ ] `fz_compressed_buffer` - compressed data + params
+- [ ] `fz_keep_compressed_buffer` / `fz_drop_compressed_buffer`
+- [ ] `fz_compressed_buffer_size`
+
+#### fz_glyph_cache
+- [ ] Glyph cache management (beyond basic fz_glyph)
+- [ ] Cache statistics
+- [ ] Cache eviction policies
 
 ### Lower Priority
 
-#### pdf_3d (3D Content)
+#### fz_bidi (BiDi Text)
+- [ ] `fz_bidi_direction` - base direction detection
+- [ ] `fz_bidi_reorder_run` - reorder text runs
+- [ ] BiDi embedding levels
+
+#### fz_barcode
+- [ ] `fz_barcode` - barcode types
+- [ ] `fz_new_barcode` - generate barcode image
+- [ ] QR codes, Code39, Code128, EAN, etc.
+
+#### fz_deskew
+- [ ] `fz_deskew_page` - auto-deskew scanned pages
+- [ ] Skew angle detection
+
+#### fz_heap
+- [ ] `fz_heap` - priority queue structure
+- [ ] `fz_heap_insert` / `fz_heap_remove`
+- [ ] Used for sorted rendering
+
+#### fz_hyphen
+- [ ] `fz_hyphenator` - text hyphenation
+- [ ] `fz_load_hyphenator` - load hyphenation patterns
+- [ ] `fz_hyphenate_word` - find hyphenation points
+
+#### fz_json
+- [ ] `fz_write_json` - JSON output
+- [ ] JSON string escaping
+
+#### fz_log
+- [ ] `fz_log` - logging functions
+- [ ] Log levels and filtering
+
+#### fz_write_pixmap
+- [ ] `fz_write_pixmap_as_png/jpeg/pam/pnm/pbm/pkm`
+- [ ] `fz_save_pixmap_as_*` - save to file
+- [ ] `fz_new_buffer_from_pixmap_as_*` - save to buffer
+
+#### fz_util
+- [ ] Various utility functions
+- [ ] Memory helpers
+- [ ] String utilities
+
+---
+
+## Missing PDF Modules
+
+> Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
+
+### High Priority
+
+#### pdf_javascript (JavaScript Support)
+- [ ] `pdf_enable_js` / `pdf_disable_js`
+- [ ] `pdf_js_supported` - check JS availability
+- [ ] `pdf_js_execute` - run JavaScript code
+- [ ] `pdf_js_event_init` - initialize event
+- [ ] `pdf_js_event_result` - get event result
+- [ ] `pdf_js_event_value` - get value from event
+- [ ] Keystroke event handling
+
+#### pdf_interpret (Content Stream Processor)
+- [ ] `pdf_processor` - operator processor base
+- [ ] `pdf_new_run_processor` - rendering processor
+- [ ] `pdf_new_buffer_processor` - collect to buffer
+- [ ] `pdf_new_output_processor` - write to output
+- [ ] `pdf_new_sanitize_filter` - sanitize stream
+- [ ] `pdf_new_color_filter` - recolor content
+- [ ] `pdf_process_contents` - process stream
+- [ ] `pdf_process_annot` - process annotation
+- [ ] All PDF operators (op_w, op_j, op_J, op_M, etc.)
+- [ ] Graphics state operations
+- [ ] Path construction/painting
+- [ ] Text operations
+- [ ] Color operations
+- [ ] XObject handling
+
+#### pdf_page
+- [ ] `pdf_page` structure
+- [ ] `pdf_load_page` / `pdf_drop_page`
+- [ ] `pdf_page_obj` - get page dictionary
+- [ ] `pdf_page_resources` - get resources
+- [ ] `pdf_page_contents` - get content stream
+- [ ] `pdf_page_transform` - get transformation
+- [ ] `pdf_bound_page` - get page bounds
+- [ ] `pdf_run_page` - render page
+
+#### pdf_parse
+- [ ] `pdf_parse_stm_obj` - parse stream object
+- [ ] `pdf_parse_ind_obj` - parse indirect object
+- [ ] `pdf_parse_dict` / `pdf_parse_array`
+- [ ] PDF token parsing
+
+#### pdf_layer (Optional Content)
+- [ ] `pdf_layer_config` - layer configuration
+- [ ] `pdf_count_layer_configs` / `pdf_select_layer_config`
+- [ ] `pdf_layer_config_info`
+- [ ] `pdf_count_layers` / `pdf_layer_name`
+- [ ] `pdf_layer_is_enabled` / `pdf_enable_layer`
+- [ ] OCG/OCMD support
+
+#### pdf_signature (Digital Signatures)
+- [ ] `pdf_signature_is_signed`
+- [ ] `pdf_signature_byte_range`
+- [ ] `pdf_signature_contents`
+- [ ] `pdf_signature_incremental_change_since_signing`
+- [ ] `pdf_sign_signature` - sign document
+- [ ] `pdf_clear_signature`
+- [ ] Certificate handling
+- [ ] PKCS#7 support
+
+### Medium Priority
+
+#### pdf_cmap
+- [ ] `pdf_cmap` structure
+- [ ] `fz_new_cmap` / `fz_keep_cmap` / `fz_drop_cmap`
+- [ ] `pdf_load_cmap` - load from stream
+- [ ] `pdf_load_embedded_cmap` - from PDF object
+- [ ] `fz_lookup_cmap` / `fz_lookup_cmap_full`
+- [ ] CID/Unicode mapping
+- [ ] Vertical writing mode support
+
+#### pdf_font (PDF-specific)
+- [ ] `pdf_font_desc` - PDF font descriptor
+- [ ] `pdf_load_font` - load font from PDF
+- [ ] `pdf_load_type3_font`
+- [ ] `pdf_font_cid_to_gid` / `pdf_font_cid_to_unicode`
+- [ ] `pdf_add_font_file` - embed font
+
+#### pdf_resource
+- [ ] `pdf_find_font_resource` - font lookup
+- [ ] `pdf_find_image_resource` - image lookup
+- [ ] `pdf_find_colorspace_resource`
+- [ ] `pdf_find_pattern_resource`
+- [ ] `pdf_find_shading_resource`
+- [ ] `pdf_add_*_resource` - add resources
+
+#### pdf_clean
+- [ ] `pdf_clean_file` - optimize PDF
+- [ ] `pdf_linearize` - create linearized PDF
+- [ ] Object stream creation
+- [ ] Stream compression
+
+#### pdf_redact
+- [ ] `pdf_redact_page` - apply redaction
+- [ ] `pdf_add_redact_annot` - create redaction annotation
+- [ ] Content removal
+- [ ] Metadata sanitization
+
+#### pdf_image_rewriter
+- [ ] `pdf_rewrite_images` - rewrite/optimize images
+- [ ] Image compression options
+- [ ] Resolution changes
+
+#### pdf_recolor
+- [ ] `pdf_shade_recolorer` - shade recoloring
+- [ ] Color conversion during processing
+
+### Lower Priority
+
+#### pdf_event
+- [ ] `pdf_doc_event` - document events
+- [ ] `pdf_doc_event_cb` - event callback
+- [ ] Alert, print, launch events
+
+#### pdf_name_table
+- [ ] PDF name string optimization
+- [ ] Standard PDF names
+
+#### pdf_zugferd
+- [ ] ZUGFeRD invoice support
+- [ ] XML invoice extraction/embedding
+- [ ] Factur-X compliance
+
+#### pdf_portfolio
+- [ ] Portfolio structure
+- [ ] Embedded file handling
+- [ ] Navigator support
+
+#### pdf_3d
 - [ ] 3D annotation support
-- [ ] U3D format parsing
-- [ ] PRC format parsing
-- [ ] 3D view handling
+- [ ] U3D format
+- [ ] PRC format
+- [ ] 3D views
 
 ---
 
@@ -804,31 +1035,42 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 
 ## Priority Roadmap
 
-### v0.2.0 - Patterns & Layers
-1. pdf_pattern (tiling/shading patterns)
-2. pdf_layer (optional content groups)
-3. Enhanced rendering device
+### v0.2.0 - Text Extraction & Outlines
+1. fz_stext (structured text extraction)
+2. fz_outline (document outlines/TOC)
+3. fz_filter (stream filters - decode)
+4. pdf_page (page handling)
 
-### v0.3.0 - Security & Signatures
+### v0.3.0 - Document Writing
+1. fz_writer (document writers)
+2. fz_write_pixmap (image output)
+3. pdf_clean (optimization)
+4. pdf_parse (parsing)
+
+### v0.4.0 - Content Processing
+1. pdf_interpret (content stream processor)
+2. pdf_layer (optional content groups)
+3. pdf_cmap (character maps)
+4. fz_story (HTML layout)
+
+### v0.5.0 - Security & Signatures
 1. pdf_signature (digital signatures)
 2. pdf_redact (redaction)
-3. Enhanced encryption (AES-256)
+3. pdf_javascript (JavaScript)
+4. Enhanced encryption
 
-### v0.4.0 - JavaScript & Accessibility
-1. pdf_js (JavaScript)
-2. pdf_tagged (accessibility/PDF-UA)
-3. Enhanced form support
-
-### v0.5.0 - Additional Formats
+### v0.6.0 - Additional Formats
 1. XPS support
-2. EPUB support
+2. EPUB support  
 3. SVG support
+4. fz_barcode (barcodes)
 
 ### v1.0.0 - Production Ready
-1. Full MuPDF API parity
+1. Full MuPDF API parity (~70+ modules)
 2. Comprehensive documentation
 3. Performance optimization
 4. Mobile platform support
+5. WebAssembly target
 
 ---
 
@@ -843,5 +1085,5 @@ Priority should be given to items that:
 
 ---
 
-*Last updated: 2025-12-26*
+*Last updated: 2025-12-26 (MuPDF header analysis)*
 
