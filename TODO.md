@@ -54,6 +54,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_compress | 30+ | Deflate/Brotli/Fax compression |
 | fz_glyph_cache | 25+ | Cache statistics, eviction policies |
 | fz_bidi | 18+ | Bidirectional text, reordering, mirroring |
+| fz_barcode | 12+ | QR/Code128/EAN/UPC generation |
 
 ---
 
@@ -62,11 +63,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_barcode
-- [ ] `fz_barcode` - barcode types
-- [ ] `fz_new_barcode` - generate barcode image
-- [ ] QR codes, Code39, Code128, EAN, etc.
 
 #### fz_deskew
 - [ ] `fz_deskew_page` - auto-deskew scanned pages

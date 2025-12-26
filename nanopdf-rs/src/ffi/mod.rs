@@ -10,6 +10,7 @@
 pub mod annot;
 pub mod archive;
 pub mod band_writer;
+pub mod barcode;
 pub mod bidi;
 pub mod bitmap;
 pub mod buffer;
