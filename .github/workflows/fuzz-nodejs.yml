@@ -73,11 +73,11 @@ jobs:
       - name: Build Rust library
         working-directory: nanopdf-rs
         run: |
-          cargo build --release
-          mkdir -p ../nanopdf-js/native/lib
-          cp target/release/libnanopdf_rs.so ../nanopdf-js/native/lib/ || true
-          cp target/release/libnanopdf_rs.dylib ../nanopdf-js/native/lib/ || true
-          cp target/release/nanopdf_rs.dll ../nanopdf-js/native/lib/ || true
+          make release
+          mkdir -p ../nanopdf-js/native/lib/linux-x64
+          cp target/release/libnanopdf.a ../nanopdf-js/native/lib/linux-x64/
+          mkdir -p ../nanopdf-js/native/include
+          cp -r include/* ../nanopdf-js/native/include/
 
       - name: Install dependencies
         working-directory: nanopdf-js
