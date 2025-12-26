@@ -112,7 +112,9 @@ func TestBuffer(t *testing.T) {
 		}
 
 		// Modify original, clone should be unaffected
-		original.AppendString(" Modified")
+		if err := original.AppendString(" Modified"); err != nil {
+			t.Fatalf("AppendString failed: %v", err)
+		}
 		if cloned.String() == original.String() {
 			t.Error("clone should be independent")
 		}

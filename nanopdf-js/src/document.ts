@@ -604,6 +604,39 @@ export class Page {
       );
     });
   }
+
+  /**
+   * Search for text on the page (alias for search)
+   */
+  searchText(needle: string): Quad[] {
+    return this.search(needle);
+  }
+
+  /**
+   * Extract text from the page (alias for getText for MuPDF API compatibility)
+   */
+  extractText(): string {
+    return this.getText();
+  }
+
+  /**
+   * Extract text blocks from the page (alias for getTextBlocks for MuPDF API compatibility)
+   */
+  extractTextBlocks(): TextBlock[] {
+    return this.getTextBlocks();
+  }
+
+  /**
+   * Drop/release the page resources
+   */
+  drop(): void {
+    // Clean up native resources if available
+    if (this._ctx && this._page) {
+      // Native cleanup would go here
+      this._page = undefined;
+      this._ctx = undefined;
+    }
+  }
 }
 
 /**
@@ -969,6 +1002,33 @@ export class Document {
       throw NanoPDFError.argument(`Page index ${index} out of bounds (0..${this._pages.length})`);
     }
     return this._pages[index]!;
+  }
+
+  /**
+   * Load a page by index (alias for getPage for MuPDF API compatibility)
+   */
+  loadPage(index: number): Page {
+    return this.getPage(index);
+  }
+
+  /**
+   * Check if the document needs a password (method form for API compatibility)
+   */
+  needsPasswordCheck(): boolean {
+    return this._needsPassword;
+  }
+
+  /**
+   * Close the document and release resources
+   */
+  close(): void {
+    // Clean up native resources if available
+    if (this._ctx && this._doc) {
+      // Native cleanup would go here
+      this._doc = undefined;
+      this._ctx = undefined;
+    }
+    this._pages = [];
   }
 
   /**

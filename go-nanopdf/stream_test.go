@@ -93,7 +93,9 @@ func TestStreamSeekTell(t *testing.T) {
 
 	// Read and verify
 	buf := make([]byte, 1)
-	stream.Read(buf)
+	if _, err := stream.Read(buf); err != nil {
+		t.Fatalf("Read failed: %v", err)
+	}
 	if buf[0] != '5' {
 		t.Errorf("Read byte %c, expected '5'", buf[0])
 	}

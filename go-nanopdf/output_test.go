@@ -112,7 +112,9 @@ func TestOutputTell(t *testing.T) {
 	}
 
 	// Write 10 bytes
-	output.WriteData([]byte("0123456789"))
+	if err := output.WriteData([]byte("0123456789")); err != nil {
+		t.Fatalf("WriteData failed: %v", err)
+	}
 
 	// Position should be 10
 	if pos := output.Tell(); pos != 10 {
