@@ -53,6 +53,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_color | 25+ | Color management |
 | fz_compress | 30+ | Deflate/Brotli/Fax compression |
 | fz_glyph_cache | 25+ | Cache statistics, eviction policies |
+| fz_bidi | 18+ | Bidirectional text, reordering, mirroring |
 
 ---
 
@@ -61,11 +62,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_bidi (BiDi Text)
-- [ ] `fz_bidi_direction` - base direction detection
-- [ ] `fz_bidi_reorder_run` - reorder text runs
-- [ ] BiDi embedding levels
 
 #### fz_barcode
 - [ ] `fz_barcode` - barcode types

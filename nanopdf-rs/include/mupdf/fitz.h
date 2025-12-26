@@ -10,6 +10,7 @@ extern "C" {
 
 #include "mupdf/fitz/archive.h"
 #include "mupdf/fitz/band_writer.h"
+#include "mupdf/fitz/bidi.h"
 #include "mupdf/fitz/bitmap.h"
 #include "mupdf/fitz/buffer.h"
 #include "mupdf/fitz/color.h"
