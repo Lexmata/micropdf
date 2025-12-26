@@ -38,35 +38,35 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ### High Priority
 
-#### fz_shade (Gradients/Shading)
-- [ ] Linear gradients
-- [ ] Radial gradients
-- [ ] Coons patch meshes
-- [ ] Tensor-product patch meshes
-- [ ] Function-based shading
-- [ ] Axial shading
-- [ ] Type 1-7 shading patterns
+#### fz_shade (Gradients/Shading) ✅ Complete
+- [x] Linear gradients
+- [x] Radial gradients
+- [x] Coons patch meshes
+- [x] Tensor-product patch meshes
+- [x] Function-based shading
+- [x] Axial shading
+- [x] Type 1-7 shading patterns
 
-#### fz_separation (Spot Colors)
-- [ ] Spot color handling
-- [ ] Separation colorspaces
-- [ ] DeviceN colorspace support
-- [ ] ICC profile integration
-- [ ] Color management for print production
+#### fz_separation (Spot Colors) ✅ Complete
+- [x] Spot color handling
+- [x] Separation colorspaces
+- [x] DeviceN colorspace support
+- [x] ICC profile integration
+- [x] Color management for print production
 
-#### fz_glyph (Advanced Glyph Handling)
-- [ ] Glyph caching
-- [ ] Subpixel positioning
-- [ ] Glyph scaling and transformation
-- [ ] Color font support (COLR/CPAL)
-- [ ] Variable font support
+#### fz_glyph (Advanced Glyph Handling) ✅ Complete
+- [x] Glyph caching
+- [x] Subpixel positioning
+- [x] Glyph scaling and transformation
+- [x] Color font support (COLR/CPAL)
+- [x] Variable font support
 
-#### fz_store (Resource Caching)
-- [ ] Memory cache for rendered objects
-- [ ] LRU eviction policy
-- [ ] Cache size limits
-- [ ] Per-document caching
-- [ ] Thread-safe cache access
+#### fz_store (Resource Caching) ✅ Complete
+- [x] Memory cache for rendered objects
+- [x] LRU eviction policy
+- [x] Cache size limits
+- [x] Per-document caching
+- [x] Thread-safe cache access
 
 ### Medium Priority
 

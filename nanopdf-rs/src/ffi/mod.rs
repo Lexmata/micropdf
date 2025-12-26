@@ -20,12 +20,16 @@ pub mod enhanced;
 pub mod font;
 pub mod form;
 pub mod geometry;
+pub mod glyph;
 pub mod image;
 pub mod link;
 pub mod output;
 pub mod path;
 pub mod pdf_object;
 pub mod pixmap;
+pub mod separation;
+pub mod shade;
+pub mod store;
 pub mod stream;
 pub mod text;
 
