@@ -234,10 +234,12 @@ Current performance metrics (from `cargo bench`):
   - Compile-time assertions: `assert_layout!`, `assert_cache_lines!`
   - FFI: layout queries, alignment checks, padding calculations
 
-- [ ] **Data locality**
-  - Group related data in memory
-  - Prefetch hints for sequential access
-  - Page-aligned allocations for large buffers
+- [x] **Data locality** ✅
+  - `PageAlignedBuffer`: 4KB-aligned allocations for TLB efficiency
+  - `prefetch_read/write`: CPU prefetch hints (x86_64 SSE, ARM64 PRFM)
+  - `PrefetchLocality`: NonTemporal, Low, Medium, High hints
+  - `PointSoA/RectSoA/ColorSoA`: Struct-of-Arrays for SIMD vectorization
+  - FFI: page buffer ops, SoA containers, locality stats
 
 ### Lower Priority Optimizations
 

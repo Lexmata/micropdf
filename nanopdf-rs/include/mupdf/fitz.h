@@ -21,6 +21,7 @@ extern "C" {
 #include "mupdf/fitz/compress.h"
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/cookie.h"
+#include "mupdf/fitz/data_locality.h"
 #include "mupdf/fitz/deskew.h"
 #include "mupdf/fitz/device.h"
 #include "mupdf/fitz/display_list.h"
