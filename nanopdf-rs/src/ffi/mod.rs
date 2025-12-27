@@ -39,6 +39,7 @@ pub mod hyphen;
 pub mod image;
 pub mod json;
 pub mod link;
+pub mod lockfree;
 pub mod log;
 pub mod office;
 pub mod outline;

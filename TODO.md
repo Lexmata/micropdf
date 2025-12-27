@@ -203,10 +203,12 @@ Current performance metrics (from `cargo bench`):
   - Buffer ops: fill, copy, equal (16-byte SIMD chunks)
   - Base64 encode/decode (scalar with SIMD-ready infrastructure)
 
-- [ ] **Lock-free data structures**
-  - Profile shows `futex::Mutex::lock_contended`
-  - Consider lock-free queues for parallel processing
-  - Reduce contention in HandleStore
+- [x] **Lock-free data structures** ✅
+  - `LockFreeHandleStore`: RwLock + sharding (16 shards) for read-heavy FFI
+  - `LockFreeQueue`: MPMC ring buffer with atomic head/tail (4096 capacity)
+  - `ShardedMap`: Concurrent HashMap with configurable shards
+  - `AtomicRefCount`: High-perf reference counting with relaxed ordering
+  - FFI: queue push/pop/len/capacity, store statistics
 
 ### Medium Priority Optimizations
 
