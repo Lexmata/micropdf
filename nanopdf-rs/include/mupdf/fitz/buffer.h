@@ -14,7 +14,7 @@ extern "C" {
 #endif
 
 // ============================================================================
-// Buffer Functions (36 total)
+// Buffer Functions (44 total)
 // ============================================================================
 
 void fz_append_base64(int32_t _ctx, int32_t buf, const u8 * data, size_t size, int32_t newline);
@@ -37,7 +37,13 @@ size_t fz_buffer_capacity(int32_t _ctx, int32_t buf);
 const u8 * fz_buffer_data(int32_t _ctx, int32_t buf, size_t * len);
 int32_t fz_buffer_eq(int32_t _ctx, int32_t buf1, int32_t buf2);
 int32_t fz_buffer_extract(int32_t _ctx, int32_t buf);
+int fz_buffer_is_pooled(int32_t _ctx, int32_t buf);
 size_t fz_buffer_len(int32_t _ctx, int32_t buf);
+void fz_buffer_pool_clear(int32_t _ctx);
+size_t fz_buffer_pool_count(int32_t _ctx);
+PoolStatsFFI fz_buffer_pool_stats(int32_t _ctx);
+void fz_buffer_reserve(int32_t _ctx, int32_t buf, size_t additional);
+void fz_buffer_shrink_to_fit(int32_t _ctx, int32_t buf);
 size_t fz_buffer_storage(int32_t _ctx, int32_t buf, *mut u8 * datap);
 void fz_clear_buffer(int32_t _ctx, int32_t buf);
 int32_t fz_clone_buffer(int32_t _ctx, int32_t buf);
@@ -48,6 +54,8 @@ void fz_md5_buffer(int32_t _ctx, int32_t buf, [u8; 16] * digest);
 int32_t fz_new_buffer(int32_t _ctx, size_t capacity);
 int32_t fz_new_buffer_from_copied_data(int32_t _ctx, const u8 * data, size_t size);
 int32_t fz_new_buffer_from_data(int32_t _ctx, u8 * data, size_t size);
+int32_t fz_new_buffer_unpooled(int32_t _ctx, size_t capacity);
+int32_t fz_new_buffer_with_capacity(int32_t _ctx, size_t hint);
 void fz_resize_buffer(int32_t _ctx, int32_t buf, size_t capacity);
 int32_t fz_slice_buffer(int32_t _ctx, int32_t buf, size_t offset, size_t len);
 const char * fz_string_from_buffer(int32_t _ctx, int32_t _buf);

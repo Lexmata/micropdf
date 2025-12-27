@@ -168,10 +168,12 @@ Current performance metrics (from `cargo bench`):
 ### High Priority Optimizations
 
 #### Memory Allocation Hot Paths
-- [ ] **Buffer reuse pool** - Reduce allocations in tight loops
-  - Profile shows `alloc::vec::Vec` and `RawVecInner` in hot paths
-  - Implement buffer pooling for frequently allocated sizes
-  - Add `Buffer::with_capacity()` hints in critical paths
+- [x] **Buffer reuse pool** - Reduce allocations in tight loops ✅
+  - Implemented buffer pooling with 6 size classes: 64B, 256B, 1KB, 4KB, 16KB, 64KB
+  - Pool max 32 buffers per size class
+  - FFI functions: `fz_buffer_pool_stats`, `fz_buffer_pool_clear`, `fz_buffer_pool_count`
+  - New buffer functions: `fz_new_buffer_with_capacity`, `fz_new_buffer_unpooled`
+  - Added `fz_buffer_reserve`, `fz_buffer_shrink_to_fit`, `fz_buffer_is_pooled`
 
 - [ ] **String interning for PDF Names**
   - `nanopdf::pdf::object::Name::new` appears frequently in profiles

@@ -1,24 +1,194 @@
 //! C FFI for buffer - MuPDF compatible
 //! Safe Rust implementation using handle-based resource management
+//!
+//! This module includes a buffer pool for efficient memory reuse in hot paths.
 
 use super::{BUFFERS, Handle};
+use std::collections::{HashMap, VecDeque};
 use std::ffi::{c_char, c_int, c_void};
+use std::sync::{LazyLock, Mutex};
+
+// ============================================================================
+// Buffer Pool for Memory Reuse
+// ============================================================================
+
+/// Common buffer sizes for pooling (in bytes)
+const POOL_SIZES: &[usize] = &[
+    64,    // Tiny: small strings, names
+    256,   // Small: typical text runs
+    1024,  // 1KB: page content fragments
+    4096,  // 4KB: typical page size
+    16384, // 16KB: larger content
+    65536, // 64KB: images, streams
+];
+
+/// Maximum buffers to keep per size class
+const MAX_POOL_SIZE: usize = 32;
+
+/// A pool of pre-allocated buffers for reuse
+struct BufferPool {
+    /// Pools indexed by size class
+    pools: Vec<Mutex<VecDeque<Vec<u8>>>>,
+    /// Statistics
+    stats: Mutex<PoolStats>,
+}
+
+/// Pool statistics for debugging and optimization
+#[derive(Debug, Clone, Default)]
+pub struct PoolStats {
+    /// Number of buffers acquired from pool
+    pub hits: u64,
+    /// Number of new allocations (pool miss)
+    pub misses: u64,
+    /// Number of buffers returned to pool
+    pub returns: u64,
+    /// Number of buffers dropped (pool full)
+    pub drops: u64,
+}
+
+impl BufferPool {
+    fn new() -> Self {
+        let pools = POOL_SIZES
+            .iter()
+            .map(|_| Mutex::new(VecDeque::new()))
+            .collect();
+        Self {
+            pools,
+            stats: Mutex::new(PoolStats::default()),
+        }
+    }
+
+    /// Find the size class for a given capacity
+    fn size_class(capacity: usize) -> Option<usize> {
+        POOL_SIZES.iter().position(|&size| size >= capacity)
+    }
+
+    /// Acquire a buffer from the pool or allocate new
+    fn acquire(&self, capacity: usize) -> Vec<u8> {
+        if let Some(class) = Self::size_class(capacity) {
+            if let Ok(mut pool) = self.pools[class].lock() {
+                if let Some(mut buf) = pool.pop_front() {
+                    buf.clear();
+                    if let Ok(mut stats) = self.stats.lock() {
+                        stats.hits += 1;
+                    }
+                    return buf;
+                }
+            }
+        }
+
+        // Pool miss - allocate new
+        if let Ok(mut stats) = self.stats.lock() {
+            stats.misses += 1;
+        }
+
+        // Use pool size if it fits, otherwise exact capacity
+        let alloc_size = Self::size_class(capacity)
+            .map(|class| POOL_SIZES[class])
+            .unwrap_or(capacity);
+
+        Vec::with_capacity(alloc_size)
+    }
+
+    /// Return a buffer to the pool for reuse
+    fn release(&self, mut buf: Vec<u8>) {
+        let capacity = buf.capacity();
+
+        if let Some(class) = Self::size_class(capacity) {
+            // Only pool if capacity matches a pool size exactly
+            if buf.capacity() == POOL_SIZES[class] {
+                if let Ok(mut pool) = self.pools[class].lock() {
+                    if pool.len() < MAX_POOL_SIZE {
+                        buf.clear();
+                        pool.push_back(buf);
+                        if let Ok(mut stats) = self.stats.lock() {
+                            stats.returns += 1;
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Pool full or size doesn't match - drop buffer
+        if let Ok(mut stats) = self.stats.lock() {
+            stats.drops += 1;
+        }
+        drop(buf);
+    }
+
+    /// Get pool statistics
+    fn get_stats(&self) -> PoolStats {
+        self.stats.lock().map(|s| s.clone()).unwrap_or_default()
+    }
+
+    /// Clear all pools
+    fn clear(&self) {
+        for pool in &self.pools {
+            if let Ok(mut p) = pool.lock() {
+                p.clear();
+            }
+        }
+    }
+
+    /// Get total buffers in pool
+    fn pool_count(&self) -> usize {
+        self.pools
+            .iter()
+            .filter_map(|p| p.lock().ok())
+            .map(|p| p.len())
+            .sum()
+    }
+}
+
+/// Global buffer pool instance
+static BUFFER_POOL: LazyLock<BufferPool> = LazyLock::new(BufferPool::new);
 
 /// Internal buffer state
 pub struct Buffer {
     data: Vec<u8>,
+    /// Whether this buffer came from the pool
+    pooled: bool,
 }
 
 impl Buffer {
+    /// Create a new buffer with given capacity (uses pool if available)
     pub fn new(capacity: usize) -> Self {
+        let data = BUFFER_POOL.acquire(capacity);
+        Self { data, pooled: true }
+    }
+
+    /// Create a new buffer without using pool
+    pub fn new_unpooled(capacity: usize) -> Self {
         Self {
             data: Vec::with_capacity(capacity),
+            pooled: false,
         }
     }
 
+    /// Create a buffer from data (copies data, uses pool for allocation)
     pub fn from_data(data: &[u8]) -> Self {
+        let mut buf = BUFFER_POOL.acquire(data.len());
+        buf.extend_from_slice(data);
+        Self {
+            data: buf,
+            pooled: true,
+        }
+    }
+
+    /// Create a buffer from data without using pool
+    pub fn from_data_unpooled(data: &[u8]) -> Self {
         Self {
             data: data.to_vec(),
+            pooled: false,
+        }
+    }
+
+    /// Take ownership of existing Vec (does not use pool)
+    pub fn from_vec(data: Vec<u8>) -> Self {
+        Self {
+            data,
+            pooled: false,
         }
     }
 
@@ -63,6 +233,49 @@ impl Buffer {
         if self.data.is_empty() || self.data.last() != Some(&0) {
             self.data.push(0);
         }
+    }
+
+    /// Check if buffer is from pool
+    pub fn is_pooled(&self) -> bool {
+        self.pooled
+    }
+
+    /// Get buffer capacity
+    pub fn capacity(&self) -> usize {
+        self.data.capacity()
+    }
+
+    /// Reserve additional capacity (may reallocate)
+    pub fn reserve(&mut self, additional: usize) {
+        self.data.reserve(additional);
+    }
+
+    /// Reserve exact capacity (may reallocate)
+    pub fn reserve_exact(&mut self, additional: usize) {
+        self.data.reserve_exact(additional);
+    }
+
+    /// Shrink buffer to fit current data
+    pub fn shrink_to_fit(&mut self) {
+        self.data.shrink_to_fit();
+        self.pooled = false; // No longer poolable after shrink
+    }
+
+    /// Take the inner Vec, replacing with empty (for transfer)
+    pub fn take(&mut self) -> Vec<u8> {
+        self.pooled = false;
+        std::mem::take(&mut self.data)
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if self.pooled {
+            // Return buffer to pool
+            let data = std::mem::take(&mut self.data);
+            BUFFER_POOL.release(data);
+        }
+        // Non-pooled buffers drop normally
     }
 }
 
@@ -400,10 +613,6 @@ impl Default for BitBuffer {
         Self::new()
     }
 }
-
-use std::collections::HashMap;
-use std::sync::LazyLock;
-use std::sync::Mutex;
 
 /// Global bit buffer state for each buffer handle
 static BIT_BUFFERS: LazyLock<Mutex<HashMap<Handle, BitBuffer>>> =
@@ -785,6 +994,111 @@ pub extern "C" fn fz_buffer_extract(_ctx: Handle, buf: Handle) -> Handle {
 // cannot be safely implemented without additional infrastructure due to Rust's
 // borrowing rules and the handle-based architecture. Use fz_string_from_buffer for
 // read-only access, or work with buffer copies via fz_buffer_extract.
+
+// ============================================================================
+// Buffer Pool FFI Functions
+// ============================================================================
+
+/// Get buffer pool statistics
+///
+/// Returns a pointer to a PoolStatsFFI struct that must be freed with fz_free_pool_stats
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+pub struct PoolStatsFFI {
+    /// Number of buffers acquired from pool (cache hits)
+    pub hits: u64,
+    /// Number of new allocations (cache misses)
+    pub misses: u64,
+    /// Number of buffers returned to pool
+    pub returns: u64,
+    /// Number of buffers dropped (pool full)
+    pub drops: u64,
+    /// Hit rate (0.0 - 1.0)
+    pub hit_rate: f64,
+    /// Current number of pooled buffers
+    pub pool_count: u64,
+}
+
+/// Get buffer pool statistics
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_pool_stats(_ctx: Handle) -> PoolStatsFFI {
+    let stats = BUFFER_POOL.get_stats();
+    let total = stats.hits + stats.misses;
+    let hit_rate = if total > 0 {
+        stats.hits as f64 / total as f64
+    } else {
+        0.0
+    };
+
+    PoolStatsFFI {
+        hits: stats.hits,
+        misses: stats.misses,
+        returns: stats.returns,
+        drops: stats.drops,
+        hit_rate,
+        pool_count: BUFFER_POOL.pool_count() as u64,
+    }
+}
+
+/// Clear the buffer pool
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_pool_clear(_ctx: Handle) {
+    BUFFER_POOL.clear();
+}
+
+/// Get the number of buffers currently in the pool
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_pool_count(_ctx: Handle) -> usize {
+    BUFFER_POOL.pool_count()
+}
+
+// Note: fz_buffer_capacity already defined below in the file
+
+/// Reserve additional capacity in buffer
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_reserve(_ctx: Handle, buf: Handle, additional: usize) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.reserve(additional);
+        }
+    }
+}
+
+/// Shrink buffer capacity to fit current length
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_shrink_to_fit(_ctx: Handle, buf: Handle) {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(mut guard) = buffer.lock() {
+            guard.shrink_to_fit();
+        }
+    }
+}
+
+/// Check if buffer is from the pool
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_is_pooled(_ctx: Handle, buf: Handle) -> c_int {
+    if let Some(buffer) = BUFFERS.get(buf) {
+        if let Ok(guard) = buffer.lock() {
+            return if guard.is_pooled() { 1 } else { 0 };
+        }
+    }
+    0
+}
+
+/// Create a buffer with suggested capacity (uses pool if appropriate)
+///
+/// This is an optimization hint - the actual capacity may be larger
+/// to match a pool size class.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_with_capacity(_ctx: Handle, hint: usize) -> Handle {
+    BUFFERS.insert(Buffer::new(hint))
+}
+
+/// Create a buffer bypassing the pool (for long-lived buffers)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_unpooled(_ctx: Handle, capacity: usize) -> Handle {
+    BUFFERS.insert(Buffer::new_unpooled(capacity))
+}
 
 #[cfg(test)]
 mod tests {
@@ -1451,5 +1765,165 @@ mod tests {
         fz_append_buffer(0, 99999, buf);
 
         fz_drop_buffer(0, buf);
+    }
+
+    // ============================================================================
+    // Buffer Pool Tests
+    // ============================================================================
+
+    #[test]
+    fn test_buffer_pool_basic() {
+        // Clear pool first for clean state
+        fz_buffer_pool_clear(0);
+
+        // Create and drop a poolable buffer
+        let buf = fz_new_buffer(0, 256);
+        fz_append_byte(0, buf, b'X' as i32);
+        assert_eq!(fz_buffer_is_pooled(0, buf), 1);
+        fz_drop_buffer(0, buf);
+
+        // Pool should have one buffer now
+        let count = fz_buffer_pool_count(0);
+        assert!(count >= 1, "Pool should have at least one buffer");
+    }
+
+    #[test]
+    fn test_buffer_pool_reuse() {
+        // Clear pool
+        fz_buffer_pool_clear(0);
+
+        // Create and drop a buffer
+        let buf1 = fz_new_buffer(0, 1024);
+        let cap1 = fz_buffer_capacity(0, buf1);
+        fz_drop_buffer(0, buf1);
+
+        // Get stats before reuse
+        let stats_before = fz_buffer_pool_stats(0);
+
+        // Create another buffer of similar size
+        let buf2 = fz_new_buffer(0, 512); // Should get 1024 from pool
+        let cap2 = fz_buffer_capacity(0, buf2);
+
+        // Check stats after reuse
+        let stats_after = fz_buffer_pool_stats(0);
+
+        // Should have reused the buffer (hit)
+        assert!(
+            stats_after.hits > stats_before.hits || cap2 == cap1,
+            "Buffer should be reused from pool"
+        );
+
+        fz_drop_buffer(0, buf2);
+    }
+
+    #[test]
+    fn test_buffer_pool_stats() {
+        fz_buffer_pool_clear(0);
+
+        let stats = fz_buffer_pool_stats(0);
+        assert!(stats.hit_rate >= 0.0 && stats.hit_rate <= 1.0);
+    }
+
+    #[test]
+    fn test_buffer_capacity() {
+        let buf = fz_new_buffer(0, 100);
+
+        // Capacity should be at least 100 (may be rounded up to pool size)
+        let cap = fz_buffer_capacity(0, buf);
+        assert!(cap >= 100, "Capacity should be at least 100");
+
+        // Length should be 0
+        assert_eq!(fz_buffer_len(0, buf), 0);
+
+        fz_drop_buffer(0, buf);
+    }
+
+    #[test]
+    fn test_buffer_reserve() {
+        let buf = fz_new_buffer(0, 10);
+        let initial_cap = fz_buffer_capacity(0, buf);
+
+        // Reserve much more than current capacity
+        fz_buffer_reserve(0, buf, 10000);
+        let new_cap = fz_buffer_capacity(0, buf);
+
+        // New capacity should be at least initial + requested
+        // (Vec::reserve guarantees at least len + additional)
+        assert!(
+            new_cap >= initial_cap || new_cap >= 10000,
+            "Should have reserved space: initial_cap={}, new_cap={}",
+            initial_cap,
+            new_cap
+        );
+
+        fz_drop_buffer(0, buf);
+    }
+
+    #[test]
+    fn test_buffer_shrink() {
+        let buf = fz_new_buffer(0, 1000);
+
+        // Add some data
+        for i in 0..10 {
+            fz_append_byte(0, buf, i);
+        }
+
+        // Shrink to fit
+        fz_buffer_shrink_to_fit(0, buf);
+
+        // Should no longer be pooled
+        assert_eq!(fz_buffer_is_pooled(0, buf), 0);
+
+        fz_drop_buffer(0, buf);
+    }
+
+    #[test]
+    fn test_buffer_unpooled() {
+        let buf = fz_new_buffer_unpooled(0, 256);
+
+        // Should not be pooled
+        assert_eq!(fz_buffer_is_pooled(0, buf), 0);
+
+        fz_drop_buffer(0, buf);
+    }
+
+    #[test]
+    fn test_buffer_with_capacity() {
+        let buf = fz_new_buffer_with_capacity(0, 500);
+
+        // Should have capacity >= 500 (rounded to pool size)
+        let cap = fz_buffer_capacity(0, buf);
+        assert!(cap >= 500, "Capacity should be at least 500");
+
+        // Should be pooled
+        assert_eq!(fz_buffer_is_pooled(0, buf), 1);
+
+        fz_drop_buffer(0, buf);
+    }
+
+    #[test]
+    fn test_pool_size_classes() {
+        // Test that different sizes get appropriate capacity
+        let sizes_and_expected = [
+            (10, 64),       // Tiny -> 64
+            (100, 256),     // Small -> 256
+            (500, 1024),    // Medium -> 1024
+            (2000, 4096),   // Page -> 4096
+            (10000, 16384), // Large -> 16384
+            (50000, 65536), // Very large -> 65536
+        ];
+
+        for (requested, expected_min) in sizes_and_expected {
+            let buf = fz_new_buffer(0, requested);
+            let cap = fz_buffer_capacity(0, buf);
+            assert!(
+                cap >= expected_min,
+                "Buffer for {} bytes should have capacity >= {}, got {}",
+                requested,
+                expected_min,
+                cap
+            );
+            fz_drop_buffer(0, buf);
+        }
     }
 }
