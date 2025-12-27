@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 59/70+ modules** (~84%)
+**Implemented: 60/70+ modules** (~86%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -70,6 +70,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_signature | 40+ | PKCS#7 signing/verification, DN, certificates |
 | pdf_cmap | 30+ | CID/Unicode mapping, vertical writing mode |
 | pdf_font | 45+ | Font descriptor, metrics, CID/GID/Unicode mapping |
+| pdf_resource | 50+ | Resource lookup, patterns, functions, XObjects |
 
 ---
 
@@ -78,14 +79,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Medium Priority
-
-#### pdf_resource
-- [ ] `pdf_find_font_resource` - font lookup
-- [ ] `pdf_find_image_resource` - image lookup
-- [ ] `pdf_find_colorspace_resource`
-- [ ] `pdf_find_pattern_resource`
-- [ ] `pdf_find_shading_resource`
-- [ ] `pdf_add_*_resource` - add resources
 
 #### pdf_clean
 - [ ] `pdf_clean_file` - optimize PDF
