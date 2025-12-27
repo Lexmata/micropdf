@@ -40,6 +40,7 @@ pub mod log;
 pub mod outline;
 pub mod output;
 pub mod path;
+pub mod pdf_javascript;
 pub mod pdf_object;
 pub mod pixmap;
 pub mod pool;

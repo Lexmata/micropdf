@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 51/70+ modules** (~73%)
+**Implemented: 52/70+ modules** (~74%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -62,6 +62,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_log | 26+ | Logging, levels, callbacks, filtering |
 | fz_write_pixmap | 30+ | PNG/JPEG/PNM/PAM/PBM/PKM/PSD/PS output |
 | fz_util | 36+ | String, path, URI, UTF-8, numeric utilities |
+| pdf_javascript | 24+ | JS enable/disable, event handling, execution |
 
 ---
 
@@ -70,15 +71,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### High Priority
-
-#### pdf_javascript (JavaScript Support)
-- [ ] `pdf_enable_js` / `pdf_disable_js`
-- [ ] `pdf_js_supported` - check JS availability
-- [ ] `pdf_js_execute` - run JavaScript code
-- [ ] `pdf_js_event_init` - initialize event
-- [ ] `pdf_js_event_result` - get event result
-- [ ] `pdf_js_event_value` - get value from event
-- [ ] Keystroke event handling
 
 #### pdf_interpret (Content Stream Processor)
 - [ ] `pdf_processor` - operator processor base
