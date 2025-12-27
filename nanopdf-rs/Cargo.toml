@@ -82,6 +82,50 @@ harness = false
 name = "pdf_objects"
 harness = false
 
+[[bench]]
+name = "colorspace"
+harness = false
+
+[[bench]]
+name = "filters"
+harness = false
+
+[[bench]]
+name = "pixmap"
+harness = false
+
+[[bench]]
+name = "stream"
+harness = false
+
+[[bench]]
+name = "path"
+harness = false
+
+[[bench]]
+name = "font"
+harness = false
+
+[[bench]]
+name = "image"
+harness = false
+
+[[bench]]
+name = "text"
+harness = false
+
+[[bench]]
+name = "device"
+harness = false
+
+[[bench]]
+name = "output"
+harness = false
+
+[[bench]]
+name = "archive"
+harness = false
+
 # Debian package configuration (cargo-deb)
 [package.metadata.deb]
 maintainer = "Lexmata <contact@lexmata.com>"

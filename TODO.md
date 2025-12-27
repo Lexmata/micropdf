@@ -269,16 +269,18 @@ Current performance metrics (from `cargo bench`):
 
 ### Benchmarking Infrastructure
 
-- [ ] Add benchmarks for more modules:
-  - [ ] colorspace operations
-  - [ ] device rendering
-  - [ ] filter encode/decode (flate, lzw, etc.)
-  - [ ] font operations
-  - [ ] image operations
-  - [ ] path operations
-  - [ ] pixmap operations
-  - [ ] stream read/write
-  - [ ] text layout
+- [x] Add benchmarks for more modules: ✅
+  - [x] colorspace operations (`benches/colorspace.rs`)
+  - [x] device rendering (`benches/device.rs`)
+  - [x] filter encode/decode (`benches/filters.rs`) - flate, ascii85, asciihex, runlength, lzw
+  - [x] font operations (`benches/font.rs`)
+  - [x] image operations (`benches/image.rs`)
+  - [x] path operations (`benches/path.rs`)
+  - [x] pixmap operations (`benches/pixmap.rs`)
+  - [x] stream read/write (`benches/stream.rs`)
+  - [x] text layout (`benches/text.rs`)
+  - [x] archive operations (`benches/archive.rs`)
+  - [x] output streams (`benches/output.rs`)
 - [ ] Add real-world PDF benchmarks
 - [ ] Memory usage profiling
 - [ ] Comparison benchmarks vs MuPDF
