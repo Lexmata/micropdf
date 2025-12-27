@@ -34,6 +34,7 @@ pub mod glyph_cache;
 pub mod heap;
 pub mod hyphen;
 pub mod image;
+pub mod json;
 pub mod link;
 pub mod outline;
 pub mod output;

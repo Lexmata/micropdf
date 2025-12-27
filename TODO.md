@@ -58,6 +58,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_deskew | 10+ | Skew detection, deskew, rotation |
 | fz_heap | 22+ | Priority queue, heap sort |
 | fz_hyphen | 16+ | Text hyphenation, Liang's algorithm |
+| fz_json | 28+ | JSON parsing, serialization, DOM |
 
 ---
 
@@ -66,10 +67,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_json
-- [ ] `fz_write_json` - JSON output
-- [ ] JSON string escaping
 
 #### fz_log
 - [ ] `fz_log` - logging functions
