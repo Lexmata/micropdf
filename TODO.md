@@ -244,13 +244,16 @@ Current performance metrics (from `cargo bench`):
 ### Lower Priority Optimizations
 
 #### Compilation
-- [ ] **Profile-guided optimization (PGO)**
-  - Generate profiles from real workloads
-  - Apply PGO in release builds
+- [x] **Profile-guided optimization (PGO)** ✅
+  - `scripts/pgo-build.sh`: automated PGO workflow script
+  - `release-pgo-generate` profile: instrumentation phase
+  - `release-pgo-use` profile: optimized build with profile data
+  - Expected 10-20% improvement on hot paths
 
-- [ ] **Link-time optimization (LTO)**
-  - Enable thin-LTO for release builds
-  - Cross-crate inlining
+- [x] **Link-time optimization (LTO)** ✅
+  - `release` profile: thin-LTO + codegen-units=1
+  - `release-max` profile: fat-LTO for maximum optimization
+  - `bench` profile: thin-LTO for realistic benchmarks
 
 #### Micro-optimizations
 - [ ] **Inline hints**
