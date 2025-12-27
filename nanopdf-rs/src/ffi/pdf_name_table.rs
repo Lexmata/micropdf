@@ -284,8 +284,9 @@ struct NameRegistry {
 impl NameRegistry {
     fn new() -> Self {
         let mut registry = Self {
-            name_to_index: HashMap::new(),
-            names: Vec::new(),
+            // Pre-size for 150+ standard names plus common custom names
+            name_to_index: HashMap::with_capacity(200),
+            names: Vec::with_capacity(200),
             lookups: 0,
             hits: 0,
         };

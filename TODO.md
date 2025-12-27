@@ -190,10 +190,11 @@ Current performance metrics (from `cargo bench`):
   - Statistics: `pdf_object_arena_stats`, clear, compact operations
 
 #### Algorithm Improvements
-- [ ] **Optimize hashbrown usage**
-  - `hashbrown::raw::RawTable` shows in profiles
-  - Pre-size hash maps when document structure is known
-  - Consider perfect hashing for known key sets
+- [x] **Optimize hashbrown usage** ✅
+  - Implemented `presized` module with type-specific constructors
+  - Added `PdfNameHasher` with FNV-1a variant for PDF names
+  - Created `StandardPdfName` enum with O(1) lookup for 64 names
+  - FFI: capacity hints, standard name lookup, hash functions
 
 - [ ] **SIMD acceleration**
   - Matrix operations (currently scalar)
