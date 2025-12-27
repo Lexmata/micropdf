@@ -41,17 +41,17 @@ log_error() {
 # Check for required tools
 check_requirements() {
     log_info "Checking requirements..."
-    
+
     if ! command -v rustc &> /dev/null; then
         log_error "rustc not found. Please install Rust."
         exit 1
     fi
-    
+
     if ! command -v cargo &> /dev/null; then
         log_error "cargo not found. Please install Rust."
         exit 1
     fi
-    
+
     # Check for llvm-profdata (needed to merge profiles)
     if ! command -v llvm-profdata &> /dev/null; then
         # Try rustup's version
@@ -79,39 +79,39 @@ clean_profiles() {
 # Step 1: Build with instrumentation
 build_instrumented() {
     log_info "Building instrumented binary..."
-    
+
     # Create profile directory
     mkdir -p "$PROFILE_DIR"
-    
+
     # Build with PGO instrumentation
     cd "$PROJECT_DIR"
     RUSTFLAGS="-Cprofile-generate=$PROFILE_DIR" \
         cargo build --profile release-pgo-generate --lib
-    
+
     log_info "Instrumented binary built."
 }
 
 # Step 2: Run representative workloads to generate profiles
 generate_profiles() {
     log_info "Generating profile data by running benchmarks..."
-    
+
     # Run benchmarks (they exercise hot paths)
     cd "$PROJECT_DIR"
     RUSTFLAGS="-Cprofile-generate=$PROFILE_DIR" \
         cargo bench --profile release-pgo-generate -- --noplot 2>/dev/null || true
-    
+
     # Run tests (exercises more code paths)
     log_info "Running tests to generate additional profile data..."
     RUSTFLAGS="-Cprofile-generate=$PROFILE_DIR" \
         cargo test --profile release-pgo-generate --lib 2>/dev/null || true
-    
+
     # Check if profiles were generated
     PROFILE_COUNT=$(find "$PROFILE_DIR" -name "*.profraw" 2>/dev/null | wc -l)
     if [[ "$PROFILE_COUNT" -eq 0 ]]; then
         log_error "No profile data generated. Check that benchmarks/tests ran correctly."
         exit 1
     fi
-    
+
     log_info "Generated $PROFILE_COUNT profile files."
 }
 
@@ -122,30 +122,30 @@ merge_profiles() {
         log_warn "Using raw profile directory instead."
         return
     fi
-    
+
     log_info "Merging profile data..."
-    
+
     "$LLVM_PROFDATA" merge -o "$MERGED_PROFILE" "$PROFILE_DIR"/*.profraw
-    
+
     log_info "Profile data merged to $MERGED_PROFILE"
 }
 
 # Step 4: Build optimized binary using profiles
 build_optimized() {
     log_info "Building optimized binary with PGO..."
-    
+
     cd "$PROJECT_DIR"
-    
+
     # Use merged profile if available, otherwise use profile directory
     if [[ -f "$MERGED_PROFILE" ]]; then
         PROFILE_PATH="$MERGED_PROFILE"
     else
         PROFILE_PATH="$PROFILE_DIR"
     fi
-    
+
     RUSTFLAGS="-Cprofile-use=$PROFILE_PATH -Cllvm-args=-pgo-warn-missing-function" \
         cargo build --profile release-pgo-use --lib
-    
+
     log_info "PGO-optimized binary built!"
 }
 
@@ -170,9 +170,9 @@ report_results() {
 # Main function
 main() {
     local command="${1:-all}"
-    
+
     check_requirements
-    
+
     case "$command" in
         clean)
             clean_profiles

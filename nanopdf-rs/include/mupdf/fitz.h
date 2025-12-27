@@ -34,6 +34,7 @@ extern "C" {
 #include "mupdf/fitz/glyph_cache.h"
 #include "mupdf/fitz/hashmap_util.h"
 #include "mupdf/fitz/heap.h"
+#include "mupdf/fitz/hints.h"
 #include "mupdf/fitz/hyphen.h"
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/json.h"

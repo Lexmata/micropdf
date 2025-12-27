@@ -256,13 +256,16 @@ Current performance metrics (from `cargo bench`):
   - `bench` profile: thin-LTO for realistic benchmarks
 
 #### Micro-optimizations
-- [ ] **Inline hints**
-  - `#[inline(always)]` for critical small functions
-  - Measure impact of inlining decisions
+- [x] **Inline hints** ✅
+  - `#[inline(always)]` applied to hot path helpers
+  - Inline min/max/clamp for f32, i32, usize
+  - Documentation guidelines for inline usage
 
-- [ ] **Branch prediction hints**
-  - `likely`/`unlikely` macros for hot paths
-  - Optimize error path ordering
+- [x] **Branch prediction hints** ✅
+  - `likely()`/`unlikely()` functions for branch hints
+  - `likely!`/`unlikely!` macros for ergonomic use
+  - `assume()` for optimizer hints in release builds
+  - Early return patterns: `early_return_on_error/null/none`
 
 ### Benchmarking Infrastructure
 

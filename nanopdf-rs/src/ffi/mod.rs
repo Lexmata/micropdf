@@ -37,6 +37,7 @@ pub mod glyph;
 pub mod glyph_cache;
 pub mod hashmap_util;
 pub mod heap;
+pub mod hints;
 pub mod hyphen;
 pub mod image;
 pub mod json;
