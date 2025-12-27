@@ -45,6 +45,7 @@ extern "C" {
 #include "mupdf/fitz/pdf_interpret.h"
 #include "mupdf/fitz/pdf_javascript.h"
 #include "mupdf/fitz/pdf_layer.h"
+#include "mupdf/fitz/pdf_name_table.h"
 #include "mupdf/fitz/pdf_page.h"
 #include "mupdf/fitz/pdf_parse.h"
 #include "mupdf/fitz/pdf_recolor.h"

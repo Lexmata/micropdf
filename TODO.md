@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 65/70+ modules** (~93%)
+**Implemented: 66/70+ modules** (~94%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -76,6 +76,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_image_rewriter | 20+ | Image optimization, subsampling, recompression |
 | pdf_recolor | 20+ | Page/shade recoloring, color conversion, output intents |
 | pdf_event | 30+ | Alerts, print, launch URL, mail, menu item events |
+| pdf_name_table | 20+ | Name interning, 150+ standard names, cache statistics |
 
 ---
 
@@ -84,10 +85,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Lower Priority
-
-#### pdf_name_table
-- [ ] PDF name string optimization
-- [ ] Standard PDF names
 
 #### pdf_zugferd
 - [ ] ZUGFeRD invoice support

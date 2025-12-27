@@ -48,6 +48,7 @@ pub mod pdf_image_rewriter;
 pub mod pdf_interpret;
 pub mod pdf_javascript;
 pub mod pdf_layer;
+pub mod pdf_name_table;
 pub mod pdf_object;
 pub mod pdf_page;
 pub mod pdf_parse;
