@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 60/70+ modules** (~86%)
+**Implemented: 61/70+ modules** (~87%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -71,6 +71,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_cmap | 30+ | CID/Unicode mapping, vertical writing mode |
 | pdf_font | 45+ | Font descriptor, metrics, CID/GID/Unicode mapping |
 | pdf_resource | 50+ | Resource lookup, patterns, functions, XObjects |
+| pdf_clean | 35+ | Optimization, linearization, garbage collection |
 
 ---
 
@@ -79,12 +80,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Medium Priority
-
-#### pdf_clean
-- [ ] `pdf_clean_file` - optimize PDF
-- [ ] `pdf_linearize` - create linearized PDF
-- [ ] Object stream creation
-- [ ] Stream compression
 
 #### pdf_redact
 - [ ] `pdf_redact_page` - apply redaction
