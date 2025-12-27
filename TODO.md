@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 53/70+ modules** (~76%)
+**Implemented: 54/70+ modules** (~77%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -64,6 +64,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_util | 36+ | String, path, URI, UTF-8, numeric utilities |
 | pdf_javascript | 24+ | JS enable/disable, event handling, execution |
 | pdf_interpret | 70+ | Content stream processor, all PDF operators |
+| pdf_page | 50+ | Page loading, bounds, transform, rendering |
 
 ---
 
@@ -72,16 +73,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### High Priority
-
-#### pdf_page
-- [ ] `pdf_page` structure
-- [ ] `pdf_load_page` / `pdf_drop_page`
-- [ ] `pdf_page_obj` - get page dictionary
-- [ ] `pdf_page_resources` - get resources
-- [ ] `pdf_page_contents` - get content stream
-- [ ] `pdf_page_transform` - get transformation
-- [ ] `pdf_bound_page` - get page bounds
-- [ ] `pdf_run_page` - render page
 
 #### pdf_parse
 - [ ] `pdf_parse_stm_obj` - parse stream object
@@ -879,10 +870,10 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 ## Priority Roadmap
 
 ### v0.2.0 - Text Extraction & Outlines
-1. fz_stext (structured text extraction)
-2. fz_outline (document outlines/TOC)
-3. fz_filter (stream filters - decode)
-4. pdf_page (page handling)
+1. ~~fz_stext (structured text extraction)~~ ✅
+2. ~~fz_outline (document outlines/TOC)~~ ✅
+3. ~~fz_filter (stream filters - decode)~~ ✅
+4. ~~pdf_page (page handling)~~ ✅
 
 ### v0.3.0 - Document Writing
 1. fz_writer (document writers)
