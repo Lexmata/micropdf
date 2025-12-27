@@ -50,6 +50,7 @@ extern "C" {
 #include "mupdf/fitz/pdf_3d.h"
 #include "mupdf/fitz/pdf_clean.h"
 #include "mupdf/fitz/pdf_cmap.h"
+#include "mupdf/fitz/pdf_conformance.h"
 #include "mupdf/fitz/pdf_event.h"
 #include "mupdf/fitz/pdf_font.h"
 #include "mupdf/fitz/pdf_image_rewriter.h"

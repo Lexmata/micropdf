@@ -33,6 +33,26 @@ Fuzzing is an automated testing technique that feeds random/malformed data to th
 **Seed corpus**: Compressed/encoded data  
 **Finds**: Decompression bugs, infinite loops, crashes
 
+### 6. `fuzz_xref`
+**What it tests**: PDF cross-reference table parsing and object resolution  
+**Seed corpus**: Real PDF files  
+**Finds**: Xref parsing bugs, circular references, invalid object numbers
+
+### 7. `fuzz_page_render`
+**What it tests**: Page loading, bounds calculation, rendering pipeline  
+**Seed corpus**: Real PDF files  
+**Finds**: Rendering crashes, memory issues, device bugs
+
+### 8. `fuzz_annotations`
+**What it tests**: PDF annotations (comments, links, forms)  
+**Seed corpus**: PDFs with annotations  
+**Finds**: Annotation parsing bugs, type handling issues
+
+### 9. `fuzz_fonts`
+**What it tests**: Font resource handling and embedding  
+**Seed corpus**: PDFs with various fonts  
+**Finds**: Font parsing bugs, embedding issues
+
 ## Installation
 
 ```bash

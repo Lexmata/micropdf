@@ -48,6 +48,34 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "fuzz_xref"
+path = "fuzz_targets/fuzz_xref.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_page_render"
+path = "fuzz_targets/fuzz_page_render.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_annotations"
+path = "fuzz_targets/fuzz_annotations.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_fonts"
+path = "fuzz_targets/fuzz_fonts.rs"
+test = false
+doc = false
+bench = false
+
 [profile.release]
 debug = true
 

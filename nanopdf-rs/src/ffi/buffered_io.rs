@@ -235,9 +235,6 @@ impl VectoredWriter {
     /// Queue a buffer for writing
     pub fn queue(&mut self, data: Vec<u8>) -> io::Result<()> {
         self.stats.writes.fetch_add(1, Ordering::Relaxed);
-        self.stats
-            .bytes_written
-            .fetch_add(data.len() as u64, Ordering::Relaxed);
 
         self.pending_bytes += data.len();
         self.pending.push(data);
