@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 54/70+ modules** (~77%)
+**Implemented: 55/70+ modules** (~79%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -65,6 +65,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_javascript | 24+ | JS enable/disable, event handling, execution |
 | pdf_interpret | 70+ | Content stream processor, all PDF operators |
 | pdf_page | 50+ | Page loading, bounds, transform, rendering |
+| pdf_parse | 35+ | Lexer, tokenizer, object/dict/array parsing |
 
 ---
 
@@ -73,12 +74,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### High Priority
-
-#### pdf_parse
-- [ ] `pdf_parse_stm_obj` - parse stream object
-- [ ] `pdf_parse_ind_obj` - parse indirect object
-- [ ] `pdf_parse_dict` / `pdf_parse_array`
-- [ ] PDF token parsing
 
 #### pdf_layer (Optional Content)
 - [ ] `pdf_layer_config` - layer configuration
@@ -876,10 +871,10 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 4. ~~pdf_page (page handling)~~ ✅
 
 ### v0.3.0 - Document Writing
-1. fz_writer (document writers)
-2. fz_write_pixmap (image output)
+1. ~~fz_writer (document writers)~~ ✅
+2. ~~fz_write_pixmap (image output)~~ ✅
 3. pdf_clean (optimization)
-4. pdf_parse (parsing)
+4. ~~pdf_parse (parsing)~~ ✅
 
 ### v0.4.0 - Content Processing
 1. ~~pdf_interpret (content stream processor)~~ ✅

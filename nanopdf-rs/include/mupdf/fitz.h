@@ -40,6 +40,7 @@ extern "C" {
 #include "mupdf/fitz/pdf_interpret.h"
 #include "mupdf/fitz/pdf_javascript.h"
 #include "mupdf/fitz/pdf_page.h"
+#include "mupdf/fitz/pdf_parse.h"
 #include "mupdf/fitz/pixmap.h"
 #include "mupdf/fitz/pool.h"
 #include "mupdf/fitz/separation.h"
