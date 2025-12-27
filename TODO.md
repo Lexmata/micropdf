@@ -85,6 +85,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_epub | 45+ | EPUB e-book format, OPF, spine, manifest, navigation |
 | fz_svg | 50+ | SVG DOM, paths, transforms, styles, elements, colors |
 | fz_cbz | 40+ | CBZ/CBR archives, ComicInfo.xml, natural sort, manga |
+| fz_office | 45+ | DOCX/XLSX/PPTX/ODT/ODS/ODP, cells, slides, metadata |
 
 ---
 
@@ -128,12 +129,15 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [x] Double-page spread detection
 - [x] 20+ supported image formats
 
-### Not Implemented
+#### Office Formats (OOXML/ODF) ✅
+- [x] DOCX - paragraphs, headings, text styles
+- [x] XLSX - sheets, cells (string/number), references
+- [x] PPTX - slides, titles, content
+- [x] ODT/ODS/ODP support
+- [x] Metadata (title, creator, subject, etc.)
+- [x] Page/slide dimensions
 
-#### Office Formats (via third-party)
-- [ ] DOCX basic rendering
-- [ ] XLSX basic rendering
-- [ ] PPTX basic rendering
+### Not Implemented
 
 ---
 

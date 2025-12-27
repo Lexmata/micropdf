@@ -39,6 +39,7 @@ pub mod image;
 pub mod json;
 pub mod link;
 pub mod log;
+pub mod office;
 pub mod outline;
 pub mod output;
 pub mod path;
