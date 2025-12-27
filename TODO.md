@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 66/70+ modules** (~94%)
+**Implemented: 67/70+ modules** (~96%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -77,6 +77,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_recolor | 20+ | Page/shade recoloring, color conversion, output intents |
 | pdf_event | 30+ | Alerts, print, launch URL, mail, menu item events |
 | pdf_name_table | 20+ | Name interning, 150+ standard names, cache statistics |
+| pdf_zugferd | 20+ | ZUGFeRD/Factur-X invoices, XML extraction/embedding, validation |
 
 ---
 
@@ -85,11 +86,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Lower Priority
-
-#### pdf_zugferd
-- [ ] ZUGFeRD invoice support
-- [ ] XML invoice extraction/embedding
-- [ ] Factur-X compliance
 
 #### pdf_portfolio
 - [ ] Portfolio structure
