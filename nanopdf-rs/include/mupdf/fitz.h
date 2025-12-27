@@ -39,6 +39,7 @@ extern "C" {
 #include "mupdf/fitz/path.h"
 #include "mupdf/fitz/pdf_clean.h"
 #include "mupdf/fitz/pdf_cmap.h"
+#include "mupdf/fitz/pdf_event.h"
 #include "mupdf/fitz/pdf_font.h"
 #include "mupdf/fitz/pdf_image_rewriter.h"
 #include "mupdf/fitz/pdf_interpret.h"

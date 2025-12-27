@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 64/70+ modules** (~91%)
+**Implemented: 65/70+ modules** (~93%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -75,6 +75,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_redact | 30+ | Redaction, metadata sanitization, content removal |
 | pdf_image_rewriter | 20+ | Image optimization, subsampling, recompression |
 | pdf_recolor | 20+ | Page/shade recoloring, color conversion, output intents |
+| pdf_event | 30+ | Alerts, print, launch URL, mail, menu item events |
 
 ---
 
@@ -83,11 +84,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Lower Priority
-
-#### pdf_event
-- [ ] `pdf_doc_event` - document events
-- [ ] `pdf_doc_event_cb` - event callback
-- [ ] Alert, print, launch events
 
 #### pdf_name_table
 - [ ] PDF name string optimization
