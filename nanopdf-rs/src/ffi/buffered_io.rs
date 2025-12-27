@@ -271,7 +271,10 @@ impl VectoredWriter {
         let slices: Vec<IoSlice> = self.pending.iter().map(|b| IoSlice::new(b)).collect();
 
         // Write all buffers in one syscall
-        self.file.write_vectored(&slices)?;
+        let bytes_written = self.file.write_vectored(&slices)?;
+        self.stats
+            .bytes_written
+            .fetch_add(bytes_written as u64, Ordering::Relaxed);
 
         // Clear pending
         self.pending.clear();

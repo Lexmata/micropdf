@@ -803,6 +803,33 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 
 ---
 
+## CI Pipeline Fixes (Blocking)
+
+> These issues were causing CI failures and have been fixed.
+
+### Rust Clippy Errors ✅
+
+- [x] **`src/ffi/buffered_io.rs:274`** - `unused_io_amount`
+  - Fixed: Added `bytes_written` tracking to stats
+
+- [x] **`src/ffi/pdf_font.rs:281`** - `erasing_op`
+  - Fixed: Removed useless `* 0` multiplication
+
+### Go Lint Errors ✅
+
+- [x] **`go-nanopdf/benchmark_test.go:123`** - `errcheck`
+  - Fixed: Added `_ =` prefix
+
+- [x] **`go-nanopdf/example/main.go:44`** - `errcheck`
+  - Fixed: Added `_ =` prefix
+
+### Node.js Test Failures ✅
+
+- [x] **`nanopdf-js/src/geometry.ts:369`**
+  - Fixed: Added null check in `Rect.from()`
+
+---
+
 ## Testing & Quality
 
 - [ ] **Fuzzing**

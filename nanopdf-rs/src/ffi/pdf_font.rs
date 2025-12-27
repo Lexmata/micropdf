@@ -278,7 +278,7 @@ impl FontDesc {
                 return HorizontalMetrics {
                     lo: cid,
                     hi: cid,
-                    w: m.w + (cid - m.lo) as i32 * 0, // Same width for range
+                    w: m.w, // Range has same width for all CIDs
                 };
             }
         }

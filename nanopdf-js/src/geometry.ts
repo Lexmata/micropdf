@@ -366,6 +366,9 @@ export class Rect implements RectLike {
     if (r instanceof Rect) {
       return r;
     }
+    if (r == null) {
+      return new Rect(0, 0, 0, 0);
+    }
     return new Rect(r.x0, r.y0, r.x1, r.y1);
   }
 

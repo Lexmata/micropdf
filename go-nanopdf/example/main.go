@@ -41,7 +41,7 @@ func exampleBuffers() {
 	fmt.Printf("Buffer content: %s\n", buf.String())
 
 	// Append data
-	buf.AppendString(" More data.")
+	_ = buf.AppendString(" More data.")
 	fmt.Printf("After append: %s\n", buf.String())
 
 	// Clone buffer

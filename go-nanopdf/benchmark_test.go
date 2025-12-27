@@ -120,7 +120,7 @@ func BenchmarkBufferAppend(b *testing.B) {
 			continue
 		}
 		for j := 0; j < 100; j++ {
-			buf.Append(chunk)
+			_ = buf.Append(chunk)
 		}
 		buf.Free()
 	}
