@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 58/70+ modules** (~83%)
+**Implemented: 59/70+ modules** (~84%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -69,6 +69,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_layer | 28+ | OCG layers, configs, UI, enable/disable |
 | pdf_signature | 40+ | PKCS#7 signing/verification, DN, certificates |
 | pdf_cmap | 30+ | CID/Unicode mapping, vertical writing mode |
+| pdf_font | 45+ | Font descriptor, metrics, CID/GID/Unicode mapping |
 
 ---
 
@@ -77,13 +78,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Medium Priority
-
-#### pdf_font (PDF-specific)
-- [ ] `pdf_font_desc` - PDF font descriptor
-- [ ] `pdf_load_font` - load font from PDF
-- [ ] `pdf_load_type3_font`
-- [ ] `pdf_font_cid_to_gid` / `pdf_font_cid_to_unicode`
-- [ ] `pdf_add_font_file` - embed font
 
 #### pdf_resource
 - [ ] `pdf_find_font_resource` - font lookup
