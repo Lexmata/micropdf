@@ -196,11 +196,12 @@ Current performance metrics (from `cargo bench`):
   - Created `StandardPdfName` enum with O(1) lookup for 64 names
   - FFI: capacity hints, standard name lookup, hash functions
 
-- [ ] **SIMD acceleration**
-  - Matrix operations (currently scalar)
-  - Color space conversions
-  - Buffer operations (copy, fill)
-  - Base64 encode/decode
+- [x] **SIMD acceleration** ✅
+  - Runtime feature detection (SSE2/SSE4.1/AVX/AVX2/NEON)
+  - Matrix operations: concat, transform_point, transform_points (batch)
+  - Color space: RGB<->CMYK, RGB->grayscale (ITU-R BT.709)
+  - Buffer ops: fill, copy, equal (16-byte SIMD chunks)
+  - Base64 encode/decode (scalar with SIMD-ready infrastructure)
 
 - [ ] **Lock-free data structures**
   - Profile shows `futex::Mutex::lock_contended`

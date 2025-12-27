@@ -68,6 +68,7 @@ pub mod pixmap;
 pub mod pool;
 pub mod separation;
 pub mod shade;
+pub mod simd_util;
 pub mod stext;
 pub mod store;
 pub mod story;

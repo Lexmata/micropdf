@@ -64,6 +64,7 @@ extern "C" {
 #include "mupdf/fitz/pool.h"
 #include "mupdf/fitz/separation.h"
 #include "mupdf/fitz/shade.h"
+#include "mupdf/fitz/simd_util.h"
 #include "mupdf/fitz/stext.h"
 #include "mupdf/fitz/store.h"
 #include "mupdf/fitz/story.h"
