@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 68/70+ modules** (~97%)
+**Implemented: 69/70+ modules** (~99%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -79,20 +79,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_name_table | 20+ | Name interning, 150+ standard names, cache statistics |
 | pdf_zugferd | 20+ | ZUGFeRD/Factur-X invoices, XML extraction/embedding, validation |
 | pdf_portfolio | 25+ | Embedded files, collection schema, views, AF relationships |
-
----
-
-## Missing PDF Modules
-
-> Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
-
-### Lower Priority
-
-#### pdf_3d
-- [ ] 3D annotation support
-- [ ] U3D format
-- [ ] PRC format
-- [ ] 3D views
+| pdf_3d | 30+ | U3D/PRC formats, 3D views, camera, render modes, lighting |
 
 ---
 

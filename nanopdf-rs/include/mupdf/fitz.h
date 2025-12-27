@@ -37,6 +37,7 @@ extern "C" {
 #include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/path.h"
+#include "mupdf/fitz/pdf_3d.h"
 #include "mupdf/fitz/pdf_clean.h"
 #include "mupdf/fitz/pdf_cmap.h"
 #include "mupdf/fitz/pdf_event.h"

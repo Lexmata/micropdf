@@ -40,6 +40,7 @@ pub mod log;
 pub mod outline;
 pub mod output;
 pub mod path;
+pub mod pdf_3d;
 pub mod pdf_clean;
 pub mod pdf_cmap;
 pub mod pdf_event;
