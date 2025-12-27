@@ -772,6 +772,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)] // Vectored I/O works differently on Windows
     fn test_vectored_writer_basic() {
         let temp = NamedTempFile::new().unwrap();
         let path = temp.path();
@@ -791,6 +792,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)] // Vectored I/O works differently on Windows
     fn test_vectored_writer_auto_flush() {
         let temp = NamedTempFile::new().unwrap();
         let path = temp.path();
@@ -809,6 +811,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)] // Vectored I/O works differently on Windows
     fn test_vectored_writer_stats() {
         let temp = NamedTempFile::new().unwrap();
         let path = temp.path();
@@ -846,6 +849,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(unix)] // Vectored I/O works differently on Windows
     fn test_ffi_vectored_writer() {
         let temp = NamedTempFile::new().unwrap();
         let path = std::ffi::CString::new(temp.path().to_str().unwrap()).unwrap();
