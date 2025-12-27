@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 63/70+ modules** (~90%)
+**Implemented: 64/70+ modules** (~91%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -74,18 +74,13 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_clean | 35+ | Optimization, linearization, garbage collection |
 | pdf_redact | 30+ | Redaction, metadata sanitization, content removal |
 | pdf_image_rewriter | 20+ | Image optimization, subsampling, recompression |
+| pdf_recolor | 20+ | Page/shade recoloring, color conversion, output intents |
 
 ---
 
 ## Missing PDF Modules
 
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
-
-### Medium Priority
-
-#### pdf_recolor
-- [ ] `pdf_shade_recolorer` - shade recoloring
-- [ ] Color conversion during processing
 
 ### Lower Priority
 

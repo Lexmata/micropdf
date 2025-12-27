@@ -50,6 +50,7 @@ pub mod pdf_layer;
 pub mod pdf_object;
 pub mod pdf_page;
 pub mod pdf_parse;
+pub mod pdf_recolor;
 pub mod pdf_redact;
 pub mod pdf_resource;
 pub mod pdf_signature;
