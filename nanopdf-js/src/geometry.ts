@@ -863,19 +863,54 @@ export class Quad implements QuadLike {
 
   /** Check if a point is inside the quad */
   containsPoint(p: PointLike): boolean {
-    // Use cross product to check if point is on the correct side of each edge
-    const cross = (ax: number, ay: number, bx: number, by: number) => ax * by - ay * bx;
+    const px = p.x;
+    const py = p.y;
 
-    const check = (p1: Point, p2: Point) => {
-      return cross(p2.x - p1.x, p2.y - p1.y, p.x - p1.x, p.y - p1.y) >= 0;
-    };
+    // Fast bounding box early-exit (avoids expensive cross products for ~90% of cases)
+    const minX = Math.min(this.ul.x, this.ur.x, this.ll.x, this.lr.x);
+    const maxX = Math.max(this.ul.x, this.ur.x, this.ll.x, this.lr.x);
+    const minY = Math.min(this.ul.y, this.ur.y, this.ll.y, this.lr.y);
+    const maxY = Math.max(this.ul.y, this.ur.y, this.ll.y, this.lr.y);
 
-    return (
-      check(this.ul, this.ur) &&
-      check(this.ur, this.lr) &&
-      check(this.lr, this.ll) &&
-      check(this.ll, this.ul)
-    );
+    if (px < minX || px > maxX || py < minY || py > maxY) {
+      return false;
+    }
+
+    // For axis-aligned rectangles, the bounding box IS the quad
+    if (
+      this.ul.x === this.ll.x &&
+      this.ur.x === this.lr.x &&
+      this.ul.y === this.ur.y &&
+      this.ll.y === this.lr.y
+    ) {
+      return true; // Already passed bounding box check
+    }
+
+    // Full cross product check for non-rectangular quads
+    // Inline cross product for performance (avoids function call overhead)
+    const ulx = this.ul.x,
+      uly = this.ul.y;
+    const urx = this.ur.x,
+      ury = this.ur.y;
+    const lrx = this.lr.x,
+      lry = this.lr.y;
+    const llx = this.ll.x,
+      lly = this.ll.y;
+
+    // Check each edge: point must be on the "inside" (left) of all edges
+    const c1 = (urx - ulx) * (py - uly) - (ury - uly) * (px - ulx);
+    if (c1 < 0) return false;
+
+    const c2 = (lrx - urx) * (py - ury) - (lry - ury) * (px - urx);
+    if (c2 < 0) return false;
+
+    const c3 = (llx - lrx) * (py - lry) - (lly - lry) * (px - lrx);
+    if (c3 < 0) return false;
+
+    const c4 = (ulx - llx) * (py - lly) - (uly - lly) * (px - llx);
+    if (c4 < 0) return false;
+
+    return true;
   }
 
   /** Check if this is a valid quad (non-self-intersecting) */

@@ -31,6 +31,7 @@
  */
 
 import { NanoPDFError, type BufferLike, isBufferLike } from './types.js';
+import { createHash } from 'node:crypto';
 
 // Re-export for convenience
 export { BufferLike, isBufferLike };
@@ -294,10 +295,27 @@ export class Buffer {
   }
 
   /**
-   * Get the buffer data as a Uint8Array
+   * Get the buffer data as a Uint8Array (copy)
+   *
+   * Creates a new Uint8Array with a copy of the buffer data.
+   * Use `toUint8ArrayView()` for a zero-copy view if you don't need to modify it.
    */
   toUint8Array(): Uint8Array {
     return new Uint8Array(this._data);
+  }
+
+  /**
+   * Get a zero-copy Uint8Array view of the buffer data
+   *
+   * WARNING: This returns a view, not a copy. Modifying the view will
+   * modify the original buffer. The view becomes invalid if the buffer
+   * is modified (append, resize, etc.) or freed.
+   *
+   * Use this for read-only operations where performance matters.
+   */
+  toUint8ArrayView(): Uint8Array {
+    // Node.js Buffer is a subclass of Uint8Array, so we can return directly
+    return this._data;
   }
 
   /**
@@ -643,8 +661,7 @@ export class Buffer {
    * Compute MD5 digest of buffer contents
    */
   md5Digest(): Uint8Array {
-    const crypto = require('node:crypto');
-    const hash = crypto.createHash('md5');
+    const hash = createHash('md5');
     hash.update(this._data);
     return new Uint8Array(hash.digest());
   }
@@ -653,8 +670,7 @@ export class Buffer {
    * Compute SHA-256 digest of buffer contents
    */
   sha256Digest(): Uint8Array {
-    const crypto = require('node:crypto');
-    const hash = crypto.createHash('sha256');
+    const hash = createHash('sha256');
     hash.update(this._data);
     return new Uint8Array(hash.digest());
   }

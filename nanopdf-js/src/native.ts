@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -498,8 +499,7 @@ function createMockAddon(): NativeAddon {
     }
 
     md5Digest(): Uint8Array {
-      const crypto = require('node:crypto');
-      const hash = crypto.createHash('md5');
+      const hash = createHash('md5');
       hash.update(this.data);
       return new Uint8Array(hash.digest());
     }

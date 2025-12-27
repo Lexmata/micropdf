@@ -67,16 +67,13 @@ All pipeline issues resolved (Rust clippy, Go lint, Node.js tests).
 
 ### Node.js Optimizations
 
-| Issue | Impact |
+| Issue | Status |
 |-------|--------|
-| `Quad.containsPoint` | 411ns (15x slower than other ops) |
-| `Buffer.toUint8Array` | 942ns for 1KB |
-| `Buffer.toString` | 1952ns for 1KB |
-| ESM crypto module | `require('node:crypto')` fails |
+| `Quad.containsPoint` | ✅ Fixed - bounding box early-exit + axis-aligned fast path |
+| `Buffer.toUint8Array` | ✅ Fixed - added `toUint8ArrayView()` for zero-copy |
+| ESM crypto module | ✅ Fixed - replaced `require()` with ESM `import` |
 
-- [ ] Quad.containsPoint - bounding box early-exit
-- [ ] Buffer view optimization
-- [ ] Fix crypto ESM/CJS compatibility
+- [ ] Buffer.toString optimization (TextDecoder for large buffers)
 - [ ] Object pooling for geometry types
 
 ### Go Optimizations
