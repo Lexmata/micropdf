@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 61/70+ modules** (~87%)
+**Implemented: 62/70+ modules** (~89%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -72,6 +72,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_font | 45+ | Font descriptor, metrics, CID/GID/Unicode mapping |
 | pdf_resource | 50+ | Resource lookup, patterns, functions, XObjects |
 | pdf_clean | 35+ | Optimization, linearization, garbage collection |
+| pdf_redact | 30+ | Redaction, metadata sanitization, content removal |
 
 ---
 
@@ -80,12 +81,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Medium Priority
-
-#### pdf_redact
-- [ ] `pdf_redact_page` - apply redaction
-- [ ] `pdf_add_redact_annot` - create redaction annotation
-- [ ] Content removal
-- [ ] Metadata sanitization
 
 #### pdf_image_rewriter
 - [ ] `pdf_rewrite_images` - rewrite/optimize images

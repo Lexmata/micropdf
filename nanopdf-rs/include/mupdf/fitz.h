@@ -45,6 +45,7 @@ extern "C" {
 #include "mupdf/fitz/pdf_layer.h"
 #include "mupdf/fitz/pdf_page.h"
 #include "mupdf/fitz/pdf_parse.h"
+#include "mupdf/fitz/pdf_redact.h"
 #include "mupdf/fitz/pdf_resource.h"
 #include "mupdf/fitz/pdf_signature.h"
 #include "mupdf/fitz/pixmap.h"
