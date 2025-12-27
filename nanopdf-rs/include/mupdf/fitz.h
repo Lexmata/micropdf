@@ -33,6 +33,7 @@ extern "C" {
 #include "mupdf/fitz/image.h"
 #include "mupdf/fitz/json.h"
 #include "mupdf/fitz/link.h"
+#include "mupdf/fitz/log.h"
 #include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/path.h"

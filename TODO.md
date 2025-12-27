@@ -59,6 +59,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_heap | 22+ | Priority queue, heap sort |
 | fz_hyphen | 16+ | Text hyphenation, Liang's algorithm |
 | fz_json | 28+ | JSON parsing, serialization, DOM |
+| fz_log | 26+ | Logging, levels, callbacks, filtering |
 
 ---
 
@@ -67,10 +68,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_log
-- [ ] `fz_log` - logging functions
-- [ ] Log levels and filtering
 
 #### fz_write_pixmap
 - [ ] `fz_write_pixmap_as_png/jpeg/pam/pnm/pbm/pkm`
