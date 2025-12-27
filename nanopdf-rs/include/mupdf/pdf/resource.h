@@ -375,3 +375,4 @@ fz_colorspace *pdf_xobject_colorspace(fz_context *ctx, pdf_obj *xobj);
 
 #endif /* NANOPDF_PDF_RESOURCE_H */
 
+

@@ -285,3 +285,4 @@ void pdf_cmap_free_string(fz_context *ctx, char *s);
 
 #endif /* NANOPDF_PDF_CMAP_H */
 
+

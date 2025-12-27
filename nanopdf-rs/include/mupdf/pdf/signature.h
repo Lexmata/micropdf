@@ -323,3 +323,4 @@ void pdf_clear_all_signatures(fz_context *ctx, pdf_document *doc);
 
 #endif /* NANOPDF_PDF_SIGNATURE_H */
 
+

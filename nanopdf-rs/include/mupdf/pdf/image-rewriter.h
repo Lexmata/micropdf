@@ -216,3 +216,4 @@ void pdf_drop_image_rewriter_options(pdf_image_rewriter_options *opts);
 
 #endif /* NANOPDF_PDF_IMAGE_REWRITER_H */
 
+

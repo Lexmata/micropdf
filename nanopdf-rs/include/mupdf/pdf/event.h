@@ -249,3 +249,4 @@ void pdf_clear_pending_events(fz_context *ctx, pdf_event_handler *handler);
 
 #endif /* NANOPDF_PDF_EVENT_H */
 
+

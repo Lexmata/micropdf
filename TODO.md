@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 69/70+ modules** (~99%)
+**Implemented: 70/70+ modules** (100% core coverage)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -80,6 +80,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_zugferd | 20+ | ZUGFeRD/Factur-X invoices, XML extraction/embedding, validation |
 | pdf_portfolio | 25+ | Embedded files, collection schema, views, AF relationships |
 | pdf_3d | 30+ | U3D/PRC formats, 3D views, camera, render modes, lighting |
+| pdf_xref | 30+ | Cross-reference table, object management, streams, trailer |
 
 ---
 

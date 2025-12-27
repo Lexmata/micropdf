@@ -228,3 +228,4 @@ double pdf_name_table_hit_rate(void);
 
 #endif /* NANOPDF_PDF_NAME_TABLE_H */
 
+

@@ -323,3 +323,4 @@ void pdf_clean_free_string(fz_context *ctx, char *s);
 
 #endif /* NANOPDF_PDF_CLEAN_H */
 
+

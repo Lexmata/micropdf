@@ -176,3 +176,4 @@ void pdf_rgb_to_cmyk(float r, float g, float b, float *c, float *m, float *y, fl
 
 #endif /* NANOPDF_PDF_RECOLOR_H */
 
+

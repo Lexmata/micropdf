@@ -248,3 +248,4 @@ int pdf_apply_all_redactions(fz_context *ctx, pdf_document *doc, const pdf_redac
 
 #endif /* NANOPDF_PDF_REDACT_H */
 
+

@@ -295,3 +295,4 @@ char *pdf_3d_lighting_to_string(fz_context *ctx, int lighting);
 
 #endif /* NANOPDF_PDF_3D_H */
 
+

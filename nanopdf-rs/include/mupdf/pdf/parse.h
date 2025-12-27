@@ -264,3 +264,4 @@ const char *pdf_token_name(pdf_token tok);
 
 #endif /* NANOPDF_PDF_PARSE_H */
 
+

@@ -58,6 +58,7 @@ pub mod pdf_recolor;
 pub mod pdf_redact;
 pub mod pdf_resource;
 pub mod pdf_signature;
+pub mod pdf_xref;
 pub mod pdf_zugferd;
 pub mod pixmap;
 pub mod pool;

@@ -219,3 +219,4 @@ char *pdf_collection_view_to_string(fz_context *ctx, int view);
 
 #endif /* NANOPDF_PDF_PORTFOLIO_H */
 
+
