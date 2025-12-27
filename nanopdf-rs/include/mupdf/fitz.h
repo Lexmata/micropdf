@@ -14,6 +14,7 @@ extern "C" {
 #include "mupdf/fitz/bidi.h"
 #include "mupdf/fitz/bitmap.h"
 #include "mupdf/fitz/buffer.h"
+#include "mupdf/fitz/cbz.h"
 #include "mupdf/fitz/color.h"
 #include "mupdf/fitz/colorspace.h"
 #include "mupdf/fitz/compress.h"

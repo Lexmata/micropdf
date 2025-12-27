@@ -84,6 +84,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_xps | 30+ | XPS document format, parts, pages, fonts, targets |
 | fz_epub | 45+ | EPUB e-book format, OPF, spine, manifest, navigation |
 | fz_svg | 50+ | SVG DOM, paths, transforms, styles, elements, colors |
+| fz_cbz | 40+ | CBZ/CBR archives, ComicInfo.xml, natural sort, manga |
 
 ---
 
@@ -119,12 +120,15 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [x] ViewBox support
 - [x] Output device for SVG generation
 
-### Not Implemented
+#### CBZ/CBR (Comic Book Archives) ✅
+- [x] Archive extraction (CBZ/CBR/CB7/CBT)
+- [x] Image sequence handling (natural sort order)
+- [x] Metadata (ComicInfo.xml) - title, series, number, writer, etc.
+- [x] Manga reading direction support
+- [x] Double-page spread detection
+- [x] 20+ supported image formats
 
-#### CBZ/CBR (Comic Book Archives)
-- [ ] Archive extraction
-- [ ] Image sequence handling
-- [ ] Metadata (ComicInfo.xml)
+### Not Implemented
 
 #### Office Formats (via third-party)
 - [ ] DOCX basic rendering

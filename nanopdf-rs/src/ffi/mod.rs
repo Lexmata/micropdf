@@ -14,6 +14,7 @@ pub mod barcode;
 pub mod bidi;
 pub mod bitmap;
 pub mod buffer;
+pub mod cbz;
 pub mod color;
 pub mod colorspace;
 pub mod compress;
