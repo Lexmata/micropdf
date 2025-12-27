@@ -8,6 +8,9 @@
 //!
 //! Uses runtime feature detection to select the best implementation.
 
+// Allow unsafe operations inside unsafe functions (Rust 2024 edition compat)
+#![allow(unsafe_op_in_unsafe_fn)]
+
 use std::ffi::c_float;
 
 // ============================================================================

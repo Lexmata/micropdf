@@ -1022,7 +1022,7 @@ impl Interpreter {
         let state = self.state_mut();
         let translate = Matrix::translate(tx, ty);
         state.text_line_matrix = state.text_line_matrix.concat(&translate);
-        state.text_matrix = state.text_line_matrix.clone();
+        state.text_matrix = state.text_line_matrix;
 
         Ok(())
     }
@@ -1052,7 +1052,7 @@ impl Interpreter {
 
         let matrix = Matrix::new(a, b, c, d, e, f);
         let state = self.state_mut();
-        state.text_matrix = matrix.clone();
+        state.text_matrix = matrix;
         state.text_line_matrix = matrix;
 
         Ok(())
@@ -1400,7 +1400,7 @@ mod tests {
     #[test]
     fn test_get_f32() {
         assert_eq!(get_f32(&Object::Int(42)).unwrap(), 42.0);
-        assert_eq!(get_f32(&Object::Real(3.14)).unwrap(), 3.14f32);
+        assert_eq!(get_f32(&Object::Real(3.5)).unwrap(), 3.5f32);
         assert!(get_f32(&Object::Null).is_err());
     }
 }

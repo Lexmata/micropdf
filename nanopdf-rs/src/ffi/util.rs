@@ -1365,9 +1365,9 @@ mod tests {
 
     #[test]
     fn test_atof() {
-        let s = CString::new("3.14").unwrap();
+        let s = CString::new("3.5").unwrap();
         let v = fz_atof(s.as_ptr());
-        assert!((v - 3.14).abs() < 0.001);
+        assert!((v - 3.5).abs() < 0.001);
 
         let nan = CString::new("NaN").unwrap();
         assert!(fz_atof(nan.as_ptr()).is_nan());

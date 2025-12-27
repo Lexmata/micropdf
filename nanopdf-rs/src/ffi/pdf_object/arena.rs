@@ -743,7 +743,7 @@ mod tests {
         let int_h = pdf_arena_new_int(0, arena_id, 42);
         assert!(ArenaHandle::is_arena_handle(int_h));
 
-        let real_h = pdf_arena_new_real(0, arena_id, 3.14);
+        let real_h = pdf_arena_new_real(0, arena_id, 3.5);
         assert!(ArenaHandle::is_arena_handle(real_h));
 
         let name = std::ffi::CString::new("Type").unwrap();
