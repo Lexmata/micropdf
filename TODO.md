@@ -219,10 +219,11 @@ Current performance metrics (from `cargo bench`):
   - `LazyRegion`: Page-tracking for lazy loading (4KB pages)
   - FFI: open/close, read, find/rfind, seek, advise
 
-- [ ] **Buffered writing**
-  - Batch small writes
-  - Use vectored I/O where possible
-  - Async write support
+- [x] **Buffered writing** ✅
+  - `BufferedWriter`: 64KB buffer, batches small writes, stats tracking
+  - `VectoredWriter`: scatter-gather I/O (writev), auto-flush threshold
+  - `AsyncWriter`: tokio-based async writing (optional feature)
+  - FFI: create/write/flush/sync, stats, pending counts
 
 #### Cache Efficiency
 - [ ] **Structure packing**
