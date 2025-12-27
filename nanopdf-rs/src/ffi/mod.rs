@@ -25,6 +25,7 @@ pub mod display_list;
 pub mod document;
 pub mod draw_device;
 pub mod enhanced;
+pub mod epub;
 pub mod filter;
 pub mod font;
 pub mod form;

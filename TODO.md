@@ -82,6 +82,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_3d | 30+ | U3D/PRC formats, 3D views, camera, render modes, lighting |
 | pdf_xref | 30+ | Cross-reference table, object management, streams, trailer |
 | fz_xps | 30+ | XPS document format, parts, pages, fonts, targets |
+| fz_epub | 45+ | EPUB e-book format, OPF, spine, manifest, navigation |
 
 ---
 
@@ -98,14 +99,16 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [x] URL resolution
 - [x] Content type handling
 
-### Not Implemented
+#### EPUB (Electronic Publication) ✅
+- [x] EPUB container structure (version 2 and 3)
+- [x] OPF manifest handling (items, media types)
+- [x] Spine (reading order, linear/non-linear)
+- [x] NCX/NAV navigation (table of contents)
+- [x] Metadata (title, creators, language, identifier)
+- [x] File access within package
+- [x] Reading direction (LTR/RTL)
 
-#### EPUB (Electronic Publication)
-- [ ] EPUB container parsing
-- [ ] OPF manifest handling
-- [ ] NCX/NAV navigation
-- [ ] CSS styling
-- [ ] HTML content rendering
+### Not Implemented
 
 #### SVG (Scalable Vector Graphics)
 - [ ] SVG DOM parsing
