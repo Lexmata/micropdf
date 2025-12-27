@@ -87,11 +87,19 @@ jobs:
         working-directory: nanopdf-js
         run: pnpm build:ts
 
+      - name: Compile fuzz targets
+        working-directory: nanopdf-js
+        run: |
+          # Compile fuzz targets to JavaScript using TypeScript compiler
+          for f in fuzz/targets/*.fuzz.ts; do
+            npx tsc "$f" --outDir fuzz/targets --module esnext --moduleResolution bundler --esModuleInterop --skipLibCheck
+          done
+
       - name: Run fuzzer
         working-directory: nanopdf-js
         run: |
           DURATION=${{ github.event.inputs.duration || '300' }}
-          npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.ts --sync --timeout=${DURATION}s
+          npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.js --sync --timeout=${DURATION}s
         env:
           NODE_ENV: production
 
@@ -146,9 +154,10 @@ jobs:
             cd nanopdf-js
             pnpm install
             pnpm build:ts
+            for f in fuzz/targets/*.fuzz.ts; do npx tsc "$f" --outDir fuzz/targets --module esnext --moduleResolution bundler --esModuleInterop --skipLibCheck; done
 
             # Download crash file from artifacts
-            npx jazzer fuzz/targets/${target}.fuzz.ts --sync --reproducer=crash-<hash>
+            npx jazzer fuzz/targets/${target}.fuzz.js --sync --reproducer=crash-<hash>
             \`\`\`
 
             ### Labels

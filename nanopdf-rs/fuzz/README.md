@@ -9,48 +9,48 @@ Fuzzing is an automated testing technique that feeds random/malformed data to th
 ## Fuzz Targets
 
 ### 1. `fuzz_pdf_parse`
-**What it tests**: PDF document parsing  
-**Seed corpus**: Real PDF files from `test-pdfs/`  
+**What it tests**: PDF document parsing
+**Seed corpus**: Real PDF files from `test-pdfs/`
 **Finds**: Parse errors, crashes in document handling, memory issues
 
 ### 2. `fuzz_buffer`
-**What it tests**: Buffer operations (create, append, read, clear)  
-**Seed corpus**: Text and binary data  
+**What it tests**: Buffer operations (create, append, read, clear)
+**Seed corpus**: Text and binary data
 **Finds**: Buffer overflow, underflow, memory leaks
 
 ### 3. `fuzz_stream`
-**What it tests**: Stream I/O (read, seek, peek)  
-**Seed corpus**: Various data formats  
+**What it tests**: Stream I/O (read, seek, peek)
+**Seed corpus**: Various data formats
 **Finds**: Stream handling bugs, read errors
 
 ### 4. `fuzz_pdf_objects`
-**What it tests**: PDF object model (dictionaries, arrays, references)  
-**Seed corpus**: Real PDF files  
+**What it tests**: PDF object model (dictionaries, arrays, references)
+**Seed corpus**: Real PDF files
 **Finds**: Object parsing bugs, type confusion, crashes
 
 ### 5. `fuzz_filters`
-**What it tests**: PDF stream filters (FlateDecode, ASCII85, ASCIIHex, RLE)  
-**Seed corpus**: Compressed/encoded data  
+**What it tests**: PDF stream filters (FlateDecode, ASCII85, ASCIIHex, RLE)
+**Seed corpus**: Compressed/encoded data
 **Finds**: Decompression bugs, infinite loops, crashes
 
 ### 6. `fuzz_xref`
-**What it tests**: PDF cross-reference table parsing and object resolution  
-**Seed corpus**: Real PDF files  
+**What it tests**: PDF cross-reference table parsing and object resolution
+**Seed corpus**: Real PDF files
 **Finds**: Xref parsing bugs, circular references, invalid object numbers
 
 ### 7. `fuzz_page_render`
-**What it tests**: Page loading, bounds calculation, rendering pipeline  
-**Seed corpus**: Real PDF files  
+**What it tests**: Page loading, bounds calculation, rendering pipeline
+**Seed corpus**: Real PDF files
 **Finds**: Rendering crashes, memory issues, device bugs
 
 ### 8. `fuzz_annotations`
-**What it tests**: PDF annotations (comments, links, forms)  
-**Seed corpus**: PDFs with annotations  
+**What it tests**: PDF annotations (comments, links, forms)
+**Seed corpus**: PDFs with annotations
 **Finds**: Annotation parsing bugs, type handling issues
 
 ### 9. `fuzz_fonts`
-**What it tests**: Font resource handling and embedding  
-**Seed corpus**: PDFs with various fonts  
+**What it tests**: Font resource handling and embedding
+**Seed corpus**: PDFs with various fonts
 **Finds**: Font parsing bugs, embedding issues
 
 ## Installation
@@ -260,7 +260,7 @@ cargo fuzz run fuzz_pdf_parse -- -dict=fuzz/dict/pdf.dict
 ### Slow Fuzzing
 
 - **Problem**: < 100 exec/s
-- **Solution**: 
+- **Solution**:
   - Check if running in debug mode (should be release)
   - Reduce `-max_len` to limit input size
   - Profile the fuzz target
