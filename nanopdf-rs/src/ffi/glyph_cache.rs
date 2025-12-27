@@ -938,6 +938,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_ffi_cache_stats() {
         let ctx = 1;
 
@@ -1057,6 +1058,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_purge_font() {
         let ctx = 1;
 

@@ -661,6 +661,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_module_level() {
         reset_log_config();
         let ctx = 1;
@@ -725,6 +726,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_log_buffer() {
         // Note: Due to global state shared with parallel tests, we only test buffer APIs
         // and don't assert on exact counts
