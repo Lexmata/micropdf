@@ -70,6 +70,7 @@ pub mod store;
 pub mod story;
 pub mod stream;
 pub mod string_util;
+pub mod svg;
 pub mod text;
 pub mod transition;
 pub mod tree;

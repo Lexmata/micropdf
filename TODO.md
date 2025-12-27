@@ -83,6 +83,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_xref | 30+ | Cross-reference table, object management, streams, trailer |
 | fz_xps | 30+ | XPS document format, parts, pages, fonts, targets |
 | fz_epub | 45+ | EPUB e-book format, OPF, spine, manifest, navigation |
+| fz_svg | 50+ | SVG DOM, paths, transforms, styles, elements, colors |
 
 ---
 
@@ -108,14 +109,17 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 - [x] File access within package
 - [x] Reading direction (LTR/RTL)
 
-### Not Implemented
+#### SVG (Scalable Vector Graphics) ✅
+- [x] SVG DOM parsing (document, elements)
+- [x] Path commands (M, L, C, Q, A, Z, etc.)
+- [x] Transformations (matrix, translate, scale, rotate, skew)
+- [x] Style properties (fill, stroke, opacity)
+- [x] Element types (22 types: rect, circle, path, text, etc.)
+- [x] Color parsing (hex and named colors)
+- [x] ViewBox support
+- [x] Output device for SVG generation
 
-#### SVG (Scalable Vector Graphics)
-- [ ] SVG DOM parsing
-- [ ] Path commands
-- [ ] Transformations
-- [ ] Filters and effects
-- [ ] Text layout
+### Not Implemented
 
 #### CBZ/CBR (Comic Book Archives)
 - [ ] Archive extraction
