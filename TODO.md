@@ -226,10 +226,13 @@ Current performance metrics (from `cargo bench`):
   - FFI: create/write/flush/sync, stats, pending counts
 
 #### Cache Efficiency
-- [ ] **Structure packing**
-  - Audit struct layouts for cache alignment
-  - Use `#[repr(C)]` where beneficial
-  - Reduce padding in hot structs
+- [x] **Structure packing** ✅
+  - `CacheAligned<T>`: 64-byte aligned wrapper for false sharing avoidance
+  - `Padded<T, N>`: Explicit padding for struct isolation
+  - `PackedPoint/Rect/Matrix/Quad`: Optimized geometry structs with `#[repr(C)]`
+  - `LayoutInfo`: Runtime layout analysis (size, align, cache lines)
+  - Compile-time assertions: `assert_layout!`, `assert_cache_lines!`
+  - FFI: layout queries, alignment checks, padding calculations
 
 - [ ] **Data locality**
   - Group related data in memory

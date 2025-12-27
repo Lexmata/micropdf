@@ -73,6 +73,7 @@ extern "C" {
 #include "mupdf/fitz/story.h"
 #include "mupdf/fitz/stream.h"
 #include "mupdf/fitz/string_util.h"
+#include "mupdf/fitz/struct_layout.h"
 #include "mupdf/fitz/svg.h"
 #include "mupdf/fitz/text.h"
 #include "mupdf/fitz/transition.h"
