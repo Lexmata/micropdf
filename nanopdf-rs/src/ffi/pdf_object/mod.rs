@@ -3,6 +3,7 @@
 //! This module provides C-compatible exports for PDF object manipulation.
 
 // Module declarations
+pub mod arena;
 pub mod array;
 pub mod check;
 pub mod compare;
@@ -17,6 +18,7 @@ pub mod types;
 pub mod utils;
 
 // Re-export public types and functions
+pub use arena::*;
 pub use array::*;
 pub use check::*;
 pub use compare::*;

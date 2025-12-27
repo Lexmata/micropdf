@@ -182,10 +182,12 @@ Current performance metrics (from `cargo bench`):
   - Methods: `as_str()`, `arc()`, `is_interned()`, `from_string()`
   - From/Into traits for ergonomic conversion
 
-- [ ] **PDF Object arena allocation**
-  - PDF Objects created 17B+ samples in profiling
-  - Consider bump allocator for document-lifetime objects
-  - Reduce per-object allocation overhead
+- [x] **PDF Object arena allocation** ✅
+  - Implemented typed arena allocator for PDF objects
+  - Chunk-based allocation (default 1024 objects per chunk)
+  - Document-lifetime semantics (bulk free on arena drop)
+  - FFI: `pdf_new_object_arena`, `pdf_arena_new_*`, `pdf_arena_free_obj`
+  - Statistics: `pdf_object_arena_stats`, clear, compact operations
 
 #### Algorithm Improvements
 - [ ] **Optimize hashbrown usage**
