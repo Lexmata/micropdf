@@ -19,6 +19,7 @@ pub mod colorspace;
 pub mod compress;
 pub mod context;
 pub mod cookie;
+pub mod deskew;
 pub mod device;
 pub mod display_list;
 pub mod document;

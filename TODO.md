@@ -55,6 +55,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_glyph_cache | 25+ | Cache statistics, eviction policies |
 | fz_bidi | 18+ | Bidirectional text, reordering, mirroring |
 | fz_barcode | 12+ | QR/Code128/EAN/UPC generation |
+| fz_deskew | 10+ | Skew detection, deskew, rotation |
 
 ---
 
@@ -63,10 +64,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_deskew
-- [ ] `fz_deskew_page` - auto-deskew scanned pages
-- [ ] Skew angle detection
 
 #### fz_heap
 - [ ] `fz_heap` - priority queue structure
