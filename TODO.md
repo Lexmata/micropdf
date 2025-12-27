@@ -81,19 +81,24 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_portfolio | 25+ | Embedded files, collection schema, views, AF relationships |
 | pdf_3d | 30+ | U3D/PRC formats, 3D views, camera, render modes, lighting |
 | pdf_xref | 30+ | Cross-reference table, object management, streams, trailer |
+| fz_xps | 30+ | XPS document format, parts, pages, fonts, targets |
 
 ---
 
 ## Document Format Support
 
-### Not Implemented
+### Implemented
 
-#### XPS (XML Paper Specification)
-- [ ] XPS parser
-- [ ] FixedDocument handling
-- [ ] XAML rendering
-- [ ] Font embedding
-- [ ] Image handling
+#### XPS (XML Paper Specification) ✅
+- [x] XPS document structure (FixedDocumentSequence, FixedDocument, FixedPage)
+- [x] Part management (add, get, has_part)
+- [x] Page access (count, size, name)
+- [x] Font cache
+- [x] Link targets
+- [x] URL resolution
+- [x] Content type handling
+
+### Not Implemented
 
 #### EPUB (Electronic Publication)
 - [ ] EPUB container parsing

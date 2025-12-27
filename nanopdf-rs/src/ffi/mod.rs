@@ -76,6 +76,7 @@ pub mod util;
 pub mod write_pixmap;
 pub mod writer;
 pub mod xml;
+pub mod xps;
 
 // Safe helper functions for common FFI patterns
 mod safe_helpers;

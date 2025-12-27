@@ -72,6 +72,7 @@ extern "C" {
 #include "mupdf/fitz/write_pixmap.h"
 #include "mupdf/fitz/writer.h"
 #include "mupdf/fitz/xml.h"
+#include "mupdf/fitz/xps.h"
 
 #ifdef __cplusplus
 }
