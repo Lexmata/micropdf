@@ -43,6 +43,7 @@ pub mod path;
 pub mod pdf_clean;
 pub mod pdf_cmap;
 pub mod pdf_font;
+pub mod pdf_image_rewriter;
 pub mod pdf_interpret;
 pub mod pdf_javascript;
 pub mod pdf_layer;
