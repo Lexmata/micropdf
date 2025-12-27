@@ -52,6 +52,7 @@ pub mod pdf_name_table;
 pub mod pdf_object;
 pub mod pdf_page;
 pub mod pdf_parse;
+pub mod pdf_portfolio;
 pub mod pdf_recolor;
 pub mod pdf_redact;
 pub mod pdf_resource;

@@ -48,6 +48,7 @@ extern "C" {
 #include "mupdf/fitz/pdf_name_table.h"
 #include "mupdf/fitz/pdf_page.h"
 #include "mupdf/fitz/pdf_parse.h"
+#include "mupdf/fitz/pdf_portfolio.h"
 #include "mupdf/fitz/pdf_recolor.h"
 #include "mupdf/fitz/pdf_redact.h"
 #include "mupdf/fitz/pdf_resource.h"

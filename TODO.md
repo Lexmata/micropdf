@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 67/70+ modules** (~96%)
+**Implemented: 68/70+ modules** (~97%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -78,6 +78,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_event | 30+ | Alerts, print, launch URL, mail, menu item events |
 | pdf_name_table | 20+ | Name interning, 150+ standard names, cache statistics |
 | pdf_zugferd | 20+ | ZUGFeRD/Factur-X invoices, XML extraction/embedding, validation |
+| pdf_portfolio | 25+ | Embedded files, collection schema, views, AF relationships |
 
 ---
 
@@ -86,11 +87,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Lower Priority
-
-#### pdf_portfolio
-- [ ] Portfolio structure
-- [ ] Embedded file handling
-- [ ] Navigator support
 
 #### pdf_3d
 - [ ] 3D annotation support
