@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 55/70+ modules** (~79%)
+**Implemented: 56/70+ modules** (~80%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -66,6 +66,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_interpret | 70+ | Content stream processor, all PDF operators |
 | pdf_page | 50+ | Page loading, bounds, transform, rendering |
 | pdf_parse | 35+ | Lexer, tokenizer, object/dict/array parsing |
+| pdf_layer | 28+ | OCG layers, configs, UI, enable/disable |
 
 ---
 
@@ -74,14 +75,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### High Priority
-
-#### pdf_layer (Optional Content)
-- [ ] `pdf_layer_config` - layer configuration
-- [ ] `pdf_count_layer_configs` / `pdf_select_layer_config`
-- [ ] `pdf_layer_config_info`
-- [ ] `pdf_count_layers` / `pdf_layer_name`
-- [ ] `pdf_layer_is_enabled` / `pdf_enable_layer`
-- [ ] OCG/OCMD support
 
 #### pdf_signature (Digital Signatures)
 - [ ] `pdf_signature_is_signed`
@@ -878,7 +871,7 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 
 ### v0.4.0 - Content Processing
 1. ~~pdf_interpret (content stream processor)~~ ✅
-2. pdf_layer (optional content groups)
+2. ~~pdf_layer (optional content groups)~~ ✅
 3. pdf_cmap (character maps)
 4. ~~fz_story (HTML layout)~~ ✅
 

@@ -42,6 +42,7 @@ pub mod output;
 pub mod path;
 pub mod pdf_interpret;
 pub mod pdf_javascript;
+pub mod pdf_layer;
 pub mod pdf_object;
 pub mod pdf_page;
 pub mod pdf_parse;
