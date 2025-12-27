@@ -56,6 +56,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_bidi | 18+ | Bidirectional text, reordering, mirroring |
 | fz_barcode | 12+ | QR/Code128/EAN/UPC generation |
 | fz_deskew | 10+ | Skew detection, deskew, rotation |
+| fz_heap | 22+ | Priority queue, heap sort |
 
 ---
 
@@ -64,11 +65,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_heap
-- [ ] `fz_heap` - priority queue structure
-- [ ] `fz_heap_insert` / `fz_heap_remove`
-- [ ] Used for sorted rendering
 
 #### fz_hyphen
 - [ ] `fz_hyphenator` - text hyphenation
