@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 57/70+ modules** (~81%)
+**Implemented: 58/70+ modules** (~83%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -68,6 +68,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_parse | 35+ | Lexer, tokenizer, object/dict/array parsing |
 | pdf_layer | 28+ | OCG layers, configs, UI, enable/disable |
 | pdf_signature | 40+ | PKCS#7 signing/verification, DN, certificates |
+| pdf_cmap | 30+ | CID/Unicode mapping, vertical writing mode |
 
 ---
 
@@ -76,15 +77,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
 
 ### Medium Priority
-
-#### pdf_cmap
-- [ ] `pdf_cmap` structure
-- [ ] `fz_new_cmap` / `fz_keep_cmap` / `fz_drop_cmap`
-- [ ] `pdf_load_cmap` - load from stream
-- [ ] `pdf_load_embedded_cmap` - from PDF object
-- [ ] `fz_lookup_cmap` / `fz_lookup_cmap_full`
-- [ ] CID/Unicode mapping
-- [ ] Vertical writing mode support
 
 #### pdf_font (PDF-specific)
 - [ ] `pdf_font_desc` - PDF font descriptor
@@ -861,7 +853,7 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 ### v0.4.0 - Content Processing
 1. ~~pdf_interpret (content stream processor)~~ ✅
 2. ~~pdf_layer (optional content groups)~~ ✅
-3. pdf_cmap (character maps)
+3. ~~pdf_cmap (character maps)~~ ✅
 4. ~~fz_story (HTML layout)~~ ✅
 
 ### v0.5.0 - Security & Signatures

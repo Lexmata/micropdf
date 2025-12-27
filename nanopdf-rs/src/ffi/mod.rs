@@ -40,6 +40,7 @@ pub mod log;
 pub mod outline;
 pub mod output;
 pub mod path;
+pub mod pdf_cmap;
 pub mod pdf_interpret;
 pub mod pdf_javascript;
 pub mod pdf_layer;
