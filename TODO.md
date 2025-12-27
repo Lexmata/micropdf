@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 56/70+ modules** (~80%)
+**Implemented: 57/70+ modules** (~81%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -67,24 +67,13 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | pdf_page | 50+ | Page loading, bounds, transform, rendering |
 | pdf_parse | 35+ | Lexer, tokenizer, object/dict/array parsing |
 | pdf_layer | 28+ | OCG layers, configs, UI, enable/disable |
+| pdf_signature | 40+ | PKCS#7 signing/verification, DN, certificates |
 
 ---
 
 ## Missing PDF Modules
 
 > Based on analysis of `mupdf-source/include/mupdf/pdf/*.h`
-
-### High Priority
-
-#### pdf_signature (Digital Signatures)
-- [ ] `pdf_signature_is_signed`
-- [ ] `pdf_signature_byte_range`
-- [ ] `pdf_signature_contents`
-- [ ] `pdf_signature_incremental_change_since_signing`
-- [ ] `pdf_sign_signature` - sign document
-- [ ] `pdf_clear_signature`
-- [ ] Certificate handling
-- [ ] PKCS#7 support
 
 ### Medium Priority
 
@@ -876,7 +865,7 @@ Python is **~1400x slower than Go** for simple geometry operations due to:
 4. ~~fz_story (HTML layout)~~ ✅
 
 ### v0.5.0 - Security & Signatures
-1. pdf_signature (digital signatures)
+1. ~~pdf_signature (digital signatures)~~ ✅
 2. pdf_redact (redaction)
 3. ~~pdf_javascript (JavaScript)~~ ✅
 4. Enhanced encryption
