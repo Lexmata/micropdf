@@ -54,6 +54,7 @@ weezl = "0.1"
 jpeg2k = { version = "0.8", optional = true }
 bytes = "1"
 byteorder = "1"
+memmap2 = "0.9"
 rayon = { version = "1.10", optional = true }
 tokio = { version = "1", features = ["fs", "io-util", "rt", "sync", "macros", "rt-multi-thread", "time"], optional = true }
 futures = { version = "0.3", optional = true }

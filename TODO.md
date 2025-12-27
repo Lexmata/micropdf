@@ -213,10 +213,11 @@ Current performance metrics (from `cargo bench`):
 ### Medium Priority Optimizations
 
 #### I/O Performance
-- [ ] **Memory-mapped file reading**
-  - Large PDF files should use mmap
-  - Lazy loading of page content
-  - Reduce memory copies
+- [x] **Memory-mapped file reading** ✅
+  - `MappedFile`: mmap-based file with zero-copy access
+  - `MappedBuffer`: Cursor-based reader with Read/Seek traits
+  - `LazyRegion`: Page-tracking for lazy loading (4KB pages)
+  - FFI: open/close, read, find/rfind, seek, advise
 
 - [ ] **Buffered writing**
   - Batch small writes

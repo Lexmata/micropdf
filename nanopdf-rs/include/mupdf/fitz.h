@@ -38,6 +38,7 @@ extern "C" {
 #include "mupdf/fitz/link.h"
 #include "mupdf/fitz/lockfree.h"
 #include "mupdf/fitz/log.h"
+#include "mupdf/fitz/mmap.h"
 #include "mupdf/fitz/office.h"
 #include "mupdf/fitz/outline.h"
 #include "mupdf/fitz/output.h"

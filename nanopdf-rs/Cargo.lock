@@ -720,6 +720,7 @@ dependencies = [
  "image",
  "jpeg2k",
  "md-5",
+ "memmap2",
  "rayon",
  "sha2",
  "tempfile",

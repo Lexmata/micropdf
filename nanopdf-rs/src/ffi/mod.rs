@@ -41,6 +41,7 @@ pub mod json;
 pub mod link;
 pub mod lockfree;
 pub mod log;
+pub mod mmap;
 pub mod office;
 pub mod outline;
 pub mod output;
