@@ -6,7 +6,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 
 ## Current Status
 
-**Implemented: 42/70+ modules** (~60%)
+**Implemented: 51/70+ modules** (~73%)
 
 | Module | Functions | Notes |
 |--------|-----------|-------|
@@ -61,19 +61,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_json | 28+ | JSON parsing, serialization, DOM |
 | fz_log | 26+ | Logging, levels, callbacks, filtering |
 | fz_write_pixmap | 30+ | PNG/JPEG/PNM/PAM/PBM/PKM/PSD/PS output |
-
----
-
-## Missing Fitz (Core) Modules
-
-> Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
-
-### Lower Priority
-
-#### fz_util
-- [ ] Various utility functions
-- [ ] Memory helpers
-- [ ] String utilities
+| fz_util | 36+ | String, path, URI, UTF-8, numeric utilities |
 
 ---
 
