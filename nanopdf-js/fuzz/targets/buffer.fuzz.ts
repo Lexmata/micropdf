@@ -5,12 +5,13 @@
  *
  * Targets:
  * - Buffer.fromString()
- * - Buffer.fromArrayBuffer()
+ * - Buffer.fromUint8Array()
  * - BufferReader operations
  * - BufferWriter operations
  *
  * Run:
- *   npx jazzer fuzz/targets/buffer.fuzz.ts
+ *   npx tsc fuzz/targets/buffer.fuzz.ts --outDir fuzz/targets --module esnext --moduleResolution bundler --esModuleInterop --skipLibCheck
+ *   npx jazzer fuzz/targets/buffer.fuzz.js
  */
 
 import { FuzzedDataProvider } from '@jazzer.js/core';
@@ -27,21 +28,22 @@ export function fuzz(data: Buffer): void {
   try {
     // Test 1: Create buffer from fuzzed data
     try {
-      const buf = NanoBuffer.fromArrayBuffer(data.buffer);
+      const uint8 = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+      const buf = NanoBuffer.fromUint8Array(uint8);
 
-      // Try to get size
-      const size = buf.size;
+      // Try to get length
+      const len = buf.length;
 
-      // Try to slice if size > 0
-      if (size > 0) {
-        const sliceEnd = Math.min(size, provider.consumeIntegralInRange(1, Math.max(1, size)));
+      // Try to slice if len > 0
+      if (len > 0) {
+        const sliceEnd = Math.min(len, provider.consumeIntegralInRange(1, Math.max(1, len)));
         try {
           buf.slice(0, sliceEnd);
-        } catch (e) {
+        } catch {
           // Slice failed - acceptable
         }
       }
-    } catch (e) {
+    } catch {
       // Buffer creation failed - acceptable
     }
 
@@ -53,14 +55,14 @@ export function fuzz(data: Buffer): void {
       const writeOps = provider.consumeIntegralInRange(1, 10);
 
       for (let i = 0; i < writeOps; i++) {
-        const op = provider.consumeIntegralInRange(0, 5);
+        const op = provider.consumeIntegralInRange(0, 4);
 
         switch (op) {
           case 0: // Write string
             try {
               const str = provider.consumeString(provider.consumeIntegralInRange(0, 100));
               writer.writeString(str);
-            } catch (e) {
+            } catch {
               // Write failed - acceptable
             }
             break;
@@ -68,40 +70,32 @@ export function fuzz(data: Buffer): void {
           case 1: // Write byte
             try {
               writer.writeByte(provider.consumeIntegral(1, false));
-            } catch (e) {
+            } catch {
               // Write failed - acceptable
             }
             break;
 
-          case 2: // Write int16
+          case 2: // Write uint16
             try {
-              writer.writeInt16(provider.consumeIntegral(2, true));
-            } catch (e) {
+              writer.writeUInt16BE(provider.consumeIntegral(2, false));
+            } catch {
               // Write failed - acceptable
             }
             break;
 
-          case 3: // Write int32
+          case 3: // Write uint32
             try {
-              writer.writeInt32(provider.consumeIntegral(4, true));
-            } catch (e) {
+              writer.writeUInt32BE(provider.consumeIntegral(4, false));
+            } catch {
               // Write failed - acceptable
             }
             break;
 
-          case 4: // Write float
-            try {
-              writer.writeFloat(provider.consumeProbability());
-            } catch (e) {
-              // Write failed - acceptable
-            }
-            break;
-
-          case 5: // Write bytes
+          case 4: // Write bytes
             try {
               const bytes = provider.consumeBytes(provider.consumeIntegralInRange(0, 50));
-              writer.writeBytes(bytes);
-            } catch (e) {
+              writer.write(bytes);
+            } catch {
               // Write failed - acceptable
             }
             break;
@@ -111,54 +105,49 @@ export function fuzz(data: Buffer): void {
       // Try to get buffer
       try {
         writer.toBuffer();
-      } catch (e) {
+      } catch {
         // toBuffer failed - acceptable
       }
-    } catch (e) {
+    } catch {
       // BufferWriter operations failed - acceptable
     }
 
     // Test 3: BufferReader operations
     try {
-      const buf = NanoBuffer.fromArrayBuffer(data.buffer);
+      const uint8 = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+      const buf = NanoBuffer.fromUint8Array(uint8);
       const reader = new BufferReader(buf);
 
       // Try various read operations
       const readOps = provider.consumeIntegralInRange(1, 10);
 
       for (let i = 0; i < readOps; i++) {
-        const op = provider.consumeIntegralInRange(0, 5);
+        const op = provider.consumeIntegralInRange(0, 3);
 
         try {
           switch (op) {
             case 0: // Read byte
               reader.readByte();
               break;
-            case 1: // Read int16
-              reader.readInt16();
+            case 1: // Read uint16
+              reader.readUInt16BE();
               break;
-            case 2: // Read int32
-              reader.readInt32();
+            case 2: // Read uint32
+              reader.readUInt32BE();
               break;
-            case 3: // Read float
-              reader.readFloat();
-              break;
-            case 4: // Read string
-              reader.readString(provider.consumeIntegralInRange(1, 20));
-              break;
-            case 5: // Read bytes
-              reader.readBytes(provider.consumeIntegralInRange(1, 20));
+            case 3: // Read bytes
+              reader.read(provider.consumeIntegralInRange(1, 20));
               break;
           }
-        } catch (e) {
+        } catch {
           // Read failed (EOF or invalid data) - acceptable
           break;
         }
       }
-    } catch (e) {
+    } catch {
       // BufferReader operations failed - acceptable
     }
-  } catch (e) {
+  } catch {
     // Overall fuzzing failed - acceptable
   }
 }
