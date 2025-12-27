@@ -107,10 +107,12 @@ All pipeline issues resolved (Rust clippy, Go lint, Node.js tests).
 
 ### Advanced Features
 
-- [ ] **GPU Acceleration** - OpenGL/Vulkan/Metal/DirectX
-- [ ] **Multi-threaded Rendering** - Tile-based parallel
-- [ ] **OCR Integration** - Tesseract
-- [ ] **Table Detection** - Structure recognition
+| Feature | Status |
+|---------|--------|
+| **Multi-threaded Rendering** | ✅ Tile-based parallel (`tile_render` module) |
+| **Table Detection** | ✅ Structure recognition (`table_detect` module) |
+| **OCR Integration** | ✅ Tesseract stubs (`ocr` module) |
+| **GPU Acceleration** | 🔮 Future (OpenGL/Vulkan/Metal/DirectX) |
 
 ### Platform Support
 
