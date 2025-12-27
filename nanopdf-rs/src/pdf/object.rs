@@ -1,19 +1,233 @@
 //! PDF object types
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::Arc;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Name(pub String);
+// ============================================================================
+// Interned Name Implementation
+// ============================================================================
+
+/// Interned PDF Name with shared storage
+///
+/// PDF names are frequently repeated (Type, Length, Font, etc.). This
+/// implementation uses `Arc<str>` for zero-copy cloning and sharing.
+/// Common names are pre-interned for fast comparison.
+#[derive(Debug, Clone, Eq)]
+pub struct Name(Arc<str>);
+
 impl Name {
+    /// Create a new name, potentially sharing storage with existing names
     pub fn new(s: &str) -> Self {
-        Self(s.to_string())
+        // Check for common pre-interned names first
+        if let Some(interned) = Self::get_interned(s) {
+            return interned;
+        }
+        Self(Arc::from(s))
+    }
+
+    /// Create from owned String
+    pub fn from_string(s: String) -> Self {
+        if let Some(interned) = Self::get_interned(&s) {
+            return interned;
+        }
+        Self(Arc::from(s))
+    }
+
+    /// Get the name string
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// Get Arc for zero-copy sharing
+    pub fn arc(&self) -> Arc<str> {
+        Arc::clone(&self.0)
+    }
+
+    /// Check if this is a standard interned name (cheap pointer comparison)
+    pub fn is_interned(&self) -> bool {
+        COMMON_NAMES
+            .iter()
+            .any(|(_, arc)| Arc::ptr_eq(&self.0, arc))
+    }
+
+    /// Try to get a pre-interned common name
+    fn get_interned(s: &str) -> Option<Self> {
+        COMMON_NAMES
+            .iter()
+            .find(|(name, _)| *name == s)
+            .map(|(_, arc)| Self(Arc::clone(arc)))
     }
 }
+
+impl PartialEq for Name {
+    fn eq(&self, other: &Self) -> bool {
+        // Fast path: pointer equality for interned names
+        if Arc::ptr_eq(&self.0, &other.0) {
+            return true;
+        }
+        // Slow path: string comparison
+        self.0.as_ref() == other.0.as_ref()
+    }
+}
+
+impl std::hash::Hash for Name {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.as_ref().hash(state);
+    }
+}
+
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "/{}", self.0)
     }
 }
+
+impl AsRef<str> for Name {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<&str> for Name {
+    fn from(s: &str) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<String> for Name {
+    fn from(s: String) -> Self {
+        Self::from_string(s)
+    }
+}
+
+// ============================================================================
+// Pre-interned Common PDF Names
+// ============================================================================
+
+use std::sync::LazyLock;
+
+/// Common PDF names pre-interned for fast comparison
+static COMMON_NAMES: LazyLock<Vec<(&'static str, Arc<str>)>> = LazyLock::new(|| {
+    vec![
+        // Document structure (most common)
+        ("Type", Arc::from("Type")),
+        ("Subtype", Arc::from("Subtype")),
+        ("Length", Arc::from("Length")),
+        ("Filter", Arc::from("Filter")),
+        ("Parent", Arc::from("Parent")),
+        ("Kids", Arc::from("Kids")),
+        ("Count", Arc::from("Count")),
+        // Page structure
+        ("Catalog", Arc::from("Catalog")),
+        ("Pages", Arc::from("Pages")),
+        ("Page", Arc::from("Page")),
+        ("Resources", Arc::from("Resources")),
+        ("Contents", Arc::from("Contents")),
+        ("MediaBox", Arc::from("MediaBox")),
+        ("CropBox", Arc::from("CropBox")),
+        ("Rotate", Arc::from("Rotate")),
+        // Resources
+        ("Font", Arc::from("Font")),
+        ("XObject", Arc::from("XObject")),
+        ("ExtGState", Arc::from("ExtGState")),
+        ("ColorSpace", Arc::from("ColorSpace")),
+        ("Pattern", Arc::from("Pattern")),
+        ("Shading", Arc::from("Shading")),
+        // XObjects
+        ("Image", Arc::from("Image")),
+        ("Form", Arc::from("Form")),
+        // Stream properties
+        ("DecodeParms", Arc::from("DecodeParms")),
+        // Filters
+        ("FlateDecode", Arc::from("FlateDecode")),
+        ("DCTDecode", Arc::from("DCTDecode")),
+        ("ASCII85Decode", Arc::from("ASCII85Decode")),
+        ("ASCIIHexDecode", Arc::from("ASCIIHexDecode")),
+        ("LZWDecode", Arc::from("LZWDecode")),
+        ("RunLengthDecode", Arc::from("RunLengthDecode")),
+        ("CCITTFaxDecode", Arc::from("CCITTFaxDecode")),
+        ("JBIG2Decode", Arc::from("JBIG2Decode")),
+        ("JPXDecode", Arc::from("JPXDecode")),
+        // Color spaces
+        ("DeviceGray", Arc::from("DeviceGray")),
+        ("DeviceRGB", Arc::from("DeviceRGB")),
+        ("DeviceCMYK", Arc::from("DeviceCMYK")),
+        ("ICCBased", Arc::from("ICCBased")),
+        ("Indexed", Arc::from("Indexed")),
+        ("Separation", Arc::from("Separation")),
+        ("DeviceN", Arc::from("DeviceN")),
+        // Fonts
+        ("BaseFont", Arc::from("BaseFont")),
+        ("Encoding", Arc::from("Encoding")),
+        ("Widths", Arc::from("Widths")),
+        ("FirstChar", Arc::from("FirstChar")),
+        ("LastChar", Arc::from("LastChar")),
+        ("ToUnicode", Arc::from("ToUnicode")),
+        ("FontDescriptor", Arc::from("FontDescriptor")),
+        ("DescendantFonts", Arc::from("DescendantFonts")),
+        ("Type0", Arc::from("Type0")),
+        ("Type1", Arc::from("Type1")),
+        ("TrueType", Arc::from("TrueType")),
+        ("CIDFontType0", Arc::from("CIDFontType0")),
+        ("CIDFontType2", Arc::from("CIDFontType2")),
+        // Image properties
+        ("Width", Arc::from("Width")),
+        ("Height", Arc::from("Height")),
+        ("BitsPerComponent", Arc::from("BitsPerComponent")),
+        ("SMask", Arc::from("SMask")),
+        ("Mask", Arc::from("Mask")),
+        ("Decode", Arc::from("Decode")),
+        ("Interpolate", Arc::from("Interpolate")),
+        // Metadata
+        ("Root", Arc::from("Root")),
+        ("Info", Arc::from("Info")),
+        ("Title", Arc::from("Title")),
+        ("Author", Arc::from("Author")),
+        ("Subject", Arc::from("Subject")),
+        ("Keywords", Arc::from("Keywords")),
+        ("Creator", Arc::from("Creator")),
+        ("Producer", Arc::from("Producer")),
+        ("CreationDate", Arc::from("CreationDate")),
+        ("ModDate", Arc::from("ModDate")),
+        // Annotations
+        ("Annot", Arc::from("Annot")),
+        ("Annots", Arc::from("Annots")),
+        ("Rect", Arc::from("Rect")),
+        ("AP", Arc::from("AP")),
+        ("N", Arc::from("N")),
+        ("R", Arc::from("R")),
+        ("D", Arc::from("D")),
+        // Actions
+        ("A", Arc::from("A")),
+        ("Action", Arc::from("Action")),
+        ("S", Arc::from("S")),
+        ("Dest", Arc::from("Dest")),
+        ("URI", Arc::from("URI")),
+        // Forms
+        ("AcroForm", Arc::from("AcroForm")),
+        ("Fields", Arc::from("Fields")),
+        ("T", Arc::from("T")),
+        ("V", Arc::from("V")),
+        ("FT", Arc::from("FT")),
+        // Encryption
+        ("Encrypt", Arc::from("Encrypt")),
+        // Outlines
+        ("Outlines", Arc::from("Outlines")),
+        ("First", Arc::from("First")),
+        ("Last", Arc::from("Last")),
+        ("Next", Arc::from("Next")),
+        ("Prev", Arc::from("Prev")),
+        // XRef
+        ("XRef", Arc::from("XRef")),
+        ("Size", Arc::from("Size")),
+        ("Index", Arc::from("Index")),
+        ("W", Arc::from("W")),
+        // Graphics state
+        ("CA", Arc::from("CA")),
+        ("ca", Arc::from("ca")),
+        ("BM", Arc::from("BM")),
+    ]
+});
 
 #[derive(Debug, Clone)]
 pub struct PdfString(Vec<u8>);
@@ -124,7 +338,44 @@ mod tests {
     #[test]
     fn test_name_new() {
         let name = Name::new("Type");
-        assert_eq!(name.0, "Type");
+        assert_eq!(name.as_str(), "Type");
+    }
+
+    #[test]
+    fn test_name_interning() {
+        // Common names should share storage
+        let n1 = Name::new("Type");
+        let n2 = Name::new("Type");
+        assert!(n1.is_interned());
+        assert!(n2.is_interned());
+        // Fast path: pointer equality
+        assert!(Arc::ptr_eq(&n1.arc(), &n2.arc()));
+    }
+
+    #[test]
+    fn test_name_non_interned() {
+        // Uncommon names should not be interned
+        let n1 = Name::new("UncommonName12345");
+        let n2 = Name::new("UncommonName12345");
+        assert!(!n1.is_interned());
+        assert!(!n2.is_interned());
+        // Still equal by value
+        assert_eq!(n1, n2);
+    }
+
+    #[test]
+    fn test_name_from_string() {
+        let name = Name::from_string("Font".to_string());
+        assert!(name.is_interned());
+        assert_eq!(name.as_str(), "Font");
+    }
+
+    #[test]
+    fn test_name_from_trait() {
+        let name: Name = "Image".into();
+        assert!(name.is_interned());
+        let name2: Name = "CustomName".into();
+        assert!(!name2.is_interned());
     }
 
     #[test]
@@ -256,7 +507,7 @@ mod tests {
     fn test_object_name() {
         let obj = Object::Name(Name::new("Type"));
         let n = obj.as_name().unwrap();
-        assert_eq!(n.0, "Type");
+        assert_eq!(n.as_str(), "Type");
     }
 
     #[test]

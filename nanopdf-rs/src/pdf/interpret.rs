@@ -304,7 +304,7 @@ impl Interpreter {
                         Ok(Token::Null) => {
                             dict.insert(key, Object::Null);
                         }
-                        _ => return Err(format!("Invalid value for key '{}'", key.0)),
+                        _ => return Err(format!("Invalid value for key '{}'", key.as_str())),
                     }
                 }
                 Ok(Token::Eof) => return Err("Unexpected end of stream in dictionary".to_string()),
@@ -1117,7 +1117,7 @@ impl Interpreter {
         }
 
         let font = match &operands[0] {
-            Object::Name(n) => n.0.clone(),
+            Object::Name(n) => n.as_str().to_string(),
             _ => return Err("Invalid font name".to_string()),
         };
         let size = get_f32(&operands[1])?;

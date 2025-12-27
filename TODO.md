@@ -175,10 +175,12 @@ Current performance metrics (from `cargo bench`):
   - New buffer functions: `fz_new_buffer_with_capacity`, `fz_new_buffer_unpooled`
   - Added `fz_buffer_reserve`, `fz_buffer_shrink_to_fit`, `fz_buffer_is_pooled`
 
-- [ ] **String interning for PDF Names**
-  - `nanopdf::pdf::object::Name::new` appears frequently in profiles
-  - Implement string interning for common PDF names (Type, Length, etc.)
-  - Use `Arc<str>` or cow patterns for shared name storage
+- [x] **String interning for PDF Names** ✅
+  - Implemented `Arc<str>` based Name struct with 100+ pre-interned common names
+  - Fast pointer equality for interned names (no string comparison)
+  - `Name::new()` automatically uses interned storage for common names
+  - Methods: `as_str()`, `arc()`, `is_interned()`, `from_string()`
+  - From/Into traits for ergonomic conversion
 
 - [ ] **PDF Object arena allocation**
   - PDF Objects created 17B+ samples in profiling

@@ -300,7 +300,7 @@ impl PdfWriter {
                 }
                 writer.write_all(b")")?;
             }
-            Object::Name(n) => writer.write_all(format!("/{}", n.0).as_bytes())?,
+            Object::Name(n) => writer.write_all(format!("/{}", n.as_str()).as_bytes())?,
             Object::Array(arr) => {
                 writer.write_all(b"[")?;
                 for (i, item) in arr.iter().enumerate() {
@@ -314,7 +314,7 @@ impl PdfWriter {
             Object::Dict(dict) => {
                 writer.write_all(b"<<\n")?;
                 for (key, value) in dict.iter() {
-                    writer.write_all(format!("/{} ", key.0).as_bytes())?;
+                    writer.write_all(format!("/{} ", key.as_str()).as_bytes())?;
                     self.write_object(writer, value)?;
                     writer.write_all(b"\n")?;
                 }
@@ -323,7 +323,7 @@ impl PdfWriter {
             Object::Stream { dict, data } => {
                 writer.write_all(b"<<\n")?;
                 for (key, value) in dict.iter() {
-                    writer.write_all(format!("/{} ", key.0).as_bytes())?;
+                    writer.write_all(format!("/{} ", key.as_str()).as_bytes())?;
                     self.write_object(writer, value)?;
                     writer.write_all(b"\n")?;
                 }
