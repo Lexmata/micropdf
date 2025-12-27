@@ -57,6 +57,7 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 | fz_barcode | 12+ | QR/Code128/EAN/UPC generation |
 | fz_deskew | 10+ | Skew detection, deskew, rotation |
 | fz_heap | 22+ | Priority queue, heap sort |
+| fz_hyphen | 16+ | Text hyphenation, Liang's algorithm |
 
 ---
 
@@ -65,11 +66,6 @@ This document tracks remaining work needed for complete MuPDF API compatibility.
 > Based on analysis of `mupdf-source/include/mupdf/fitz/*.h`
 
 ### Lower Priority
-
-#### fz_hyphen
-- [ ] `fz_hyphenator` - text hyphenation
-- [ ] `fz_load_hyphenator` - load hyphenation patterns
-- [ ] `fz_hyphenate_word` - find hyphenation points
 
 #### fz_json
 - [ ] `fz_write_json` - JSON output
