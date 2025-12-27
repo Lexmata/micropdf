@@ -53,6 +53,7 @@ pub mod string_util;
 pub mod text;
 pub mod transition;
 pub mod tree;
+pub mod write_pixmap;
 pub mod writer;
 pub mod xml;
 

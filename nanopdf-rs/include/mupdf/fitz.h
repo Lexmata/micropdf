@@ -49,6 +49,7 @@ extern "C" {
 #include "mupdf/fitz/text.h"
 #include "mupdf/fitz/transition.h"
 #include "mupdf/fitz/tree.h"
+#include "mupdf/fitz/write_pixmap.h"
 #include "mupdf/fitz/writer.h"
 #include "mupdf/fitz/xml.h"
 
