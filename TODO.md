@@ -92,15 +92,18 @@ All pipeline issues resolved (Rust clippy, Go lint, Node.js tests).
 
 ### Python Optimizations
 
-| Issue | Impact |
-|-------|--------|
-| `Rect.transform` | 1.22µs (1400x slower than Go) |
-| `Matrix chain` | 1.12µs |
+| Issue | Before | After | Status |
+|-------|--------|-------|--------|
+| `Rect.transform` | 1.22µs | 0.41µs | ✅ 3x faster |
+| `Matrix concat` | 1.12µs | 0.24µs | ✅ 4.7x faster |
+| `Matrix.rotate` | - | 0.13µs | ✅ cached |
 
-- [ ] Add `__slots__` to geometry types
-- [ ] NumPy-backed batch operations
-- [ ] Cython extension for hot paths
-- [ ] In-place mutation variants
+- [x] Add `__slots__` to all geometry types
+- [x] Pure Python fast paths (no FFI for basic ops)
+- [x] Rotation matrix cache for common angles
+- [x] In-place mutation variants (`_inplace` suffix)
+- [x] NumPy-backed batch operations (when available)
+- [ ] Cython extension for hot paths (future)
 
 ### Advanced Features
 

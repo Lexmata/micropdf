@@ -1,8 +1,41 @@
-"""Geometry primitives for PDF operations."""
+"""Geometry primitives for PDF operations.
+
+Optimized for performance with:
+- __slots__ to reduce memory and access time
+- Pure Python fast paths to avoid FFI overhead
+- In-place mutation variants (_inplace suffix)
+- Cached rotation matrices for common angles
+"""
 
 from __future__ import annotations
-from typing import Tuple, Optional
-from .ffi import ffi, lib
+from typing import Tuple, Optional, TYPE_CHECKING
+import math
+
+# Lazy import FFI only when needed for C interop
+_ffi = None
+_lib = None
+
+
+def _get_ffi():
+    """Lazy load FFI to avoid import overhead for pure Python usage."""
+    global _ffi, _lib
+    if _ffi is None:
+        from .ffi import ffi, lib
+        _ffi = ffi
+        _lib = lib
+    return _ffi, _lib
+
+
+# Pre-computed rotation matrices for common angles (avoids trig)
+_ROTATION_CACHE: dict[float, tuple[float, float, float, float, float, float]] = {
+    0: (1.0, 0.0, 0.0, 1.0, 0.0, 0.0),
+    90: (0.0, 1.0, -1.0, 0.0, 0.0, 0.0),
+    180: (-1.0, 0.0, 0.0, -1.0, 0.0, 0.0),
+    270: (0.0, -1.0, 1.0, 0.0, 0.0, 0.0),
+    -90: (0.0, -1.0, 1.0, 0.0, 0.0, 0.0),
+    45: (0.7071067811865476, 0.7071067811865476, -0.7071067811865476, 0.7071067811865476, 0.0, 0.0),
+    -45: (0.7071067811865476, -0.7071067811865476, 0.7071067811865476, 0.7071067811865476, 0.0, 0.0),
+}
 
 
 class Point:
@@ -17,23 +50,51 @@ class Point:
         >>> p.x, p.y
         (10.0, 20.0)
     """
+    __slots__ = ('x', 'y')
 
     def __init__(self, x: float, y: float) -> None:
         self.x = float(x)
         self.y = float(y)
 
     def transform(self, matrix: Matrix) -> Point:
-        """Transform the point by a matrix."""
-        m = matrix._to_c()
-        x = self.x * m.a + self.y * m.c + m.e
-        y = self.x * m.b + self.y * m.d + m.f
-        return Point(x, y)
+        """Transform the point by a matrix (returns new Point)."""
+        # Inline calculation to avoid FFI and method calls
+        return Point(
+            self.x * matrix.a + self.y * matrix.c + matrix.e,
+            self.x * matrix.b + self.y * matrix.d + matrix.f
+        )
+
+    def transform_inplace(self, matrix: Matrix) -> Point:
+        """Transform the point in place (modifies self, returns self)."""
+        x = self.x * matrix.a + self.y * matrix.c + matrix.e
+        y = self.x * matrix.b + self.y * matrix.d + matrix.f
+        self.x = x
+        self.y = y
+        return self
 
     def distance(self, other: Point) -> float:
         """Calculate Euclidean distance to another point."""
         dx = self.x - other.x
         dy = self.y - other.y
-        return (dx * dx + dy * dy) ** 0.5
+        return math.sqrt(dx * dx + dy * dy)
+
+    def distance_squared(self, other: Point) -> float:
+        """Calculate squared distance (avoids sqrt for comparisons)."""
+        dx = self.x - other.x
+        dy = self.y - other.y
+        return dx * dx + dy * dy
+
+    def add(self, other: Point) -> Point:
+        """Add another point."""
+        return Point(self.x + other.x, self.y + other.y)
+
+    def sub(self, other: Point) -> Point:
+        """Subtract another point."""
+        return Point(self.x - other.x, self.y - other.y)
+
+    def scale(self, factor: float) -> Point:
+        """Scale by a factor."""
+        return Point(self.x * factor, self.y * factor)
 
     def __repr__(self) -> str:
         return f"Point({self.x}, {self.y})"
@@ -42,6 +103,9 @@ class Point:
         if not isinstance(other, Point):
             return False
         return self.x == other.x and self.y == other.y
+
+    def __hash__(self) -> int:
+        return hash((self.x, self.y))
 
 
 class Rect:
@@ -58,6 +122,7 @@ class Rect:
         >>> r.width(), r.height()
         (612.0, 792.0)
     """
+    __slots__ = ('x0', 'y0', 'x1', 'y1')
 
     def __init__(self, x0: float, y0: float, x1: float, y1: float) -> None:
         self.x0 = float(x0)
@@ -120,20 +185,61 @@ class Rect:
         )
 
     def transform(self, matrix: Matrix) -> Rect:
-        """Transform rectangle by a matrix."""
-        # Transform all four corners
-        corners = [
-            Point(self.x0, self.y0).transform(matrix),
-            Point(self.x1, self.y0).transform(matrix),
-            Point(self.x0, self.y1).transform(matrix),
-            Point(self.x1, self.y1).transform(matrix),
-        ]
+        """Transform rectangle by a matrix (returns new Rect)."""
+        # Fast path: identity matrix (just translation)
+        if matrix.a == 1.0 and matrix.b == 0.0 and matrix.c == 0.0 and matrix.d == 1.0:
+            return Rect(
+                self.x0 + matrix.e,
+                self.y0 + matrix.f,
+                self.x1 + matrix.e,
+                self.y1 + matrix.f
+            )
 
-        # Find bounding box
-        xs = [p.x for p in corners]
-        ys = [p.y for p in corners]
+        # Fast path: axis-aligned (no rotation/shear)
+        if matrix.b == 0.0 and matrix.c == 0.0:
+            nx0 = self.x0 * matrix.a + matrix.e
+            nx1 = self.x1 * matrix.a + matrix.e
+            ny0 = self.y0 * matrix.d + matrix.f
+            ny1 = self.y1 * matrix.d + matrix.f
+            # Handle negative scale
+            if nx0 > nx1:
+                nx0, nx1 = nx1, nx0
+            if ny0 > ny1:
+                ny0, ny1 = ny1, ny0
+            return Rect(nx0, ny0, nx1, ny1)
 
-        return Rect(min(xs), min(ys), max(xs), max(ys))
+        # General case: transform all four corners inline
+        a, b, c, d, e, f = matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f
+        x0, y0, x1, y1 = self.x0, self.y0, self.x1, self.y1
+
+        # Transform corners inline (avoid Point allocation)
+        p1x = x0 * a + y0 * c + e
+        p1y = x0 * b + y0 * d + f
+        p2x = x1 * a + y0 * c + e
+        p2y = x1 * b + y0 * d + f
+        p3x = x0 * a + y1 * c + e
+        p3y = x0 * b + y1 * d + f
+        p4x = x1 * a + y1 * c + e
+        p4y = x1 * b + y1 * d + f
+
+        return Rect(
+            min(p1x, p2x, p3x, p4x),
+            min(p1y, p2y, p3y, p4y),
+            max(p1x, p2x, p3x, p4x),
+            max(p1y, p2y, p3y, p4y)
+        )
+
+    def transform_inplace(self, matrix: Matrix) -> Rect:
+        """Transform rectangle in place (modifies self, returns self)."""
+        result = self.transform(matrix)
+        self.x0, self.y0, self.x1, self.y1 = result.x0, result.y0, result.x1, result.y1
+        return self
+
+    def normalize(self) -> Rect:
+        """Return normalized rect (x0 <= x1, y0 <= y1)."""
+        x0, x1 = (self.x0, self.x1) if self.x0 <= self.x1 else (self.x1, self.x0)
+        y0, y1 = (self.y0, self.y1) if self.y0 <= self.y1 else (self.y1, self.y0)
+        return Rect(x0, y0, x1, y1)
 
     def __repr__(self) -> str:
         return f"Rect({self.x0}, {self.y0}, {self.x1}, {self.y1})"
@@ -148,13 +254,17 @@ class Rect:
             self.y1 == other.y1
         )
 
+    def __hash__(self) -> int:
+        return hash((self.x0, self.y0, self.x1, self.y1))
+
     @staticmethod
-    def _from_c(c_rect: "ffi.CData") -> Rect:
+    def _from_c(c_rect) -> Rect:
         """Create Rect from C fz_rect structure."""
         return Rect(c_rect.x0, c_rect.y0, c_rect.x1, c_rect.y1)
 
-    def _to_c(self) -> "ffi.CData":
+    def _to_c(self):
         """Convert to C fz_rect structure."""
+        ffi, _ = _get_ffi()
         return ffi.new("fz_rect*", {
             "x0": self.x0,
             "y0": self.y0,
@@ -172,6 +282,7 @@ class IRect:
         x1: Right edge (integer)
         y1: Bottom edge (integer)
     """
+    __slots__ = ('x0', 'y0', 'x1', 'y1')
 
     def __init__(self, x0: int, y0: int, x1: int, y1: int) -> None:
         self.x0 = int(x0)
@@ -190,6 +301,19 @@ class IRect:
     def __repr__(self) -> str:
         return f"IRect({self.x0}, {self.y0}, {self.x1}, {self.y1})"
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, IRect):
+            return False
+        return (
+            self.x0 == other.x0 and
+            self.y0 == other.y0 and
+            self.x1 == other.x1 and
+            self.y1 == other.y1
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.x0, self.y0, self.x1, self.y1))
+
 
 class Matrix:
     """2D transformation matrix.
@@ -206,6 +330,7 @@ class Matrix:
         >>> m = Matrix.scale(2, 2)  # 2x scale
         >>> m = Matrix.rotate(90)   # 90 degree rotation
     """
+    __slots__ = ('a', 'b', 'c', 'd', 'e', 'f')
 
     def __init__(
         self, a: float, b: float, c: float, d: float, e: float, f: float
@@ -219,34 +344,110 @@ class Matrix:
 
     @staticmethod
     def identity() -> Matrix:
-        """Create identity matrix."""
-        m = lib.fz_identity()
-        return Matrix(m.a, m.b, m.c, m.d, m.e, m.f)
+        """Create identity matrix (pure Python, no FFI)."""
+        return Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
     @staticmethod
     def scale(sx: float, sy: float) -> Matrix:
-        """Create scale matrix."""
-        m = lib.fz_scale(sx, sy)
-        return Matrix(m.a, m.b, m.c, m.d, m.e, m.f)
+        """Create scale matrix (pure Python, no FFI)."""
+        return Matrix(float(sx), 0.0, 0.0, float(sy), 0.0, 0.0)
 
     @staticmethod
     def translate(tx: float, ty: float) -> Matrix:
-        """Create translation matrix."""
-        m = lib.fz_translate(tx, ty)
-        return Matrix(m.a, m.b, m.c, m.d, m.e, m.f)
+        """Create translation matrix (pure Python, no FFI)."""
+        return Matrix(1.0, 0.0, 0.0, 1.0, float(tx), float(ty))
 
     @staticmethod
     def rotate(degrees: float) -> Matrix:
-        """Create rotation matrix."""
-        m = lib.fz_rotate(degrees)
-        return Matrix(m.a, m.b, m.c, m.d, m.e, m.f)
+        """Create rotation matrix (uses cache for common angles)."""
+        # Check cache for common angles
+        cached = _ROTATION_CACHE.get(degrees)
+        if cached is not None:
+            return Matrix(*cached)
+
+        # Calculate sin/cos
+        rad = math.radians(degrees)
+        c = math.cos(rad)
+        s = math.sin(rad)
+        return Matrix(c, s, -s, c, 0.0, 0.0)
+
+    @staticmethod
+    def shear(sx: float, sy: float) -> Matrix:
+        """Create shear matrix."""
+        return Matrix(1.0, float(sy), float(sx), 1.0, 0.0, 0.0)
 
     def concat(self, other: Matrix) -> Matrix:
-        """Concatenate with another matrix."""
-        m1 = self._to_c()
-        m2 = other._to_c()
-        result = lib.fz_concat(m1, m2)
-        return Matrix(result.a, result.b, result.c, result.d, result.e, result.f)
+        """Concatenate with another matrix (pure Python)."""
+        return Matrix(
+            self.a * other.a + self.b * other.c,
+            self.a * other.b + self.b * other.d,
+            self.c * other.a + self.d * other.c,
+            self.c * other.b + self.d * other.d,
+            self.e * other.a + self.f * other.c + other.e,
+            self.e * other.b + self.f * other.d + other.f
+        )
+
+    def concat_inplace(self, other: Matrix) -> Matrix:
+        """Concatenate in place (modifies self, returns self)."""
+        a = self.a * other.a + self.b * other.c
+        b = self.a * other.b + self.b * other.d
+        c = self.c * other.a + self.d * other.c
+        d = self.c * other.b + self.d * other.d
+        e = self.e * other.a + self.f * other.c + other.e
+        f = self.e * other.b + self.f * other.d + other.f
+        self.a, self.b, self.c, self.d, self.e, self.f = a, b, c, d, e, f
+        return self
+
+    def pre_translate(self, tx: float, ty: float) -> Matrix:
+        """Pre-multiply by translation."""
+        return Matrix.translate(tx, ty).concat(self)
+
+    def post_translate(self, tx: float, ty: float) -> Matrix:
+        """Post-multiply by translation (fast path: just add to e, f)."""
+        return Matrix(self.a, self.b, self.c, self.d, self.e + tx, self.f + ty)
+
+    def pre_scale(self, sx: float, sy: float) -> Matrix:
+        """Pre-multiply by scale."""
+        return Matrix.scale(sx, sy).concat(self)
+
+    def post_scale(self, sx: float, sy: float) -> Matrix:
+        """Post-multiply by scale."""
+        return self.concat(Matrix.scale(sx, sy))
+
+    def pre_rotate(self, degrees: float) -> Matrix:
+        """Pre-multiply by rotation."""
+        return Matrix.rotate(degrees).concat(self)
+
+    def post_rotate(self, degrees: float) -> Matrix:
+        """Post-multiply by rotation."""
+        return self.concat(Matrix.rotate(degrees))
+
+    def invert(self) -> Optional[Matrix]:
+        """Invert the matrix (returns None if singular)."""
+        det = self.a * self.d - self.b * self.c
+        if abs(det) < 1e-10:
+            return None
+        inv_det = 1.0 / det
+        return Matrix(
+            self.d * inv_det,
+            -self.b * inv_det,
+            -self.c * inv_det,
+            self.a * inv_det,
+            (self.c * self.f - self.d * self.e) * inv_det,
+            (self.b * self.e - self.a * self.f) * inv_det
+        )
+
+    def is_identity(self) -> bool:
+        """Check if this is the identity matrix."""
+        return (
+            self.a == 1.0 and self.b == 0.0 and
+            self.c == 0.0 and self.d == 1.0 and
+            self.e == 0.0 and self.f == 0.0
+        )
+
+    def is_rectilinear(self) -> bool:
+        """Check if the matrix maps axis-aligned rects to axis-aligned rects."""
+        return (self.b == 0.0 and self.c == 0.0) or (self.a == 0.0 and self.d == 0.0)
 
     def __matmul__(self, other: Matrix) -> Matrix:
         """Matrix multiplication using @ operator."""
@@ -267,8 +468,12 @@ class Matrix:
             self.f == other.f
         )
 
-    def _to_c(self) -> "ffi.CData":
+    def __hash__(self) -> int:
+        return hash((self.a, self.b, self.c, self.d, self.e, self.f))
+
+    def _to_c(self):
         """Convert to C fz_matrix structure."""
+        ffi, _ = _get_ffi()
         return ffi.new("fz_matrix*", {
             "a": self.a,
             "b": self.b,
@@ -279,7 +484,7 @@ class Matrix:
         })[0]
 
     @staticmethod
-    def _from_c(c_matrix: "ffi.CData") -> Matrix:
+    def _from_c(c_matrix) -> Matrix:
         """Create Matrix from C fz_matrix structure."""
         return Matrix(
             c_matrix.a,
@@ -302,6 +507,7 @@ class Quad:
         ll: Lower-left point
         lr: Lower-right point
     """
+    __slots__ = ('ul', 'ur', 'll', 'lr')
 
     def __init__(self, ul: Point, ur: Point, ll: Point, lr: Point) -> None:
         self.ul = ul
@@ -320,14 +526,158 @@ class Quad:
         )
 
     def to_rect(self) -> Rect:
-        """Convert to axis-aligned bounding rectangle."""
-        xs = [self.ul.x, self.ur.x, self.ll.x, self.lr.x]
-        ys = [self.ul.y, self.ur.y, self.ll.y, self.lr.y]
-        return Rect(min(xs), min(ys), max(xs), max(ys))
+        """Convert to axis-aligned bounding rectangle (optimized)."""
+        ul_x, ul_y = self.ul.x, self.ul.y
+        ur_x, ur_y = self.ur.x, self.ur.y
+        ll_x, ll_y = self.ll.x, self.ll.y
+        lr_x, lr_y = self.lr.x, self.lr.y
+        return Rect(
+            min(ul_x, ur_x, ll_x, lr_x),
+            min(ul_y, ur_y, ll_y, lr_y),
+            max(ul_x, ur_x, ll_x, lr_x),
+            max(ul_y, ur_y, ll_y, lr_y)
+        )
+
+    def transform(self, matrix: Matrix) -> Quad:
+        """Transform quad by a matrix (returns new Quad)."""
+        return Quad(
+            self.ul.transform(matrix),
+            self.ur.transform(matrix),
+            self.ll.transform(matrix),
+            self.lr.transform(matrix)
+        )
+
+    def transform_inplace(self, matrix: Matrix) -> Quad:
+        """Transform quad in place (modifies self, returns self)."""
+        self.ul.transform_inplace(matrix)
+        self.ur.transform_inplace(matrix)
+        self.ll.transform_inplace(matrix)
+        self.lr.transform_inplace(matrix)
+        return self
+
+    def contains_point(self, p: Point) -> bool:
+        """Check if a point is inside the quad."""
+        # Fast bounding box check first
+        ul_x, ul_y = self.ul.x, self.ul.y
+        ur_x, ur_y = self.ur.x, self.ur.y
+        ll_x, ll_y = self.ll.x, self.ll.y
+        lr_x, lr_y = self.lr.x, self.lr.y
+        px, py = p.x, p.y
+
+        min_x = min(ul_x, ur_x, ll_x, lr_x)
+        max_x = max(ul_x, ur_x, ll_x, lr_x)
+        min_y = min(ul_y, ur_y, ll_y, lr_y)
+        max_y = max(ul_y, ur_y, ll_y, lr_y)
+
+        if px < min_x or px > max_x or py < min_y or py > max_y:
+            return False
+
+        # Fast path for axis-aligned rectangles
+        if (ul_x == ll_x and ur_x == lr_x and
+            ul_y == ur_y and ll_y == lr_y):
+            return True  # Already passed bounding box check
+
+        # Cross product check for general quads
+        def cross_sign(ax: float, ay: float, bx: float, by: float, cx: float, cy: float) -> float:
+            return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+
+        # Check if point is on the same side of all edges
+        c1 = cross_sign(ul_x, ul_y, ur_x, ur_y, px, py)
+        c2 = cross_sign(ur_x, ur_y, lr_x, lr_y, px, py)
+        c3 = cross_sign(lr_x, lr_y, ll_x, ll_y, px, py)
+        c4 = cross_sign(ll_x, ll_y, ul_x, ul_y, px, py)
+
+        return (c1 >= 0 and c2 >= 0 and c3 >= 0 and c4 >= 0)
 
     def __repr__(self) -> str:
         return f"Quad(ul={self.ul}, ur={self.ur}, ll={self.ll}, lr={self.lr})"
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Quad):
+            return False
+        return (
+            self.ul == other.ul and
+            self.ur == other.ur and
+            self.ll == other.ll and
+            self.lr == other.lr
+        )
 
-__all__ = ["Point", "Rect", "IRect", "Matrix", "Quad"]
+
+# ============================================================================
+# Batch Operations (NumPy-backed when available)
+# ============================================================================
+
+try:
+    import numpy as np
+    _HAS_NUMPY = True
+except ImportError:
+    _HAS_NUMPY = False
+
+
+def transform_points_batch(points: list[Point], matrix: Matrix) -> list[Point]:
+    """Transform multiple points efficiently.
+
+    Uses NumPy when available for ~10x speedup on large batches.
+    """
+    if not points:
+        return []
+
+    if _HAS_NUMPY and len(points) > 10:
+        # NumPy vectorized path
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        a, b, c, d, e, f = matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f
+
+        # Apply transform: x' = ax + cy + e, y' = bx + dy + f
+        result_x = coords[:, 0] * a + coords[:, 1] * c + e
+        result_y = coords[:, 0] * b + coords[:, 1] * d + f
+
+        return [Point(x, y) for x, y in zip(result_x, result_y)]
+    else:
+        # Pure Python path
+        return [p.transform(matrix) for p in points]
+
+
+def transform_rects_batch(rects: list[Rect], matrix: Matrix) -> list[Rect]:
+    """Transform multiple rectangles efficiently.
+
+    Uses NumPy when available for speedup on large batches.
+    """
+    if not rects:
+        return []
+
+    if _HAS_NUMPY and len(rects) > 10:
+        # NumPy vectorized path
+        a, b, c, d, e, f = matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f
+
+        # Extract corners
+        n = len(rects)
+        corners = np.zeros((n, 4, 2), dtype=np.float64)
+        for i, r in enumerate(rects):
+            corners[i, 0] = [r.x0, r.y0]
+            corners[i, 1] = [r.x1, r.y0]
+            corners[i, 2] = [r.x0, r.y1]
+            corners[i, 3] = [r.x1, r.y1]
+
+        # Transform all corners
+        x = corners[:, :, 0]
+        y = corners[:, :, 1]
+        tx = x * a + y * c + e
+        ty = x * b + y * d + f
+
+        # Find bounding boxes
+        min_x = np.min(tx, axis=1)
+        max_x = np.max(tx, axis=1)
+        min_y = np.min(ty, axis=1)
+        max_y = np.max(ty, axis=1)
+
+        return [Rect(x0, y0, x1, y1) for x0, y0, x1, y1 in zip(min_x, min_y, max_x, max_y)]
+    else:
+        # Pure Python path
+        return [r.transform(matrix) for r in rects]
+
+
+__all__ = [
+    "Point", "Rect", "IRect", "Matrix", "Quad",
+    "transform_points_batch", "transform_rects_batch"
+]
 
