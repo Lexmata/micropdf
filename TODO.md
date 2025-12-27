@@ -78,16 +78,17 @@ All pipeline issues resolved (Rust clippy, Go lint, Node.js tests).
 
 ### Go Optimizations
 
-| Issue | Impact |
-|-------|--------|
-| `MatrixRotate` | 10.36ns (100x slower) |
-| `MatrixTransformRect` | 10.96ns |
-| `QuadTransform` | 9.49ns |
+| Issue | Before | After | Status |
+|-------|--------|-------|--------|
+| `MatrixRotate` | 10.36ns | 1.45ns (cached) | ✅ 7x faster |
+| `MatrixTransformRect` | 10.96ns | 1.82ns | ✅ 6x faster |
+| `QuadTransform` | 9.49ns | 2.60ns | ✅ 3.6x faster |
 
-- [ ] Rotation matrix caching (0°, 90°, 180°, 270°)
-- [ ] Trig lookup tables
-- [ ] sync.Pool for buffers
-- [ ] SIMD batch transforms
+- [x] Rotation matrix caching (0°, 90°, 180°, 270°, ±45°)
+- [x] Trig lookup tables for integer degrees
+- [x] sync.Pool for buffers and matrices
+- [x] Inlined transforms (avoid function call overhead)
+- [ ] SIMD batch transforms (requires CGO/assembly)
 
 ### Python Optimizations
 

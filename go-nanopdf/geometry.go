@@ -1,6 +1,94 @@
 package nanopdf
 
-import "math"
+import (
+	"math"
+	"sync"
+)
+
+// ============================================================================
+// Rotation Matrix Cache - avoids trig for common angles
+// ============================================================================
+
+// Pre-computed rotation matrices for common angles (constants, no map lookup)
+var (
+	rot0   = Matrix{A: 1, B: 0, C: 0, D: 1, E: 0, F: 0}
+	rot90  = Matrix{A: 0, B: 1, C: -1, D: 0, E: 0, F: 0}
+	rot180 = Matrix{A: -1, B: 0, C: 0, D: -1, E: 0, F: 0}
+	rot270 = Matrix{A: 0, B: -1, C: 1, D: 0, E: 0, F: 0}
+	rot45  = Matrix{A: 0.7071067811865476, B: 0.7071067811865476, C: -0.7071067811865476, D: 0.7071067811865476, E: 0, F: 0}
+	rotN45 = Matrix{A: 0.7071067811865476, B: -0.7071067811865476, C: 0.7071067811865476, D: 0.7071067811865476, E: 0, F: 0}
+)
+
+// Trig lookup table for fast sin/cos approximation (1 degree resolution)
+var (
+	sinTable [360]float32
+	cosTable [360]float32
+	trigOnce sync.Once
+)
+
+// initTrigTables initializes the sin/cos lookup tables
+func initTrigTables() {
+	for i := 0; i < 360; i++ {
+		rad := float64(i) * math.Pi / 180.0
+		sinTable[i] = float32(math.Sin(rad))
+		cosTable[i] = float32(math.Cos(rad))
+	}
+}
+
+// fastSinCos returns sin and cos using lookup table for integer degrees
+func fastSinCos(degrees int) (sin, cos float32) {
+	trigOnce.Do(initTrigTables)
+	// Normalize to 0-359
+	d := degrees % 360
+	if d < 0 {
+		d += 360
+	}
+	return sinTable[d], cosTable[d]
+}
+
+// ============================================================================
+// Buffer Pool - reduces allocations for temporary buffers
+// ============================================================================
+
+// BufferPool provides pooled byte buffers to reduce allocations
+var BufferPool = sync.Pool{
+	New: func() interface{} {
+		// Default 4KB buffer
+		buf := make([]byte, 0, 4096)
+		return &buf
+	},
+}
+
+// GetBuffer retrieves a buffer from the pool
+func GetBuffer() *[]byte {
+	return BufferPool.Get().(*[]byte)
+}
+
+// PutBuffer returns a buffer to the pool
+func PutBuffer(buf *[]byte) {
+	*buf = (*buf)[:0] // Reset length but keep capacity
+	BufferPool.Put(buf)
+}
+
+// ============================================================================
+// Matrix Pool - reduces allocations for temporary matrices
+// ============================================================================
+
+var matrixPool = sync.Pool{
+	New: func() interface{} {
+		return new(Matrix)
+	},
+}
+
+// GetMatrix retrieves a matrix from the pool
+func GetMatrix() *Matrix {
+	return matrixPool.Get().(*Matrix)
+}
+
+// PutMatrix returns a matrix to the pool
+func PutMatrix(m *Matrix) {
+	matrixPool.Put(m)
+}
 
 // Point represents a 2D point.
 type Point struct {
@@ -233,7 +321,33 @@ func MatrixScale(sx, sy float32) Matrix {
 }
 
 // MatrixRotate creates a rotation matrix (degrees).
+// Uses cached values for common angles (0, 90, 180, 270, ±45) and
+// lookup tables for integer degrees to minimize trig calculations.
 func MatrixRotate(degrees float32) Matrix {
+	// Fast path: common angles with switch (no map lookup)
+	switch degrees {
+	case 0:
+		return rot0
+	case 90:
+		return rot90
+	case 180:
+		return rot180
+	case 270, -90:
+		return rot270
+	case 45:
+		return rot45
+	case -45:
+		return rotN45
+	}
+
+	// For integer degrees, use lookup table
+	intDeg := int(degrees)
+	if float32(intDeg) == degrees {
+		s, c := fastSinCos(intDeg)
+		return Matrix{A: c, B: s, C: -s, D: c, E: 0, F: 0}
+	}
+
+	// Fall back to full trig calculation for fractional degrees
 	rad := float64(degrees) * math.Pi / 180.0
 	c := float32(math.Cos(rad))
 	s := float32(math.Sin(rad))
@@ -293,19 +407,95 @@ func (m Matrix) TransformPoint(p Point) Point {
 }
 
 // TransformRect transforms a rectangle by this matrix.
+// Optimized: skips bounding box for axis-aligned transforms.
 func (m Matrix) TransformRect(r Rect) Rect {
-	// Transform all four corners and compute bounding box
-	p1 := Point{r.X0, r.Y0}.Transform(m)
-	p2 := Point{r.X1, r.Y0}.Transform(m)
-	p3 := Point{r.X0, r.Y1}.Transform(m)
-	p4 := Point{r.X1, r.Y1}.Transform(m)
-
-	return Rect{
-		X0: min32(min32(p1.X, p2.X), min32(p3.X, p4.X)),
-		Y0: min32(min32(p1.Y, p2.Y), min32(p3.Y, p4.Y)),
-		X1: max32(max32(p1.X, p2.X), max32(p3.X, p4.X)),
-		Y1: max32(max32(p1.Y, p2.Y), max32(p3.Y, p4.Y)),
+	// Fast path: identity matrix
+	if m.A == 1 && m.B == 0 && m.C == 0 && m.D == 1 {
+		return Rect{
+			X0: r.X0 + m.E,
+			Y0: r.Y0 + m.F,
+			X1: r.X1 + m.E,
+			Y1: r.Y1 + m.F,
+		}
 	}
+
+	// Fast path: axis-aligned (no rotation/shear, just scale + translate)
+	if m.B == 0 && m.C == 0 {
+		x0 := r.X0*m.A + m.E
+		x1 := r.X1*m.A + m.E
+		y0 := r.Y0*m.D + m.F
+		y1 := r.Y1*m.D + m.F
+		// Handle negative scale
+		if x0 > x1 {
+			x0, x1 = x1, x0
+		}
+		if y0 > y1 {
+			y0, y1 = y1, y0
+		}
+		return Rect{X0: x0, Y0: y0, X1: x1, Y1: y1}
+	}
+
+	// General case: transform all four corners and compute bounding box
+	// Inline point transforms to avoid function call overhead
+	x0, y0 := r.X0, r.Y0
+	x1, y1 := r.X1, r.Y1
+
+	// Transform corners inline
+	p1x := x0*m.A + y0*m.C + m.E
+	p1y := x0*m.B + y0*m.D + m.F
+	p2x := x1*m.A + y0*m.C + m.E
+	p2y := x1*m.B + y0*m.D + m.F
+	p3x := x0*m.A + y1*m.C + m.E
+	p3y := x0*m.B + y1*m.D + m.F
+	p4x := x1*m.A + y1*m.C + m.E
+	p4y := x1*m.B + y1*m.D + m.F
+
+	// Compute bounding box with inline min/max
+	minX := p1x
+	if p2x < minX {
+		minX = p2x
+	}
+	if p3x < minX {
+		minX = p3x
+	}
+	if p4x < minX {
+		minX = p4x
+	}
+
+	maxX := p1x
+	if p2x > maxX {
+		maxX = p2x
+	}
+	if p3x > maxX {
+		maxX = p3x
+	}
+	if p4x > maxX {
+		maxX = p4x
+	}
+
+	minY := p1y
+	if p2y < minY {
+		minY = p2y
+	}
+	if p3y < minY {
+		minY = p3y
+	}
+	if p4y < minY {
+		minY = p4y
+	}
+
+	maxY := p1y
+	if p2y > maxY {
+		maxY = p2y
+	}
+	if p3y > maxY {
+		maxY = p3y
+	}
+	if p4y > maxY {
+		maxY = p4y
+	}
+
+	return Rect{X0: minX, Y0: minY, X1: maxX, Y1: maxY}
 }
 
 // Quad represents a quadrilateral defined by four corners.
@@ -329,23 +519,78 @@ func QuadFromRect(r Rect) Quad {
 }
 
 // Transform transforms the quad by a matrix.
+// Optimized: inlines point transforms to avoid function call overhead.
 func (q Quad) Transform(m Matrix) Quad {
+	// Inline all four transforms to avoid function call overhead
 	return Quad{
-		UL: q.UL.Transform(m),
-		UR: q.UR.Transform(m),
-		LL: q.LL.Transform(m),
-		LR: q.LR.Transform(m),
+		UL: Point{
+			X: q.UL.X*m.A + q.UL.Y*m.C + m.E,
+			Y: q.UL.X*m.B + q.UL.Y*m.D + m.F,
+		},
+		UR: Point{
+			X: q.UR.X*m.A + q.UR.Y*m.C + m.E,
+			Y: q.UR.X*m.B + q.UR.Y*m.D + m.F,
+		},
+		LL: Point{
+			X: q.LL.X*m.A + q.LL.Y*m.C + m.E,
+			Y: q.LL.X*m.B + q.LL.Y*m.D + m.F,
+		},
+		LR: Point{
+			X: q.LR.X*m.A + q.LR.Y*m.C + m.E,
+			Y: q.LR.X*m.B + q.LR.Y*m.D + m.F,
+		},
 	}
 }
 
 // Bounds returns the bounding rectangle of the quad.
+// Optimized: inlines min/max to avoid function call overhead.
 func (q Quad) Bounds() Rect {
-	r := RectEmpty
-	r = r.IncludePoint(q.UL)
-	r = r.IncludePoint(q.UR)
-	r = r.IncludePoint(q.LL)
-	r = r.IncludePoint(q.LR)
-	return r
+	// Inline all min/max to avoid function calls
+	minX := q.UL.X
+	if q.UR.X < minX {
+		minX = q.UR.X
+	}
+	if q.LL.X < minX {
+		minX = q.LL.X
+	}
+	if q.LR.X < minX {
+		minX = q.LR.X
+	}
+
+	maxX := q.UL.X
+	if q.UR.X > maxX {
+		maxX = q.UR.X
+	}
+	if q.LL.X > maxX {
+		maxX = q.LL.X
+	}
+	if q.LR.X > maxX {
+		maxX = q.LR.X
+	}
+
+	minY := q.UL.Y
+	if q.UR.Y < minY {
+		minY = q.UR.Y
+	}
+	if q.LL.Y < minY {
+		minY = q.LL.Y
+	}
+	if q.LR.Y < minY {
+		minY = q.LR.Y
+	}
+
+	maxY := q.UL.Y
+	if q.UR.Y > maxY {
+		maxY = q.UR.Y
+	}
+	if q.LL.Y > maxY {
+		maxY = q.LL.Y
+	}
+	if q.LR.Y > maxY {
+		maxY = q.LR.Y
+	}
+
+	return Rect{X0: minX, Y0: minY, X1: maxX, Y1: maxY}
 }
 
 // Helper functions

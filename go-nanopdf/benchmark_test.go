@@ -394,6 +394,30 @@ func BenchmarkMatrixRotate(b *testing.B) {
 	}
 }
 
+func BenchmarkMatrixRotateCached(b *testing.B) {
+	// Test cached angles (0, 90, 180, 270)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = MatrixRotate(90)
+	}
+}
+
+func BenchmarkMatrixRotateIntDegree(b *testing.B) {
+	// Test integer degrees (uses lookup table)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = MatrixRotate(37) // Non-cached but integer
+	}
+}
+
+func BenchmarkMatrixRotateFractional(b *testing.B) {
+	// Test fractional degrees (full trig)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_ = MatrixRotate(37.5)
+	}
+}
+
 func BenchmarkMatrixShear(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
