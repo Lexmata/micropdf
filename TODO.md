@@ -39,10 +39,11 @@
 
 ### Python Bindings
 
-| Issue | Count | Improvement |
-|-------|-------|-------------|
-| FFI calls | 78 | More batch operations |
-| `__del__` implementations | 6 | Audit explicit `close()` methods |
+| Issue | Count | Status |
+|-------|-------|--------|
+| FFI calls | 49 | ✅ Batch ops added (9 functions) |
+| `__del__` implementations | 6 | ✅ All call drop()/close() |
+| Batch operations | 9 funcs | ✅ NumPy-accelerated when available |
 
 ---
 

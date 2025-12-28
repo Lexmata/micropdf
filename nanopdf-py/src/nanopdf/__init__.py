@@ -28,7 +28,13 @@ from .context import Context
 from .document import Document, Page
 from .buffer import Buffer
 from .pixmap import Pixmap
-from .geometry import Point, Rect, IRect, Matrix, Quad
+from .geometry import (
+    Point, Rect, IRect, Matrix, Quad,
+    transform_points_batch, transform_rects_batch,
+    point_distances_batch, point_distances_squared_batch,
+    rect_contains_points_batch, count_points_in_rect,
+    rect_union_batch, filter_points_in_rect, nearest_point
+)
 from .colorspace import Colorspace
 from .errors import NanoPDFError, ErrorCode
 from .easy import EasyPDF
@@ -87,6 +93,16 @@ __all__ = [
     "IRect",
     "Matrix",
     "Quad",
+    # Batch operations
+    "transform_points_batch",
+    "transform_rects_batch",
+    "point_distances_batch",
+    "point_distances_squared_batch",
+    "rect_contains_points_batch",
+    "count_points_in_rect",
+    "rect_union_batch",
+    "filter_points_in_rect",
+    "nearest_point",
     # Color
     "Colorspace",
     # Errors

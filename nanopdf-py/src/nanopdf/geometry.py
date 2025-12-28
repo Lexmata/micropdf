@@ -701,8 +701,194 @@ def transform_rects_batch(rects: list[Rect], matrix: Matrix) -> list[Rect]:
         return [r.transform(matrix) for r in rects]
 
 
+def point_distances_batch(from_point: Point, points: list[Point]) -> list[float]:
+    """Calculate distances from one point to multiple points.
+
+    Uses NumPy when available for speedup on large batches.
+
+    Args:
+        from_point: Reference point to measure from
+        points: List of points to measure to
+
+    Returns:
+        List of distances in same order as input points
+    """
+    if not points:
+        return []
+
+    if _HAS_NUMPY and len(points) > 10:
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        dx = coords[:, 0] - from_point.x
+        dy = coords[:, 1] - from_point.y
+        return list(np.sqrt(dx * dx + dy * dy))
+    else:
+        return [from_point.distance(p) for p in points]
+
+
+def point_distances_squared_batch(from_point: Point, points: list[Point]) -> list[float]:
+    """Calculate squared distances from one point to multiple points.
+
+    Faster than distances when you don't need the actual distance
+    (e.g., finding nearest point).
+
+    Args:
+        from_point: Reference point to measure from
+        points: List of points to measure to
+
+    Returns:
+        List of squared distances in same order as input points
+    """
+    if not points:
+        return []
+
+    if _HAS_NUMPY and len(points) > 10:
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        dx = coords[:, 0] - from_point.x
+        dy = coords[:, 1] - from_point.y
+        return list(dx * dx + dy * dy)
+    else:
+        return [from_point.distance_squared(p) for p in points]
+
+
+def rect_contains_points_batch(rect: Rect, points: list[Point]) -> list[bool]:
+    """Test which points are inside a rectangle.
+
+    Uses NumPy when available for speedup on large batches.
+
+    Args:
+        rect: Rectangle to test against
+        points: List of points to test
+
+    Returns:
+        List of booleans (True = inside, False = outside)
+    """
+    if not points:
+        return []
+
+    if _HAS_NUMPY and len(points) > 10:
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        inside = (
+            (coords[:, 0] >= rect.x0) &
+            (coords[:, 0] < rect.x1) &
+            (coords[:, 1] >= rect.y0) &
+            (coords[:, 1] < rect.y1)
+        )
+        return list(inside)
+    else:
+        return [rect.contains_point(p) for p in points]
+
+
+def count_points_in_rect(rect: Rect, points: list[Point]) -> int:
+    """Count how many points are inside a rectangle.
+
+    More efficient than len([p for p in points if rect.contains_point(p)]).
+
+    Args:
+        rect: Rectangle to test against
+        points: List of points to count
+
+    Returns:
+        Number of points inside the rectangle
+    """
+    if not points:
+        return 0
+
+    if _HAS_NUMPY and len(points) > 10:
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        inside = (
+            (coords[:, 0] >= rect.x0) &
+            (coords[:, 0] < rect.x1) &
+            (coords[:, 1] >= rect.y0) &
+            (coords[:, 1] < rect.y1)
+        )
+        return int(np.sum(inside))
+    else:
+        return sum(1 for p in points if rect.contains_point(p))
+
+
+def rect_union_batch(rects: list[Rect]) -> Optional[Rect]:
+    """Compute the union (bounding box) of multiple rectangles.
+
+    Args:
+        rects: List of rectangles to union
+
+    Returns:
+        Rectangle containing all input rectangles, or None if empty list
+    """
+    if not rects:
+        return None
+
+    if len(rects) == 1:
+        return Rect(rects[0].x0, rects[0].y0, rects[0].x1, rects[0].y1)
+
+    if _HAS_NUMPY and len(rects) > 10:
+        coords = np.array([[r.x0, r.y0, r.x1, r.y1] for r in rects], dtype=np.float64)
+        return Rect(
+            float(np.min(coords[:, 0])),
+            float(np.min(coords[:, 1])),
+            float(np.max(coords[:, 2])),
+            float(np.max(coords[:, 3]))
+        )
+    else:
+        result = Rect(rects[0].x0, rects[0].y0, rects[0].x1, rects[0].y1)
+        for r in rects[1:]:
+            result = result.union(r)
+        return result
+
+
+def filter_points_in_rect(rect: Rect, points: list[Point]) -> list[Point]:
+    """Filter points to only those inside a rectangle.
+
+    Args:
+        rect: Rectangle to test against
+        points: List of points to filter
+
+    Returns:
+        List of points that are inside the rectangle
+    """
+    if not points:
+        return []
+
+    if _HAS_NUMPY and len(points) > 10:
+        coords = np.array([[p.x, p.y] for p in points], dtype=np.float64)
+        inside = (
+            (coords[:, 0] >= rect.x0) &
+            (coords[:, 0] < rect.x1) &
+            (coords[:, 1] >= rect.y0) &
+            (coords[:, 1] < rect.y1)
+        )
+        return [p for p, is_in in zip(points, inside) if is_in]
+    else:
+        return [p for p in points if rect.contains_point(p)]
+
+
+def nearest_point(from_point: Point, points: list[Point]) -> Optional[Point]:
+    """Find the nearest point in a list.
+
+    Args:
+        from_point: Reference point
+        points: List of points to search
+
+    Returns:
+        The nearest point, or None if list is empty
+    """
+    if not points:
+        return None
+
+    if len(points) == 1:
+        return points[0]
+
+    # Use squared distances to avoid sqrt
+    distances = point_distances_squared_batch(from_point, points)
+    min_idx = distances.index(min(distances))
+    return points[min_idx]
+
+
 __all__ = [
     "Point", "Rect", "IRect", "Matrix", "Quad",
-    "transform_points_batch", "transform_rects_batch"
+    "transform_points_batch", "transform_rects_batch",
+    "point_distances_batch", "point_distances_squared_batch",
+    "rect_contains_points_batch", "count_points_in_rect",
+    "rect_union_batch", "filter_points_in_rect", "nearest_point"
 ]
 
