@@ -110,8 +110,9 @@ export function pointsFromCoords(...coords: number[]): Float32Array {
 export function pointsFromObjects(points: { x: number; y: number }[]): Float32Array {
   const arr = new Float32Array(points.length * 2);
   for (let i = 0; i < points.length; i++) {
-    arr[i * 2] = points[i].x;
-    arr[i * 2 + 1] = points[i].y;
+    const p = points[i]!;
+    arr[i * 2] = p.x;
+    arr[i * 2 + 1] = p.y;
   }
   return arr;
 }
@@ -132,8 +133,8 @@ export function transformPointsInPlace(
 ): void {
   const n = points.length;
   for (let i = 0; i < n; i += 2) {
-    const x = points[i];
-    const y = points[i + 1];
+    const x = points[i]!;
+    const y = points[i + 1]!;
     points[i] = x * a + y * c + e;
     points[i + 1] = x * b + y * d + f;
   }
@@ -154,8 +155,8 @@ export function transformPoints(
   const result = new Float32Array(points.length);
   const n = points.length;
   for (let i = 0; i < n; i += 2) {
-    const x = points[i];
-    const y = points[i + 1];
+    const x = points[i]!;
+    const y = points[i + 1]!;
     result[i] = x * a + y * c + e;
     result[i + 1] = x * b + y * d + f;
   }
@@ -182,7 +183,7 @@ export function rectsFromObjects(
 ): Float32Array {
   const arr = new Float32Array(rects.length * 4);
   for (let i = 0; i < rects.length; i++) {
-    const r = rects[i];
+    const r = rects[i]!;
     arr[i * 4] = r.x0;
     arr[i * 4 + 1] = r.y0;
     arr[i * 4 + 2] = r.x1;
@@ -210,10 +211,10 @@ export function transformRectsInPlace(
   // Fast path: translation only
   if (a === 1 && b === 0 && c === 0 && d === 1) {
     for (let i = 0; i < n; i += 4) {
-      rects[i] += e;
-      rects[i + 1] += f;
-      rects[i + 2] += e;
-      rects[i + 3] += f;
+      rects[i] = rects[i]! + e;
+      rects[i + 1] = rects[i + 1]! + f;
+      rects[i + 2] = rects[i + 2]! + e;
+      rects[i + 3] = rects[i + 3]! + f;
     }
     return;
   }
@@ -221,10 +222,10 @@ export function transformRectsInPlace(
   // Fast path: axis-aligned (scale + translate)
   if (b === 0 && c === 0) {
     for (let i = 0; i < n; i += 4) {
-      let x0 = rects[i] * a + e;
-      let y0 = rects[i + 1] * d + f;
-      let x1 = rects[i + 2] * a + e;
-      let y1 = rects[i + 3] * d + f;
+      let x0 = rects[i]! * a + e;
+      let y0 = rects[i + 1]! * d + f;
+      let x1 = rects[i + 2]! * a + e;
+      let y1 = rects[i + 3]! * d + f;
       // Handle negative scale
       if (x0 > x1) [x0, x1] = [x1, x0];
       if (y0 > y1) [y0, y1] = [y1, y0];
@@ -238,10 +239,10 @@ export function transformRectsInPlace(
 
   // General case: transform corners and compute bounding box
   for (let i = 0; i < n; i += 4) {
-    const x0 = rects[i],
-      y0 = rects[i + 1];
-    const x1 = rects[i + 2],
-      y1 = rects[i + 3];
+    const x0 = rects[i]!,
+      y0 = rects[i + 1]!;
+    const x1 = rects[i + 2]!,
+      y1 = rects[i + 3]!;
 
     // Transform all four corners
     const p1x = x0 * a + y0 * c + e,
@@ -313,12 +314,12 @@ export function matrixRotate(degrees: number): Float32Array {
  * Concatenate two matrices in-place (m1 = m1 * m2).
  */
 export function matrixConcatInPlace(m1: Float32Array, m2: Float32Array): void {
-  const a = m1[0] * m2[0] + m1[1] * m2[2];
-  const b = m1[0] * m2[1] + m1[1] * m2[3];
-  const c = m1[2] * m2[0] + m1[3] * m2[2];
-  const d = m1[2] * m2[1] + m1[3] * m2[3];
-  const e = m1[4] * m2[0] + m1[5] * m2[2] + m2[4];
-  const f = m1[4] * m2[1] + m1[5] * m2[3] + m2[5];
+  const a = m1[0]! * m2[0]! + m1[1]! * m2[2]!;
+  const b = m1[0]! * m2[1]! + m1[1]! * m2[3]!;
+  const c = m1[2]! * m2[0]! + m1[3]! * m2[2]!;
+  const d = m1[2]! * m2[1]! + m1[3]! * m2[3]!;
+  const e = m1[4]! * m2[0]! + m1[5]! * m2[2]! + m2[4]!;
+  const f = m1[4]! * m2[1]! + m1[5]! * m2[3]! + m2[5]!;
   m1[0] = a;
   m1[1] = b;
   m1[2] = c;
@@ -332,12 +333,12 @@ export function matrixConcatInPlace(m1: Float32Array, m2: Float32Array): void {
  */
 export function matrixConcat(m1: Float32Array, m2: Float32Array): Float32Array {
   return new Float32Array([
-    m1[0] * m2[0] + m1[1] * m2[2],
-    m1[0] * m2[1] + m1[1] * m2[3],
-    m1[2] * m2[0] + m1[3] * m2[2],
-    m1[2] * m2[1] + m1[3] * m2[3],
-    m1[4] * m2[0] + m1[5] * m2[2] + m2[4],
-    m1[4] * m2[1] + m1[5] * m2[3] + m2[5]
+    m1[0]! * m2[0]! + m1[1]! * m2[2]!,
+    m1[0]! * m2[1]! + m1[1]! * m2[3]!,
+    m1[2]! * m2[0]! + m1[3]! * m2[2]!,
+    m1[2]! * m2[1]! + m1[3]! * m2[3]!,
+    m1[4]! * m2[0]! + m1[5]! * m2[2]! + m2[4]!,
+    m1[4]! * m2[1]! + m1[5]! * m2[3]! + m2[5]!
   ]);
 }
 
@@ -353,8 +354,8 @@ export function pointDistances(fromX: number, fromY: number, points: Float32Arra
   const n = points.length / 2;
   const result = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const dx = points[i * 2] - fromX;
-    const dy = points[i * 2 + 1] - fromY;
+    const dx = points[i * 2]! - fromX;
+    const dy = points[i * 2 + 1]! - fromY;
     result[i] = Math.sqrt(dx * dx + dy * dy);
   }
   return result;
@@ -371,8 +372,8 @@ export function pointDistancesSquared(
   const n = points.length / 2;
   const result = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const dx = points[i * 2] - fromX;
-    const dy = points[i * 2 + 1] - fromY;
+    const dx = points[i * 2]! - fromX;
+    const dy = points[i * 2 + 1]! - fromY;
     result[i] = dx * dx + dy * dy;
   }
   return result;
@@ -396,8 +397,8 @@ export function rectContainsPoints(
   const n = points.length / 2;
   const result = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
-    const px = points[i * 2];
-    const py = points[i * 2 + 1];
+    const px = points[i * 2]!;
+    const py = points[i * 2 + 1]!;
     result[i] = px >= x0 && px < x1 && py >= y0 && py < y1 ? 1 : 0;
   }
   return result;
@@ -416,8 +417,8 @@ export function countPointsInRect(
   let count = 0;
   const n = points.length;
   for (let i = 0; i < n; i += 2) {
-    const px = points[i];
-    const py = points[i + 1];
+    const px = points[i]!;
+    const py = points[i + 1]!;
     if (px >= x0 && px < x1 && py >= y0 && py < y1) {
       count++;
     }
@@ -445,27 +446,27 @@ export function convertPixelFormat(
   if (srcComponents === 3 && dstComponents === 4) {
     // RGB to RGBA
     for (let i = 0, j = 0; i < src.length; i += 3, j += 4) {
-      dst[j] = src[i];
-      dst[j + 1] = src[i + 1];
-      dst[j + 2] = src[i + 2];
+      dst[j] = src[i]!;
+      dst[j + 1] = src[i + 1]!;
+      dst[j + 2] = src[i + 2]!;
       dst[j + 3] = defaultAlpha;
     }
   } else if (srcComponents === 4 && dstComponents === 3) {
     // RGBA to RGB
     for (let i = 0, j = 0; i < src.length; i += 4, j += 3) {
-      dst[j] = src[i];
-      dst[j + 1] = src[i + 1];
-      dst[j + 2] = src[i + 2];
+      dst[j] = src[i]!;
+      dst[j + 1] = src[i + 1]!;
+      dst[j + 2] = src[i + 2]!;
     }
   } else if (srcComponents === 1 && dstComponents === 3) {
     // Gray to RGB
     for (let i = 0, j = 0; i < src.length; i++, j += 3) {
-      dst[j] = dst[j + 1] = dst[j + 2] = src[i];
+      dst[j] = dst[j + 1] = dst[j + 2] = src[i]!;
     }
   } else if (srcComponents === 1 && dstComponents === 4) {
     // Gray to RGBA
     for (let i = 0, j = 0; i < src.length; i++, j += 4) {
-      dst[j] = dst[j + 1] = dst[j + 2] = src[i];
+      dst[j] = dst[j + 1] = dst[j + 2] = src[i]!;
       dst[j + 3] = defaultAlpha;
     }
   } else {
@@ -480,10 +481,10 @@ export function convertPixelFormat(
  */
 export function premultiplyAlpha(pixels: Uint8Array): void {
   for (let i = 0; i < pixels.length; i += 4) {
-    const a = pixels[i + 3] / 255;
-    pixels[i] = Math.round(pixels[i] * a);
-    pixels[i + 1] = Math.round(pixels[i + 1] * a);
-    pixels[i + 2] = Math.round(pixels[i + 2] * a);
+    const a = pixels[i + 3]! / 255;
+    pixels[i] = Math.round(pixels[i]! * a);
+    pixels[i + 1] = Math.round(pixels[i + 1]! * a);
+    pixels[i + 2] = Math.round(pixels[i + 2]! * a);
   }
 }
 
@@ -492,12 +493,12 @@ export function premultiplyAlpha(pixels: Uint8Array): void {
  */
 export function unpremultiplyAlpha(pixels: Uint8Array): void {
   for (let i = 0; i < pixels.length; i += 4) {
-    const a = pixels[i + 3];
+    const a = pixels[i + 3]!;
     if (a > 0 && a < 255) {
       const scale = 255 / a;
-      pixels[i] = Math.min(255, Math.round(pixels[i] * scale));
-      pixels[i + 1] = Math.min(255, Math.round(pixels[i + 1] * scale));
-      pixels[i + 2] = Math.min(255, Math.round(pixels[i + 2] * scale));
+      pixels[i] = Math.min(255, Math.round(pixels[i]! * scale));
+      pixels[i + 1] = Math.min(255, Math.round(pixels[i + 1]! * scale));
+      pixels[i + 2] = Math.min(255, Math.round(pixels[i + 2]! * scale));
     }
   }
 }

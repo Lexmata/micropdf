@@ -180,12 +180,18 @@ export class MemoryProfiler {
       handle,
       resourceType,
       sizeBytes,
-      allocatedAt: new Date(),
-      tag
+      allocatedAt: new Date()
     };
 
+    if (tag !== undefined) {
+      record.tag = tag;
+    }
+
     if (this.captureStackTraces) {
-      record.stackTrace = new Error().stack;
+      const stack = new Error().stack;
+      if (stack !== undefined) {
+        record.stackTrace = stack;
+      }
     }
 
     this.allocations.set(handle, record);
@@ -410,7 +416,7 @@ export function formatLeakReport(report: LeakReport): string {
     const sorted = leaks.sort((a, b) => a.allocatedAt.getTime() - b.allocatedAt.getTime());
 
     for (let i = 0; i < Math.min(10, sorted.length); i++) {
-      const leak = sorted[i];
+      const leak = sorted[i]!;
       const age = Date.now() - leak.allocatedAt.getTime();
       let line = `  ${i + 1}. Handle ${leak.handle} - ${leak.sizeBytes} bytes, age ${age}ms`;
       if (leak.tag) {
@@ -476,7 +482,6 @@ export function forceGC(): boolean {
 export async function takeHeapSnapshot(filename: string): Promise<boolean> {
   try {
     const v8 = await import('node:v8');
-    const fs = await import('node:fs');
 
     const snapshotStream = v8.writeHeapSnapshot(filename);
     if (snapshotStream) {
