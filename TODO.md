@@ -32,10 +32,10 @@
 | defer patterns | 91 | Audit for missing `defer Close()` on resources |
 
 **Specific tasks:**
-- [ ] Add `runtime.SetFinalizer` for leak detection in debug builds
-- [ ] Implement handle tracking similar to Rust profiler
-- [ ] Review all CGO string conversions (C.CString leaks)
-- [ ] Add sync.Pool for frequently allocated CGO types
+- [x] Add `runtime.SetFinalizer` for leak detection in debug builds - `resource_tracking.go`
+- [x] Implement handle tracking similar to Rust profiler - `HandleTracker` type
+- [x] Review all CGO string conversions (C.CString leaks) - All 15 uses properly freed with defer
+- [x] Add sync.Pool for frequently allocated CGO types - Point/Rect/Matrix/Quad/ByteSlice pools
 
 ### Node.js Bindings
 
