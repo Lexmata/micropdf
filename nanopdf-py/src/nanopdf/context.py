@@ -95,6 +95,15 @@ class Context:
             raise system_error("Context handle is None")
         return self._handle
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging).
+
+        Note: This returns the Python object size, not the native resource size.
+        The actual memory footprint includes native allocations tracked by the profiler.
+        """
+        # Base object + handle (8 bytes) + dropped flag (1 byte)
+        return object.__sizeof__(self) + 9
+
 
 __all__ = ["Context"]
 

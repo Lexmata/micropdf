@@ -143,6 +143,15 @@ class Buffer:
             raise argument_error("Buffer handle is None")
         return self._handle
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging).
+
+        Note: This returns the Python object size, not the native buffer size.
+        Use len(buffer) or buffer.length() for the data size.
+        """
+        # Base object + handle (8 bytes) + ctx ref (8 bytes) + dropped flag (1 byte)
+        return object.__sizeof__(self) + 17
+
 
 __all__ = ["Buffer"]
 

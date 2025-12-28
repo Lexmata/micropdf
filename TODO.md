@@ -59,10 +59,10 @@
 | `__del__` implementations | 6 | Ensure all have explicit `close()` methods |
 
 **Specific tasks:**
-- [ ] Add `weakref.ref` tracking for debug leak detection
-- [ ] Implement context managers for all resource types
-- [ ] Cache frequently-called FFI functions with `functools.lru_cache`
-- [ ] Add `__sizeof__` to all types for memory debugging
+- [x] Add `weakref.ref` tracking for debug leak detection - `resource_tracking.py` with `ResourceTracker`
+- [x] Implement context managers for all resource types - `ResourceScope` + existing `__enter__`/`__exit__`
+- [x] Cache frequently-called FFI functions with `functools.lru_cache` - `cached_ffi_call` decorator + `get_cached_ffi_func`
+- [x] Add `__sizeof__` to all types for memory debugging - Added to Point, Rect, IRect, Matrix, Quad, Context, Buffer, Document, Page, Pixmap
 
 ---
 

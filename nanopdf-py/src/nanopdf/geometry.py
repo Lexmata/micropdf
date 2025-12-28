@@ -107,6 +107,11 @@ class Point:
     def __hash__(self) -> int:
         return hash((self.x, self.y))
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + 2 floats (8 bytes each)
+        return object.__sizeof__(self) + 16
+
 
 class Rect:
     """Rectangle defined by two corners (x0, y0) and (x1, y1).
@@ -257,6 +262,11 @@ class Rect:
     def __hash__(self) -> int:
         return hash((self.x0, self.y0, self.x1, self.y1))
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + 4 floats (8 bytes each)
+        return object.__sizeof__(self) + 32
+
     @staticmethod
     def _from_c(c_rect) -> Rect:
         """Create Rect from C fz_rect structure."""
@@ -313,6 +323,11 @@ class IRect:
 
     def __hash__(self) -> int:
         return hash((self.x0, self.y0, self.x1, self.y1))
+
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + 4 ints (4 bytes each)
+        return object.__sizeof__(self) + 16
 
 
 class Matrix:
@@ -471,6 +486,11 @@ class Matrix:
     def __hash__(self) -> int:
         return hash((self.a, self.b, self.c, self.d, self.e, self.f))
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + 6 floats (8 bytes each)
+        return object.__sizeof__(self) + 48
+
     def _to_c(self):
         """Convert to C fz_matrix structure."""
         ffi, _ = _get_ffi()
@@ -601,6 +621,11 @@ class Quad:
             self.ll == other.ll and
             self.lr == other.lr
         )
+
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + 4 Point references (8 bytes each) + Point objects
+        return object.__sizeof__(self) + 32 + 4 * self.ul.__sizeof__()
 
 
 # ============================================================================

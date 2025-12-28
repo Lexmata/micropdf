@@ -33,6 +33,45 @@ from .colorspace import Colorspace
 from .errors import NanoPDFError, ErrorCode
 from .easy import EasyPDF
 
+# Resource tracking and profiling
+from .resource_tracking import (
+    enable_tracking,
+    track_resource,
+    untrack_resource,
+    get_tracked_resources,
+    get_potential_leaks,
+    get_leak_warnings,
+    get_memory_summary,
+    clear_tracking,
+    cached_ffi_call,
+    get_cached_ffi_func,
+    clear_ffi_cache,
+    get_object_memory_size,
+    get_all_object_sizes,
+    print_memory_report,
+    ResourceScope,
+    TrackedResource,
+)
+
+from .profiler import (
+    enable_profiling,
+    enable_stack_traces,
+    is_profiling_enabled,
+    track_allocation,
+    track_deallocation,
+    get_leak_report,
+    print_leak_report,
+    reset_profiler,
+    start_tracemalloc,
+    stop_tracemalloc,
+    print_tracemalloc_top,
+    force_gc,
+    print_gc_stats,
+    get_memory_usage,
+    print_memory_usage,
+    ResourceType,
+)
+
 __all__ = [
     # Version
     "__version__",
@@ -55,5 +94,39 @@ __all__ = [
     "ErrorCode",
     # Easy API
     "EasyPDF",
+    # Resource tracking
+    "enable_tracking",
+    "track_resource",
+    "untrack_resource",
+    "get_tracked_resources",
+    "get_potential_leaks",
+    "get_leak_warnings",
+    "get_memory_summary",
+    "clear_tracking",
+    "cached_ffi_call",
+    "get_cached_ffi_func",
+    "clear_ffi_cache",
+    "get_object_memory_size",
+    "get_all_object_sizes",
+    "print_memory_report",
+    "ResourceScope",
+    "TrackedResource",
+    # Profiler
+    "enable_profiling",
+    "enable_stack_traces",
+    "is_profiling_enabled",
+    "track_allocation",
+    "track_deallocation",
+    "get_leak_report",
+    "print_leak_report",
+    "reset_profiler",
+    "start_tracemalloc",
+    "stop_tracemalloc",
+    "print_tracemalloc_top",
+    "force_gc",
+    "print_gc_stats",
+    "get_memory_usage",
+    "print_memory_usage",
+    "ResourceType",
 ]
 

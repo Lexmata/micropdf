@@ -149,6 +149,11 @@ class Page:
             raise system_error("Page handle is None")
         return self._handle
 
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + handle (8 bytes) + ctx ref (8 bytes) + dropped flag (1 byte)
+        return object.__sizeof__(self) + 17
+
 
 class Document:
     """PDF document.
@@ -370,6 +375,11 @@ class Document:
         if self._handle is None:
             raise system_error("Document handle is None")
         return self._handle
+
+    def __sizeof__(self) -> int:
+        """Return size of object in bytes (for memory debugging)."""
+        # Base object + handle (8 bytes) + ctx ref (8 bytes) + dropped flag (1 byte)
+        return object.__sizeof__(self) + 17
 
 
 __all__ = ["Document", "Page"]
