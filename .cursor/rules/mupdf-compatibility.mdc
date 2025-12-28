@@ -1,0 +1,472 @@
+---
+alwaysApply: false
+---
+# MuPDF API Compatibility Guidelines
+
+NanoPDF aims to be a drop-in replacement for MuPDF. Follow these guidelines to maintain API compatibility.
+
+## Function Naming
+
+### Prefix Convention
+
+| Prefix | Usage | Example |
+|--------|-------|---------|
+| `fz_` | Core functions (contexts, buffers, geometry) | `fz_new_buffer`, `fz_drop_pixmap` |
+| `pdf_` | PDF-specific functions | `pdf_open_document`, `pdf_page_count` |
+| `fitz_` | Internal/deprecated (avoid in new code) | - |
+
+```rust
+// ✅ CORRECT: Standard MuPDF naming
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer(capacity: i32) -> u64 { }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_keep_buffer(buf: u64) -> u64 { }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_drop_buffer(buf: u64) { }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_open_document(ctx: u64, path: *const c_char) -> u64 { }
+
+// ❌ WRONG: Non-standard naming
+pub extern "C" fn nanopdf_create_buffer(capacity: i32) -> u64 { }
+pub extern "C" fn buffer_new(capacity: i32) -> u64 { }
+```
+
+### Lifecycle Pattern
+
+Every resource type follows the new/keep/drop pattern:
+
+```rust
+// Creation
+fz_new_<type>(...)     -> handle    // Create new resource
+fz_<type>_from_...(...)-> handle    // Alternative constructors
+
+// Reference counting
+fz_keep_<type>(handle) -> handle    // Increment refcount
+fz_drop_<type>(handle)              // Decrement refcount
+
+// Example for Buffer
+fz_new_buffer(capacity: i32) -> u64
+fz_buffer_from_data(data: *const u8, len: usize) -> u64
+fz_keep_buffer(buf: u64) -> u64
+fz_drop_buffer(buf: u64)
+```
+
+## Core Types
+
+### Geometry Types
+
+Match MuPDF's exact type definitions:
+
+```rust
+/// MuPDF-compatible point
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct fz_point {
+    pub x: f32,
+    pub y: f32,
+}
+
+/// MuPDF-compatible rectangle
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct fz_rect {
+    pub x0: f32,
+    pub y0: f32,
+    pub x1: f32,
+    pub y1: f32,
+}
+
+/// MuPDF-compatible transformation matrix
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct fz_matrix {
+    pub a: f32,
+    pub b: f32,
+    pub c: f32,
+    pub d: f32,
+    pub e: f32,
+    pub f: f32,
+}
+
+/// MuPDF-compatible quad (4 points)
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct fz_quad {
+    pub ul: fz_point,  // Upper-left
+    pub ur: fz_point,  // Upper-right
+    pub ll: fz_point,  // Lower-left
+    pub lr: fz_point,  // Lower-right
+}
+```
+
+### Constants
+
+Match MuPDF's constant values exactly:
+
+```rust
+// Identity matrix
+pub const fz_identity: fz_matrix = fz_matrix {
+    a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: 0.0, f: 0.0
+};
+
+// Infinite rectangle
+pub const fz_infinite_rect: fz_rect = fz_rect {
+    x0: f32::MIN, y0: f32::MIN, x1: f32::MAX, y1: f32::MAX
+};
+
+// Empty rectangle
+pub const fz_empty_rect: fz_rect = fz_rect {
+    x0: 0.0, y0: 0.0, x1: 0.0, y1: 0.0
+};
+
+// Unit rectangle
+pub const fz_unit_rect: fz_rect = fz_rect {
+    x0: 0.0, y0: 0.0, x1: 1.0, y1: 1.0
+};
+```
+
+## Function Signatures
+
+### Context Functions
+
+```rust
+// MuPDF-compatible context management
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_context(
+    alloc: *const fz_alloc_context,  // Can be null for default
+    locks: *const fz_locks_context,  // Can be null for default
+    max_store: usize,
+) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clone_context(ctx: u64) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_drop_context(ctx: u64);
+```
+
+### Document Functions
+
+```rust
+// Open document by path
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_open_document(
+    ctx: u64,
+    filename: *const c_char,
+) -> u64;
+
+// Open document from stream
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_open_document_with_stream(
+    ctx: u64,
+    magic: *const c_char,  // File extension hint
+    stream: u64,
+) -> u64;
+
+// Get page count
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_count_pages(
+    ctx: u64,
+    doc: u64,
+) -> i32;
+
+// Load a page
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_load_page(
+    ctx: u64,
+    doc: u64,
+    number: i32,
+) -> u64;
+
+// Get page bounds
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_bound_page(
+    ctx: u64,
+    page: u64,
+) -> fz_rect;
+```
+
+### Rendering Functions
+
+```rust
+// Create pixmap from page
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_pixmap_from_page(
+    ctx: u64,
+    page: u64,
+    ctm: fz_matrix,
+    cs: u64,          // Colorspace handle
+    alpha: i32,       // 0 or 1
+) -> u64;
+
+// Create pixmap with specific size
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_pixmap(
+    ctx: u64,
+    cs: u64,
+    w: i32,
+    h: i32,
+    seps: u64,        // Separations (can be 0)
+    alpha: i32,
+) -> u64;
+
+// Get pixmap properties
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_width(ctx: u64, pix: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_height(ctx: u64, pix: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_components(ctx: u64, pix: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_stride(ctx: u64, pix: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_pixmap_samples(ctx: u64, pix: u64) -> *mut u8;
+```
+
+### Text Extraction
+
+```rust
+// Structured text options
+#[repr(C)]
+pub struct fz_stext_options {
+    pub flags: i32,
+    pub scale: f32,
+}
+
+// Create text page
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_stext_page_from_page(
+    ctx: u64,
+    page: u64,
+    options: *const fz_stext_options,
+) -> u64;
+
+// Get text from page
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_copy_rectangle(
+    ctx: u64,
+    text: u64,
+    area: fz_rect,
+    crlf: i32,
+) -> *mut c_char;  // Caller must free with fz_free
+```
+
+## Colorspace Functions
+
+```rust
+// Built-in colorspaces
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_gray(ctx: u64) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_rgb(ctx: u64) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_bgr(ctx: u64) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_device_cmyk(ctx: u64) -> u64;
+```
+
+## Error Handling
+
+### MuPDF Exception Style
+
+MuPDF uses setjmp/longjmp for error handling. We simulate this with the last-error pattern:
+
+```rust
+// Check for errors after any function that can fail
+// MuPDF pattern:
+//   fz_try(ctx) { ... }
+//   fz_catch(ctx) { ... }
+
+// NanoPDF pattern:
+let result = fz_some_operation(ctx, ...);
+if result == 0 {  // Or < 0 for error codes
+    let error = fz_caught_message(ctx);
+    // Handle error
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_caught_message(ctx: u64) -> *const c_char;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_caught(ctx: u64) -> i32;  // Error code
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_rethrow(ctx: u64);  // Re-raise current error
+```
+
+## PDF-Specific Functions
+
+### PDF Object Manipulation
+
+```rust
+// Create PDF objects
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_null() -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_bool(b: i32) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_int(i: i64) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_real(f: f32) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_string(ctx: u64, s: *const c_char, len: usize) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_name(ctx: u64, name: *const c_char) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_array(ctx: u64, doc: u64, initial_cap: i32) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_dict(ctx: u64, doc: u64, initial_cap: i32) -> u64;
+
+// Object type checking
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_null(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_bool(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_int(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_real(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_number(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_name(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_string(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_array(obj: u64) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_is_dict(obj: u64) -> i32;
+```
+
+### PDF Document Operations
+
+```rust
+// Open/create PDF
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_open_document(
+    ctx: u64,
+    filename: *const c_char,
+) -> u64;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_create_document(ctx: u64) -> u64;
+
+// Save PDF
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_save_document(
+    ctx: u64,
+    doc: u64,
+    filename: *const c_char,
+    opts: *const pdf_write_options,
+) -> i32;
+
+// PDF metadata
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_lookup_metadata(
+    ctx: u64,
+    doc: u64,
+    key: *const c_char,
+    buf: *mut c_char,
+    size: i32,
+) -> i32;
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_set_metadata(
+    ctx: u64,
+    doc: u64,
+    key: *const c_char,
+    value: *const c_char,
+);
+```
+
+## Compatibility Testing
+
+### Verification Checklist
+
+When implementing a MuPDF-compatible function:
+
+- [ ] Function name matches MuPDF exactly (`fz_`/`pdf_` prefix)
+- [ ] Parameter order matches MuPDF
+- [ ] Parameter types are compatible (same sizes)
+- [ ] Return type matches MuPDF
+- [ ] Error handling follows MuPDF conventions
+- [ ] Constants match MuPDF values
+- [ ] Struct layouts match (`#[repr(C)]`)
+- [ ] Behavior matches documented MuPDF behavior
+
+### ABI Compatibility Test
+
+```rust
+#[cfg(test)]
+mod abi_tests {
+    use super::*;
+    use std::mem::size_of;
+
+    #[test]
+    fn test_struct_sizes() {
+        // Verify struct sizes match MuPDF ABI
+        assert_eq!(size_of::<fz_point>(), 8);
+        assert_eq!(size_of::<fz_rect>(), 16);
+        assert_eq!(size_of::<fz_matrix>(), 24);
+        assert_eq!(size_of::<fz_quad>(), 32);
+    }
+
+    #[test]
+    fn test_struct_alignment() {
+        // Verify alignment
+        assert_eq!(std::mem::align_of::<fz_point>(), 4);
+        assert_eq!(std::mem::align_of::<fz_rect>(), 4);
+        assert_eq!(std::mem::align_of::<fz_matrix>(), 4);
+    }
+}
+```
+
+## Breaking Changes Policy
+
+### Never Break Without Notice
+
+1. **Deprecated functions** must be kept for at least 2 minor versions
+2. **Renamed functions** must have both old and new names during transition
+3. **Changed signatures** require a new function name
+
+```rust
+// ✅ CORRECT: Deprecation path
+#[deprecated(since = "0.2.0", note = "Use fz_new_buffer_v2 instead")]
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer(capacity: i32) -> u64 {
+    fz_new_buffer_v2(capacity, 0)  // Call new version
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer_v2(
+    capacity: i32,
+    flags: u32,  // New parameter
+) -> u64 {
+    // New implementation
+}
+```

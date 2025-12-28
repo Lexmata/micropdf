@@ -1,0 +1,513 @@
+---
+alwaysApply: false
+---
+# FFI (Foreign Function Interface) Conventions
+
+This project exposes a C-compatible FFI layer that enables bindings in Go, Python, Node.js, and other languages. Follow these conventions to maintain ABI stability and safety.
+
+## Core Principles
+
+1. **C ABI Compatibility** - All exported functions use `extern "C"` calling convention
+2. **Handle-Based API** - Resources are managed via opaque integer handles
+3. **No Panic Across FFI** - Panics must never cross the FFI boundary
+4. **UTF-8 Strings** - All strings are UTF-8 encoded, null-terminated
+5. **Error Codes** - Functions return error codes; use last-error pattern for details
+
+## Function Signatures
+
+### Naming Convention
+
+```rust
+// ✅ CORRECT: MuPDF-compatible naming with fz_/pdf_ prefix
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer(capacity: i32) -> u64 { }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_drop_buffer(buf: u64) { }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn pdf_new_document(ctx: u64) -> u64 { }
+
+// ❌ WRONG: Non-standard naming
+pub extern "C" fn create_buffer(capacity: i32) -> u64 { }
+pub extern "C" fn bufferNew(capacity: i32) -> u64 { }
+```
+
+### Parameter Types
+
+Use only C-compatible types in FFI signatures:
+
+| Rust Type | C Type | Usage |
+|-----------|--------|-------|
+| `u64` | `uint64_t` | Handles, sizes |
+| `i64` | `int64_t` | Signed integers |
+| `i32` | `int32_t` | Small integers, counts |
+| `f32` | `float` | Single-precision |
+| `f64` | `double` | Double-precision |
+| `*const c_char` | `const char*` | Input strings |
+| `*mut c_char` | `char*` | Output strings |
+| `*const u8` | `const uint8_t*` | Input byte arrays |
+| `*mut u8` | `uint8_t*` | Output byte arrays |
+| `bool` | `bool` / `int` | Booleans (be careful!) |
+
+```rust
+// ✅ CORRECT: C-compatible types only
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_data(
+    buf: u64,
+    out_data: *mut *const u8,
+    out_len: *mut usize,
+) -> i32 { }
+
+// ❌ WRONG: Rust-specific types in FFI
+pub extern "C" fn fz_buffer_data(
+    buf: u64,
+) -> &[u8] { }  // Slices are not C-compatible!
+
+pub extern "C" fn fz_open_document(
+    path: String,  // String is not C-compatible!
+) -> u64 { }
+```
+
+## Handle Management
+
+### HandleStore Pattern
+
+```rust
+use std::sync::{Arc, Mutex, LazyLock};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::collections::HashMap;
+
+/// Thread-safe storage for FFI handles
+pub struct HandleStore<T> {
+    handles: Mutex<HashMap<u64, Arc<Mutex<T>>>>,
+    next_id: AtomicU64,
+}
+
+impl<T> HandleStore<T> {
+    pub const fn new() -> Self {
+        Self {
+            handles: Mutex::new(HashMap::new()),
+            next_id: AtomicU64::new(1),
+        }
+    }
+
+    /// Insert a value and return its handle
+    pub fn insert(&self, value: T) -> u64 {
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
+        let mut handles = self.handles.lock().expect("lock poisoned");
+        handles.insert(id, Arc::new(Mutex::new(value)));
+        id
+    }
+
+    /// Get a value by handle (returns cloned Arc)
+    pub fn get(&self, handle: u64) -> Option<Arc<Mutex<T>>> {
+        let handles = self.handles.lock().expect("lock poisoned");
+        handles.get(&handle).cloned()
+    }
+
+    /// Remove and return a value by handle
+    pub fn remove(&self, handle: u64) -> Option<Arc<Mutex<T>>> {
+        let mut handles = self.handles.lock().expect("lock poisoned");
+        handles.remove(&handle)
+    }
+}
+
+// Global stores for each resource type
+pub static BUFFERS: LazyLock<HandleStore<Buffer>> = LazyLock::new(HandleStore::new);
+pub static DOCUMENTS: LazyLock<HandleStore<Document>> = LazyLock::new(HandleStore::new);
+```
+
+### Lifecycle Functions
+
+```rust
+// ✅ CORRECT: Complete lifecycle for each resource type
+
+/// Create a new buffer (returns handle, 0 on error)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_buffer(capacity: i32) -> u64 {
+    let buffer = match Buffer::new(capacity as usize) {
+        Ok(b) => b,
+        Err(e) => {
+            set_last_error(e);
+            return 0;
+        }
+    };
+    BUFFERS.insert(buffer)
+}
+
+/// Increment reference count (for shared ownership)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_keep_buffer(buf: u64) -> u64 {
+    if BUFFERS.get(buf).is_some() {
+        buf  // Handle exists, return it
+    } else {
+        0  // Invalid handle
+    }
+}
+
+/// Decrement reference count and free if zero
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_drop_buffer(buf: u64) {
+    BUFFERS.remove(buf);
+}
+```
+
+## Error Handling
+
+### Last-Error Pattern
+
+```rust
+use std::cell::RefCell;
+
+thread_local! {
+    static LAST_ERROR: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+/// Set the last error message (call before returning error code)
+pub fn set_last_error<E: std::fmt::Display>(error: E) {
+    LAST_ERROR.with(|cell| {
+        *cell.borrow_mut() = Some(error.to_string());
+    });
+}
+
+/// Get the last error message
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_get_last_error() -> *const c_char {
+    LAST_ERROR.with(|cell| {
+        match cell.borrow().as_ref() {
+            Some(msg) => {
+                // Return pointer to static or leaked string
+                // In production, use a proper string buffer
+                msg.as_ptr() as *const c_char
+            }
+            None => std::ptr::null(),
+        }
+    })
+}
+
+/// Clear the last error
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_clear_error() {
+    LAST_ERROR.with(|cell| {
+        *cell.borrow_mut() = None;
+    });
+}
+```
+
+### Return Codes
+
+```rust
+/// Standard error codes
+pub const FZ_OK: i32 = 0;
+pub const FZ_ERROR_GENERIC: i32 = -1;
+pub const FZ_ERROR_ARGUMENT: i32 = -2;
+pub const FZ_ERROR_MEMORY: i32 = -3;
+pub const FZ_ERROR_FORMAT: i32 = -4;
+pub const FZ_ERROR_NOT_FOUND: i32 = -5;
+
+// ✅ CORRECT: Return error code, set last error
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_append(
+    buf: u64,
+    data: *const u8,
+    len: usize,
+) -> i32 {
+    // Validate inputs
+    if data.is_null() && len > 0 {
+        set_last_error("data pointer is null");
+        return FZ_ERROR_ARGUMENT;
+    }
+
+    // Get buffer handle
+    let buffer = match BUFFERS.get(buf) {
+        Some(b) => b,
+        None => {
+            set_last_error("invalid buffer handle");
+            return FZ_ERROR_ARGUMENT;
+        }
+    };
+
+    // Perform operation
+    let slice = unsafe { std::slice::from_raw_parts(data, len) };
+    match buffer.lock().expect("lock").append(slice) {
+        Ok(()) => FZ_OK,
+        Err(e) => {
+            set_last_error(e);
+            FZ_ERROR_GENERIC
+        }
+    }
+}
+```
+
+## String Handling
+
+### Input Strings
+
+```rust
+use std::ffi::CStr;
+
+// ✅ CORRECT: Safe string conversion
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_open_document(
+    ctx: u64,
+    path: *const c_char,
+) -> u64 {
+    // Validate pointer
+    if path.is_null() {
+        set_last_error("path is null");
+        return 0;
+    }
+
+    // Convert to Rust string
+    let path_str = match unsafe { CStr::from_ptr(path) }.to_str() {
+        Ok(s) => s,
+        Err(e) => {
+            set_last_error(format!("invalid UTF-8 in path: {}", e));
+            return 0;
+        }
+    };
+
+    // Use path_str...
+    match Document::open(path_str) {
+        Ok(doc) => DOCUMENTS.insert(doc),
+        Err(e) => {
+            set_last_error(e);
+            0
+        }
+    }
+}
+```
+
+### Output Strings
+
+```rust
+use std::ffi::CString;
+
+// ✅ CORRECT: Copy string to caller-provided buffer
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_document_title(
+    doc: u64,
+    buf: *mut c_char,
+    buf_len: usize,
+) -> i32 {
+    if buf.is_null() || buf_len == 0 {
+        set_last_error("invalid output buffer");
+        return FZ_ERROR_ARGUMENT;
+    }
+
+    let document = match DOCUMENTS.get(doc) {
+        Some(d) => d,
+        None => {
+            set_last_error("invalid document handle");
+            return FZ_ERROR_ARGUMENT;
+        }
+    };
+
+    let title = document.lock().expect("lock").title();
+    let bytes = title.as_bytes();
+    
+    if bytes.len() + 1 > buf_len {
+        set_last_error("buffer too small");
+        return FZ_ERROR_MEMORY;
+    }
+
+    unsafe {
+        std::ptr::copy_nonoverlapping(bytes.as_ptr(), buf as *mut u8, bytes.len());
+        *buf.add(bytes.len()) = 0;  // Null terminator
+    }
+
+    FZ_OK
+}
+
+// ✅ CORRECT: Return required buffer size
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_document_title_length(doc: u64) -> i32 {
+    match DOCUMENTS.get(doc) {
+        Some(d) => {
+            let title = d.lock().expect("lock").title();
+            (title.len() + 1) as i32  // +1 for null terminator
+        }
+        None => {
+            set_last_error("invalid document handle");
+            -1
+        }
+    }
+}
+```
+
+## Byte Arrays
+
+### Input Arrays
+
+```rust
+// ✅ CORRECT: Pointer + length for input arrays
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_from_data(
+    data: *const u8,
+    len: usize,
+) -> u64 {
+    if data.is_null() && len > 0 {
+        set_last_error("data pointer is null");
+        return 0;
+    }
+
+    let slice = if len > 0 {
+        unsafe { std::slice::from_raw_parts(data, len) }
+    } else {
+        &[]
+    };
+
+    match Buffer::from_data(slice.to_vec()) {
+        Ok(buf) => BUFFERS.insert(buf),
+        Err(e) => {
+            set_last_error(e);
+            0
+        }
+    }
+}
+```
+
+### Output Arrays
+
+```rust
+// ✅ CORRECT: Return pointer to internal data (caller must not free)
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_buffer_data(
+    buf: u64,
+    out_data: *mut *const u8,
+    out_len: *mut usize,
+) -> i32 {
+    if out_data.is_null() || out_len.is_null() {
+        set_last_error("null output pointer");
+        return FZ_ERROR_ARGUMENT;
+    }
+
+    let buffer = match BUFFERS.get(buf) {
+        Some(b) => b,
+        None => {
+            set_last_error("invalid buffer handle");
+            return FZ_ERROR_ARGUMENT;
+        }
+    };
+
+    let guard = buffer.lock().expect("lock");
+    let data = guard.as_slice();
+
+    unsafe {
+        *out_data = data.as_ptr();
+        *out_len = data.len();
+    }
+
+    FZ_OK
+}
+```
+
+## Panic Safety
+
+### Catch Panics at FFI Boundary
+
+```rust
+use std::panic::{catch_unwind, AssertUnwindSafe};
+
+// ✅ CORRECT: Catch panics at FFI boundary
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_render_page(
+    doc: u64,
+    page_num: i32,
+    // ... other params
+) -> u64 {
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        // All the actual work here
+        let document = DOCUMENTS.get(doc)?;
+        let page = document.lock().ok()?.get_page(page_num as usize)?;
+        let pixmap = page.render()?;
+        Some(PIXMAPS.insert(pixmap))
+    }));
+
+    match result {
+        Ok(Some(handle)) => handle,
+        Ok(None) => {
+            set_last_error("operation failed");
+            0
+        }
+        Err(_) => {
+            set_last_error("internal panic - this is a bug");
+            0
+        }
+    }
+}
+```
+
+## Thread Safety
+
+### Document Thread Safety Requirements
+
+```rust
+// ✅ CORRECT: Document thread safety in comments
+
+/// Create a new context.
+/// 
+/// # Thread Safety
+/// 
+/// The returned context handle can be used from any thread, but
+/// concurrent operations on the same context must be synchronized
+/// by the caller.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_new_context() -> u64 { }
+
+/// Render a page to a pixmap.
+/// 
+/// # Thread Safety
+/// 
+/// This function is thread-safe. Multiple pages from the same
+/// document can be rendered concurrently.
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_render_page(doc: u64, page: i32) -> u64 { }
+```
+
+## Callbacks
+
+### Function Pointer Signatures
+
+```rust
+/// Callback for progress reporting
+pub type ProgressCallback = extern "C" fn(
+    user_data: *mut c_void,
+    current: usize,
+    total: usize,
+) -> i32;  // Return 0 to continue, non-zero to cancel
+
+// ✅ CORRECT: Safe callback invocation
+#[unsafe(no_mangle)]
+pub extern "C" fn fz_render_with_progress(
+    doc: u64,
+    page: i32,
+    callback: Option<ProgressCallback>,
+    user_data: *mut c_void,
+) -> u64 {
+    let report_progress = |current: usize, total: usize| -> bool {
+        if let Some(cb) = callback {
+            cb(user_data, current, total) == 0
+        } else {
+            true  // No callback, continue
+        }
+    };
+
+    // Use report_progress during rendering...
+}
+```
+
+## ABI Stability Checklist
+
+When modifying FFI functions:
+
+- [ ] Function signature matches C calling convention
+- [ ] Only C-compatible types used in parameters/return
+- [ ] Error handling uses last-error pattern
+- [ ] Panics caught at FFI boundary
+- [ ] Strings properly null-terminated
+- [ ] Pointer validity checked before use
+- [ ] Thread safety documented
+- [ ] Handle lifecycle (new/keep/drop) complete
+- [ ] Memory ownership clearly documented
