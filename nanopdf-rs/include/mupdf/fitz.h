@@ -32,6 +32,7 @@ extern "C" {
 #include "mupdf/fitz/geometry.h"
 #include "mupdf/fitz/glyph.h"
 #include "mupdf/fitz/glyph_cache.h"
+#include "mupdf/fitz/gpu.h"
 #include "mupdf/fitz/hashmap_util.h"
 #include "mupdf/fitz/heap.h"
 #include "mupdf/fitz/hints.h"

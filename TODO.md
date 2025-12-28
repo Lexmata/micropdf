@@ -96,7 +96,7 @@
 
 ## Future
 
-- [ ] GPU acceleration (OpenGL/Vulkan/Metal/DirectX)
+- [x] GPU acceleration (OpenGL/Vulkan/Metal/DirectX) - `ffi/gpu/` module with backend abstraction
 
 ---
 
