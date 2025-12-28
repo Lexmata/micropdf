@@ -103,12 +103,12 @@
 
 ## Additional Optimizations
 
-| Language | Task |
-|----------|------|
-| Node.js | Buffer.toString optimization (TextDecoder for large buffers) |
-| Node.js | Object pooling for geometry types |
-| Go | SIMD batch transforms (requires CGO/assembly) |
-| Python | Cython extension for hot paths |
+| Language | Task | Status |
+|----------|------|--------|
+| Node.js | Buffer.toString optimization (TextDecoder for large buffers) | ✅ `buffer.ts` |
+| Node.js | Object pooling for geometry types | ✅ `resource-tracking.ts` |
+| Go | SIMD batch transforms | ✅ `simd.go` - loop unrolling, batch APIs |
+| Python | Cython extension for hot paths | ✅ `_geometry_fast.pyx` + `geometry_fast.py` |
 
 ---
 
