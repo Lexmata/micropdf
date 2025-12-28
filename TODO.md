@@ -4,51 +4,56 @@
 
 ---
 
-## Remaining Optimization Targets
+## ✅ Completed Optimizations
 
 ### Rust Core
 
-| Issue | Count | Status |
-|-------|-------|--------|
-| Unsafe blocks | 962 | ✅ `ffi_safety.rs` module with SAFETY docs |
-| SmallVec | - | ✅ Added to Cargo.toml |
-| Safety helpers | 10 funcs | ✅ `cstr_to_str`, `raw_to_slice`, `write_out`, macros |
-| Global state | 234 uses | ⏳ Needs scoped contexts |
-| Clone calls | 220+ | ⏳ Replace with `Cow<'_, T>` |
-
-**Completed:**
-- `ffi_safety.rs` - SAFETY-documented helper functions
-- `smallvec = "1.13"` added to dependencies
-- Helper imports in `pdf_interpret.rs`, `writer.rs`
-- Macros: `cstr_safe!`, `slice_safe!`, `write_safe!`
+| Feature | Status |
+|---------|--------|
+| `ffi_safety.rs` module | ✅ SAFETY-documented FFI helpers |
+| Safety macros | ✅ `cstr_safe!`, `slice_safe!`, `write_safe!` |
+| SmallVec dependency | ✅ Added `smallvec = "1.13"` |
+| Helper imports | ✅ `pdf_interpret.rs`, `writer.rs` |
 
 ### Go Bindings
 
-| Issue | Count | Status |
-|-------|-------|--------|
-| CGO/unsafe calls | 259 | ✅ `path_batch.go` adds batching APIs |
-| defer patterns | 130 | ✅ Audited - all C.CString properly freed |
-| C.CString/C.free | 15/15 | ✅ All matched |
+| Feature | Status |
+|---------|--------|
+| Path batching | ✅ `path_batch.go` - `PathBuilder`, batch ops |
+| CGO audit | ✅ 259 calls, all C.CString freed (15/15) |
+| sync.Pool | ✅ Point, Rect, Matrix, Quad, ByteSlice pools |
+| Resource tracking | ✅ `runtime.SetFinalizer` integration |
 
 ### Node.js Bindings
 
-| Issue | Count | Status |
-|-------|-------|--------|
-| Object allocations | 347 | ✅ `typed-arrays.ts` module added |
-| Array.from/slice/map | 35 | ✅ In-place variants available |
-| TypedArray utilities | 28 funcs | ✅ Color, point, rect, matrix, pixel ops |
+| Feature | Status |
+|---------|--------|
+| `typed-arrays.ts` | ✅ 28 functions for TypedArray ops |
+| Object pooling | ✅ Point, Rect, Matrix, Quad pools |
+| `FinalizationRegistry` | ✅ Leak detection for handles |
+| `Buffer.toString` | ✅ TextDecoder for large buffers |
 
 ### Python Bindings
 
-| Issue | Count | Status |
-|-------|-------|--------|
-| FFI calls | 49 | ✅ Batch ops added (9 functions) |
-| `__del__` implementations | 6 | ✅ All call drop()/close() |
-| Batch operations | 9 funcs | ✅ NumPy-accelerated when available |
+| Feature | Status |
+|---------|--------|
+| Batch operations | ✅ 9 NumPy-accelerated functions |
+| `__del__` audit | ✅ All 6 call `drop()`/`close()` |
+| `__slots__` | ✅ All geometry types |
+| Context managers | ✅ All resource types |
 
 ---
 
-## Platform Support
+## ⏳ Remaining Work
+
+### Rust Core
+
+| Task | Priority |
+|------|----------|
+| Replace `Cow<'_, T>` for clone() calls (220+) | Medium |
+| Scoped contexts instead of `LazyLock` (234 uses) | Low |
+
+### Platform Support
 
 - [ ] **WebAssembly** - wasm32 target, wasm-bindgen
 - [ ] **Mobile** - Android (arm64-v8a), iOS (arm64)
@@ -66,7 +71,7 @@
 
 ---
 
-## Reference: Profiling Benchmarks (2025-12-28)
+## Reference: Profiling Benchmarks
 
 | Operation | Time | Notes |
 |-----------|------|-------|
