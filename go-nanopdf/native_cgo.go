@@ -17,7 +17,7 @@ package nanopdf
 
 // Version function
 const char* nanopdf_version(void) {
-    return "0.1.0";
+    return "0.2.0";
 }
 
 */
@@ -28,7 +28,7 @@ import (
 
 func version() string {
 	// Version is compiled in
-	return "0.1.0"
+	return "0.2.0"
 }
 
 func isMock() bool {

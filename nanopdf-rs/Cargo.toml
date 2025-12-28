@@ -1,6 +1,6 @@
 [package]
 name = "nanopdf"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 description = "A pure Rust PDF library - drop-in replacement for MuPDF with 100% API compatibility"
