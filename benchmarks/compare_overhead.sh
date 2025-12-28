@@ -32,7 +32,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 echo "--- Running Rust Baseline ---"
 if [ -f "$PROJECT_ROOT/nanopdf-rs/Cargo.toml" ]; then
     cd "$PROJECT_ROOT/nanopdf-rs"
-    
+
     # Check if the example exists
     if cargo build --release --example cross_language_baseline 2>/dev/null; then
         cargo run --release --example cross_language_baseline 2>&1 | tee "$RESULTS_DIR/rust_${TIMESTAMP}.txt"
@@ -52,7 +52,7 @@ echo ""
 echo "--- Running Go Benchmark ---"
 if [ -f "$PROJECT_ROOT/go-nanopdf/go.mod" ]; then
     cd "$PROJECT_ROOT"
-    
+
     if command -v go &> /dev/null; then
         go run benchmarks/cross_language_overhead.go 2>&1 | tee "$RESULTS_DIR/go_${TIMESTAMP}.txt"
     else
@@ -70,7 +70,7 @@ echo ""
 echo "--- Running Node.js Benchmark ---"
 if [ -f "$PROJECT_ROOT/nanopdf-js/package.json" ]; then
     cd "$PROJECT_ROOT"
-    
+
     if command -v npx &> /dev/null; then
         npx tsx benchmarks/cross_language_overhead.ts 2>&1 | tee "$RESULTS_DIR/nodejs_${TIMESTAMP}.txt"
     elif command -v node &> /dev/null; then
@@ -119,7 +119,7 @@ echo "  overhead = language_ns / rust_ns"
 echo ""
 echo "Typical expectations:"
 echo "  - Go FFI overhead: ~2-5x"
-echo "  - Node.js FFI overhead: ~5-20x" 
+echo "  - Node.js FFI overhead: ~5-20x"
 echo "  - Python FFI overhead: ~10-50x"
 echo ""
 echo "Pure language implementations (no FFI) should be similar"

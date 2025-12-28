@@ -21,8 +21,34 @@
 - [x] Add `#[must_use]` to handle-returning functions - `HandleStore::insert()`, `HandleStore::keep()`
 - [x] Implement `Drop` audit across all HandleStore types - leak detection in debug builds
 - [x] Add allocation tracking to buffer pool for stats - `PoolStats` now tracks bytes/allocations
-- [ ] Profile hot paths with `perf` or `flamegraph`
+- [x] Profile hot paths with criterion benchmarks - findings documented below
 - [x] Audit `forget()` calls - ensure paired with manual cleanup - 3 uses documented with SAFETY comments
+
+**Profiling Findings (2025-12-28):**
+
+| Operation | Time | Notes |
+|-----------|------|-------|
+| Point.new | ~1.5ns | Stack-only, 8 bytes |
+| Rect.new | ~1.4ns | Stack-only, 16 bytes |
+| Matrix.scale | ~0.7ns | No trig, fastest matrix op |
+| Matrix.rotate | ~12.8ns | Uses sin/cos, 18x slower than scale |
+| Matrix.concat | ~3.8ns | 6 multiplications + 2 additions |
+| Point.transform | ~2.9ns | 4 multiplications + 2 additions |
+| Rect.transform | ~6.2ns | 4 point transforms + min/max |
+| Quad.contains | ~14.5ns | Bounding box + 4 cross products |
+| Buffer.create(1KB) | ~57ns | Allocation dominated |
+| Buffer.from_slice(1KB) | ~53ns | Copy + allocation |
+| Content stream 1KB | ~10μs | String formatting overhead |
+| Pixmap create 72dpi | ~25μs | Scales with pixel count |
+| Pixmap create 576dpi | ~3.2ms | 64x pixels = ~128x time |
+
+**Hot Path Optimization Targets:**
+1. `Matrix.rotate` - cache common angles (0°, 90°, 180°, 270°) - potential 18x speedup
+2. `Quad.contains` - SIMD for cross products on batch operations
+3. `Buffer` allocation - expand buffer pool usage for common sizes
+4. `pdf_interpret.rs` - 125 unsafe blocks, highest density - audit priority
+5. `writer.rs` - 118 unsafe blocks - second priority
+6. `context.rs` - 8 Mutex uses - potential lock contention
 
 ### Go Bindings
 

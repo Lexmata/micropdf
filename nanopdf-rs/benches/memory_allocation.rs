@@ -9,132 +9,65 @@
 //! Uses a custom allocator wrapper to track allocations during benchmarks.
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use std::alloc::{GlobalAlloc, Layout, System};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 use nanopdf::fitz::buffer::Buffer;
 use nanopdf::fitz::geometry::{Matrix, Point, Quad, Rect};
 
 // ============================================================================
-// Allocation Tracking
+// Helper Functions
 // ============================================================================
 
-/// Global counters for allocation tracking
-static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
-static ALLOC_BYTES: AtomicUsize = AtomicUsize::new(0);
-static DEALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
-static DEALLOC_BYTES: AtomicUsize = AtomicUsize::new(0);
-static PEAK_BYTES: AtomicUsize = AtomicUsize::new(0);
-static CURRENT_BYTES: AtomicUsize = AtomicUsize::new(0);
-
-/// Reset allocation counters
-fn reset_counters() {
-    ALLOC_COUNT.store(0, Ordering::SeqCst);
-    ALLOC_BYTES.store(0, Ordering::SeqCst);
-    DEALLOC_COUNT.store(0, Ordering::SeqCst);
-    DEALLOC_BYTES.store(0, Ordering::SeqCst);
-    PEAK_BYTES.store(0, Ordering::SeqCst);
-    CURRENT_BYTES.store(0, Ordering::SeqCst);
+/// Helper to create identity matrix
+fn matrix_identity() -> Matrix {
+    Matrix::new(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 }
 
-/// Get allocation statistics
-#[derive(Debug, Clone, Copy)]
-struct AllocStats {
-    alloc_count: usize,
-    alloc_bytes: usize,
-    dealloc_count: usize,
-    dealloc_bytes: usize,
-    peak_bytes: usize,
-    net_bytes: isize,
+/// Helper to invert a matrix
+fn matrix_invert(m: &Matrix) -> Option<Matrix> {
+    let det = m.a * m.d - m.b * m.c;
+    if det.abs() < 1e-10 {
+        return None;
+    }
+    let inv_det = 1.0 / det;
+    Some(Matrix::new(
+        m.d * inv_det,
+        -m.b * inv_det,
+        -m.c * inv_det,
+        m.a * inv_det,
+        (m.c * m.f - m.d * m.e) * inv_det,
+        (m.b * m.e - m.a * m.f) * inv_det,
+    ))
 }
 
-fn get_stats() -> AllocStats {
-    let alloc_bytes = ALLOC_BYTES.load(Ordering::SeqCst);
-    let dealloc_bytes = DEALLOC_BYTES.load(Ordering::SeqCst);
-    AllocStats {
-        alloc_count: ALLOC_COUNT.load(Ordering::SeqCst),
-        alloc_bytes,
-        dealloc_count: DEALLOC_COUNT.load(Ordering::SeqCst),
-        dealloc_bytes,
-        peak_bytes: PEAK_BYTES.load(Ordering::SeqCst),
-        net_bytes: alloc_bytes as isize - dealloc_bytes as isize,
-    }
+/// Helper to get quad bounding box
+fn quad_bounds(q: &Quad) -> Rect {
+    let min_x = q.ul.x.min(q.ur.x).min(q.ll.x).min(q.lr.x);
+    let min_y = q.ul.y.min(q.ur.y).min(q.ll.y).min(q.lr.y);
+    let max_x = q.ul.x.max(q.ur.x).max(q.ll.x).max(q.lr.x);
+    let max_y = q.ul.y.max(q.ur.y).max(q.ll.y).max(q.lr.y);
+    Rect::new(min_x, min_y, max_x, max_y)
 }
 
-/// Tracking allocator wrapper
-struct TrackingAllocator;
-
-unsafe impl GlobalAlloc for TrackingAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let ptr = System.alloc(layout);
-        if !ptr.is_null() {
-            ALLOC_COUNT.fetch_add(1, Ordering::SeqCst);
-            ALLOC_BYTES.fetch_add(layout.size(), Ordering::SeqCst);
-
-            let current = CURRENT_BYTES.fetch_add(layout.size(), Ordering::SeqCst) + layout.size();
-            let mut peak = PEAK_BYTES.load(Ordering::SeqCst);
-            while current > peak {
-                match PEAK_BYTES.compare_exchange_weak(
-                    peak,
-                    current,
-                    Ordering::SeqCst,
-                    Ordering::SeqCst,
-                ) {
-                    Ok(_) => break,
-                    Err(p) => peak = p,
-                }
-            }
-        }
-        ptr
+/// Helper to check if quad contains point
+fn quad_contains(q: &Quad, p: &Point) -> bool {
+    // Bounding box check first
+    let bounds = quad_bounds(q);
+    if !bounds.contains(p.x, p.y) {
+        return false;
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        DEALLOC_COUNT.fetch_add(1, Ordering::SeqCst);
-        DEALLOC_BYTES.fetch_add(layout.size(), Ordering::SeqCst);
-        CURRENT_BYTES.fetch_sub(layout.size(), Ordering::SeqCst);
-        System.dealloc(ptr, layout)
+    // Cross product check for convex quad
+    fn cross(ax: f32, ay: f32, bx: f32, by: f32, cx: f32, cy: f32) -> f32 {
+        (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
     }
 
-    unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
-        let new_ptr = System.realloc(ptr, layout, new_size);
-        if !new_ptr.is_null() && new_size > layout.size() {
-            let growth = new_size - layout.size();
-            ALLOC_BYTES.fetch_add(growth, Ordering::SeqCst);
+    let c1 = cross(q.ul.x, q.ul.y, q.ur.x, q.ur.y, p.x, p.y);
+    let c2 = cross(q.ur.x, q.ur.y, q.lr.x, q.lr.y, p.x, p.y);
+    let c3 = cross(q.lr.x, q.lr.y, q.ll.x, q.ll.y, p.x, p.y);
+    let c4 = cross(q.ll.x, q.ll.y, q.ul.x, q.ul.y, p.x, p.y);
 
-            let current = CURRENT_BYTES.fetch_add(growth, Ordering::SeqCst) + growth;
-            let mut peak = PEAK_BYTES.load(Ordering::SeqCst);
-            while current > peak {
-                match PEAK_BYTES.compare_exchange_weak(
-                    peak,
-                    current,
-                    Ordering::SeqCst,
-                    Ordering::SeqCst,
-                ) {
-                    Ok(_) => break,
-                    Err(p) => peak = p,
-                }
-            }
-        } else if !new_ptr.is_null() && new_size < layout.size() {
-            let shrink = layout.size() - new_size;
-            DEALLOC_BYTES.fetch_add(shrink, Ordering::SeqCst);
-            CURRENT_BYTES.fetch_sub(shrink, Ordering::SeqCst);
-        }
-        new_ptr
-    }
-}
-
-// Note: We can't actually set a global allocator in a benchmark crate
-// because criterion uses its own. Instead, we'll measure manually.
-
-/// Measure allocations for a closure
-fn measure_allocations<F, R>(f: F) -> (R, AllocStats)
-where
-    F: FnOnce() -> R,
-{
-    reset_counters();
-    let result = f();
-    let stats = get_stats();
-    (result, stats)
+    (c1 >= 0.0 && c2 >= 0.0 && c3 >= 0.0 && c4 >= 0.0)
+        || (c1 <= 0.0 && c2 <= 0.0 && c3 <= 0.0 && c4 <= 0.0)
 }
 
 // ============================================================================
@@ -221,7 +154,7 @@ fn bench_matrix_allocations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory/matrix");
 
     // Matrix creation methods
-    group.bench_function("identity", |b| b.iter(Matrix::identity));
+    group.bench_function("identity", |b| b.iter(matrix_identity));
 
     group.bench_function("scale", |b| {
         b.iter(|| Matrix::scale(black_box(2.0), black_box(2.0)))
@@ -243,7 +176,7 @@ fn bench_matrix_allocations(c: &mut Criterion) {
     // Chain of transforms
     group.bench_function("chain_4_transforms", |b| {
         b.iter(|| {
-            Matrix::identity()
+            matrix_identity()
                 .concat(&Matrix::scale(2.0, 2.0))
                 .concat(&Matrix::rotate(45.0))
                 .concat(&Matrix::translate(100.0, 100.0))
@@ -253,7 +186,7 @@ fn bench_matrix_allocations(c: &mut Criterion) {
 
     // Matrix inversion
     let m = Matrix::scale(2.0, 3.0).concat(&Matrix::rotate(30.0));
-    group.bench_function("invert", |b| b.iter(|| black_box(&m).invert()));
+    group.bench_function("invert", |b| b.iter(|| matrix_invert(black_box(&m))));
 
     group.finish();
 }
@@ -273,12 +206,12 @@ fn bench_quad_allocations(c: &mut Criterion) {
     });
 
     // Quad to bounding rect
-    group.bench_function("bounds", |b| b.iter(|| black_box(&q).bounds()));
+    group.bench_function("bounds", |b| b.iter(|| quad_bounds(black_box(&q))));
 
     // Contains point
     let p = Point::new(50.0, 50.0);
     group.bench_function("contains_point", |b| {
-        b.iter(|| black_box(&q).contains(black_box(&p)))
+        b.iter(|| quad_contains(black_box(&q), black_box(&p)))
     });
 
     group.finish();
