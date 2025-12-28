@@ -92,11 +92,11 @@ cpdef tuple point_normalize(double x, double y):
 cpdef list transform_points_batch(list points, double a, double b, double c, double d, double e, double f):
     """
     Transform multiple points by a single matrix.
-    
+
     Args:
         points: List of (x, y) tuples
         a, b, c, d, e, f: Matrix components
-    
+
     Returns:
         List of transformed (x, y) tuples
     """
@@ -104,23 +104,23 @@ cpdef list transform_points_batch(list points, double a, double b, double c, dou
     cdef list result = [None] * n
     cdef double x, y, nx, ny
     cdef int i
-    
+
     for i in range(n):
         x, y = points[i]
         nx = x * a + y * c + e
         ny = x * b + y * d + f
         result[i] = (nx, ny)
-    
+
     return result
 
 cpdef list point_distances_batch(double from_x, double from_y, list points):
     """
     Calculate distances from one point to multiple points.
-    
+
     Args:
         from_x, from_y: Source point
         points: List of (x, y) tuples
-    
+
     Returns:
         List of distances
     """
@@ -128,13 +128,13 @@ cpdef list point_distances_batch(double from_x, double from_y, list points):
     cdef list result = [0.0] * n
     cdef double x, y, dx, dy
     cdef int i
-    
+
     for i in range(n):
         x, y = points[i]
         dx = x - from_x
         dy = y - from_y
         result[i] = sqrt(dx * dx + dy * dy)
-    
+
     return result
 
 # ============================================================================
@@ -161,7 +161,7 @@ cpdef tuple matrix_rotate(double degrees):
     """
     cdef double s, c_val
     cdef int int_deg
-    
+
     # Fast path for common angles
     if degrees == 0:
         return (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
@@ -175,7 +175,7 @@ cpdef tuple matrix_rotate(double degrees):
         return (SQRT2_2, SQRT2_2, -SQRT2_2, SQRT2_2, 0.0, 0.0)
     elif degrees == -45:
         return (SQRT2_2, -SQRT2_2, SQRT2_2, SQRT2_2, 0.0, 0.0)
-    
+
     # General case
     cdef double rad = degrees * DEG_TO_RAD
     s = sin(rad)
@@ -189,7 +189,7 @@ cpdef tuple matrix_invert(double a, double b, double c, double d, double e, doub
     cdef double det = a * d - b * c
     if fabs(det) < 1e-14:
         return None
-    
+
     cdef double inv_det = 1.0 / det
     return (
         d * inv_det,
@@ -212,7 +212,7 @@ cpdef tuple rect_transform(double x0, double y0, double x1, double y1,
     # Fast path: identity matrix (translation only)
     if a == 1.0 and b == 0.0 and c == 0.0 and d == 1.0:
         return (x0 + e, y0 + f, x1 + e, y1 + f)
-    
+
     # Fast path: axis-aligned (scale + translate, no rotation)
     if b == 0.0 and c == 0.0:
         cdef double nx0 = x0 * a + e
@@ -225,7 +225,7 @@ cpdef tuple rect_transform(double x0, double y0, double x1, double y1,
         if ny0 > ny1:
             ny0, ny1 = ny1, ny0
         return (nx0, ny0, nx1, ny1)
-    
+
     # General case: transform all four corners
     cdef double p1x = x0 * a + y0 * c + e
     cdef double p1y = x0 * b + y0 * d + f
@@ -235,27 +235,27 @@ cpdef tuple rect_transform(double x0, double y0, double x1, double y1,
     cdef double p3y = x0 * b + y1 * d + f
     cdef double p4x = x1 * a + y1 * c + e
     cdef double p4y = x1 * b + y1 * d + f
-    
+
     # Compute bounding box
     cdef double min_x = p1x
     cdef double max_x = p1x
     cdef double min_y = p1y
     cdef double max_y = p1y
-    
+
     if p2x < min_x: min_x = p2x
     if p2x > max_x: max_x = p2x
     if p3x < min_x: min_x = p3x
     if p3x > max_x: max_x = p3x
     if p4x < min_x: min_x = p4x
     if p4x > max_x: max_x = p4x
-    
+
     if p2y < min_y: min_y = p2y
     if p2y > max_y: max_y = p2y
     if p3y < min_y: min_y = p3y
     if p3y > max_y: max_y = p3y
     if p4y < min_y: min_y = p4y
     if p4y > max_y: max_y = p4y
-    
+
     return (min_x, min_y, max_x, max_y)
 
 cpdef tuple rect_union(double x0a, double y0a, double x1a, double y1a,
@@ -287,11 +287,11 @@ cpdef bint rect_contains_point(double x0, double y0, double x1, double y1, doubl
 cpdef list transform_rects_batch(list rects, double a, double b, double c, double d, double e, double f):
     """
     Transform multiple rectangles by a single matrix.
-    
+
     Args:
         rects: List of (x0, y0, x1, y1) tuples
         a, b, c, d, e, f: Matrix components
-    
+
     Returns:
         List of transformed (x0, y0, x1, y1) tuples
     """
@@ -299,28 +299,28 @@ cpdef list transform_rects_batch(list rects, double a, double b, double c, doubl
     cdef list result = [None] * n
     cdef double x0, y0, x1, y1
     cdef int i
-    
+
     # Fast path: identity matrix
     if a == 1.0 and b == 0.0 and c == 0.0 and d == 1.0:
         for i in range(n):
             x0, y0, x1, y1 = rects[i]
             result[i] = (x0 + e, y0 + f, x1 + e, y1 + f)
         return result
-    
+
     for i in range(n):
         x0, y0, x1, y1 = rects[i]
         result[i] = rect_transform(x0, y0, x1, y1, a, b, c, d, e, f)
-    
+
     return result
 
 cpdef list rect_contains_points_batch(double x0, double y0, double x1, double y1, list points):
     """
     Check which points are inside a rectangle.
-    
+
     Args:
         x0, y0, x1, y1: Rectangle bounds
         points: List of (x, y) tuples
-    
+
     Returns:
         List of booleans
     """
@@ -328,11 +328,11 @@ cpdef list rect_contains_points_batch(double x0, double y0, double x1, double y1
     cdef list result = [False] * n
     cdef double px, py
     cdef int i
-    
+
     for i in range(n):
         px, py = points[i]
         result[i] = px >= x0 and px < x1 and py >= y0 and py < y1
-    
+
     return result
 
 # ============================================================================
@@ -348,21 +348,21 @@ cpdef tuple quad_bounds(double ul_x, double ul_y, double ur_x, double ur_y,
     cdef double max_x = ul_x
     cdef double min_y = ul_y
     cdef double max_y = ul_y
-    
+
     if ur_x < min_x: min_x = ur_x
     if ur_x > max_x: max_x = ur_x
     if ll_x < min_x: min_x = ll_x
     if ll_x > max_x: max_x = ll_x
     if lr_x < min_x: min_x = lr_x
     if lr_x > max_x: max_x = lr_x
-    
+
     if ur_y < min_y: min_y = ur_y
     if ur_y > max_y: max_y = ur_y
     if ll_y < min_y: min_y = ll_y
     if ll_y > max_y: max_y = ll_y
     if lr_y < min_y: min_y = lr_y
     if lr_y > max_y: max_y = lr_y
-    
+
     return (min_x, min_y, max_x, max_y)
 
 cpdef bint quad_contains_point(double ul_x, double ul_y, double ur_x, double ur_y,
@@ -376,41 +376,41 @@ cpdef bint quad_contains_point(double ul_x, double ul_y, double ur_x, double ur_
     cdef double max_x = ul_x
     cdef double min_y = ul_y
     cdef double max_y = ul_y
-    
+
     if ur_x < min_x: min_x = ur_x
     if ur_x > max_x: max_x = ur_x
     if ll_x < min_x: min_x = ll_x
     if ll_x > max_x: max_x = ll_x
     if lr_x < min_x: min_x = lr_x
     if lr_x > max_x: max_x = lr_x
-    
+
     if ur_y < min_y: min_y = ur_y
     if ur_y > max_y: max_y = ur_y
     if ll_y < min_y: min_y = ll_y
     if ll_y > max_y: max_y = ll_y
     if lr_y < min_y: min_y = lr_y
     if lr_y > max_y: max_y = lr_y
-    
+
     if px < min_x or px > max_x or py < min_y or py > max_y:
         return False
-    
+
     # Cross product checks
     cdef double c1 = (ur_x - ul_x) * (py - ul_y) - (ur_y - ul_y) * (px - ul_x)
     if c1 < 0:
         return False
-    
+
     cdef double c2 = (lr_x - ur_x) * (py - ur_y) - (lr_y - ur_y) * (px - ur_x)
     if c2 < 0:
         return False
-    
+
     cdef double c3 = (ll_x - lr_x) * (py - lr_y) - (ll_y - lr_y) * (px - lr_x)
     if c3 < 0:
         return False
-    
+
     cdef double c4 = (ul_x - ll_x) * (py - ll_y) - (ul_y - ll_y) * (px - ll_x)
     if c4 < 0:
         return False
-    
+
     return True
 
 cpdef tuple quad_transform(double ul_x, double ul_y, double ur_x, double ur_y,

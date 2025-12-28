@@ -113,7 +113,7 @@ def _py_matrix_rotate(degrees: float) -> Tuple[float, ...]:
         return (_SQRT2_2, _SQRT2_2, -_SQRT2_2, _SQRT2_2, 0.0, 0.0)
     elif degrees == -45:
         return (_SQRT2_2, -_SQRT2_2, _SQRT2_2, _SQRT2_2, 0.0, 0.0)
-    
+
     rad = math.radians(degrees)
     s = math.sin(rad)
     c = math.cos(rad)
@@ -140,7 +140,7 @@ def _py_rect_transform(x0: float, y0: float, x1: float, y1: float,
     # Fast path: identity matrix
     if a == 1.0 and b == 0.0 and c == 0.0 and d == 1.0:
         return (x0 + e, y0 + f, x1 + e, y1 + f)
-    
+
     # Fast path: axis-aligned
     if b == 0.0 and c == 0.0:
         nx0 = x0 * a + e
@@ -152,13 +152,13 @@ def _py_rect_transform(x0: float, y0: float, x1: float, y1: float,
         if ny0 > ny1:
             ny0, ny1 = ny1, ny0
         return (nx0, ny0, nx1, ny1)
-    
+
     # General case
     p1x, p1y = x0 * a + y0 * c + e, x0 * b + y0 * d + f
     p2x, p2y = x1 * a + y0 * c + e, x1 * b + y0 * d + f
     p3x, p3y = x0 * a + y1 * c + e, x0 * b + y1 * d + f
     p4x, p4y = x1 * a + y1 * c + e, x1 * b + y1 * d + f
-    
+
     return (
         min(p1x, p2x, p3x, p4x),
         min(p1y, p2y, p3y, p4y),
@@ -210,27 +210,27 @@ def _py_quad_contains_point(ul_x: float, ul_y: float, ur_x: float, ur_y: float,
     max_x = max(ul_x, ur_x, ll_x, lr_x)
     min_y = min(ul_y, ur_y, ll_y, lr_y)
     max_y = max(ul_y, ur_y, ll_y, lr_y)
-    
+
     if px < min_x or px > max_x or py < min_y or py > max_y:
         return False
-    
+
     # Cross product checks
     c1 = (ur_x - ul_x) * (py - ul_y) - (ur_y - ul_y) * (px - ul_x)
     if c1 < 0:
         return False
-    
+
     c2 = (lr_x - ur_x) * (py - ur_y) - (lr_y - ur_y) * (px - ur_x)
     if c2 < 0:
         return False
-    
+
     c3 = (ll_x - lr_x) * (py - lr_y) - (ll_y - lr_y) * (px - lr_x)
     if c3 < 0:
         return False
-    
+
     c4 = (ul_x - ll_x) * (py - ll_y) - (ul_y - ll_y) * (px - ll_x)
     if c4 < 0:
         return False
-    
+
     return True
 
 def _py_quad_transform(ul_x: float, ul_y: float, ur_x: float, ur_y: float,

@@ -23,10 +23,11 @@
 
 ### Go Bindings
 
-| Issue | Count | Improvement |
-|-------|-------|-------------|
-| CGO/unsafe calls | 276 | Batch CGO calls to reduce overhead |
-| defer patterns | 91 | Audit for missing `defer Close()` |
+| Issue | Count | Status |
+|-------|-------|--------|
+| CGO/unsafe calls | 259 | ✅ `path_batch.go` adds batching APIs |
+| defer patterns | 130 | ✅ Audited - all C.CString properly freed |
+| C.CString/C.free | 15/15 | ✅ All matched |
 
 ### Node.js Bindings
 
