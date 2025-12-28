@@ -3,6 +3,7 @@
 //! This module provides functions for writing documents in various formats
 //! including PDF, SVG, text, Office formats, and image formats.
 
+use super::ffi_safety::{cstr_to_str, cstr_to_string};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;

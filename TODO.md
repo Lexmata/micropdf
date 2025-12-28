@@ -8,18 +8,19 @@
 
 ### Rust Core
 
-| Issue | Count | Improvement |
-|-------|-------|-------------|
-| Unsafe blocks | 906 | Audit for soundness, add SAFETY comments |
-| Global state | 234 uses | Consider scoped contexts instead of `LazyLock` |
-| Clone calls | 220+ | Replace with `Cow<'_, T>` or references |
-| Vec allocations | 229 | Use `SmallVec` for small collections |
-| String allocations | 410 | Expand string interning beyond PDF names |
+| Issue | Count | Status |
+|-------|-------|--------|
+| Unsafe blocks | 962 | ✅ `ffi_safety.rs` module with SAFETY docs |
+| SmallVec | - | ✅ Added to Cargo.toml |
+| Safety helpers | 10 funcs | ✅ `cstr_to_str`, `raw_to_slice`, `write_out`, macros |
+| Global state | 234 uses | ⏳ Needs scoped contexts |
+| Clone calls | 220+ | ⏳ Replace with `Cow<'_, T>` |
 
-**Priority files for unsafe audit:**
-1. `pdf_interpret.rs` - 125 unsafe blocks
-2. `writer.rs` - 118 unsafe blocks
-3. `context.rs` - 8 Mutex uses (lock contention)
+**Completed:**
+- `ffi_safety.rs` - SAFETY-documented helper functions
+- `smallvec = "1.13"` added to dependencies
+- Helper imports in `pdf_interpret.rs`, `writer.rs`
+- Macros: `cstr_safe!`, `slice_safe!`, `write_safe!`
 
 ### Go Bindings
 

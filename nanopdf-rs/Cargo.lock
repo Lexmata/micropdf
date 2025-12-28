@@ -723,6 +723,7 @@ dependencies = [
  "memmap2",
  "rayon",
  "sha2",
+ "smallvec",
  "tempfile",
  "thiserror 2.0.17",
  "tokio",

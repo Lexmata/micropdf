@@ -9,6 +9,7 @@
 //! - Color filter (recolor content)
 //! - Content stream processing
 
+use crate::ffi::ffi_safety::{cstr_to_str, raw_to_slice, write_out};
 use crate::ffi::{Handle, HandleStore};
 use crate::fitz::geometry::{Matrix, Rect};
 use std::collections::HashMap;

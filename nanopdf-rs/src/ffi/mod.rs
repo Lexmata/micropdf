@@ -29,6 +29,7 @@ pub mod document;
 pub mod draw_device;
 pub mod enhanced;
 pub mod epub;
+pub mod ffi_safety;
 pub mod filter;
 pub mod font;
 pub mod form;

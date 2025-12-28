@@ -43,6 +43,7 @@ path = "src/lib.rs"
 crate-type = ["lib", "staticlib", "cdylib"]
 
 [dependencies]
+smallvec = "1.13"
 thiserror = "2"
 flate2 = "1"
 brotli = "7"
