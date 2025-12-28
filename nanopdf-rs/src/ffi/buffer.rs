@@ -44,6 +44,18 @@ pub struct PoolStats {
     pub returns: u64,
     /// Number of buffers dropped (pool full)
     pub drops: u64,
+    /// Total bytes allocated (cumulative)
+    pub total_bytes_allocated: u64,
+    /// Total bytes deallocated (cumulative)
+    pub total_bytes_deallocated: u64,
+    /// Current bytes in use
+    pub current_bytes: u64,
+    /// Peak bytes in use
+    pub peak_bytes: u64,
+    /// Total allocations count
+    pub total_allocations: u64,
+    /// Total deallocations count
+    pub total_deallocations: u64,
 }
 
 impl BufferPool {
@@ -68,9 +80,15 @@ impl BufferPool {
         if let Some(class) = Self::size_class(capacity) {
             if let Ok(mut pool) = self.pools[class].lock() {
                 if let Some(mut buf) = pool.pop_front() {
+                    let buf_capacity = buf.capacity() as u64;
                     buf.clear();
                     if let Ok(mut stats) = self.stats.lock() {
                         stats.hits += 1;
+                        stats.total_allocations += 1;
+                        stats.current_bytes += buf_capacity;
+                        if stats.current_bytes > stats.peak_bytes {
+                            stats.peak_bytes = stats.current_bytes;
+                        }
                     }
                     return buf;
                 }
@@ -78,23 +96,35 @@ impl BufferPool {
         }
 
         // Pool miss - allocate new
-        if let Ok(mut stats) = self.stats.lock() {
-            stats.misses += 1;
-        }
-
         // Use pool size if it fits, otherwise exact capacity
         let alloc_size = Self::size_class(capacity)
             .map(|class| POOL_SIZES[class])
             .unwrap_or(capacity);
+
+        if let Ok(mut stats) = self.stats.lock() {
+            stats.misses += 1;
+            stats.total_allocations += 1;
+            stats.total_bytes_allocated += alloc_size as u64;
+            stats.current_bytes += alloc_size as u64;
+            if stats.current_bytes > stats.peak_bytes {
+                stats.peak_bytes = stats.current_bytes;
+            }
+        }
 
         Vec::with_capacity(alloc_size)
     }
 
     /// Return a buffer to the pool for reuse
     fn release(&self, mut buf: Vec<u8>) {
-        let capacity = buf.capacity();
+        let capacity = buf.capacity() as u64;
 
-        if let Some(class) = Self::size_class(capacity) {
+        // Update deallocation stats
+        if let Ok(mut stats) = self.stats.lock() {
+            stats.total_deallocations += 1;
+            stats.current_bytes = stats.current_bytes.saturating_sub(capacity);
+        }
+
+        if let Some(class) = Self::size_class(capacity as usize) {
             // Only pool if capacity matches a pool size exactly
             if buf.capacity() == POOL_SIZES[class] {
                 if let Ok(mut pool) = self.pools[class].lock() {
@@ -113,6 +143,7 @@ impl BufferPool {
         // Pool full or size doesn't match - drop buffer
         if let Ok(mut stats) = self.stats.lock() {
             stats.drops += 1;
+            stats.total_bytes_deallocated += capacity;
         }
         drop(buf);
     }
@@ -1017,6 +1048,18 @@ pub struct PoolStatsFFI {
     pub hit_rate: f64,
     /// Current number of pooled buffers
     pub pool_count: u64,
+    /// Total bytes ever allocated (cumulative)
+    pub total_bytes_allocated: u64,
+    /// Total bytes deallocated (cumulative)
+    pub total_bytes_deallocated: u64,
+    /// Current bytes in use
+    pub current_bytes: u64,
+    /// Peak bytes in use
+    pub peak_bytes: u64,
+    /// Total allocations count
+    pub total_allocations: u64,
+    /// Total deallocations count
+    pub total_deallocations: u64,
 }
 
 /// Get buffer pool statistics
@@ -1037,6 +1080,12 @@ pub extern "C" fn fz_buffer_pool_stats(_ctx: Handle) -> PoolStatsFFI {
         drops: stats.drops,
         hit_rate,
         pool_count: BUFFER_POOL.pool_count() as u64,
+        total_bytes_allocated: stats.total_bytes_allocated,
+        total_bytes_deallocated: stats.total_bytes_deallocated,
+        current_bytes: stats.current_bytes,
+        peak_bytes: stats.peak_bytes,
+        total_allocations: stats.total_allocations,
+        total_deallocations: stats.total_deallocations,
     }
 }
 

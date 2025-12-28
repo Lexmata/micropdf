@@ -352,9 +352,15 @@ pub extern "C" fn fz_new_deflated_data(
             let len = compressed.len();
             let ptr = compressed.as_ptr() as *mut u8;
 
-            // Leak the vector to return ownership to caller
+            // SAFETY: We deliberately leak this Vec to transfer ownership to the C caller.
+            // The caller is responsible for freeing this memory. Memory layout:
+            // - Contiguous array of `len` bytes at `ptr`
+            // - Allocated via Rust's global allocator
+            // To properly deallocate from Rust: Vec::from_raw_parts(ptr, len, len)
+            // Or call fz_free_compressed_data() which handles this cleanup.
             std::mem::forget(compressed);
 
+            // SAFETY: compressed_length was checked for null at function entry
             unsafe {
                 *compressed_length = len;
             }
@@ -517,8 +523,16 @@ pub extern "C" fn fz_new_brotli_data(
         drop(encoder);
         let len = compressed.len();
         let ptr = compressed.as_ptr() as *mut u8;
+
+        // SAFETY: We deliberately leak this Vec to transfer ownership to the C caller.
+        // The caller is responsible for freeing this memory. Memory layout:
+        // - Contiguous array of `len` bytes at `ptr`
+        // - Allocated via Rust's global allocator
+        // To properly deallocate from Rust: Vec::from_raw_parts(ptr, len, len)
+        // Or call fz_free_compressed_data() which handles this cleanup.
         std::mem::forget(compressed);
 
+        // SAFETY: compressed_length was checked for null at function entry
         unsafe {
             *compressed_length = len;
         }

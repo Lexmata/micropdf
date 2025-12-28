@@ -287,7 +287,7 @@ vec3 blend_lighten(vec3 src, vec3 dst) { return max(src, dst); }
 void main() {
     vec4 src = texture(u_src, v_texcoord);
     vec4 dst = texture(u_dst, v_texcoord);
-    
+
     vec3 result;
     switch (u_blend_mode) {
         case 0: result = src.rgb; break; // Normal
@@ -298,7 +298,7 @@ void main() {
         case 5: result = blend_lighten(src.rgb, dst.rgb); break;
         default: result = src.rgb; break;
     }
-    
+
     // Alpha compositing
     float alpha = src.a + dst.a * (1.0 - src.a);
     fragColor = vec4(result, alpha);

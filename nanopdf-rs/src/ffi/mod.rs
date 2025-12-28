@@ -116,45 +116,129 @@ pub fn new_handle() -> Handle {
     HANDLE_COUNTER.fetch_add(1, Ordering::SeqCst)
 }
 
+/// Statistics for handle store tracking
+#[derive(Debug, Default, Clone, Copy)]
+pub struct HandleStoreStats {
+    /// Total handles ever created
+    pub total_created: u64,
+    /// Total handles destroyed
+    pub total_destroyed: u64,
+    /// Current live handles
+    pub current_count: u64,
+    /// Peak concurrent handles
+    pub peak_count: u64,
+}
+
 /// Thread-safe handle storage for a specific type
 pub struct HandleStore<T> {
     store: Mutex<HashMap<Handle, Arc<Mutex<T>>>>,
+    stats: Mutex<HandleStoreStats>,
 }
 
 impl<T> HandleStore<T> {
     pub fn new() -> Self {
         Self {
             store: Mutex::new(HashMap::new()),
+            stats: Mutex::new(HandleStoreStats::default()),
         }
     }
 
+    /// Insert a value and return its handle.
+    ///
+    /// Returns a non-zero handle on success. The caller is responsible
+    /// for eventually calling `remove()` to release the resource.
+    #[must_use = "handle must be stored and later passed to remove() to avoid resource leaks"]
     pub fn insert(&self, value: T) -> Handle {
         let handle = new_handle();
         let mut store = self.store.lock().unwrap();
         store.insert(handle, Arc::new(Mutex::new(value)));
+
+        // Update stats
+        if let Ok(mut stats) = self.stats.lock() {
+            stats.total_created += 1;
+            stats.current_count += 1;
+            if stats.current_count > stats.peak_count {
+                stats.peak_count = stats.current_count;
+            }
+        }
+
         handle
     }
 
+    /// Get a reference to the value associated with a handle.
     pub fn get(&self, handle: Handle) -> Option<Arc<Mutex<T>>> {
         let store = self.store.lock().unwrap();
         store.get(&handle).cloned()
     }
 
+    /// Remove a handle and return the value if it exists.
     pub fn remove(&self, handle: Handle) -> Option<Arc<Mutex<T>>> {
         let mut store = self.store.lock().unwrap();
-        store.remove(&handle)
+        let result = store.remove(&handle);
+
+        // Update stats
+        if result.is_some() {
+            if let Ok(mut stats) = self.stats.lock() {
+                stats.total_destroyed += 1;
+                stats.current_count = stats.current_count.saturating_sub(1);
+            }
+        }
+
+        result
     }
 
+    /// Keep (retain) a handle - returns the same handle.
+    /// For reference counting, the Arc inside handles ref counting automatically.
+    #[must_use = "returned handle should be used or the keep call is unnecessary"]
     pub fn keep(&self, handle: Handle) -> Handle {
-        // For reference counting, we just return the same handle
-        // The Arc inside handles ref counting automatically
         handle
+    }
+
+    /// Get current statistics for this handle store.
+    pub fn stats(&self) -> HandleStoreStats {
+        self.stats.lock().map(|s| *s).unwrap_or_default()
+    }
+
+    /// Get current number of live handles.
+    pub fn len(&self) -> usize {
+        self.store.lock().map(|s| s.len()).unwrap_or(0)
+    }
+
+    /// Check if store is empty.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Check for potential leaks (handles that haven't been removed).
+    /// Returns a list of handles that are still alive.
+    pub fn get_live_handles(&self) -> Vec<Handle> {
+        self.store
+            .lock()
+            .map(|s| s.keys().copied().collect())
+            .unwrap_or_default()
     }
 }
 
 impl<T> Default for HandleStore<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl<T> Drop for HandleStore<T> {
+    fn drop(&mut self) {
+        // Log if there are unreleased handles (potential leak detection)
+        if let Ok(store) = self.store.lock() {
+            let count = store.len();
+            if count > 0 {
+                // In debug builds, this helps identify leaks
+                #[cfg(debug_assertions)]
+                eprintln!(
+                    "[HandleStore] Warning: {} unreleased handles at drop time",
+                    count
+                );
+            }
+        }
     }
 }
 

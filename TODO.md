@@ -18,11 +18,11 @@
 | String allocations | 410 | Expand string interning beyond PDF names |
 
 **Specific tasks:**
-- [ ] Add `#[must_use]` to handle-returning functions
-- [ ] Implement `Drop` audit across all HandleStore types
-- [ ] Add allocation tracking to buffer pool for stats
+- [x] Add `#[must_use]` to handle-returning functions - `HandleStore::insert()`, `HandleStore::keep()`
+- [x] Implement `Drop` audit across all HandleStore types - leak detection in debug builds
+- [x] Add allocation tracking to buffer pool for stats - `PoolStats` now tracks bytes/allocations
 - [ ] Profile hot paths with `perf` or `flamegraph`
-- [ ] Audit `forget()` calls - ensure paired with manual cleanup
+- [x] Audit `forget()` calls - ensure paired with manual cleanup - 3 uses documented with SAFETY comments
 
 ### Go Bindings
 

@@ -403,7 +403,13 @@ pub extern "C" fn pdf_signature_contents(
                 // Allocate using Box to ensure proper memory management
                 let mut boxed = sig.contents.clone().into_boxed_slice();
                 let ptr = boxed.as_mut_ptr() as *mut c_char;
-                std::mem::forget(boxed); // Prevent deallocation, caller must free
+                // SAFETY: We deliberately leak this memory to transfer ownership to the C caller.
+                // The caller is responsible for freeing this memory using the appropriate
+                // deallocation function (e.g., fz_free or standard C free if allocated via malloc).
+                // Memory layout: contiguous array of len bytes, allocated via Rust's global allocator.
+                // The corresponding cleanup should use: Box::from_raw(std::slice::from_raw_parts_mut(ptr, len))
+                std::mem::forget(boxed);
+                // SAFETY: contents was checked for null above
                 unsafe {
                     *contents = ptr;
                 }
