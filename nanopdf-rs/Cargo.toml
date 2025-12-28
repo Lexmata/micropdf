@@ -130,6 +130,10 @@ harness = false
 name = "archive"
 harness = false
 
+[[bench]]
+name = "pdf_realworld"
+harness = false
+
 # Debian package configuration (cargo-deb)
 [package.metadata.deb]
 maintainer = "Lexmata <contact@lexmata.com>"
