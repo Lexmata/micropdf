@@ -966,6 +966,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_store_type_tracking() {
         let key1 = unique_key("font");
         let key2 = unique_key("image");

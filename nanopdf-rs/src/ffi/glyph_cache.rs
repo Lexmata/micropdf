@@ -1032,6 +1032,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_cache_remove() {
         let ctx = 1;
 

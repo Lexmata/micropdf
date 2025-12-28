@@ -647,6 +647,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_set_get_level() {
         reset_log_config();
         let ctx = 1;
@@ -845,6 +846,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(tarpaulin, ignore)] // Global state conflicts under coverage instrumentation
     fn test_last_warning() {
         reset_log_config();
         let ctx = 1;
