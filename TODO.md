@@ -70,8 +70,8 @@
 
 - [x] Real-world PDF benchmarks (load, render, extract text) - `benches/pdf_realworld.rs`
 - [x] Comparison benchmarks vs MuPDF C library - baseline implemented, C stubs ready
-- [ ] Memory allocation profiling per operation
-- [ ] Cross-language overhead measurement (Rust → Go/Node/Python)
+- [x] Memory allocation profiling per operation - `benches/memory_allocation.rs`
+- [x] Cross-language overhead measurement (Rust → Go/Node/Python) - `benchmarks/` directory with all 4 languages
 
 ---
 

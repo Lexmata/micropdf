@@ -134,6 +134,10 @@ harness = false
 name = "pdf_realworld"
 harness = false
 
+[[bench]]
+name = "memory_allocation"
+harness = false
+
 # Debian package configuration (cargo-deb)
 [package.metadata.deb]
 maintainer = "Lexmata <contact@lexmata.com>"
