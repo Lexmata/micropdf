@@ -306,7 +306,7 @@ pub extern "C" fn fz_document_title(
 
     let title = document.lock().expect("lock").title();
     let bytes = title.as_bytes();
-    
+
     if bytes.len() + 1 > buf_len {
         set_last_error("buffer too small");
         return FZ_ERROR_MEMORY;
@@ -447,9 +447,9 @@ pub extern "C" fn fz_render_page(
 // ✅ CORRECT: Document thread safety in comments
 
 /// Create a new context.
-/// 
+///
 /// # Thread Safety
-/// 
+///
 /// The returned context handle can be used from any thread, but
 /// concurrent operations on the same context must be synchronized
 /// by the caller.
@@ -457,9 +457,9 @@ pub extern "C" fn fz_render_page(
 pub extern "C" fn fz_new_context() -> u64 { }
 
 /// Render a page to a pixmap.
-/// 
+///
 /// # Thread Safety
-/// 
+///
 /// This function is thread-safe. Multiple pages from the same
 /// document can be rendered concurrently.
 #[unsafe(no_mangle)]

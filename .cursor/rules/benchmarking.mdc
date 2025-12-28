@@ -41,7 +41,7 @@ fn bench_point_transform(c: &mut Criterion) {
 
 fn bench_matrix_rotate(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_rotate");
-    
+
     // Test common angles
     for angle in [0.0, 45.0, 90.0, 180.0, 270.0, 33.5] {
         group.bench_with_input(
@@ -52,7 +52,7 @@ fn bench_matrix_rotate(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 
@@ -62,15 +62,15 @@ fn bench_rect_contains(c: &mut Criterion) {
     let point_outside = Point::new(150.0, 50.0);
 
     let mut group = c.benchmark_group("rect_contains");
-    
+
     group.bench_function("inside", |b| {
         b.iter(|| rect.contains_point(black_box(&point_inside)))
     });
-    
+
     group.bench_function("outside", |b| {
         b.iter(|| rect.contains_point(black_box(&point_outside)))
     });
-    
+
     group.finish();
 }
 
@@ -88,10 +88,10 @@ criterion_main!(benches);
 ```rust
 fn bench_buffer_append_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("buffer_append");
-    
+
     for size in [64, 256, 1024, 4096, 16384] {
         let data = vec![0u8; size];
-        
+
         group.throughput(criterion::Throughput::Bytes(size as u64));
         group.bench_with_input(
             BenchmarkId::new("size", size),
@@ -105,7 +105,7 @@ fn bench_buffer_append_throughput(c: &mut Criterion) {
             },
         );
     }
-    
+
     group.finish();
 }
 ```
@@ -152,7 +152,7 @@ func BenchmarkPointTransform(b *testing.B) {
 
 func BenchmarkMatrixRotate(b *testing.B) {
     angles := []float64{0, 45, 90, 180, 270, 33.5}
-    
+
     for _, angle := range angles {
         b.Run(fmt.Sprintf("angle_%.1f", angle), func(b *testing.B) {
             for i := 0; i < b.N; i++ {
@@ -164,14 +164,14 @@ func BenchmarkMatrixRotate(b *testing.B) {
 
 func BenchmarkBufferAppend(b *testing.B) {
     sizes := []int{64, 256, 1024, 4096, 16384}
-    
+
     for _, size := range sizes {
         data := make([]byte, size)
-        
+
         b.Run(fmt.Sprintf("size_%d", size), func(b *testing.B) {
             b.SetBytes(int64(size))
             b.ResetTimer()
-            
+
             for i := 0; i < b.N; i++ {
                 buf := NewBuffer(0)
                 _ = buf.Append(data)
@@ -187,7 +187,7 @@ func BenchmarkRectTransform(b *testing.B) {
 
     b.ReportAllocs()
     b.ResetTimer()
-    
+
     for i := 0; i < b.N; i++ {
         _ = r.Transform(m)
     }
@@ -297,7 +297,7 @@ class TestGeometryBenchmarks:
     def test_point_transform(self, benchmark):
         p = Point(100.0, 200.0)
         m = Matrix.scale(2.0, 2.0)
-        
+
         result = benchmark(p.transform, m)
         assert result.x == 200.0
 
@@ -305,7 +305,7 @@ class TestGeometryBenchmarks:
     def test_matrix_rotate_cached(self, benchmark, angle):
         # Warm up cache
         Matrix.rotate(angle)
-        
+
         result = benchmark(Matrix.rotate, angle)
         assert result is not None
 
@@ -317,14 +317,14 @@ class TestGeometryBenchmarks:
     def test_rect_contains_inside(self, benchmark):
         r = Rect(0.0, 0.0, 100.0, 100.0)
         p = Point(50.0, 50.0)
-        
+
         result = benchmark(r.contains, p)
         assert result is True
 
     def test_rect_transform(self, benchmark):
         r = Rect(0.0, 0.0, 100.0, 100.0)
         m = Matrix.scale(2.0, 2.0)
-        
+
         result = benchmark(r.transform, m)
         assert result.width == 200.0
 ```
@@ -366,7 +366,7 @@ fn bench_document_render(c: &mut Criterion) {
     // Setup (not measured)
     let doc = Document::open("large.pdf").unwrap();
     let page = doc.load_page(0).unwrap();
-    
+
     c.bench_function("render_page", |b| {
         b.iter(|| {
             // Only this is measured
@@ -382,7 +382,7 @@ fn bench_document_render(c: &mut Criterion) {
 // ✅ CORRECT: Parameterized benchmarks
 fn bench_buffer_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("buffer");
-    
+
     for size in [64, 256, 1024, 4096, 16384, 65536] {
         group.throughput(Throughput::Bytes(size as u64));
         group.bench_with_input(BenchmarkId::new("append", size), &size, |b, &size| {
@@ -394,7 +394,7 @@ fn bench_buffer_sizes(c: &mut Criterion) {
             })
         });
     }
-    
+
     group.finish();
 }
 ```
@@ -403,9 +403,9 @@ fn bench_buffer_sizes(c: &mut Criterion) {
 
 ```rust
 /// Transforms a point by a matrix.
-/// 
+///
 /// # Performance
-/// 
+///
 /// This operation is O(1) with 6 floating-point multiplications
 /// and 4 additions. Expected time: ~2ns on modern hardware.
 pub fn transform(&self, matrix: &Matrix) -> Point {
@@ -428,10 +428,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run benchmarks
         run: cargo bench -- --noplot --save-baseline pr
-      
+
       - name: Compare with main
         if: github.event_name == 'pull_request'
         run: |

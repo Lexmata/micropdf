@@ -41,6 +41,7 @@ extern "C" {
 #include "mupdf/fitz/link.h"
 #include "mupdf/fitz/lockfree.h"
 #include "mupdf/fitz/log.h"
+#include "mupdf/fitz/memory_profiler.h"
 #include "mupdf/fitz/mmap.h"
 #include "mupdf/fitz/ocr.h"
 #include "mupdf/fitz/office.h"

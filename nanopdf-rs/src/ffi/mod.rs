@@ -44,6 +44,7 @@ pub mod json;
 pub mod link;
 pub mod lockfree;
 pub mod log;
+pub mod memory_profiler;
 pub mod mmap;
 pub mod ocr;
 pub mod office;

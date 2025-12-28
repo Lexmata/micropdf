@@ -41,17 +41,17 @@ from typing import Optional, Union, Sequence
 
 class Point:
     __slots__ = ('x', 'y')
-    
+
     def __init__(self, x: float, y: float) -> None:
         self.x = x
         self.y = y
-    
+
     def transform(self, matrix: 'Matrix') -> 'Point':
         return Point(
             self.x * matrix.a + self.y * matrix.c + matrix.e,
             self.x * matrix.b + self.y * matrix.d + matrix.f
         )
-    
+
     def distance(self, other: 'Point') -> float:
         dx = self.x - other.x
         dy = self.y - other.y
@@ -71,7 +71,7 @@ class Point:
 # ✅ CORRECT: Use __slots__ for geometry types
 class Rect:
     __slots__ = ('x0', 'y0', 'x1', 'y1')
-    
+
     def __init__(self, x0: float, y0: float, x1: float, y1: float) -> None:
         self.x0 = x0
         self.y0 = y0
@@ -96,46 +96,46 @@ class Rect:
 # ✅ CORRECT: Use pure Python for simple operations
 class Matrix:
     __slots__ = ('a', 'b', 'c', 'd', 'e', 'f')
-    
+
     # Cache common rotation matrices
     _ROTATION_CACHE: dict[int, 'Matrix'] = {}
-    
+
     @classmethod
     def identity(cls) -> 'Matrix':
         """Return identity matrix (pure Python, no FFI)."""
         return cls(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
-    
+
     @classmethod
     def scale(cls, sx: float, sy: float) -> 'Matrix':
         """Return scale matrix (pure Python, no FFI)."""
         return cls(sx, 0.0, 0.0, sy, 0.0, 0.0)
-    
+
     @classmethod
     def translate(cls, tx: float, ty: float) -> 'Matrix':
         """Return translation matrix (pure Python, no FFI)."""
         return cls(1.0, 0.0, 0.0, 1.0, tx, ty)
-    
+
     @classmethod
     def rotate(cls, degrees: float) -> 'Matrix':
         """Return rotation matrix with caching for common angles."""
         int_degrees = int(degrees) % 360
-        
+
         # Check cache first
         if int_degrees in cls._ROTATION_CACHE and degrees == int_degrees:
             return cls._ROTATION_CACHE[int_degrees]
-        
+
         # Calculate rotation
         import math
         rad = math.radians(degrees)
         cos_val = math.cos(rad)
         sin_val = math.sin(rad)
-        
+
         result = cls(cos_val, sin_val, -sin_val, cos_val, 0.0, 0.0)
-        
+
         # Cache integer angles
         if degrees == int_degrees:
             cls._ROTATION_CACHE[int_degrees] = result
-        
+
         return result
 
 
@@ -153,14 +153,14 @@ class Matrix:
 # ✅ CORRECT: Provide both immutable and in-place variants
 class Point:
     __slots__ = ('x', 'y')
-    
+
     def transform(self, matrix: 'Matrix') -> 'Point':
         """Return a new transformed point (immutable)."""
         return Point(
             self.x * matrix.a + self.y * matrix.c + matrix.e,
             self.x * matrix.b + self.y * matrix.d + matrix.f
         )
-    
+
     def transform_inplace(self, matrix: 'Matrix') -> 'Point':
         """Transform this point in place (mutating, returns self)."""
         new_x = self.x * matrix.a + self.y * matrix.c + matrix.e
@@ -175,12 +175,12 @@ class Point:
 ```python
 # ✅ CORRECT: Provide batch operations for efficiency
 def transform_points_batch(
-    points: Sequence[Point], 
+    points: Sequence[Point],
     matrix: 'Matrix'
 ) -> list[Point]:
     """Transform multiple points efficiently."""
     a, b, c, d, e, f = matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f
-    
+
     return [
         Point(p.x * a + p.y * c + e, p.x * b + p.y * d + f)
         for p in points
@@ -193,17 +193,17 @@ def transform_points_numpy(
 ) -> 'numpy.ndarray':
     """Transform points using NumPy for bulk operations."""
     import numpy as np
-    
+
     m = np.array([
         [matrix.a, matrix.c, matrix.e],
         [matrix.b, matrix.d, matrix.f],
         [0.0, 0.0, 1.0]
     ])
-    
+
     # Add homogeneous coordinate
     ones = np.ones((points.shape[0], 1))
     homogeneous = np.hstack([points, ones])
-    
+
     # Transform and extract x,y
     transformed = homogeneous @ m.T
     return transformed[:, :2]
@@ -261,7 +261,7 @@ def _check_error(result: int) -> None:
     if result < 0:
         error_msg = _get_lib().nanopdf_get_last_error()
         error_str = _ffi.string(error_msg).decode('utf-8')
-        
+
         if "parse" in error_str.lower():
             raise ParseError(error_str)
         else:
@@ -276,23 +276,23 @@ from typing import Self
 
 class Document:
     __slots__ = ('_handle', '_closed')
-    
+
     def __init__(self, handle: int) -> None:
         self._handle = handle
         self._closed = False
-    
+
     def close(self) -> None:
         """Close the document and release resources."""
         if not self._closed:
             self._closed = True
             _get_lib().nanopdf_close_document(self._handle)
-    
+
     def __enter__(self) -> Self:
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.close()
-    
+
     def __del__(self) -> None:
         # Backup cleanup if not properly closed
         self.close()
@@ -316,7 +316,7 @@ class PointLike(Protocol):
     x: float
     y: float
 
-@runtime_checkable  
+@runtime_checkable
 class RectLike(Protocol):
     """Protocol for rect-like objects."""
     x0: float
@@ -327,7 +327,7 @@ class RectLike(Protocol):
 
 def contains_point(rect: RectLike, point: PointLike) -> bool:
     """Check if rect contains point (works with any compatible type)."""
-    return (rect.x0 <= point.x <= rect.x1 and 
+    return (rect.x0 <= point.x <= rect.x1 and
             rect.y0 <= point.y <= rect.y1)
 ```
 
@@ -345,14 +345,14 @@ class TestPoint:
         p = Point(10.0, 20.0)
         assert p.x == 10.0
         assert p.y == 20.0
-    
+
     def test_transform(self) -> None:
         p = Point(1.0, 0.0)
         m = Matrix.rotate(90)
         result = p.transform(m)
         assert result.x == pytest.approx(0.0, abs=1e-10)
         assert result.y == pytest.approx(1.0, abs=1e-10)
-    
+
     @pytest.mark.parametrize("x,y,expected_dist", [
         (3.0, 4.0, 5.0),
         (0.0, 0.0, 0.0),
@@ -386,7 +386,7 @@ import pytest
 def test_point_transform_performance(benchmark) -> None:
     p = Point(100.0, 200.0)
     m = Matrix.scale(2.0, 2.0)
-    
+
     result = benchmark(p.transform, m)
     assert result.x == 200.0
 
@@ -395,10 +395,10 @@ def test_matrix_rotate_cached(benchmark) -> None:
     """Benchmark rotation with cache hits."""
     def rotate_90():
         return Matrix.rotate(90)
-    
+
     # Warm up cache
     Matrix.rotate(90)
-    
+
     result = benchmark(rotate_90)
     assert result is not None
 ```
@@ -411,14 +411,14 @@ def test_matrix_rotate_cached(benchmark) -> None:
 # ✅ CORRECT: Google-style docstrings
 class Buffer:
     """A dynamic byte buffer for efficient binary data handling.
-    
+
     Buffer provides efficient append, read, and slice operations
     for working with binary data. It automatically grows as needed.
-    
+
     Attributes:
         length: Current number of bytes in the buffer.
         capacity: Current allocated capacity in bytes.
-    
+
     Example:
         >>> buf = Buffer(1024)
         >>> buf.append(b"Hello")
@@ -426,19 +426,19 @@ class Buffer:
         >>> bytes(buf)
         b'Hello World'
     """
-    
+
     def append(self, data: bytes) -> None:
         """Append data to the end of the buffer.
-        
+
         The buffer will automatically grow if the current capacity
         is insufficient.
-        
+
         Args:
             data: Bytes to append to the buffer.
-        
+
         Raises:
             MemoryError: If the buffer cannot be grown.
-        
+
         Example:
             >>> buf = Buffer()
             >>> buf.append(b"Hello")
