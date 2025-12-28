@@ -31,7 +31,7 @@ func (d *Document) Close() error {
 func OpenDocument(path string) (*Document, error) {
     cpath := C.CString(path)
     defer C.free(unsafe.Pointer(cpath))
-    
+
     handle := C.fz_open_document(cpath)
     if handle == 0 {
         return nil, getLastError()
@@ -46,13 +46,13 @@ func OpenDocument(path string) (*Document, error) {
 // Class with automatic cleanup
 export class Document {
   private _handle: number;
-  
+
   constructor(handle: number) {
     this._handle = handle;
     // Register for GC tracking
     profiler.registerForGCTracking(this, handle, ResourceType.Document);
   }
-  
+
   close(): void {
     if (this._handle !== 0) {
       native.fz_drop_document(this._handle);
@@ -68,21 +68,21 @@ export class Document {
 ```python
 class Document:
     __slots__ = ('_handle',)
-    
+
     def __init__(self, handle: int) -> None:
         self._handle = handle
-    
+
     def __del__(self) -> None:
         self.close()
-    
+
     def close(self) -> None:
         if self._handle:
             _lib.fz_drop_document(self._handle)
             self._handle = 0
-    
+
     def __enter__(self) -> 'Document':
         return self
-    
+
     def __exit__(self, *args) -> None:
         self.close()
 ```
