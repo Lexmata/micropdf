@@ -33,6 +33,10 @@ include = [
 [badges]
 maintenance = { status = "actively-developed" }
 
+# Allow tarpaulin cfg for coverage instrumentation
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(tarpaulin)"] }
+
 [lib]
 name = "nanopdf"
 path = "src/lib.rs"
