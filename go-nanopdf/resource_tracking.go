@@ -293,6 +293,7 @@ func (p *ByteSlicePool) Put(buf []byte) {
 	cap := cap(buf)
 	for i, size := range p.sizes {
 		if cap == size {
+			//lint:ignore SA6002 slice pooling is still beneficial despite interface allocation
 			p.pools[i].Put(buf[:0])
 			return
 		}
