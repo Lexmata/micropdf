@@ -45,11 +45,11 @@
 | Array.from/slice/map | ~200 | Use in-place operations where possible |
 
 **Specific tasks:**
-- [ ] Add FinalizationRegistry tracking for all handle types
-- [ ] Pool Point, Rect, Matrix, Quad instances
-- [ ] Replace `Array.from` with reusable buffers in hot paths
-- [ ] Add WeakRef-based leak detection warnings
-- [ ] Buffer.toString - use TextDecoder for buffers > 1KB
+- [x] Add FinalizationRegistry tracking for all handle types - `resource-tracking.ts`
+- [x] Pool Point, Rect, Matrix, Quad instances - MutablePoint/Rect/Matrix/Quad pools
+- [x] Replace `Array.from` with reusable buffers in hot paths - `byteArrayPool`, `numberArrayPool`
+- [x] Add WeakRef-based leak detection warnings - `handleRegistry` with WeakRef tracking
+- [x] Buffer.toString - use TextDecoder for buffers > 1KB - threshold optimization added
 
 ### Python Bindings
 

@@ -440,6 +440,58 @@ export {
 export { NanoPDF, getVersion, type NanoPDFOptions } from './nanopdf.js';
 
 // ============================================================================
+// Resource Tracking and Memory Optimization
+// ============================================================================
+
+/**
+ * Resource tracking utilities for leak detection and memory optimization.
+ *
+ * @example
+ * ```typescript
+ * import {
+ *   enableTracking,
+ *   handleRegistry,
+ *   generateLeakReport,
+ *   getPoolStats
+ * } from 'nanopdf';
+ *
+ * // Enable tracking in development
+ * enableTracking(true);
+ *
+ * // ... use NanoPDF ...
+ *
+ * // Check for leaks
+ * console.log(generateLeakReport());
+ * ```
+ */
+export {
+  ResourceType,
+  handleRegistry,
+  enableTracking,
+  enableStackTraces,
+  isTrackingEnabled,
+  acquirePoint,
+  releasePoint,
+  acquireRect,
+  releaseRect,
+  acquireMatrix,
+  releaseMatrix,
+  acquireQuad,
+  releaseQuad,
+  getPoolStats,
+  clearPools,
+  byteArrayPool,
+  uint8ArrayToString,
+  bufferToString,
+  numberArrayPool,
+  generateLeakReport,
+  printLeakReport,
+  type AllocationInfo,
+  type TypeStats,
+  type GlobalStats
+} from './resource-tracking.js';
+
+// ============================================================================
 // Easy API - Simplified PDF Operations
 // ============================================================================
 

@@ -33,6 +33,12 @@
 import { NanoPDFError, type BufferLike, isBufferLike } from './types.js';
 import { createHash } from 'node:crypto';
 
+// Shared TextDecoder for efficient UTF-8 decoding of large buffers
+const textDecoder = new TextDecoder('utf-8');
+
+// Threshold in bytes above which TextDecoder is more efficient than Node's toString()
+const TEXT_DECODER_THRESHOLD = 1024;
+
 // Re-export for convenience
 export { BufferLike, isBufferLike };
 
@@ -337,8 +343,18 @@ export class Buffer {
 
   /**
    * Get the buffer data as a string
+   *
+   * For UTF-8 encoding with buffers larger than 1KB, uses TextDecoder
+   * which is more efficient than Node's toString() for large strings.
    */
   toString(encoding: BufferEncoding = 'utf-8'): string {
+    // Use TextDecoder for large UTF-8 buffers (more efficient)
+    if (
+      (encoding === 'utf-8' || encoding === 'utf8') &&
+      this._data.length > TEXT_DECODER_THRESHOLD
+    ) {
+      return textDecoder.decode(this._data);
+    }
     return this._data.toString(encoding);
   }
 
