@@ -31,10 +31,11 @@
 
 ### Node.js Bindings
 
-| Issue | Count | Improvement |
-|-------|-------|-------------|
-| Object allocations | 398 | Further TypedArray usage |
-| Array.from/slice/map | ~200 | More in-place operations |
+| Issue | Count | Status |
+|-------|-------|--------|
+| Object allocations | 347 | ✅ `typed-arrays.ts` module added |
+| Array.from/slice/map | 35 | ✅ In-place variants available |
+| TypedArray utilities | 28 funcs | ✅ Color, point, rect, matrix, pixel ops |
 
 ### Python Bindings
 

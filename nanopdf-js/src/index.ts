@@ -529,6 +529,70 @@ export {
 // } from './simple.js';
 
 // ============================================================================
+// TypedArray Utilities - High-Performance Numeric Operations
+// ============================================================================
+
+/**
+ * TypedArray utilities for batch numeric operations.
+ *
+ * Use these functions for performance-critical code that processes
+ * large amounts of coordinate, color, or pixel data.
+ *
+ * @example
+ * ```typescript
+ * import {
+ *   pointsFromCoords,
+ *   transformPointsInPlace,
+ *   colorFromRGB,
+ *   matrixRotate
+ * } from 'nanopdf';
+ *
+ * // Create points as Float32Array
+ * const points = pointsFromCoords(0, 0, 100, 0, 100, 100, 0, 100);
+ *
+ * // Transform in-place (no allocation)
+ * const m = matrixRotate(45);
+ * transformPointsInPlace(points, m[0], m[1], m[2], m[3], m[4], m[5]);
+ *
+ * // Create colors as Float32Array
+ * const red = colorFromRGB(255, 0, 0);  // Normalized to [1, 0, 0]
+ * ```
+ */
+export {
+  // Color arrays
+  colorFromRGB,
+  colorFromRGBA,
+  colorFromGray,
+  colorFromCMYK,
+  // Point arrays
+  pointsFromCoords,
+  pointsFromObjects,
+  transformPointsInPlace,
+  transformPoints,
+  // Rectangle arrays
+  rectsFromCoords,
+  rectsFromObjects,
+  transformRectsInPlace,
+  // Matrix operations
+  matrixIdentity,
+  matrixTranslate,
+  matrixScale,
+  matrixRotate,
+  matrixConcatInPlace,
+  matrixConcat,
+  // Distance calculations
+  pointDistances,
+  pointDistancesSquared,
+  // Containment tests
+  rectContainsPoints,
+  countPointsInRect,
+  // Pixel operations
+  convertPixelFormat,
+  premultiplyAlpha,
+  unpremultiplyAlpha
+} from './typed-arrays.js';
+
+// ============================================================================
 // Version
 // ============================================================================
 
