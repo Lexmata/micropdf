@@ -1,14 +1,12 @@
-//go:build cgo && !mock
-// +build cgo,!mock
+//go:build !cgo || mock
+// +build !cgo mock
 
 package nanopdf
 
 // ============================================================================
-// Batch Path Operations
+// Batch Path Operations (Mock Implementation)
 //
-// These functions reduce CGO call overhead by combining multiple path operations
-// into single CGO calls where possible. Use these for performance-critical code
-// that builds paths programmatically.
+// Mock implementation for when CGO is not available.
 // ============================================================================
 
 // PathOp represents a single path operation type
@@ -59,8 +57,61 @@ func NewRectToCmd(x, y, w, h float32) PathCommand {
 	return PathCommand{Op: PathOpRectTo, X: x, Y: y, X2: w, Y2: h}
 }
 
+// Path is a mock implementation for when CGO is disabled
+type Path struct {
+	commands []PathCommand
+	ctx      *Context
+}
+
+// NewPath creates a new mock path
+func NewPath(ctx *Context) *Path {
+	return &Path{
+		commands: make([]PathCommand, 0),
+		ctx:      ctx,
+	}
+}
+
+// Drop releases mock path resources
+func (p *Path) Drop() {
+	p.commands = nil
+}
+
+// MoveTo moves the current point to (x, y)
+func (p *Path) MoveTo(x, y float32) *Path {
+	p.commands = append(p.commands, NewMoveToCmd(x, y))
+	return p
+}
+
+// LineTo adds a line from the current point to (x, y)
+func (p *Path) LineTo(x, y float32) *Path {
+	p.commands = append(p.commands, NewLineToCmd(x, y))
+	return p
+}
+
+// CurveTo adds a cubic Bezier curve
+func (p *Path) CurveTo(x1, y1, x2, y2, x3, y3 float32) *Path {
+	p.commands = append(p.commands, NewCurveToCmd(x1, y1, x2, y2, x3, y3))
+	return p
+}
+
+// ClosePath closes the current subpath
+func (p *Path) ClosePath() *Path {
+	p.commands = append(p.commands, NewClosePathCmd())
+	return p
+}
+
+// RectTo adds a rectangle to the path
+func (p *Path) RectTo(x, y, w, h float32) *Path {
+	p.commands = append(p.commands, NewRectToCmd(x, y, w, h))
+	return p
+}
+
+// Bounds returns a mock bounding box
+func (p *Path) Bounds(_ Matrix) Rect {
+	return Rect{X0: 0, Y0: 0, X1: 100, Y1: 100}
+}
+
 // AddCommands adds multiple path commands in a single batch.
-// This reduces CGO overhead when building complex paths.
 func (p *Path) AddCommands(commands []PathCommand) *Path {
 	for _, cmd := range commands {
 		switch cmd.Op {
@@ -79,7 +130,7 @@ func (p *Path) AddCommands(commands []PathCommand) *Path {
 	return p
 }
 
-// AddLines adds multiple line segments efficiently.
+// AddLines adds a series of connected line segments from coordinate pairs.
 // points should alternate: [x0, y0, x1, y1, x2, y2, ...]
 // The first point is a MoveTo, subsequent points are LineTo.
 func (p *Path) AddLines(points []float32) *Path {
@@ -155,6 +206,10 @@ func (p *Path) AddClosedPolyline(points []Point) *Path {
 	return p
 }
 
+// ============================================================================
+// PathBuilder - Fluent API for batch path construction
+// ============================================================================
+
 // PathBuilder provides a fluent interface for building paths with deferred execution.
 // Commands are accumulated and can be applied to a path in a single batch.
 type PathBuilder struct {
@@ -213,6 +268,13 @@ func (b *PathBuilder) BuildNew(ctx *Context) *Path {
 func (b *PathBuilder) Reset() *PathBuilder {
 	b.commands = b.commands[:0]
 	return b
+}
+
+// Commands returns a copy of accumulated commands
+func (b *PathBuilder) Commands() []PathCommand {
+	result := make([]PathCommand, len(b.commands))
+	copy(result, b.commands)
+	return result
 }
 
 // Len returns the number of accumulated commands
