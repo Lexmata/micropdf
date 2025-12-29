@@ -360,13 +360,13 @@ fn bench_type_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory/type_sizes");
 
     // Report sizes (this is more of a documentation benchmark)
-    group.bench_function("point_size", |b| b.iter(|| std::mem::size_of::<Point>()));
+    group.bench_function("point_size", |b| b.iter(std::mem::size_of::<Point>));
 
-    group.bench_function("rect_size", |b| b.iter(|| std::mem::size_of::<Rect>()));
+    group.bench_function("rect_size", |b| b.iter(std::mem::size_of::<Rect>));
 
-    group.bench_function("matrix_size", |b| b.iter(|| std::mem::size_of::<Matrix>()));
+    group.bench_function("matrix_size", |b| b.iter(std::mem::size_of::<Matrix>));
 
-    group.bench_function("quad_size", |b| b.iter(|| std::mem::size_of::<Quad>()));
+    group.bench_function("quad_size", |b| b.iter(std::mem::size_of::<Quad>));
 
     // Print sizes (visible in benchmark output)
     println!("\nType sizes:");

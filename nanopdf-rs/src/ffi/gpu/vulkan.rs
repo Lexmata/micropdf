@@ -218,9 +218,8 @@ impl GpuDevice for VulkanDevice {
 // Vulkan SPIR-V Shaders
 // ============================================================================
 
-/// These would be pre-compiled SPIR-V bytecode in a real implementation
-/// For now, we include the GLSL source that would be compiled
-
+/// These would be pre-compiled SPIR-V bytecode in a real implementation.
+/// For now, we include the GLSL source that would be compiled.
 pub const QUAD_VERTEX_SHADER_GLSL: &str = r#"
 #version 450
 layout(location = 0) in vec2 a_position;
