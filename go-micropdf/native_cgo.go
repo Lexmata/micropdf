@@ -14,10 +14,11 @@ package micropdf
 #include <stdlib.h>
 #include <stdint.h>
 #include "micropdf_ffi.h"
+#include "micropdf/enhanced.h"
 
 // Version function
 const char* micropdf_version(void) {
-    return "0.2.0";
+    return "0.3.0";
 }
 
 */
@@ -28,7 +29,7 @@ import (
 
 func version() string {
 	// Version is compiled in
-	return "0.2.0"
+	return "0.3.0"
 }
 
 func isMock() bool {
@@ -358,4 +359,31 @@ func pixmapToBytes(ctx uintptr, pix uintptr, format string) []byte {
 	// The format conversion would require full MuPDF implementation
 	// For now, this is equivalent to Samples()
 	return pixmapSamples(ctx, pix)
+}
+
+// ============================================================================
+// Enhanced PDF Operations
+// ============================================================================
+
+func mergePDFsNative(ctx uintptr, inputPaths []string, outputPath string) int {
+	// Convert Go strings to C strings
+	cPaths := make([]*C.char, len(inputPaths))
+	for i, path := range inputPaths {
+		cPaths[i] = C.CString(path)
+		defer C.free(unsafe.Pointer(cPaths[i]))
+	}
+
+	cOutputPath := C.CString(outputPath)
+	defer C.free(unsafe.Pointer(cOutputPath))
+
+	// Call the Rust FFI function
+	// Cast to const char * const * for the paths array
+	result := C.np_merge_pdfs(
+		C.int32_t(ctx),
+		(*C.char)(unsafe.Pointer(&cPaths[0])),
+		C.int32_t(len(inputPaths)),
+		cOutputPath,
+	)
+
+	return int(result)
 }

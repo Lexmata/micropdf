@@ -188,6 +188,9 @@ ffi.cdef("""
     void fz_curveto(fz_context ctx, fz_path path, float x1, float y1, float x2, float y2, float x3, float y3);
     void fz_closepath(fz_context ctx, fz_path path);
     void fz_rectto(fz_context ctx, fz_path path, float x, float y, float w, float h);
+
+    // Enhanced PDF operations
+    int32_t np_merge_pdfs(int32_t ctx, const char * const * paths, int32_t count, const char * output_path);
 """)
 
 # Constants

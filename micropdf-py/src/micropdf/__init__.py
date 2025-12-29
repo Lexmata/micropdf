@@ -38,6 +38,7 @@ from .geometry import (
 from .colorspace import Colorspace
 from .errors import MicroPDFError, ErrorCode
 from .easy import EasyPDF
+from .enhanced import merge_pdfs
 
 # Resource tracking and profiling
 from .resource_tracking import (

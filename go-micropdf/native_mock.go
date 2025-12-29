@@ -520,3 +520,14 @@ func resetCookie(_ uintptr, cookie uintptr) {
 		c.aborted = false
 	}
 }
+
+// ============================================================================
+// Enhanced PDF Operations (Mock)
+// ============================================================================
+
+func mergePDFsNative(_ uintptr, inputPaths []string, _ string) int {
+	// Mock implementation: just count total pages from input files
+	// In a real implementation, this would merge the PDFs
+	totalPages := len(inputPaths) * 10 // Mock: assume 10 pages per document
+	return totalPages
+}
