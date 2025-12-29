@@ -4,16 +4,16 @@ on:
   push:
     branches: [main, develop, 'feature/**', 'bugfix/**']
     paths:
-      - 'nanopdf-js/**'
-      - 'nanopdf-rs/src/**'
-      - 'nanopdf-rs/Cargo.toml'
+      - 'micropdf-js/**'
+      - 'micropdf-rs/src/**'
+      - 'micropdf-rs/Cargo.toml'
       - '.github/workflows/test-nodejs-bindings.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'nanopdf-js/**'
-      - 'nanopdf-rs/src/**'
-      - 'nanopdf-rs/Cargo.toml'
+      - 'micropdf-js/**'
+      - 'micropdf-rs/src/**'
+      - 'micropdf-rs/Cargo.toml'
 
 jobs:
   test-nodejs-docker:
@@ -32,7 +32,7 @@ jobs:
       - name: Build and test Node.js bindings
         continue-on-error: true  # Tests may fail until FFI is complete
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           chmod +x docker/build-test.sh
           ./docker/build-test.sh || echo "Docker tests may have failed due to incomplete FFI"
 
@@ -42,8 +42,8 @@ jobs:
         with:
           name: nodejs-test-results
           path: |
-            nanopdf-js/coverage/
-            nanopdf-js/*.log
+            micropdf-js/coverage/
+            micropdf-js/*.log
 
   test-nodejs-native:
     name: Test Node.js Bindings (Native)
@@ -77,7 +77,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            nanopdf-rs/target/
+            micropdf-rs/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache pnpm modules
@@ -90,47 +90,47 @@ jobs:
 
       - name: Build Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           cargo build --release
 
       - name: Install Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           # Use sudo -E to preserve PATH with cargo
           sudo -E env "PATH=$PATH" make install PREFIX=/usr
 
       - name: Install Node.js dependencies
         continue-on-error: true  # May fail if native addon build fails
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm install --frozen-lockfile || echo "Native addon build may have failed - continuing with mock"
 
       - name: Build TypeScript
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run build:ts
 
       - name: Build native addon
         continue-on-error: true  # FFI may be incomplete
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run build:native || echo "Native addon build skipped - FFI not yet complete"
 
       - name: Run tests
         continue-on-error: true  # Tests requiring native addon may fail
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm test || echo "Some tests may have failed due to incomplete FFI"
 
       - name: Run integration tests
         continue-on-error: true  # Integration tests may fail without native addon
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm test -- --run integration || echo "Integration tests skipped - native addon not available"
 
       - name: Type check
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm exec tsc --noEmit
 
   test-nodejs-coverage:
@@ -156,40 +156,40 @@ jobs:
 
       - name: Build Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           cargo build --release
 
       - name: Install Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           # Use sudo -E to preserve PATH with cargo
           sudo -E env "PATH=$PATH" make install PREFIX=/usr
 
       - name: Install dependencies
         continue-on-error: true  # May fail if native addon build fails
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm install --frozen-lockfile || echo "Native addon build may have failed - continuing with mock"
 
       - name: Build project
         continue-on-error: true  # FFI may be incomplete
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run build:ts
           pnpm run build:native || echo "Native addon build skipped"
 
       - name: Run tests with coverage
         continue-on-error: true  # Tests may fail without native addon
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm test -- --coverage || echo "Some tests may have failed"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./nanopdf-js/coverage/coverage-final.json
+          files: ./micropdf-js/coverage/coverage-final.json
           flags: nodejs-bindings
-          name: nanopdf-js
+          name: micropdf-js
 
   lint-nodejs:
     name: Lint Node.js Code
@@ -212,22 +212,22 @@ jobs:
       - name: Install dependencies
         continue-on-error: true  # May fail if native addon build fails
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm install --frozen-lockfile --ignore-scripts || pnpm install --frozen-lockfile || echo "Install with some failures"
 
       - name: Run ESLint
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run lint || echo "ESLint not configured"
 
       - name: Run Prettier check
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run format:check || echo "Prettier not configured"
 
       - name: Type check
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm exec tsc --noEmit
 
   test-prebuilds:
@@ -257,41 +257,41 @@ jobs:
 
       - name: Build Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           cargo build --release
 
       - name: Copy Rust library (Linux)
         if: runner.os == 'Linux'
         run: |
-          mkdir -p nanopdf-js/native/lib/linux-x64
-          cp nanopdf-rs/target/release/libnanopdf.a nanopdf-js/native/lib/linux-x64/
+          mkdir -p micropdf-js/native/lib/linux-x64
+          cp micropdf-rs/target/release/libmicropdf.a micropdf-js/native/lib/linux-x64/
 
       - name: Copy Rust library (macOS)
         if: runner.os == 'macOS'
         run: |
-          mkdir -p nanopdf-js/native/lib/darwin-x64
-          cp nanopdf-rs/target/release/libnanopdf.a nanopdf-js/native/lib/darwin-x64/
+          mkdir -p micropdf-js/native/lib/darwin-x64
+          cp micropdf-rs/target/release/libmicropdf.a micropdf-js/native/lib/darwin-x64/
 
       - name: Copy headers
         run: |
-          mkdir -p nanopdf-js/native/include
-          cp -r nanopdf-rs/include/* nanopdf-js/native/include/
+          mkdir -p micropdf-js/native/include
+          cp -r micropdf-rs/include/* micropdf-js/native/include/
 
       - name: Install dependencies
         continue-on-error: true  # May fail if native addon build fails
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm install --frozen-lockfile || echo "Native addon build may have failed"
 
       - name: Build native addon
         continue-on-error: true  # FFI may be incomplete
         run: |
-          cd nanopdf-js
+          cd micropdf-js
           pnpm run build:native || echo "Native addon build skipped - FFI not yet complete"
 
       - name: Test native addon
         continue-on-error: true  # Tests may fail without complete FFI
         run: |
-          cd nanopdf-js
-          node -e "const addon = require('./build/Release/nanopdf_native.node'); console.log('Loaded:', Object.keys(addon).length, 'exports');"
+          cd micropdf-js
+          node -e "const addon = require('./build/Release/micropdf_native.node'); console.log('Loaded:', Object.keys(addon).length, 'exports');"
 

@@ -37,11 +37,11 @@ jobs:
         run: pnpm install
 
       - name: Install Node.js docs dependencies
-        working-directory: ./nanopdf-js
+        working-directory: ./micropdf-js
         run: pnpm install
 
       - name: Generate TypeDoc documentation
-        working-directory: ./nanopdf-js
+        working-directory: ./micropdf-js
         run: pnpm run docs
 
       - name: Setup Python
@@ -54,7 +54,7 @@ jobs:
           pip install sphinx sphinx-rtd-theme
 
       - name: Generate Sphinx documentation
-        working-directory: ./nanopdf-py/docs
+        working-directory: ./micropdf-py/docs
         run: |
           sphinx-build -b html . ../../docs/api/python
 

@@ -18,7 +18,7 @@ GH_PAGES_BRANCH="gh-pages"
 REPO_URL=$(git config --get remote.origin.url)
 
 echo -e "${BLUE}=======================================${NC}"
-echo -e "${BLUE}  NanoPDF GitHub Pages Deployment${NC}"
+echo -e "${BLUE}  MicroPDF GitHub Pages Deployment${NC}"
 echo -e "${BLUE}=======================================${NC}"
 
 # Check if we're in the project root
@@ -130,5 +130,5 @@ git checkout "$CURRENT_BRANCH"
 echo -e "\n${GREEN}=======================================${NC}"
 echo -e "${GREEN}  Deployment Complete!${NC}"
 echo -e "${GREEN}=======================================${NC}"
-echo -e "Site URL: ${BLUE}https://lexmata.github.io/nanopdf/${NC}"
+echo -e "Site URL: ${BLUE}https://lexmata.github.io/micropdf/${NC}"
 

@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature or enhancement for NanoPDF
+about: Suggest a new feature or enhancement for MicroPDF
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
@@ -24,7 +24,7 @@ Describe how you envision this feature working.
 
 ```rust
 // Example of how you'd like to use the feature
-use nanopdf::*;
+use micropdf::*;
 
 fn example() {
     // Your proposed API usage
@@ -48,7 +48,7 @@ List specific use cases for this feature:
 Does MuPDF have this feature?
 
 - [ ] Yes, MuPDF has this feature
-- [ ] No, this would be a NanoPDF extension
+- [ ] No, this would be a MicroPDF extension
 - [ ] I'm not sure
 
 If yes, please link to relevant MuPDF documentation or source:
@@ -79,5 +79,5 @@ Add any other context, screenshots, mockups, or examples about the feature reque
 
 - [ ] I have searched existing issues to ensure this is not a duplicate
 - [ ] I have checked the project roadmap/compatibility docs
-- [ ] This feature aligns with NanoPDF's goal as a MuPDF drop-in replacement
+- [ ] This feature aligns with MicroPDF's goal as a MuPDF drop-in replacement
 

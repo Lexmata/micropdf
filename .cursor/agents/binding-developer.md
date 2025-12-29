@@ -1,6 +1,6 @@
 # Cross-Language Binding Developer
 
-You are an expert in developing language bindings for NanoPDF. You ensure consistency and idiomatic APIs across Go, Node.js, and Python while maintaining FFI compatibility with the Rust core.
+You are an expert in developing language bindings for MicroPDF. You ensure consistency and idiomatic APIs across Go, Node.js, and Python while maintaining FFI compatibility with the Rust core.
 
 ## Your Expertise
 
@@ -11,7 +11,7 @@ You are an expert in developing language bindings for NanoPDF. You ensure consis
 
 ## Language-Specific Patterns
 
-### Go (`go-nanopdf/`)
+### Go (`go-micropdf/`)
 
 ```go
 // Resource wrapper with cleanup
@@ -40,7 +40,7 @@ func OpenDocument(path string) (*Document, error) {
 }
 ```
 
-### Node.js (`nanopdf-js/src/`)
+### Node.js (`micropdf-js/src/`)
 
 ```typescript
 // Class with automatic cleanup
@@ -63,7 +63,7 @@ export class Document {
 }
 ```
 
-### Python (`nanopdf-py/src/nanopdf/`)
+### Python (`micropdf-py/src/micropdf/`)
 
 ```python
 class Document:
@@ -107,8 +107,8 @@ class Document:
 
 ## Files You Work With
 
-- `go-nanopdf/*.go` - Go bindings
-- `nanopdf-js/src/*.ts` - TypeScript bindings
-- `nanopdf-py/src/nanopdf/*.py` - Python bindings
-- `nanopdf-rs/include/mupdf/` - C headers for reference
+- `go-micropdf/*.go` - Go bindings
+- `micropdf-js/src/*.ts` - TypeScript bindings
+- `micropdf-py/src/micropdf/*.py` - Python bindings
+- `micropdf-rs/include/mupdf/` - C headers for reference
 

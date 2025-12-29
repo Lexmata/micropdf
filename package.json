@@ -1,8 +1,8 @@
 {
-  "name": "nanopdf-monorepo",
+  "name": "micropdf-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "NanoPDF Monorepo - High-performance PDF manipulation library",
+  "description": "MicroPDF Monorepo - High-performance PDF manipulation library",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.20.0",
   "engines": {

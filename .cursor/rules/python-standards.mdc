@@ -3,7 +3,7 @@ alwaysApply: false
 ---
 # Python Bindings Code Generation Standards
 
-This project provides Python bindings for NanoPDF with focus on performance and Pythonic API design.
+This project provides Python bindings for MicroPDF with focus on performance and Pythonic API design.
 
 ## Python Version and Environment
 
@@ -14,10 +14,10 @@ This project provides Python bindings for NanoPDF with focus on performance and 
 ## Project Structure
 
 ```
-nanopdf-py/
+micropdf-py/
 ├── pyproject.toml          # Project configuration
 ├── src/
-│   └── nanopdf/
+│   └── micropdf/
 │       ├── __init__.py     # Package exports
 │       ├── buffer.py       # Buffer implementation
 │       ├── geometry.py     # Point, Rect, Matrix, Quad
@@ -227,31 +227,31 @@ def _get_lib():
         _ffi.cdef("""
             // FFI declarations
         """)
-        _lib = _ffi.dlopen("libnanopdf.so")
+        _lib = _ffi.dlopen("libmicropdf.so")
     return _lib
 
 
 # ❌ WRONG: Loading at module import time
 from cffi import FFI
 ffi = FFI()
-lib = ffi.dlopen("libnanopdf.so")  # Slows down import!
+lib = ffi.dlopen("libmicropdf.so")  # Slows down import!
 ```
 
 ### Error Handling
 
 ```python
 # ✅ CORRECT: Convert FFI errors to Python exceptions
-class NanoPdfError(Exception):
-    """Base exception for NanoPDF errors."""
+class MicroPdfError(Exception):
+    """Base exception for MicroPDF errors."""
     pass
 
-class ParseError(NanoPdfError):
+class ParseError(MicroPdfError):
     """Raised when PDF parsing fails."""
     def __init__(self, message: str, offset: int = 0):
         self.offset = offset
         super().__init__(f"Parse error at offset {offset}: {message}")
 
-class ResourceError(NanoPdfError):
+class ResourceError(MicroPdfError):
     """Raised when a resource operation fails."""
     pass
 
@@ -259,13 +259,13 @@ class ResourceError(NanoPdfError):
 def _check_error(result: int) -> None:
     """Check FFI result and raise appropriate exception."""
     if result < 0:
-        error_msg = _get_lib().nanopdf_get_last_error()
+        error_msg = _get_lib().micropdf_get_last_error()
         error_str = _ffi.string(error_msg).decode('utf-8')
 
         if "parse" in error_str.lower():
             raise ParseError(error_str)
         else:
-            raise NanoPdfError(error_str)
+            raise MicroPdfError(error_str)
 ```
 
 ## Context Managers
@@ -285,7 +285,7 @@ class Document:
         """Close the document and release resources."""
         if not self._closed:
             self._closed = True
-            _get_lib().nanopdf_close_document(self._handle)
+            _get_lib().micropdf_close_document(self._handle)
 
     def __enter__(self) -> Self:
         return self
@@ -338,7 +338,7 @@ def contains_point(rect: RectLike, point: PointLike) -> bool:
 ```python
 # ✅ CORRECT: pytest with fixtures
 import pytest
-from nanopdf import Point, Rect, Matrix
+from micropdf import Point, Rect, Matrix
 
 class TestPoint:
     def test_constructor(self) -> None:
@@ -454,7 +454,7 @@ class Buffer:
 
 ```toml
 [project]
-name = "nanopdf"
+name = "micropdf"
 version = "0.1.0"
 description = "High-performance PDF library"
 readme = "README.md"

@@ -1,6 +1,6 @@
 # MuPDF Compatibility Guide
 
-NanoPDF is designed as a **drop-in replacement** for MuPDF with 100% API compatibility at the C FFI layer. This document details the compatibility status, migration path, and API coverage.
+MicroPDF is designed as a **drop-in replacement** for MuPDF with 100% API compatibility at the C FFI layer. This document details the compatibility status, migration path, and API coverage.
 
 ---
 
@@ -17,14 +17,14 @@ NanoPDF is designed as a **drop-in replacement** for MuPDF with 100% API compati
 
 ### Quick Migration (C/C++ Projects)
 
-Replace MuPDF with NanoPDF in **3 simple steps**:
+Replace MuPDF with MicroPDF in **3 simple steps**:
 
 ```bash
 # 1. Update include paths
-sed -i 's/#include <mupdf\//#include <nanopdf\//g' src/**/*.c
+sed -i 's/#include <mupdf\//#include <micropdf\//g' src/**/*.c
 
 # 2. Update linker flags
-sed -i 's/-lmupdf/-lnanopdf/g' Makefile
+sed -i 's/-lmupdf/-lmicropdf/g' Makefile
 
 # 3. Rebuild
 make clean && make
@@ -42,10 +42,10 @@ make clean && make
 #include <mupdf/pdf.h>
 ```
 
-**After (NanoPDF):**
+**After (MicroPDF):**
 ```c
-#include <nanopdf/fitz.h>
-#include <nanopdf/pdf.h>
+#include <micropdf/fitz.h>
+#include <micropdf/pdf.h>
 ```
 
 #### 2. Update Build System
@@ -57,8 +57,8 @@ find_package(MuPDF REQUIRED)
 target_link_libraries(myapp mupdf)
 
 # After
-find_package(NanoPDF REQUIRED)
-target_link_libraries(myapp nanopdf)
+find_package(MicroPDF REQUIRED)
+target_link_libraries(myapp micropdf)
 ```
 
 **pkg-config:**
@@ -67,7 +67,7 @@ target_link_libraries(myapp nanopdf)
 gcc myapp.c $(pkg-config --cflags --libs mupdf)
 
 # After
-gcc myapp.c $(pkg-config --cflags --libs nanopdf)
+gcc myapp.c $(pkg-config --cflags --libs micropdf)
 ```
 
 #### 3. Rebuild
@@ -131,7 +131,7 @@ make
 
 ### Intentional Breaking Changes
 
-NanoPDF makes **zero breaking changes** at the C API level. However, there are internal improvements:
+MicroPDF makes **zero breaking changes** at the C API level. However, there are internal improvements:
 
 #### 1. Thread Safety
 
@@ -143,9 +143,9 @@ fz_context *ctx = fz_new_context(...);
 fz_unlock(ctx, FZ_LOCK_ALLOC);
 ```
 
-**NanoPDF:**
+**MicroPDF:**
 ```c
-// NanoPDF handles locking internally (Rust Arc/Mutex)
+// MicroPDF handles locking internally (Rust Arc/Mutex)
 fz_context *ctx = fz_new_context(...);
 // Safe to use from multiple threads
 ```
@@ -159,7 +159,7 @@ fz_buffer *buf = fz_new_buffer(ctx, 1024);
 // ... easy to forget fz_drop_buffer()
 ```
 
-**NanoPDF:**
+**MicroPDF:**
 ```c
 // Same API, but Rust ensures proper cleanup
 fz_buffer *buf = fz_new_buffer(ctx, 1024);
@@ -169,9 +169,9 @@ fz_drop_buffer(ctx, buf);
 
 #### 3. Performance Optimizations
 
-NanoPDF automatically parallelizes operations where MuPDF is single-threaded:
+MicroPDF automatically parallelizes operations where MuPDF is single-threaded:
 
-| Operation | MuPDF | NanoPDF |
+| Operation | MuPDF | MicroPDF |
 |-----------|-------|---------|
 | Multi-page rendering | Sequential | ✅ Parallel (Rayon) |
 | Image decompression | Single-threaded | ✅ Parallel |
@@ -186,7 +186,7 @@ NanoPDF automatically parallelizes operations where MuPDF is single-threaded:
 
 ### Benchmark Results
 
-| Operation | MuPDF | NanoPDF | Speedup |
+| Operation | MuPDF | MicroPDF | Speedup |
 |-----------|-------|---------|---------|
 | Open 100-page PDF | 45ms | 22ms | **2.0x** |
 | Render single page (300 DPI) | 180ms | 95ms | **1.9x** |
@@ -197,7 +197,7 @@ NanoPDF automatically parallelizes operations where MuPDF is single-threaded:
 
 *Benchmarks run on AMD Ryzen 9 5950X (16 cores), tested with real-world PDFs.*
 
-See **[live benchmarks](https://lexmata.github.io/nanopdf/dev/bench/)** for detailed performance data.
+See **[live benchmarks](https://lexmata.github.io/micropdf/dev/bench/)** for detailed performance data.
 
 ---
 
@@ -205,7 +205,7 @@ See **[live benchmarks](https://lexmata.github.io/nanopdf/dev/bench/)** for deta
 
 ### MuPDF Versions Supported
 
-| MuPDF Version | NanoPDF Status | Notes |
+| MuPDF Version | MicroPDF Status | Notes |
 |---------------|----------------|-------|
 | 1.24.x | ✅ Supported | Latest stable |
 | 1.23.x | ✅ Supported | Full compatibility |
@@ -215,7 +215,7 @@ See **[live benchmarks](https://lexmata.github.io/nanopdf/dev/bench/)** for deta
 
 ### API Version
 
-NanoPDF implements the **MuPDF 1.24 API** with full backward compatibility to 1.22.
+MicroPDF implements the **MuPDF 1.24 API** with full backward compatibility to 1.22.
 
 ---
 
@@ -223,11 +223,11 @@ NanoPDF implements the **MuPDF 1.24 API** with full backward compatibility to 1.
 
 ### Automated Tests
 
-NanoPDF includes **1,200+ compatibility tests** ensuring API parity:
+MicroPDF includes **1,200+ compatibility tests** ensuring API parity:
 
 ```bash
 # Run compatibility test suite
-cd nanopdf-rs
+cd micropdf-rs
 cargo test --features mupdf-compat
 
 # Run against MuPDF test PDFs
@@ -250,42 +250,42 @@ See **[FUZZING.md](./FUZZING.md)** for details.
 
 ### Shared Library (.so / .dylib / .dll)
 
-NanoPDF produces **ABI-compatible** shared libraries:
+MicroPDF produces **ABI-compatible** shared libraries:
 
 **Linux:**
 ```bash
 # Install system-wide
-sudo cp target/release/libnanopdf.so /usr/lib/
+sudo cp target/release/libmicropdf.so /usr/lib/
 sudo ldconfig
 
-# Existing MuPDF apps will use NanoPDF
+# Existing MuPDF apps will use MicroPDF
 ldd /usr/bin/pdfviewer
-# libnanopdf.so => /usr/lib/libnanopdf.so
+# libmicropdf.so => /usr/lib/libmicropdf.so
 ```
 
 **macOS:**
 ```bash
 install_name_tool -change \
   @rpath/libmupdf.dylib \
-  @rpath/libnanopdf.dylib \
+  @rpath/libmicropdf.dylib \
   myapp
 ```
 
 **Windows:**
 ```powershell
-# Just rename or replace mupdf.dll with nanopdf.dll
-copy nanopdf.dll "C:\Program Files\MyApp\mupdf.dll"
+# Just rename or replace mupdf.dll with micropdf.dll
+copy micropdf.dll "C:\Program Files\MyApp\mupdf.dll"
 ```
 
 ### Static Linking
 
 ```bash
 # Build static library
-cd nanopdf-rs
+cd micropdf-rs
 cargo build --release --features static
 
 # Link into your app
-gcc myapp.c -L target/release -lnanopdf -o myapp
+gcc myapp.c -L target/release -lmicropdf -o myapp
 ```
 
 ---
@@ -295,17 +295,17 @@ gcc myapp.c -L target/release -lnanopdf -o myapp
 | Project | License | Commercial Use |
 |---------|---------|----------------|
 | **MuPDF** | AGPL-3.0 | ❌ Requires commercial license ($$$) |
-| **NanoPDF** | MIT / Apache 2.0 | ✅ Free for commercial use |
+| **MicroPDF** | MIT / Apache 2.0 | ✅ Free for commercial use |
 
 ### Migration Benefits
 
-NanoPDF was created to solve two critical pain points with MuPDF:
+MicroPDF was created to solve two critical pain points with MuPDF:
 
 **1. Poor ARM Build Performance**
-MuPDF takes 45+ minutes to compile on ARM systems (Raspberry Pi, Apple Silicon, AWS Graviton) and cross-compilation is fragile. NanoPDF compiles in **8-12 minutes** on ARM — **3-5x faster** thanks to Rust's superior build system.
+MuPDF takes 45+ minutes to compile on ARM systems (Raspberry Pi, Apple Silicon, AWS Graviton) and cross-compilation is fragile. MicroPDF compiles in **8-12 minutes** on ARM — **3-5x faster** thanks to Rust's superior build system.
 
 **2. Unified Multi-Language Support**
-Instead of maintaining separate PDF libraries for each language (PyMuPDF, MuPDF.js, go-fitz), NanoPDF provides **one battle-tested core** with idiomatic bindings for Rust, Node.js, Go, Python, Deno, and Bun.
+Instead of maintaining separate PDF libraries for each language (PyMuPDF, MuPDF.js, go-fitz), MicroPDF provides **one battle-tested core** with idiomatic bindings for Rust, Node.js, Go, Python, Deno, and Bun.
 
 **Additional Benefits:**
 - ✅ **Free MIT/Apache 2.0 license** - Use in commercial products without AGPL restrictions
@@ -314,7 +314,7 @@ Instead of maintaining separate PDF libraries for each language (PyMuPDF, MuPDF.
 - ✅ **Better performance** - Modern concurrency via Rayon and Tokio
 - ✅ **Easier cross-compilation** - Simple with cargo vs. complex with MuPDF makefiles
 
-**Use NanoPDF in:**
+**Use MicroPDF in:**
 - ✅ Commercial products
 - ✅ Proprietary software
 - ✅ SaaS applications
@@ -336,10 +336,10 @@ page = doc[0]
 pix = page.get_pixmap()
 ```
 
-**NanoPDF:**
+**MicroPDF:**
 ```python
-import nanopdf
-doc = nanopdf.open("document.pdf")
+import micropdf
+doc = micropdf.open("document.pdf")
 page = doc.get_page(0)
 pix = page.render_to_pixmap()
 ```
@@ -354,9 +354,9 @@ const mupdf = require('mupdf');
 const doc = mupdf.Document.openDocument('file.pdf');
 ```
 
-**NanoPDF:**
+**MicroPDF:**
 ```javascript
-const { Document } = require('nanopdf');
+const { Document } = require('micropdf');
 const doc = Document.open('file.pdf');
 ```
 
@@ -368,10 +368,10 @@ import "github.com/gen2brain/go-fitz"
 doc, _ := fitz.New("document.pdf")
 ```
 
-**go-nanopdf:**
+**go-micropdf:**
 ```go
-import "github.com/lexmata/nanopdf/go-nanopdf"
-doc, _ := nanopdf.OpenDocument(ctx, "document.pdf")
+import "github.com/lexmata/micropdf/go-micropdf"
+doc, _ := micropdf.OpenDocument(ctx, "document.pdf")
 ```
 
 ---
@@ -427,15 +427,15 @@ For missing features, you can:
 
 ### Compatibility Test Suite
 
-Verify NanoPDF compatibility with your MuPDF code:
+Verify MicroPDF compatibility with your MuPDF code:
 
 ```bash
-# Clone NanoPDF
-git clone https://github.com/lexmata/nanopdf.git
-cd nanopdf
+# Clone MicroPDF
+git clone https://github.com/lexmata/micropdf.git
+cd micropdf
 
 # Build with compatibility tests
-cd nanopdf-rs
+cd micropdf-rs
 cargo test --features mupdf-compat --release
 
 # Run against your PDFs
@@ -446,7 +446,7 @@ cargo test --test compatibility -- --test-dir /path/to/your/pdfs
 
 If you find compatibility issues:
 
-1. **Open an issue**: [github.com/lexmata/nanopdf/issues](https://github.com/lexmata/nanopdf/issues)
+1. **Open an issue**: [github.com/lexmata/micropdf/issues](https://github.com/lexmata/micropdf/issues)
 2. **Provide**:
    - MuPDF version you're migrating from
    - Code snippet showing the incompatibility
@@ -459,16 +459,16 @@ If you find compatibility issues:
 
 Need help migrating from MuPDF?
 
-- **Documentation**: [docs.rs/nanopdf](https://docs.rs/nanopdf)
-- **Examples**: [nanopdf/examples](./nanopdf-rs/examples/)
-- **Issues**: [GitHub Issues](https://github.com/lexmata/nanopdf/issues)
-- **Community**: [GitHub Discussions](https://github.com/lexmata/nanopdf/discussions)
+- **Documentation**: [docs.rs/micropdf](https://docs.rs/micropdf)
+- **Examples**: [micropdf/examples](./micropdf-rs/examples/)
+- **Issues**: [GitHub Issues](https://github.com/lexmata/micropdf/issues)
+- **Community**: [GitHub Discussions](https://github.com/lexmata/micropdf/discussions)
 
 ---
 
 ## 🎯 Summary
 
-| Feature | MuPDF | NanoPDF |
+| Feature | MuPDF | MicroPDF |
 |---------|-------|---------|
 | **ARM Build Time** | 45+ minutes | ✅ **8-12 minutes (3-5x faster)** |
 | **Multi-Language Support** | Separate libs | ✅ **Unified core + bindings** |
@@ -487,7 +487,7 @@ Need help migrating from MuPDF?
 
 **Ready to migrate?** See the [Quick Start Guide](./README.md#-quick-start)
 
-**Questions?** Open an [issue](https://github.com/lexmata/nanopdf/issues) or [discussion](https://github.com/lexmata/nanopdf/discussions)
+**Questions?** Open an [issue](https://github.com/lexmata/micropdf/issues) or [discussion](https://github.com/lexmata/micropdf/discussions)
 
 Made with ❤️ by [Lexmata](https://lexmata.ai)
 

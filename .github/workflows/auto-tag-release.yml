@@ -118,8 +118,8 @@ jobs:
           echo "Verifying version consistency..."
 
           # Check Cargo.toml
-          if [ -f nanopdf-rs/Cargo.toml ]; then
-            CARGO_VERSION=$(grep '^version = ' nanopdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          if [ -f micropdf-rs/Cargo.toml ]; then
+            CARGO_VERSION=$(grep '^version = ' micropdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
             echo "Cargo.toml version: $CARGO_VERSION"
             if [ "$CARGO_VERSION" != "$VERSION" ]; then
               echo "::warning::Version mismatch in Cargo.toml: $CARGO_VERSION != $VERSION"
@@ -127,8 +127,8 @@ jobs:
           fi
 
           # Check package.json
-          if [ -f nanopdf-js/package.json ]; then
-            PACKAGE_VERSION=$(node -p "require('./nanopdf-js/package.json').version")
+          if [ -f micropdf-js/package.json ]; then
+            PACKAGE_VERSION=$(node -p "require('./micropdf-js/package.json').version")
             echo "package.json version: $PACKAGE_VERSION"
             if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
               echo "::warning::Version mismatch in package.json: $PACKAGE_VERSION != $VERSION"
@@ -139,14 +139,14 @@ jobs:
           echo "Creating tag: $TAG"
           git tag -a "$TAG" -m "Release $VERSION
 
-          NanoPDF $VERSION
+          MicroPDF $VERSION
 
           This release was automatically tagged from a release branch merge.
 
           Projects:
-          - nanopdf-rs: $VERSION
-          - nanopdf-js: $VERSION
-          - go-nanopdf: $VERSION
+          - micropdf-rs: $VERSION
+          - micropdf-js: $VERSION
+          - go-micropdf: $VERSION
 
           See CHANGELOG.md for details."
 
@@ -170,7 +170,7 @@ jobs:
           name: Release ${{ needs.check-release-merge.outputs.version }}
           draft: true
           body: |
-            # NanoPDF ${{ needs.check-release-merge.outputs.version }}
+            # MicroPDF ${{ needs.check-release-merge.outputs.version }}
 
             **This is an automated draft release. Please update the release notes.**
 
@@ -182,17 +182,17 @@ jobs:
 
             ### Rust
             ```bash
-            cargo add nanopdf@${{ needs.check-release-merge.outputs.version }}
+            cargo add micropdf@${{ needs.check-release-merge.outputs.version }}
             ```
 
             ### Node.js
             ```bash
-            npm install @nanopdf/nanopdf@${{ needs.check-release-merge.outputs.version }}
+            npm install @micropdf/micropdf@${{ needs.check-release-merge.outputs.version }}
             ```
 
             ### Go
             ```bash
-            go get github.com/lexmata/nanopdf/go-nanopdf@v${{ needs.check-release-merge.outputs.version }}
+            go get github.com/lexmata/micropdf/go-micropdf@v${{ needs.check-release-merge.outputs.version }}
             ```
 
             ---

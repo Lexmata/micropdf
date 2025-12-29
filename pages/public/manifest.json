@@ -1,8 +1,8 @@
 {
-  "name": "NanoPDF Documentation",
-  "short_name": "NanoPDF",
+  "name": "MicroPDF Documentation",
+  "short_name": "MicroPDF",
   "description": "High-performance PDF library documentation for Rust, JavaScript, and Go",
-  "start_url": "/nanopdf/",
+  "start_url": "/micropdf/",
   "display": "standalone",
   "background_color": "#0a0e17",
   "theme_color": "#06b6d4",

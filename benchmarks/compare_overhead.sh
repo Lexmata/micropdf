@@ -30,8 +30,8 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 # ============================================================================
 
 echo "--- Running Rust Baseline ---"
-if [ -f "$PROJECT_ROOT/nanopdf-rs/Cargo.toml" ]; then
-    cd "$PROJECT_ROOT/nanopdf-rs"
+if [ -f "$PROJECT_ROOT/micropdf-rs/Cargo.toml" ]; then
+    cd "$PROJECT_ROOT/micropdf-rs"
 
     # Check if the example exists
     if cargo build --release --example cross_language_baseline 2>/dev/null; then
@@ -41,7 +41,7 @@ if [ -f "$PROJECT_ROOT/nanopdf-rs/Cargo.toml" ]; then
         cargo bench --bench memory_allocation -- --noplot 2>&1 | head -100 | tee "$RESULTS_DIR/rust_${TIMESTAMP}.txt"
     fi
 else
-    echo "Warning: Rust project not found at $PROJECT_ROOT/nanopdf-rs"
+    echo "Warning: Rust project not found at $PROJECT_ROOT/micropdf-rs"
 fi
 echo ""
 
@@ -50,7 +50,7 @@ echo ""
 # ============================================================================
 
 echo "--- Running Go Benchmark ---"
-if [ -f "$PROJECT_ROOT/go-nanopdf/go.mod" ]; then
+if [ -f "$PROJECT_ROOT/go-micropdf/go.mod" ]; then
     cd "$PROJECT_ROOT"
 
     if command -v go &> /dev/null; then
@@ -59,7 +59,7 @@ if [ -f "$PROJECT_ROOT/go-nanopdf/go.mod" ]; then
         echo "Warning: Go not found in PATH"
     fi
 else
-    echo "Warning: Go project not found at $PROJECT_ROOT/go-nanopdf"
+    echo "Warning: Go project not found at $PROJECT_ROOT/go-micropdf"
 fi
 echo ""
 
@@ -68,7 +68,7 @@ echo ""
 # ============================================================================
 
 echo "--- Running Node.js Benchmark ---"
-if [ -f "$PROJECT_ROOT/nanopdf-js/package.json" ]; then
+if [ -f "$PROJECT_ROOT/micropdf-js/package.json" ]; then
     cd "$PROJECT_ROOT"
 
     if command -v npx &> /dev/null; then
@@ -81,7 +81,7 @@ if [ -f "$PROJECT_ROOT/nanopdf-js/package.json" ]; then
         echo "Warning: Node.js not found in PATH"
     fi
 else
-    echo "Warning: Node.js project not found at $PROJECT_ROOT/nanopdf-js"
+    echo "Warning: Node.js project not found at $PROJECT_ROOT/micropdf-js"
 fi
 echo ""
 

@@ -10,12 +10,12 @@
       <span class="inline-block px-2 py-1 bg-cyan-400/15 text-cyan-400 rounded-full text-xs font-medium mb-4">Go</span>
       <h1 class="text-4xl font-bold mb-4">Go Documentation</h1>
       <p class="text-lg text-text-secondary mb-12">
-        Idiomatic Go bindings for NanoPDF with CGo integration and standard Go error handling.
+        Idiomatic Go bindings for MicroPDF with CGo integration and standard Go error handling.
       </p>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Installation</h2>
-        <pre class="mb-4"><code>go get github.com/lexmata/nanopdf/go-nanopdf</code></pre>
+        <pre class="mb-4"><code>go get github.com/lexmata/micropdf/go-micropdf</code></pre>
         <p class="text-text-secondary mb-4">Requirements:</p>
         <ul class="list-disc pl-6 text-text-secondary">
           <li class="py-1">Go 1.22 or later</li>
@@ -32,12 +32,12 @@
     <span class="string">"fmt"</span>
     <span class="string">"log"</span>
     
-    nanopdf <span class="string">"github.com/lexmata/nanopdf/go-nanopdf"</span>
+    micropdf <span class="string">"github.com/lexmata/micropdf/go-micropdf"</span>
 )
 
 <span class="keyword">func</span> main() &#123;
     <span class="comment">// Open document</span>
-    doc, err := nanopdf.OpenDocument(<span class="string">"document.pdf"</span>)
+    doc, err := micropdf.OpenDocument(<span class="string">"document.pdf"</span>)
     <span class="keyword">if</span> err != <span class="keyword">nil</span> &#123;
         log.Fatal(err)
     &#125;
@@ -68,10 +68,10 @@
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Thread Safety</h2>
-        <p class="text-text-secondary mb-4">NanoPDF Go bindings are thread-safe. You can safely use documents across goroutines:</p>
+        <p class="text-text-secondary mb-4">MicroPDF Go bindings are thread-safe. You can safely use documents across goroutines:</p>
         <pre><code><span class="keyword">import</span> <span class="string">"sync"</span>
 
-doc, _ := nanopdf.OpenDocument(<span class="string">"large.pdf"</span>)
+doc, _ := micropdf.OpenDocument(<span class="string">"large.pdf"</span>)
 <span class="keyword">defer</span> doc.Close()
 
 <span class="keyword">var</span> wg sync.WaitGroup

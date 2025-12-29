@@ -4,12 +4,12 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'nanopdf-js/**'
+      - 'micropdf-js/**'
       - '.github/workflows/fuzz-nodejs.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'nanopdf-js/**'
+      - 'micropdf-js/**'
   schedule:
     # Run nightly at 2 AM UTC
     - cron: '0 2 * * *'
@@ -53,7 +53,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-          cache-dependency-path: 'nanopdf-js/pnpm-lock.yaml'
+          cache-dependency-path: 'micropdf-js/pnpm-lock.yaml'
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -68,30 +68,30 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            nanopdf-rs/target/
+            micropdf-rs/target/
           key: ${{ runner.os }}-cargo-fuzz-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-fuzz-
 
       - name: Build Rust library
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: |
           make release
-          mkdir -p ../nanopdf-js/native/lib/linux-x64
-          cp target/release/libnanopdf.a ../nanopdf-js/native/lib/linux-x64/
-          mkdir -p ../nanopdf-js/native/include
-          cp -r include/* ../nanopdf-js/native/include/
+          mkdir -p ../micropdf-js/native/lib/linux-x64
+          cp target/release/libmicropdf.a ../micropdf-js/native/lib/linux-x64/
+          mkdir -p ../micropdf-js/native/include
+          cp -r include/* ../micropdf-js/native/include/
 
       - name: Install dependencies
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm install --frozen-lockfile
 
       - name: Build TypeScript
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm build:ts
 
       - name: Bundle fuzz targets
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: |
           # Bundle each fuzz target with esbuild to JavaScript
           pnpm add -D esbuild
@@ -105,7 +105,7 @@ jobs:
           done
 
       - name: Run fuzzer
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: |
           DURATION=${{ github.event.inputs.duration || '300' }}
           npx jazzer fuzz/targets/${{ matrix.target }}.fuzz.js --sync --timeout=${DURATION}s
@@ -118,9 +118,9 @@ jobs:
         with:
           name: fuzz-crashes-${{ matrix.target }}-${{ github.run_number }}
           path: |
-            nanopdf-js/crash-*
-            nanopdf-js/leak-*
-            nanopdf-js/timeout-*
+            micropdf-js/crash-*
+            micropdf-js/leak-*
+            micropdf-js/timeout-*
           retention-days: 30
 
       - name: Create issue for crashes
@@ -132,7 +132,7 @@ jobs:
             const path = require('path');
 
             // Check if crash files exist
-            const crashFiles = fs.readdirSync('nanopdf-js')
+            const crashFiles = fs.readdirSync('micropdf-js')
               .filter(f => f.startsWith('crash-') || f.startsWith('leak-') || f.startsWith('timeout-'));
 
             if (crashFiles.length === 0) {
@@ -160,7 +160,7 @@ jobs:
             ### Reproduce
 
             \`\`\`bash
-            cd nanopdf-js
+            cd micropdf-js
             pnpm install
             pnpm build:ts
             pnpm add -D esbuild

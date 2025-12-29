@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'nanopdf-rs/**'
+      - 'micropdf-rs/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
   pull_request:
     branches: [main]
     paths:
-      - 'nanopdf-rs/**'
+      - 'micropdf-rs/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
   workflow_dispatch:
@@ -45,22 +45,22 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            nanopdf-rs/target/
+            micropdf-rs/target/
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-bench-
 
       - name: Run benchmarks
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: |
           cargo bench --all-features -- --save-baseline main 2>&1 | tee benchmark-output.txt
 
       - name: Parse benchmark results
         id: bench
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: |
           # Create JSON output for benchmark action
-          echo '{"name": "NanoPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [' > bench-results.json
+          echo '{"name": "MicroPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [' > bench-results.json
 
           # Parse criterion output
           grep -E "^[a-zA-Z_/]+\s+time:" benchmark-output.txt | while read line; do
@@ -85,15 +85,15 @@ jobs:
 
           # Fallback if no benchmarks found
           if [ ! -s bench-results.json ] || [ $(wc -l < bench-results.json) -lt 3 ]; then
-            echo '{"name": "NanoPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [{"name": "placeholder", "value": 0, "unit": "ns"}]}' > bench-results.json
+            echo '{"name": "MicroPDF Rust Benchmarks", "date": "'$(date -Iseconds)'", "benches": [{"name": "placeholder", "value": 0, "unit": "ns"}]}' > bench-results.json
           fi
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: NanoPDF Rust Benchmarks
+          name: MicroPDF Rust Benchmarks
           tool: 'customSmallerIsBetter'
-          output-file-path: nanopdf-rs/bench-results.json
+          output-file-path: micropdf-rs/bench-results.json
           # Push to gh-pages branch (must be false when using external-data-json-path)
           auto-push: false
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -104,7 +104,7 @@ jobs:
           # Store benchmark history
           benchmark-data-dir-path: dev/bench
           # Save Criterion HTML reports
-          external-data-json-path: nanopdf-rs/criterion-report.json
+          external-data-json-path: micropdf-rs/criterion-report.json
 
       - name: Prepare Criterion HTML reports for GitHub Pages
         run: |
@@ -112,15 +112,15 @@ jobs:
           mkdir -p gh-pages-criterion
 
           # Copy criterion HTML reports
-          if [ -d "nanopdf-rs/target/criterion" ]; then
-            cp -r nanopdf-rs/target/criterion gh-pages-criterion/
+          if [ -d "micropdf-rs/target/criterion" ]; then
+            cp -r micropdf-rs/target/criterion gh-pages-criterion/
 
             # Create index page for criterion reports
             cat > gh-pages-criterion/index.html << EOF
           <!DOCTYPE html>
           <html>
           <head>
-            <title>NanoPDF Benchmarks - Criterion Reports</title>
+            <title>MicroPDF Benchmarks - Criterion Reports</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
@@ -166,13 +166,13 @@ jobs:
             </style>
           </head>
           <body>
-            <h1>🚀 NanoPDF Performance Benchmarks</h1>
+            <h1>🚀 MicroPDF Performance Benchmarks</h1>
 
             <div class="nav">
               <h2>📊 Quick Links</h2>
               <a href="../dev/bench/">Historical Trends</a>
               <a href="criterion/report/index.html">Full Criterion Report</a>
-              <a href="https://github.com/Lexmata/nanopdf">GitHub Repository</a>
+              <a href="https://github.com/Lexmata/micropdf">GitHub Repository</a>
             </div>
 
             <h2>📦 Benchmark Suites</h2>
@@ -245,9 +245,9 @@ jobs:
         with:
           name: benchmark-results
           path: |
-            nanopdf-rs/benchmark-output.txt
-            nanopdf-rs/bench-results.json
-            nanopdf-rs/target/criterion/
+            micropdf-rs/benchmark-output.txt
+            micropdf-rs/bench-results.json
+            micropdf-rs/target/criterion/
           retention-days: 30
 
   # Compare PR benchmarks against main
@@ -275,7 +275,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            nanopdf-rs/target/
+            micropdf-rs/target/
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install critcmp
@@ -285,18 +285,18 @@ jobs:
         run: git checkout ${{ github.base_ref }}
 
       - name: Run base benchmarks
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo bench --all-features -- --save-baseline base
 
       - name: Checkout PR branch
         run: git checkout ${{ github.head_ref }}
 
       - name: Run PR benchmarks
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo bench --all-features -- --save-baseline pr
 
       - name: Compare benchmarks
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         id: compare
         run: |
           echo "## Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
@@ -318,7 +318,7 @@ jobs:
             let comparison = '';
             try {
               const { execSync } = require('child_process');
-              comparison = execSync('cd nanopdf-rs && critcmp base pr 2>&1 || echo "No comparison available"', { encoding: 'utf8' });
+              comparison = execSync('cd micropdf-rs && critcmp base pr 2>&1 || echo "No comparison available"', { encoding: 'utf8' });
             } catch (e) {
               comparison = 'Benchmark comparison not available';
             }

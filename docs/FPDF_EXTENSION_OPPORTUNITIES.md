@@ -1,13 +1,13 @@
-# FPDF Extension Opportunities for NanoPDF
+# FPDF Extension Opportunities for MicroPDF
 
 ## Executive Summary
 
 **Date**: December 4, 2025
 **FPDF2 Version**: 2.x (latest)
-**NanoPDF Version**: 0.1.0
-**Purpose**: Identify unique FPDF features not in pypdf/MuPDF for potential NanoPDF extensions
+**MicroPDF Version**: 0.1.0
+**Purpose**: Identify unique FPDF features not in pypdf/MuPDF for potential MicroPDF extensions
 
-This document identifies features present in the FPDF/FPDF2 library that are **not available** in pypdf or MuPDF. These represent valuable additions that could differentiate NanoPDF as a comprehensive PDF solution combining the best of all worlds:
+This document identifies features present in the FPDF/FPDF2 library that are **not available** in pypdf or MuPDF. These represent valuable additions that could differentiate MicroPDF as a comprehensive PDF solution combining the best of all worlds:
 - **MuPDF**: High-performance rendering and reading
 - **pypdf**: Comprehensive manipulation and editing
 - **FPDF**: Document generation and flow layout
@@ -51,7 +51,7 @@ pdf.set_y(y)  # Set Y position
 pdf.set_xy(x, y)  # Set both
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_get_cursor_position()` - Get current content position
 - `np_set_cursor_position(x, y)` - Set position for next content
 - `np_advance_cursor(dx, dy)` - Move cursor relative
@@ -63,7 +63,7 @@ pdf.set_xy(x, y)  # Set both
 pdf.multi_cell(width, height, text)  # Auto wrap and flow
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_write_flowing_text(text, width, style)` - Auto-wrapping text
 - `np_set_line_height(height)` - Configure line spacing
 - `np_set_auto_page_break(enabled, margin)` - Auto add pages
@@ -75,7 +75,7 @@ pdf.ln()  # Line break
 pdf.ln(h)  # Line break with height
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_line_break(height)` - Add line break
 - `np_page_break()` - Force page break
 - `np_get_remaining_page_height()` - Check space left
@@ -105,7 +105,7 @@ pdf.cell(
 )
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_cell(width, height, text, options)` - Core cell function
 - `CellOptions` struct with:
   - `border: CellBorder` (None, All, LRTB flags)
@@ -127,7 +127,7 @@ pdf.multi_cell(
 )
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_multi_cell(width, line_height, text, options)` - Wrapping cell
 - Auto-calculate total height
 - Support justified text
@@ -142,7 +142,7 @@ pdf.set_fill_color(r, g, b)           # Cell background
 pdf.set_text_color(r, g, b)           # Text color
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_set_cell_border_style(style, width, color)` - Per-side borders
 - `np_set_cell_fill(color)` - Background color
 - `np_set_cell_padding(left, top, right, bottom)` - Cell padding
@@ -168,7 +168,7 @@ with pdf.table() as table:
             row.cell(datum)
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_table_begin(columns, options)` - Start table
 - `np_table_row_begin()` - Start row
 - `np_table_cell(content, span, options)` - Add cell
@@ -190,7 +190,7 @@ pdf.table(
 )
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `TableOptions` struct:
   - `border_layout: BorderLayout` (All, None, Minimal, Horizontal, Vertical)
   - `alternating_fill: Option<Color>` - Zebra striping
@@ -211,7 +211,7 @@ pdf.table(
 - Padding and margins
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_table_cell_span(colspan, rowspan)` - Merged cells
 - `np_table_set_header_rows(count)` - Repeat headers
 - `np_table_auto_page_break(enabled)` - Split across pages
@@ -261,7 +261,7 @@ pdf.write_html("""
 - Alignment: `text-align`
 - Dimensions: `width`, `height`
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_render_html(html_string, options)` - Convert HTML to PDF
 - `HtmlOptions`:
   - `base_url: String` - For resolving relative URLs
@@ -308,7 +308,7 @@ template.render()
 - Conditional content
 - Data binding
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_template_create(name)` - New template
 - `np_template_add_field(name, x, y, width, height, options)` - Field
 - `np_template_add_section(name, repeatable)` - Repeating section
@@ -356,7 +356,7 @@ class MyPDF(FPDF):
 - Different header/footer for first page
 - Different for odd/even pages
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_set_header_callback(callback)` - Register header function
 - `np_set_footer_callback(callback)` - Register footer function
 - `np_get_page_number()` - Current page in callback
@@ -394,7 +394,7 @@ pdf.code39("*ABC123*", x=10, y=10, w=1.5, h=10)
 pdf.interleaved2of5("1234567890", x=10, y=30)
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_barcode_code39(data, x, y, options)` - Code 39
 - `np_barcode_code128(data, x, y, options)` - Code 128
 - `np_barcode_i2of5(data, x, y, options)` - I2of5
@@ -445,7 +445,7 @@ pdf.gradient_fill(x, y, w, h, from_color, to_color, direction)
 pdf.rounded_rect(x, y, w, h, radius, style='D')
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_cell_set_border_sides(sides)` - LRTB individual control
 - `np_cell_set_border_width(width)` - Thickness
 - `np_cell_set_border_color(color)` - Per-side colors
@@ -482,7 +482,7 @@ pdf.add_page(orientation='L')  # Landscape for wide tables
 - Section bookmarks
 - Automatic TOC generation from sections
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_section_begin(name, options)` - Start section
 - `np_section_end()` - End section
 - `np_section_set_page_size(size)` - Per-section size
@@ -529,7 +529,7 @@ with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
 - Histograms
 - Box plots
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_chart_line(data, options)` - Line chart
 - `np_chart_bar(data, options)` - Bar chart
 - `np_chart_pie(data, options)` - Pie chart
@@ -552,7 +552,7 @@ with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
 pdf.image("logo.svg", x=10, y=10, w=50)
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_render_svg(svg_data, x, y, width, height)` - Render SVG
 - Use existing Rust SVG libraries (resvg, svg crate)
 - Convert SVG paths to PDF paths
@@ -572,7 +572,7 @@ pdf.set_font('DejaVu', '', 12)
 pdf.cell(0, 10, '✅ Success! 🎉')
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - Unicode emoji rendering
 - Emoji font embedding (Noto Emoji, Apple Color Emoji)
 - Color emoji support (using PNG fallback)
@@ -690,7 +690,7 @@ pdf.cell(0, 10, '✅ Success! 🎉')
 
 **FFI Layer** (`ffi/fpdf_extensions/`):
 ```
-nanopdf-rs/src/ffi/fpdf_extensions/
+micropdf-rs/src/ffi/fpdf_extensions/
   ├── cell.rs          - Cell layout system
   ├── table.rs         - Table generation
   ├── html.rs          - HTML rendering
@@ -703,7 +703,7 @@ nanopdf-rs/src/ffi/fpdf_extensions/
 
 **Core Rust** (`fitz/fpdf/`):
 ```
-nanopdf-rs/src/fitz/fpdf/
+micropdf-rs/src/fitz/fpdf/
   ├── flow.rs          - Document flow engine
   ├── cell.rs          - Cell layout
   ├── table.rs         - Table builder
@@ -832,7 +832,7 @@ template.render(&mut pdf)?;
 
 ## Competitive Advantage
 
-By implementing these FPDF features, NanoPDF will:
+By implementing these FPDF features, MicroPDF will:
 
 1. ✅ **Be the ONLY library** with MuPDF performance + pypdf features + FPDF generation
 2. ✅ **Support all use cases**: Read, Manipulate, Generate
@@ -851,7 +851,7 @@ By implementing these FPDF features, NanoPDF will:
 
 ## Conclusion
 
-The FPDF feature set represents a **significant opportunity** to make NanoPDF the **most comprehensive PDF library** available in any language. The cell-based layout system, table generation, and HTML rendering are the **killer features** that will attract users who currently split their workflow between multiple libraries.
+The FPDF feature set represents a **significant opportunity** to make MicroPDF the **most comprehensive PDF library** available in any language. The cell-based layout system, table generation, and HTML rendering are the **killer features** that will attract users who currently split their workflow between multiple libraries.
 
 **Recommended Action**: Prioritize Phases 1-2 (Core Flow & Tables) for immediate value, then Phase 3 (HTML) for maximum market impact.
 

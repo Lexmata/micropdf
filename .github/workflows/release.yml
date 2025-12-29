@@ -64,44 +64,44 @@ jobs:
           # Linux x86_64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: libnanopdf.a
-            archive: nanopdf-linux-x86_64
+            artifact: libmicropdf.a
+            archive: micropdf-linux-x86_64
 
           # Linux x86_64 (musl - fully static)
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            artifact: libnanopdf.a
-            archive: nanopdf-linux-x86_64-musl
+            artifact: libmicropdf.a
+            archive: micropdf-linux-x86_64-musl
 
           # Linux ARM64
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            artifact: libnanopdf.a
-            archive: nanopdf-linux-aarch64
+            artifact: libmicropdf.a
+            archive: micropdf-linux-aarch64
 
           # macOS x86_64
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact: libnanopdf.a
-            archive: nanopdf-macos-x86_64
+            artifact: libmicropdf.a
+            archive: micropdf-macos-x86_64
 
           # macOS ARM64 (Apple Silicon)
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: libnanopdf.a
-            archive: nanopdf-macos-aarch64
+            artifact: libmicropdf.a
+            archive: micropdf-macos-aarch64
 
           # Windows x86_64 (MSVC)
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: nanopdf.lib
-            archive: nanopdf-windows-x86_64-msvc
+            artifact: micropdf.lib
+            archive: micropdf-windows-x86_64-msvc
 
           # Windows x86_64 (GNU)
           - os: windows-latest
             target: x86_64-pc-windows-gnu
-            artifact: libnanopdf.a
-            archive: nanopdf-windows-x86_64-gnu
+            artifact: libmicropdf.a
+            archive: micropdf-windows-x86_64-gnu
 
     steps:
       - name: Checkout
@@ -134,14 +134,14 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build static library
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Create archive (Unix)
         if: runner.os != 'Windows'
         run: |
           mkdir -p dist
-          cp nanopdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
+          cp micropdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
           cp README.md LICENSE-MIT LICENSE-APACHE dist/ 2>/dev/null || true
           tar -czvf ${{ matrix.archive }}.tar.gz -C dist .
 
@@ -150,7 +150,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          Copy-Item "nanopdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }}" -Destination dist/
+          Copy-Item "micropdf-rs/target/${{ matrix.target }}/release/${{ matrix.artifact }}" -Destination dist/
           Copy-Item README.md, LICENSE-MIT, LICENSE-APACHE -Destination dist/ -ErrorAction SilentlyContinue
           Compress-Archive -Path dist/* -DestinationPath "${{ matrix.archive }}.zip"
 
@@ -180,17 +180,17 @@ jobs:
         run: cargo install cbindgen
 
       - name: Generate C header
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: |
-          cbindgen --config cbindgen.toml --crate nanopdf --output nanopdf.h 2>/dev/null || \
-          cbindgen --crate nanopdf --output nanopdf.h || \
-          echo "// NanoPDF C Header (auto-generated placeholder)" > nanopdf.h
+          cbindgen --config cbindgen.toml --crate micropdf --output micropdf.h 2>/dev/null || \
+          cbindgen --crate micropdf --output micropdf.h || \
+          echo "// MicroPDF C Header (auto-generated placeholder)" > micropdf.h
 
       - name: Upload header
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-header
-          path: nanopdf-rs/nanopdf.h
+          name: micropdf-header
+          path: micropdf-rs/micropdf.h
 
   # Build packages (deb/rpm)
   build-rust-packages:
@@ -213,31 +213,31 @@ jobs:
           sudo apt-get install -y rpm
 
       - name: Build release
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo build --release
 
       - name: Build Debian package
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo deb --no-build
         continue-on-error: true
 
       - name: Build RPM package
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo generate-rpm
         continue-on-error: true
 
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-deb
-          path: nanopdf-rs/target/debian/*.deb
+          name: micropdf-deb
+          path: micropdf-rs/target/debian/*.deb
           if-no-files-found: ignore
 
       - name: Upload RPM package
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-rpm
-          path: nanopdf-rs/target/generate-rpm/*.rpm
+          name: micropdf-rpm
+          path: micropdf-rs/target/generate-rpm/*.rpm
           if-no-files-found: ignore
 
   # Build Node.js prebuilds
@@ -252,17 +252,17 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            rust-artifact: nanopdf-linux-x86_64
+            rust-artifact: micropdf-linux-x86_64
             lib-dir: linux-x64
-            lib-file: libnanopdf.a
+            lib-file: libmicropdf.a
           - os: macos-latest
-            rust-artifact: nanopdf-macos-x86_64
+            rust-artifact: micropdf-macos-x86_64
             lib-dir: darwin-x64
-            lib-file: libnanopdf.a
+            lib-file: libmicropdf.a
           - os: windows-latest
-            rust-artifact: nanopdf-windows-x86_64-msvc
+            rust-artifact: micropdf-windows-x86_64-msvc
             lib-dir: win32-x64
-            lib-file: nanopdf.lib
+            lib-file: micropdf.lib
 
     steps:
       - name: Checkout
@@ -277,19 +277,19 @@ jobs:
       - name: Setup Rust library for Node.js
         shell: bash
         run: |
-          mkdir -p nanopdf-js/native/lib/${{ matrix.lib-dir }}
+          mkdir -p micropdf-js/native/lib/${{ matrix.lib-dir }}
           # Extract from tarball if present, otherwise copy directly
           if ls rust-lib/*.tar.gz 1>/dev/null 2>&1; then
-            tar -xzf rust-lib/*.tar.gz -C nanopdf-js/native/lib/${{ matrix.lib-dir }}/ --wildcards '*.${{ matrix.lib-file == 'nanopdf.lib' && 'lib' || 'a' }}' 2>/dev/null || \
-            tar -xzf rust-lib/*.tar.gz -C nanopdf-js/native/lib/${{ matrix.lib-dir }}/ 2>/dev/null || true
+            tar -xzf rust-lib/*.tar.gz -C micropdf-js/native/lib/${{ matrix.lib-dir }}/ --wildcards '*.${{ matrix.lib-file == 'micropdf.lib' && 'lib' || 'a' }}' 2>/dev/null || \
+            tar -xzf rust-lib/*.tar.gz -C micropdf-js/native/lib/${{ matrix.lib-dir }}/ 2>/dev/null || true
             # Find and move the library file if needed
-            find nanopdf-js/native/lib/${{ matrix.lib-dir }}/ -name '${{ matrix.lib-file }}' -exec mv {} nanopdf-js/native/lib/${{ matrix.lib-dir }}/ \; 2>/dev/null || true
+            find micropdf-js/native/lib/${{ matrix.lib-dir }}/ -name '${{ matrix.lib-file }}' -exec mv {} micropdf-js/native/lib/${{ matrix.lib-dir }}/ \; 2>/dev/null || true
           fi
           # Copy directly if file exists
           if [ -f "rust-lib/${{ matrix.lib-file }}" ]; then
-            cp "rust-lib/${{ matrix.lib-file }}" "nanopdf-js/native/lib/${{ matrix.lib-dir }}/"
+            cp "rust-lib/${{ matrix.lib-file }}" "micropdf-js/native/lib/${{ matrix.lib-dir }}/"
           fi
-          ls -la nanopdf-js/native/lib/${{ matrix.lib-dir }}/ || echo "Directory not created"
+          ls -la micropdf-js/native/lib/${{ matrix.lib-dir }}/ || echo "Directory not created"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -300,28 +300,28 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Install dependencies
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm install --ignore-scripts
 
       - name: Build native addon
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm run build:native || echo "Native build skipped - library may not be available"
         continue-on-error: true
 
       - name: Build TypeScript
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm run build:ts
 
       - name: Build prebuilds
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm run prebuild || true
         continue-on-error: true
 
       - name: Upload prebuilds
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-js-${{ runner.os }}
-          path: nanopdf-js/prebuilds/
+          name: micropdf-js-${{ runner.os }}
+          path: micropdf-js/prebuilds/
           if-no-files-found: ignore
 
   # Create GitHub Release
@@ -372,7 +372,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Publish to crates.io
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
         continue-on-error: true
 
@@ -398,21 +398,21 @@ jobs:
       - name: Download prebuilds
         uses: actions/download-artifact@v4
         with:
-          pattern: nanopdf-js-*
-          path: nanopdf-js/prebuilds/
+          pattern: micropdf-js-*
+          path: micropdf-js/prebuilds/
           merge-multiple: true
         continue-on-error: true
 
       - name: Install dependencies
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm install --ignore-scripts
 
       - name: Build
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm run build:ts
 
       - name: Publish to npm
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

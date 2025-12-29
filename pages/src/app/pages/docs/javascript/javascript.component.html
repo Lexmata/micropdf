@@ -10,19 +10,19 @@
       <span class="inline-block px-2 py-1 bg-yellow-400/15 text-yellow-400 rounded-full text-xs font-medium mb-4">JavaScript</span>
       <h1 class="text-4xl font-bold mb-4">JavaScript Documentation</h1>
       <p class="text-lg text-text-secondary mb-12">
-        Node.js bindings for NanoPDF with full TypeScript support and async/await API.
+        Node.js bindings for MicroPDF with full TypeScript support and async/await API.
       </p>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Installation</h2>
         <pre class="mb-4"><code><span class="comment"># pnpm (recommended)</span>
-pnpm add nanopdf
+pnpm add micropdf
 
 <span class="comment"># npm</span>
-npm install nanopdf
+npm install micropdf
 
 <span class="comment"># yarn</span>
-yarn add nanopdf</code></pre>
+yarn add micropdf</code></pre>
         <p class="text-text-secondary mb-4">The package includes prebuilt binaries for:</p>
         <ul class="list-disc pl-6 text-text-secondary">
           <li class="py-1">Linux (x64, arm64)</li>
@@ -33,7 +33,7 @@ yarn add nanopdf</code></pre>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Basic Usage</h2>
-        <pre><code><span class="keyword">import</span> &#123; Document &#125; <span class="keyword">from</span> <span class="string">'nanopdf'</span>;
+        <pre><code><span class="keyword">import</span> &#123; Document &#125; <span class="keyword">from</span> <span class="string">'micropdf'</span>;
 
 <span class="comment">// Open a PDF document</span>
 <span class="keyword">const</span> doc = <span class="keyword">await</span> Document.open(<span class="string">'document.pdf'</span>);
@@ -59,7 +59,7 @@ doc.close();</code></pre>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">TypeScript Types</h2>
-        <p class="text-text-secondary mb-4">NanoPDF ships with complete TypeScript definitions:</p>
+        <p class="text-text-secondary mb-4">MicroPDF ships with complete TypeScript definitions:</p>
         <pre><code><span class="keyword">import</span> &#123;
   Document,
   Page,
@@ -67,9 +67,9 @@ doc.close();</code></pre>
   Point,
   Rect,
   Matrix,
-  NanoPDFError,
+  MicroPDFError,
   ErrorCode
-&#125; <span class="keyword">from</span> <span class="string">'nanopdf'</span>;
+&#125; <span class="keyword">from</span> <span class="string">'micropdf'</span>;
 
 <span class="comment">// All types are fully typed</span>
 <span class="keyword">const</span> bounds: Rect = page.bounds;
@@ -79,12 +79,12 @@ doc.close();</code></pre>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Error Handling</h2>
-        <pre><code><span class="keyword">import</span> &#123; Document, NanoPDFError, ErrorCode &#125; <span class="keyword">from</span> <span class="string">'nanopdf'</span>;
+        <pre><code><span class="keyword">import</span> &#123; Document, MicroPDFError, ErrorCode &#125; <span class="keyword">from</span> <span class="string">'micropdf'</span>;
 
 <span class="keyword">try</span> &#123;
   <span class="keyword">const</span> doc = <span class="keyword">await</span> Document.open(<span class="string">'file.pdf'</span>);
 &#125; <span class="keyword">catch</span> (error) &#123;
-  <span class="keyword">if</span> (error <span class="keyword">instanceof</span> NanoPDFError) &#123;
+  <span class="keyword">if</span> (error <span class="keyword">instanceof</span> MicroPDFError) &#123;
     <span class="keyword">switch</span> (error.code) &#123;
       <span class="keyword">case</span> ErrorCode.FileNotFound:
         console.error(<span class="string">'File not found'</span>);

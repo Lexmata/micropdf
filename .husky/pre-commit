@@ -3,21 +3,21 @@
 # Husky v9 pre-commit hook
 # Runs before each commit to ensure code quality
 
-# Check if we're in the nanopdf-rs directory and run cargo fmt check
-if git diff --cached --name-only | grep -q "^nanopdf-rs/"; then
+# Check if we're in the micropdf-rs directory and run cargo fmt check
+if git diff --cached --name-only | grep -q "^micropdf-rs/"; then
   echo "📦 Checking Rust formatting..."
-  cd nanopdf-rs && cargo fmt --check 2>/dev/null || {
+  cd micropdf-rs && cargo fmt --check 2>/dev/null || {
     echo "❌ Rust formatting check failed. Run 'cargo fmt' to fix."
     exit 1
   }
   cd ..
 fi
 
-# Check if we're in the nanopdf-js directory and run format check
-if git diff --cached --name-only | grep -q "^nanopdf-js/"; then
+# Check if we're in the micropdf-js directory and run format check
+if git diff --cached --name-only | grep -q "^micropdf-js/"; then
   echo "📦 Checking Node.js formatting..."
-  if [ -f "nanopdf-js/package.json" ] && grep -q '"format:check"' nanopdf-js/package.json 2>/dev/null; then
-    cd nanopdf-js && pnpm format:check 2>/dev/null || {
+  if [ -f "micropdf-js/package.json" ] && grep -q '"format:check"' micropdf-js/package.json 2>/dev/null; then
+    cd micropdf-js && pnpm format:check 2>/dev/null || {
       echo "❌ Node.js formatting check failed. Run 'pnpm format' to fix."
       exit 1
     }
@@ -25,21 +25,21 @@ if git diff --cached --name-only | grep -q "^nanopdf-js/"; then
   fi
 fi
 
-# Check if we're in the go-nanopdf directory and run go fmt check
-if git diff --cached --name-only | grep -q "^go-nanopdf/"; then
+# Check if we're in the go-micropdf directory and run go fmt check
+if git diff --cached --name-only | grep -q "^go-micropdf/"; then
   echo "📦 Checking Go formatting..."
-  cd go-nanopdf && test -z "$(gofmt -l .)" 2>/dev/null || {
+  cd go-micropdf && test -z "$(gofmt -l .)" 2>/dev/null || {
     echo "❌ Go formatting check failed. Run 'gofmt -w .' to fix."
     exit 1
   }
   cd ..
 fi
 
-# Check if we're in the nanopdf-py directory and run format check
-if git diff --cached --name-only | grep -q "^nanopdf-py/"; then
+# Check if we're in the micropdf-py directory and run format check
+if git diff --cached --name-only | grep -q "^micropdf-py/"; then
   echo "📦 Checking Python formatting..."
   if command -v black >/dev/null 2>&1; then
-    cd nanopdf-py && black --check src/ tests/ 2>/dev/null || {
+    cd micropdf-py && black --check src/ tests/ 2>/dev/null || {
       echo "❌ Python formatting check failed. Run 'black src/ tests/' to fix."
       exit 1
     }

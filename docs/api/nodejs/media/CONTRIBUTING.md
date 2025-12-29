@@ -1,6 +1,6 @@
-# Contributing to NanoPDF
+# Contributing to MicroPDF
 
-Thank you for your interest in contributing to NanoPDF! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to MicroPDF! This document provides guidelines and instructions for contributing to the project.
 
 ---
 
@@ -63,13 +63,13 @@ Before you begin, ensure you have the following installed:
 1. Fork the repository on GitHub
 2. Clone your fork:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/nanopdf.git
-   cd nanopdf
+   git clone https://github.com/YOUR_USERNAME/micropdf.git
+   cd micropdf
    ```
 
 3. Add upstream remote:
    ```bash
-   git remote add upstream https://github.com/ORIGINAL_OWNER/nanopdf.git
+   git remote add upstream https://github.com/ORIGINAL_OWNER/micropdf.git
    ```
 
 ---
@@ -80,19 +80,19 @@ Before you begin, ensure you have the following installed:
 
 ```bash
 # Navigate to Node.js project
-cd nanopdf-js
+cd micropdf-js
 
 # Install dependencies
 pnpm install
 
 # Build Rust library
-cd ../nanopdf-rs
+cd ../micropdf-rs
 cargo build --release
 
 # Copy library to Node.js project
-cd ../nanopdf-js
+cd ../micropdf-js
 mkdir -p native/lib/$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)
-cp ../nanopdf-rs/target/release/libnanopdf.a native/lib/*/
+cp ../micropdf-rs/target/release/libmicropdf.a native/lib/*/
 
 # Build TypeScript
 pnpm run build:ts
@@ -137,14 +137,14 @@ pnpm run build          # Build everything
 ## Project Structure
 
 ```
-nanopdf/
-├── nanopdf-rs/              # Rust FFI library
+micropdf/
+├── micropdf-rs/              # Rust FFI library
 │   ├── src/
 │   │   └── ffi/             # FFI functions
 │   ├── include/             # C headers
 │   └── Cargo.toml
 │
-├── nanopdf-js/              # Node.js bindings
+├── micropdf-js/              # Node.js bindings
 │   ├── src/                 # TypeScript source
 │   │   ├── document.ts
 │   │   ├── page.ts
@@ -152,7 +152,7 @@ nanopdf/
 │   │   └── ...
 │   │
 │   ├── native/              # N-API C++ bindings
-│   │   ├── nanopdf.cc
+│   │   ├── micropdf.cc
 │   │   ├── context.cc
 │   │   ├── document.cc
 │   │   └── ...
@@ -259,11 +259,11 @@ Added common issues and solutions to README.
  *
  * @param page - The page to extract text from
  * @returns The extracted text as a string
- * @throws {NanoPDFError} If page is invalid
+ * @throws {MicroPDFError} If page is invalid
  */
 export function extractText(page: Page): string {
   if (!page.isValid) {
-    throw NanoPDFError.argument('Invalid page');
+    throw MicroPDFError.argument('Invalid page');
   }
   return native.extractText(page.handle);
 }
@@ -316,7 +316,7 @@ All public APIs must have JSDoc comments:
  * @param colorspace - Colorspace for output (default: RGB)
  * @param alpha - Include alpha channel (default: false)
  * @returns A pixmap containing the rendered page
- * @throws {NanoPDFError} If rendering fails
+ * @throws {MicroPDFError} If rendering fails
  *
  * @example
  * ```typescript
@@ -340,11 +340,11 @@ toPixmap(
 ```typescript
 // ✅ Good: Specific error types, clear messages
 if (!fs.existsSync(path)) {
-  throw NanoPDFError.notFound(`File not found: ${path}`);
+  throw MicroPDFError.notFound(`File not found: ${path}`);
 }
 
 if (pageNum < 0 || pageNum >= this.pageCount) {
-  throw NanoPDFError.range(
+  throw MicroPDFError.range(
     `Page number ${pageNum} out of range [0, ${this.pageCount})`
   );
 }
@@ -584,7 +584,7 @@ Look for issues tagged with `good first issue` on GitHub:
 
 ```typescript
 // Enable debug logging
-process.env.DEBUG = 'nanopdf:*';
+process.env.DEBUG = 'micropdf:*';
 
 // Add temporary logs
 console.log('[DEBUG]', 'value:', value);
@@ -621,21 +621,21 @@ node --expose-gc --max-old-space-size=4096 script.js
 ## Getting Help
 
 - 📚 **Documentation**: Read [README.md](README.md) and [ARCHITECTURE.md](ARCHITECTURE.md)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/username/nanopdf/discussions)
-- 🐛 **Issues**: [GitHub Issues](https://github.com/username/nanopdf/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/username/micropdf/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/username/micropdf/issues)
 - 📧 **Email**: maintainer@example.com
 
 ---
 
 ## License
 
-By contributing to NanoPDF, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to MicroPDF, you agree that your contributions will be licensed under the Apache License 2.0.
 
 ---
 
 ## Acknowledgments
 
-Thank you to all contributors who have helped make NanoPDF better!
+Thank you to all contributors who have helped make MicroPDF better!
 
 <div align="center">
 

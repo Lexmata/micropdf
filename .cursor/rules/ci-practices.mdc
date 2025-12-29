@@ -3,7 +3,7 @@ alwaysApply: false
 ---
 # CI/CD Practices
 
-NanoPDF uses GitHub Actions for continuous integration across multiple languages and platforms.
+MicroPDF uses GitHub Actions for continuous integration across multiple languages and platforms.
 
 ## Workflow Structure
 
@@ -39,14 +39,14 @@ jobs:
         with:
           filters: |
             rust:
-              - 'nanopdf-rs/**'
+              - 'micropdf-rs/**'
               - 'Cargo.toml'
             go:
-              - 'go-nanopdf/**'
+              - 'go-micropdf/**'
             nodejs:
-              - 'nanopdf-js/**'
+              - 'micropdf-js/**'
             python:
-              - 'nanopdf-py/**'
+              - 'micropdf-py/**'
 
   rust-lint:
     needs: detect-changes
@@ -135,7 +135,7 @@ go-lint:
         go-version: '1.21'
     - uses: golangci/golangci-lint-action@v4
       with:
-        working-directory: go-nanopdf
+        working-directory: go-micropdf
 
 go-test:
   needs: detect-changes
@@ -147,12 +147,12 @@ go-test:
       with:
         go-version: '1.21'
     - name: Run tests
-      working-directory: go-nanopdf
+      working-directory: go-micropdf
       run: go test -v -race -coverprofile=coverage.txt ./...
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       with:
-        files: go-nanopdf/coverage.txt
+        files: go-micropdf/coverage.txt
 ```
 
 ### Node.js Jobs
@@ -171,13 +171,13 @@ nodejs-lint:
       with:
         version: 9
     - name: Install dependencies
-      working-directory: nanopdf-js
+      working-directory: micropdf-js
       run: pnpm install
     - name: Lint
-      working-directory: nanopdf-js
+      working-directory: micropdf-js
       run: pnpm lint
     - name: Type check
-      working-directory: nanopdf-js
+      working-directory: micropdf-js
       run: pnpm typecheck
 
 nodejs-test:
@@ -193,10 +193,10 @@ nodejs-test:
       with:
         version: 9
     - name: Install dependencies
-      working-directory: nanopdf-js
+      working-directory: micropdf-js
       run: pnpm install
     - name: Run tests
-      working-directory: nanopdf-js
+      working-directory: micropdf-js
       run: pnpm test:coverage
 ```
 
@@ -215,13 +215,13 @@ python-lint:
     - name: Install uv
       run: pip install uv
     - name: Install dependencies
-      working-directory: nanopdf-py
+      working-directory: micropdf-py
       run: uv pip install -e ".[dev]" --system
     - name: Lint with ruff
-      working-directory: nanopdf-py
+      working-directory: micropdf-py
       run: ruff check .
     - name: Type check with mypy
-      working-directory: nanopdf-py
+      working-directory: micropdf-py
       run: mypy src/
 
 python-test:
@@ -239,11 +239,11 @@ python-test:
     - name: Install uv
       run: pip install uv
     - name: Install dependencies
-      working-directory: nanopdf-py
+      working-directory: micropdf-py
       run: uv pip install -e ".[dev]" --system
     - name: Run tests
-      working-directory: nanopdf-py
-      run: pytest --cov=nanopdf --cov-report=xml
+      working-directory: micropdf-py
+      run: pytest --cov=micropdf --cov-report=xml
 ```
 
 ## Test Configuration
@@ -303,7 +303,7 @@ jobs:
 ```yaml
 - uses: Swatinem/rust-cache@v2
   with:
-    workspaces: nanopdf-rs -> target
+    workspaces: micropdf-rs -> target
     shared-key: ${{ matrix.os }}-${{ matrix.rust }}
 ```
 
@@ -313,7 +313,7 @@ jobs:
 - uses: actions/setup-go@v5
   with:
     go-version: '1.21'
-    cache-dependency-path: go-nanopdf/go.sum
+    cache-dependency-path: go-micropdf/go.sum
 ```
 
 ### Node.js Caching
@@ -323,7 +323,7 @@ jobs:
   with:
     node-version: '20'
     cache: 'pnpm'
-    cache-dependency-path: nanopdf-js/pnpm-lock.yaml
+    cache-dependency-path: micropdf-js/pnpm-lock.yaml
 ```
 
 ### Python Caching
@@ -333,7 +333,7 @@ jobs:
   with:
     python-version: '3.12'
     cache: 'pip'
-    cache-dependency-path: nanopdf-py/pyproject.toml
+    cache-dependency-path: micropdf-py/pyproject.toml
 ```
 
 ## Docker Builds
@@ -401,8 +401,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/libnanopdf*
+          name: micropdf-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/libmicropdf*
 
   publish-crates:
     needs: build-release
@@ -412,7 +412,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish to crates.io
         run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
 
   publish-npm:
     needs: build-release
@@ -426,7 +426,7 @@ jobs:
       - uses: pnpm/action-setup@v3
       - name: Publish to npm
         run: pnpm publish --no-git-checks
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -442,10 +442,10 @@ jobs:
         run: pip install build twine
       - name: Build package
         run: python -m build
-        working-directory: nanopdf-py
+        working-directory: micropdf-py
       - name: Publish to PyPI
         run: twine upload dist/*
-        working-directory: nanopdf-py
+        working-directory: micropdf-py
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
@@ -469,7 +469,7 @@ Configure branch protection to require these checks:
 ### Status Badge
 
 ```markdown
-[![CI](https://github.com/lexmata/nanopdf/actions/workflows/ci.yml/badge.svg)](https://github.com/lexmata/nanopdf/actions/workflows/ci.yml)
+[![CI](https://github.com/lexmata/micropdf/actions/workflows/ci.yml/badge.svg)](https://github.com/lexmata/micropdf/actions/workflows/ci.yml)
 ```
 
 ## Secrets Management

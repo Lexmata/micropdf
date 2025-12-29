@@ -3,7 +3,7 @@ alwaysApply: false
 ---
 # Memory Profiling and Leak Detection
 
-NanoPDF provides comprehensive memory profiling across all language bindings to detect memory leaks and track resource usage.
+MicroPDF provides comprehensive memory profiling across all language bindings to detect memory leaks and track resource usage.
 
 ## Overview
 
@@ -19,7 +19,7 @@ All language bindings include a `profiler` module with:
 ### Enable Profiling
 
 ```rust
-use nanopdf::ffi::memory_profiler;
+use micropdf::ffi::memory_profiler;
 
 // Enable profiling
 memory_profiler::fz_enable_memory_profiling(1);
@@ -31,7 +31,7 @@ memory_profiler::fz_enable_stack_traces(1);
 ### Track Allocations
 
 ```rust
-use nanopdf::ffi::memory_profiler::{
+use micropdf::ffi::memory_profiler::{
     track_allocation, track_deallocation, ResourceType
 };
 
@@ -46,7 +46,7 @@ track_deallocation(handle);
 ### Get Leak Report
 
 ```rust
-use nanopdf::ffi::memory_profiler::MEMORY_PROFILER;
+use micropdf::ffi::memory_profiler::MEMORY_PROFILER;
 use std::time::Duration;
 
 // Get report for allocations older than 60 seconds
@@ -103,26 +103,26 @@ cargo install dhat
 ### Enable Profiling
 
 ```go
-import "github.com/lexmata/nanopdf"
+import "github.com/lexmata/micropdf"
 
 // Enable profiling
-nanopdf.EnableProfiling(true)
+micropdf.EnableProfiling(true)
 
 // Enable stack traces
-nanopdf.EnableStackTraces(true)
+micropdf.EnableStackTraces(true)
 ```
 
 ### Track Allocations
 
 ```go
 // Track allocation
-nanopdf.TrackAllocation(handle, nanopdf.ResourceBuffer, sizeBytes)
+micropdf.TrackAllocation(handle, micropdf.ResourceBuffer, sizeBytes)
 
 // Track with tag
-nanopdf.TrackAllocationTagged(handle, nanopdf.ResourcePixmap, sizeBytes, "render-output")
+micropdf.TrackAllocationTagged(handle, micropdf.ResourcePixmap, sizeBytes, "render-output")
 
 // Track deallocation
-nanopdf.TrackDeallocation(handle)
+micropdf.TrackDeallocation(handle)
 ```
 
 ### Get Leak Report
@@ -131,11 +131,11 @@ nanopdf.TrackDeallocation(handle)
 import "time"
 
 // Get leak report
-report := nanopdf.GetLeakReport(60 * time.Second)
+report := micropdf.GetLeakReport(60 * time.Second)
 fmt.Println(report.String())
 
 // Or print directly
-nanopdf.PrintLeakReport(60 * time.Second)
+micropdf.PrintLeakReport(60 * time.Second)
 ```
 
 ### pprof Integration
@@ -154,7 +154,7 @@ go func() {
 
 // Force GC and get memory stats
 runtime.GC()
-nanopdf.PrintMemStats()
+micropdf.PrintMemStats()
 ```
 
 ```bash
@@ -170,7 +170,7 @@ go tool pprof -http=:8080 heap.prof
 ### Enable Profiling
 
 ```typescript
-import { enableProfiling, enableStackTraces } from 'nanopdf/profiler';
+import { enableProfiling, enableStackTraces } from 'micropdf/profiler';
 
 // Enable profiling
 enableProfiling(true);
@@ -182,7 +182,7 @@ enableStackTraces(true);
 ### Track Allocations
 
 ```typescript
-import { trackAllocation, trackDeallocation, ResourceType } from 'nanopdf/profiler';
+import { trackAllocation, trackDeallocation, ResourceType } from 'micropdf/profiler';
 
 // Track allocation
 trackAllocation(handle, ResourceType.Buffer, sizeBytes);
@@ -197,7 +197,7 @@ trackDeallocation(handle);
 ### Get Leak Report
 
 ```typescript
-import { getLeakReport, printLeakReport, formatLeakReport } from 'nanopdf/profiler';
+import { getLeakReport, printLeakReport, formatLeakReport } from 'micropdf/profiler';
 
 // Get report (leaks older than 60s)
 const report = getLeakReport(60000);
@@ -210,7 +210,7 @@ printLeakReport(60000);
 ### V8 Heap Snapshot
 
 ```typescript
-import { takeHeapSnapshot, forceGC, printProcessMemory } from 'nanopdf/profiler';
+import { takeHeapSnapshot, forceGC, printProcessMemory } from 'micropdf/profiler';
 
 // Print process memory
 printProcessMemory();
@@ -236,7 +236,7 @@ npx clinic flame -- node your-script.js
 ### Enable Profiling
 
 ```python
-from nanopdf.profiler import enable_profiling, enable_stack_traces
+from micropdf.profiler import enable_profiling, enable_stack_traces
 
 # Enable profiling
 enable_profiling(True)
@@ -248,7 +248,7 @@ enable_stack_traces(True)
 ### Track Allocations
 
 ```python
-from nanopdf.profiler import track_allocation, track_deallocation, ResourceType
+from micropdf.profiler import track_allocation, track_deallocation, ResourceType
 
 # Track allocation
 track_allocation(handle, ResourceType.BUFFER, size_bytes)
@@ -263,7 +263,7 @@ track_deallocation(handle)
 ### Get Leak Report
 
 ```python
-from nanopdf.profiler import get_leak_report, print_leak_report
+from micropdf.profiler import get_leak_report, print_leak_report
 
 # Get report (leaks older than 60s)
 report = get_leak_report(min_age_seconds=60)
@@ -276,7 +276,7 @@ print_leak_report(min_age_seconds=60)
 ### tracemalloc Integration
 
 ```python
-from nanopdf.profiler import (
+from micropdf.profiler import (
     start_tracemalloc,
     stop_tracemalloc,
     get_tracemalloc_snapshot,
@@ -307,7 +307,7 @@ stop_tracemalloc()
 ### GC Integration
 
 ```python
-from nanopdf.profiler import force_gc, print_gc_stats, print_memory_usage
+from micropdf.profiler import force_gc, print_gc_stats, print_memory_usage
 
 # Force garbage collection
 stats = force_gc()
@@ -342,14 +342,14 @@ memory_profiler::fz_enable_memory_profiling(1);
 
 ```go
 // Go
-if os.Getenv("NANOPDF_PROFILE") != "" {
-    nanopdf.EnableProfiling(true)
+if os.Getenv("MICROPDF_PROFILE") != "" {
+    micropdf.EnableProfiling(true)
 }
 ```
 
 ```typescript
 // TypeScript
-if (process.env.NANOPDF_PROFILE) {
+if (process.env.MICROPDF_PROFILE) {
   enableProfiling(true);
 }
 ```
@@ -357,7 +357,7 @@ if (process.env.NANOPDF_PROFILE) {
 ```python
 # Python
 import os
-if os.environ.get("NANOPDF_PROFILE"):
+if os.environ.get("MICROPDF_PROFILE"):
     enable_profiling(True)
 ```
 
@@ -382,7 +382,7 @@ if !leaks.is_empty() {
 go func() {
     ticker := time.NewTicker(5 * time.Minute)
     for range ticker.C {
-        leaks := nanopdf.GetProfiler().GetPotentialLeaks(time.Minute)
+        leaks := micropdf.GetProfiler().GetPotentialLeaks(time.Minute)
         if len(leaks) > 0 {
             log.Printf("Warning: %d potential leaks detected", len(leaks))
         }
@@ -434,7 +434,7 @@ All languages use consistent resource type enums:
 All profilers generate consistent reports:
 
 ```
-=== NanoPDF Memory Leak Report ===
+=== MicroPDF Memory Leak Report ===
 
 Generated: 2025-12-28T10:30:00Z
 Min age threshold: 60s

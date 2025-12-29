@@ -1,6 +1,6 @@
 # Git LFS Setup for GitHub Actions
 
-This document explains how Git LFS is configured for NanoPDF's GitHub Actions workflows.
+This document explains how Git LFS is configured for MicroPDF's GitHub Actions workflows.
 
 ## Configuration
 
@@ -222,7 +222,7 @@ func TestWithPDF(t *testing.T) {
 - [Git LFS Documentation](https://git-lfs.github.com/)
 - [GitHub LFS Guide](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-git-large-file-storage)
 - [Actions Checkout LFS](https://github.com/actions/checkout#usage)
-- [NanoPDF Test PDFs](../test-pdfs/README.md)
+- [MicroPDF Test PDFs](../test-pdfs/README.md)
 
 ---
 

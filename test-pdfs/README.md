@@ -1,6 +1,6 @@
-# NanoPDF Test Files
+# MicroPDF Test Files
 
-This directory contains PDF files of varying complexity for integration testing across all NanoPDF projects (Rust, Node.js, Go).
+This directory contains PDF files of varying complexity for integration testing across all MicroPDF projects (Rust, Node.js, Go).
 
 All PDF files are tracked with **Git LFS** (Large File Storage) to keep the repository size manageable.
 
@@ -315,8 +315,8 @@ git lfs env
 When cloning the repository, Git LFS will automatically download the PDF files:
 
 ```bash
-git clone https://github.com/your-org/nanopdf.git
-cd nanopdf/test-pdfs
+git clone https://github.com/your-org/micropdf.git
+cd micropdf/test-pdfs
 ls -lh  # PDF files should be fully downloaded
 ```
 
@@ -330,11 +330,11 @@ git lfs pull
 
 ## Usage in Tests
 
-### Rust (nanopdf-rs)
+### Rust (micropdf-rs)
 
 ```rust
 use std::fs;
-use nanopdf::Document;
+use micropdf::Document;
 
 #[test]
 fn test_hello_world_pdf() {
@@ -349,10 +349,10 @@ fn test_hello_world_pdf() {
 }
 ```
 
-### Node.js (nanopdf-js)
+### Node.js (micropdf-js)
 
 ```javascript
-import { Document } from 'nanopdf';
+import { Document } from 'micropdf';
 import { readFileSync } from 'fs';
 
 describe('Hello World PDF', () => {
@@ -369,15 +369,15 @@ describe('Hello World PDF', () => {
 });
 ```
 
-### Go (go-nanopdf)
+### Go (go-micropdf)
 
 ```go
-package nanopdf_test
+package micropdf_test
 
 import (
     "os"
     "testing"
-    "github.com/lexmata/nanopdf/go-nanopdf"
+    "github.com/lexmata/micropdf/go-micropdf"
 )
 
 func TestHelloWorldPDF(t *testing.T) {
@@ -386,10 +386,10 @@ func TestHelloWorldPDF(t *testing.T) {
         t.Fatal(err)
     }
 
-    ctx := nanopdf.NewContext()
+    ctx := micropdf.NewContext()
     defer ctx.Drop()
 
-    doc, err := nanopdf.OpenDocumentFromBytes(ctx, data, "application/pdf")
+    doc, err := micropdf.OpenDocumentFromBytes(ctx, data, "application/pdf")
     if err != nil {
         t.Fatal(err)
     }
@@ -549,5 +549,5 @@ git lfs ls-files | grep my-test.pdf
 
 ---
 
-For more information on NanoPDF testing, see the main [README.md](../README.md).
+For more information on MicroPDF testing, see the main [README.md](../README.md).
 

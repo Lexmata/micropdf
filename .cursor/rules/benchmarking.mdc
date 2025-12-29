@@ -3,7 +3,7 @@ alwaysApply: false
 ---
 # Benchmarking Guidelines
 
-Performance is critical for NanoPDF. Follow these guidelines for consistent, meaningful benchmarks.
+Performance is critical for MicroPDF. Follow these guidelines for consistent, meaningful benchmarks.
 
 ## Rust Benchmarks (Criterion)
 
@@ -28,7 +28,7 @@ harness = false
 ```rust
 // benches/geometry.rs
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use nanopdf::geometry::{Point, Rect, Matrix};
+use micropdf::geometry::{Point, Rect, Matrix};
 
 fn bench_point_transform(c: &mut Criterion) {
     let point = Point::new(100.0, 200.0);
@@ -134,7 +134,7 @@ cargo bench -- --verbose
 
 ```go
 // benchmark_test.go
-package nanopdf
+package micropdf
 
 import (
     "testing"
@@ -291,7 +291,7 @@ dev = ["pytest-benchmark>=4.0"]
 ```python
 # tests/test_benchmark.py
 import pytest
-from nanopdf import Point, Rect, Matrix
+from micropdf import Point, Rect, Matrix
 
 class TestGeometryBenchmarks:
     def test_point_transform(self, benchmark):

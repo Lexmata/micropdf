@@ -84,11 +84,11 @@ jobs:
           VERSION="${{ needs.detect-version.outputs.version }}"
 
           # Check Cargo.toml
-          CARGO_VERSION=$(grep '^version = ' nanopdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          CARGO_VERSION=$(grep '^version = ' micropdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "Cargo.toml version: $CARGO_VERSION"
 
           # Check package.json
-          PACKAGE_VERSION=$(node -p "require('./nanopdf-js/package.json').version")
+          PACKAGE_VERSION=$(node -p "require('./micropdf-js/package.json').version")
           echo "package.json version: $PACKAGE_VERSION"
 
           # Check VERSION file if it exists
@@ -144,32 +144,32 @@ jobs:
           go-version: '1.23'
 
       # Rust tests
-      - name: Test nanopdf-rs
-        working-directory: nanopdf-rs
+      - name: Test micropdf-rs
+        working-directory: micropdf-rs
         run: cargo test --release
 
-      - name: Test nanopdf-rs (all features)
-        working-directory: nanopdf-rs
+      - name: Test micropdf-rs (all features)
+        working-directory: micropdf-rs
         run: cargo test --release --all-features
 
       # Node.js tests
       - name: Install Node.js dependencies
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm install --ignore-scripts
 
       - name: Build TypeScript
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: pnpm run build:ts
 
-      - name: Test nanopdf-js
-        working-directory: nanopdf-js
+      - name: Test micropdf-js
+        working-directory: micropdf-js
         run: pnpm test
         continue-on-error: true
 
       # Go tests (mock mode only for cross-platform)
-      - name: Test go-nanopdf (mock)
+      - name: Test go-micropdf (mock)
         if: matrix.test_go
-        working-directory: go-nanopdf
+        working-directory: go-micropdf
         run: CGO_ENABLED=0 go test -tags=mock ./...
 
   # Build release artifacts
@@ -196,11 +196,11 @@ jobs:
         uses: pnpm/action-setup@v4
 
       - name: Build Rust library (release)
-        working-directory: nanopdf-rs
+        working-directory: micropdf-rs
         run: cargo build --release
 
       - name: Build Node.js addon
-        working-directory: nanopdf-js
+        working-directory: micropdf-js
         run: |
           pnpm install --ignore-scripts
           pnpm run build
@@ -209,14 +209,14 @@ jobs:
       - name: Upload Rust artifact
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-rs-${{ needs.detect-version.outputs.version }}
-          path: nanopdf-rs/target/release/libnanopdf.*
+          name: micropdf-rs-${{ needs.detect-version.outputs.version }}
+          path: micropdf-rs/target/release/libmicropdf.*
 
       - name: Upload Node.js build
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-js-${{ needs.detect-version.outputs.version }}
-          path: nanopdf-js/dist/
+          name: micropdf-js-${{ needs.detect-version.outputs.version }}
+          path: micropdf-js/dist/
           if-no-files-found: ignore
 
   # Summary and next steps

@@ -5,8 +5,8 @@
 //!
 //! Run with: cargo run --release --example cross_language_baseline
 
-use nanopdf::fitz::buffer::Buffer;
-use nanopdf::fitz::geometry::{Matrix, Point, Rect};
+use micropdf::fitz::buffer::Buffer;
+use micropdf::fitz::geometry::{Matrix, Point, Rect};
 use std::time::Instant;
 
 const ITERATIONS: usize = 100_000;

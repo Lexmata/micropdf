@@ -1,6 +1,6 @@
 # Fuzzing Guide
 
-Comprehensive fuzzing setup for NanoPDF across all language bindings.
+Comprehensive fuzzing setup for MicroPDF across all language bindings.
 
 ## Overview
 
@@ -29,7 +29,7 @@ Fuzzing is an automated software testing technique that provides invalid, unexpe
 ### Quick Start
 
 ```bash
-cd nanopdf-rs
+cd micropdf-rs
 
 # Install cargo-fuzz
 cargo install cargo-fuzz
@@ -114,22 +114,22 @@ cargo fuzz run fuzz_filters -- -max_total_time=300
 
 ```bash
 # Crashes are saved to fuzz/artifacts/
-ls nanopdf-rs/fuzz/artifacts/fuzz_pdf_parse/
+ls micropdf-rs/fuzz/artifacts/fuzz_pdf_parse/
 
 # Reproduce crash
 cargo fuzz run fuzz_pdf_parse \
-  nanopdf-rs/fuzz/artifacts/fuzz_pdf_parse/crash-1234567890abcdef
+  micropdf-rs/fuzz/artifacts/fuzz_pdf_parse/crash-1234567890abcdef
 
 # Debug crash
 cargo fuzz run --debug fuzz_pdf_parse \
-  nanopdf-rs/fuzz/artifacts/fuzz_pdf_parse/crash-1234567890abcdef
+  micropdf-rs/fuzz/artifacts/fuzz_pdf_parse/crash-1234567890abcdef
 ```
 
 ### Coverage
 
 ```bash
 # Generate coverage report
-cd nanopdf-rs
+cd micropdf-rs
 cargo fuzz coverage fuzz_pdf_parse
 
 # View HTML report
@@ -144,7 +144,7 @@ firefox fuzz/coverage/fuzz_pdf_parse/index.html
 ### Quick Start
 
 ```bash
-cd go-nanopdf
+cd go-micropdf
 
 # Run specific fuzz test for 5 minutes
 go test -fuzz=FuzzDocumentOpen -fuzztime=5m
@@ -224,7 +224,7 @@ go test -fuzz=FuzzGeometry -fuzztime=5m
 
 ```bash
 # Crashes are saved to testdata/fuzz/
-ls go-nanopdf/testdata/fuzz/FuzzDocumentOpen/
+ls go-micropdf/testdata/fuzz/FuzzDocumentOpen/
 
 # Reproduce crash
 go test -run=FuzzDocumentOpen/1234567890abcdef
@@ -234,7 +234,7 @@ go test -run=FuzzDocumentOpen/1234567890abcdef
 
 ```bash
 # View corpus
-ls go-nanopdf/testdata/fuzz/FuzzDocumentOpen/
+ls go-micropdf/testdata/fuzz/FuzzDocumentOpen/
 
 # Add custom seed
 echo "%PDF-1.4" > testdata/fuzz/FuzzDocumentOpen/custom_seed
@@ -250,7 +250,7 @@ rm -rf testdata/fuzz/FuzzDocumentOpen/*
 ### Quick Start
 
 ```bash
-cd nanopdf-js
+cd micropdf-js
 
 # Install dependencies (includes @jazzer.js/core)
 pnpm install
@@ -365,7 +365,7 @@ npx jazzer fuzz/targets/pdf-parse.fuzz.ts --sync \\
 
 ```bash
 # View corpus
-ls nanopdf-js/fuzz/corpus/pdf_parse/
+ls micropdf-js/fuzz/corpus/pdf_parse/
 
 # Add custom seed
 cp my-test.pdf fuzz/corpus/pdf_parse/
@@ -432,7 +432,7 @@ gh workflow run fuzz.yml -f duration=600  # 10 minutes
 
 ## OSS-Fuzz Integration
 
-NanoPDF can be integrated with [OSS-Fuzz](https://github.com/google/oss-fuzz) for continuous, large-scale fuzzing by Google.
+MicroPDF can be integrated with [OSS-Fuzz](https://github.com/google/oss-fuzz) for continuous, large-scale fuzzing by Google.
 
 ### Benefits
 
@@ -444,7 +444,7 @@ NanoPDF can be integrated with [OSS-Fuzz](https://github.com/google/oss-fuzz) fo
 ### Setup (Future)
 
 1. Submit project to OSS-Fuzz
-2. Create `oss-fuzz/projects/nanopdf/` config
+2. Create `oss-fuzz/projects/micropdf/` config
 3. Add build script
 4. Configure fuzz targets
 5. Enable continuous fuzzing
@@ -459,7 +459,7 @@ Provide diverse initial inputs:
 
 ```bash
 # Rust
-cp test-pdfs/*/*.pdf nanopdf-rs/fuzz/corpus/fuzz_pdf_parse/
+cp test-pdfs/*/*.pdf micropdf-rs/fuzz/corpus/fuzz_pdf_parse/
 
 # Go (automatic via f.Add())
 ```
@@ -655,15 +655,15 @@ Detects:
 
 #### Rust
 
-1. Create `nanopdf-rs/fuzz/fuzz_targets/fuzz_myfeature.rs`
-2. Add binary to `nanopdf-rs/fuzz/Cargo.toml`
+1. Create `micropdf-rs/fuzz/fuzz_targets/fuzz_myfeature.rs`
+2. Add binary to `micropdf-rs/fuzz/Cargo.toml`
 3. Create corpus directory
 4. Add seeds
 5. Update documentation
 
 #### Go
 
-1. Add `FuzzMyFeature` to `go-nanopdf/fuzz_test.go`
+1. Add `FuzzMyFeature` to `go-micropdf/fuzz_test.go`
 2. Add seed corpus with `f.Add()`
 3. Implement fuzz logic
 4. Test locally

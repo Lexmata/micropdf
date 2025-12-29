@@ -1,12 +1,12 @@
-# NanoPDF Deployment Scripts
+# MicroPDF Deployment Scripts
 
-This directory contains scripts for managing NanoPDF releases and deployments across all projects.
+This directory contains scripts for managing MicroPDF releases and deployments across all projects.
 
 ## Scripts
 
 ### `sync-version.sh`
 
-Synchronizes version numbers across all NanoPDF projects.
+Synchronizes version numbers across all MicroPDF projects.
 
 **Usage:**
 
@@ -36,8 +36,8 @@ Synchronizes version numbers across all NanoPDF projects.
 **What it does:**
 
 1. Validates version format (semantic versioning)
-2. Updates `nanopdf-rs/Cargo.toml`
-3. Updates `nanopdf-js/package.json`
+2. Updates `micropdf-rs/Cargo.toml`
+3. Updates `micropdf-js/package.json`
 4. Updates root `VERSION` file
 5. Creates git commit (optional)
 6. Creates git tag `v<version>` (optional)
@@ -53,7 +53,7 @@ Synchronizes version numbers across all NanoPDF projects.
 
 ### `deploy.sh`
 
-Complete deployment workflow for NanoPDF releases.
+Complete deployment workflow for MicroPDF releases.
 
 **🔄 Integrated with GitHub Actions**: This script is used by `.github/workflows/release-branch.yml` to validate release branches before merging.
 
@@ -109,7 +109,7 @@ Complete deployment workflow for NanoPDF releases.
 
 ## Version File
 
-The root `VERSION` file contains the current version of all NanoPDF projects. This is the single source of truth for the project version.
+The root `VERSION` file contains the current version of all MicroPDF projects. This is the single source of truth for the project version.
 
 **Format:**
 
@@ -149,13 +149,13 @@ git pull origin main
 ./scripts/deploy.sh 0.2.0
 
 # 3. Create GitHub release
-# Go to https://github.com/your-org/nanopdf/releases/new
+# Go to https://github.com/your-org/micropdf/releases/new
 # Select tag v0.2.0
 # Add release notes
 
 # 4. Publish packages
-cd nanopdf-rs && cargo publish
-cd ../nanopdf-js && pnpm publish
+cd micropdf-rs && cargo publish
+cd ../micropdf-js && pnpm publish
 ```
 
 ### For Beta/RC Releases
@@ -199,7 +199,7 @@ git push origin v0.1.1
 
 ## Semantic Versioning
 
-NanoPDF follows [Semantic Versioning](https://semver.org/).
+MicroPDF follows [Semantic Versioning](https://semver.org/).
 
 **Format:** `MAJOR.MINOR.PATCH[-SUFFIX]`
 

@@ -3,7 +3,7 @@ alwaysApply: false
 ---
 # MuPDF API Compatibility Guidelines
 
-NanoPDF aims to be a drop-in replacement for MuPDF. Follow these guidelines to maintain API compatibility.
+MicroPDF aims to be a drop-in replacement for MuPDF. Follow these guidelines to maintain API compatibility.
 
 ## Function Naming
 
@@ -30,7 +30,7 @@ pub extern "C" fn fz_drop_buffer(buf: u64) { }
 pub extern "C" fn pdf_open_document(ctx: u64, path: *const c_char) -> u64 { }
 
 // ❌ WRONG: Non-standard naming
-pub extern "C" fn nanopdf_create_buffer(capacity: i32) -> u64 { }
+pub extern "C" fn micropdf_create_buffer(capacity: i32) -> u64 { }
 pub extern "C" fn buffer_new(capacity: i32) -> u64 { }
 ```
 
@@ -287,7 +287,7 @@ MuPDF uses setjmp/longjmp for error handling. We simulate this with the last-err
 //   fz_try(ctx) { ... }
 //   fz_catch(ctx) { ... }
 
-// NanoPDF pattern:
+// MicroPDF pattern:
 let result = fz_some_operation(ctx, ...);
 if result == 0 {  // Or < 0 for error codes
     let error = fz_caught_message(ctx);

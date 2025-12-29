@@ -1,11 +1,11 @@
-# ReportLab Extension Opportunities for NanoPDF
+# ReportLab Extension Opportunities for MicroPDF
 
 ## Executive Summary
 
 **Date**: December 4, 2025
 **ReportLab Version**: 4.x (latest)
-**NanoPDF Version**: 0.1.0
-**Purpose**: Identify unique ReportLab features not in pypdf/MuPDF/FPDF/pdfcpu for potential NanoPDF extensions
+**MicroPDF Version**: 0.1.0
+**Purpose**: Identify unique ReportLab features not in pypdf/MuPDF/FPDF/pdfcpu for potential MicroPDF extensions
 
 This document identifies features present in **ReportLab** that are **not available** (or not well-implemented) in pypdf, MuPDF, FPDF, or pdfcpu. ReportLab brings unique value through:
 - **Platypus Framework**: High-level document layout with flowables
@@ -113,7 +113,7 @@ doc.build(story)
 └─────────────────────────────────────┘
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct DocTemplate {
@@ -220,7 +220,7 @@ class Signature(Flowable):
         self.canv.drawString(self.width - 50, -10, "Date: _____")
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub trait Flowable: Send + Sync {
@@ -405,7 +405,7 @@ para = Paragraph(text, style)
 - `<seq>` - Sequence (for numbering)
 - `<img>` - Inline image
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct ParagraphStyle {
@@ -560,7 +560,7 @@ table.setStyle(TableStyle([
 (0, 0), (-1, -1)  # Entire table
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct TableStyle {
@@ -693,7 +693,7 @@ doc = BaseDocTemplate('output.pdf',
 - Frame chaining and flow control
 - Switchable templates mid-document
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct PageTemplate {
@@ -775,7 +775,7 @@ doc.build(story)
 - Leader dots (.......)
 - Right-aligned page numbers
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct TableOfContents {
@@ -865,7 +865,7 @@ story.append(drawing)
 - Annotations
 - Multiple data series
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct Chart {
@@ -957,7 +957,7 @@ story.append(heading)
 story.append(Paragraph("Content...", styles['Normal']))
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct KeepTogether {
@@ -1010,7 +1010,7 @@ story.append(CondPageBreak(2 * inch))
 story.append(Paragraph("Important section", styles['Heading']))
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct CondPageBreak {
@@ -1048,7 +1048,7 @@ template = PageTemplate(
 - Spanning content across columns
 - Column rules (vertical lines)
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 // Already covered by Frame system in PageTemplate
@@ -1223,7 +1223,7 @@ c.save()
 
 **FFI Layer** (`ffi/reportlab_extensions/`):
 ```
-nanopdf-rs/src/ffi/reportlab_extensions/
+micropdf-rs/src/ffi/reportlab_extensions/
   ├── doctemplate.rs   - Document templates
   ├── flowables.rs     - Flowable system
   ├── paragraph.rs     - Paragraph and styles
@@ -1235,7 +1235,7 @@ nanopdf-rs/src/ffi/reportlab_extensions/
 
 **Core Rust** (`fitz/reportlab/`):
 ```
-nanopdf-rs/src/fitz/reportlab/
+micropdf-rs/src/fitz/reportlab/
   ├── platypus/
   │   ├── doctemplate.rs
   │   ├── flowables.rs
@@ -1282,7 +1282,7 @@ nanopdf-rs/src/fitz/reportlab/
 
 ## Competitive Advantage
 
-By implementing ReportLab features, NanoPDF becomes:
+By implementing ReportLab features, MicroPDF becomes:
 
 1. ✅ **The ONLY comprehensive PDF library** combining:
    - MuPDF: Reading/rendering
@@ -1306,19 +1306,19 @@ By implementing ReportLab features, NanoPDF becomes:
 
 4. ✅ **Market positioning**:
    - **ReportLab (Python)**: $3,000+/year commercial license
-   - **NanoPDF (Rust)**: Open source + performance
+   - **MicroPDF (Rust)**: Open source + performance
    - **Gap filled**: Enterprise PDF generation in Rust
 
 ---
 
 ## Conclusion
 
-ReportLab represents the **highest value** addition to NanoPDF:
+ReportLab represents the **highest value** addition to MicroPDF:
 
 - **Critical Market Gap**: No comprehensive document generation in Rust
 - **Enterprise Need**: Companies pay thousands for ReportLab licenses
 - **Unique Features**: Platypus, flowables, automatic layout not in any other library
-- **Complete Solution**: With FPDF + pdfcpu + ReportLab features, NanoPDF is **unmatched**
+- **Complete Solution**: With FPDF + pdfcpu + ReportLab features, MicroPDF is **unmatched**
 
 **Combined Value** (all three extensions):
 

@@ -346,14 +346,14 @@ export class AsyncDocument implements AsyncDisposable {
 
 ```typescript
 // ✅ CORRECT: Custom error hierarchy
-export class NanoPdfError extends Error {
+export class MicroPdfError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
-    this.name = 'NanoPdfError';
+    this.name = 'MicroPdfError';
   }
 }
 
-export class ParseError extends NanoPdfError {
+export class ParseError extends MicroPdfError {
   constructor(
     message: string,
     readonly offset: number,
@@ -365,7 +365,7 @@ export class ParseError extends NanoPdfError {
   }
 }
 
-export class ValidationError extends NanoPdfError {
+export class ValidationError extends MicroPdfError {
   constructor(
     message: string,
     readonly field: string,
@@ -380,7 +380,7 @@ export class ValidationError extends NanoPdfError {
 try {
   await parseDocument(data);
 } catch (err) {
-  throw new NanoPdfError('Failed to load document', { cause: err });
+  throw new MicroPdfError('Failed to load document', { cause: err });
 }
 ```
 

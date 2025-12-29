@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sync version across all NanoPDF projects
+# Sync version across all MicroPDF projects
 #
 # Usage:
 #   ./scripts/sync-version.sh <version>
@@ -51,7 +51,7 @@ while [[ $# -gt 0 ]]; do
             cat << EOF
 Usage: $0 <version> [options]
 
-Sync version across all NanoPDF projects.
+Sync version across all MicroPDF projects.
 
 Arguments:
   <version>         Version to set (e.g., 0.2.0, 1.0.0-beta.1)
@@ -68,8 +68,8 @@ Examples:
   $0 0.2.0 --dry-run
 
 Projects updated:
-  - nanopdf-rs/Cargo.toml
-  - nanopdf-js/package.json
+  - micropdf-rs/Cargo.toml
+  - micropdf-js/package.json
   - VERSION file (root)
 EOF
             exit 0
@@ -106,8 +106,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # File paths
-CARGO_TOML="$PROJECT_ROOT/nanopdf-rs/Cargo.toml"
-PACKAGE_JSON="$PROJECT_ROOT/nanopdf-js/package.json"
+CARGO_TOML="$PROJECT_ROOT/micropdf-rs/Cargo.toml"
+PACKAGE_JSON="$PROJECT_ROOT/micropdf-js/package.json"
 VERSION_FILE="$PROJECT_ROOT/VERSION"
 
 # Verify files exist
@@ -122,7 +122,7 @@ if [[ ! -f "$PACKAGE_JSON" ]]; then
 fi
 
 echo -e "${BLUE}================================================${NC}"
-echo -e "${BLUE}NanoPDF Version Sync${NC}"
+echo -e "${BLUE}MicroPDF Version Sync${NC}"
 echo -e "${BLUE}================================================${NC}"
 echo ""
 echo -e "Target version: ${GREEN}$VERSION${NC}"
@@ -213,23 +213,23 @@ create_git_commit() {
     fi
 
     # Check for uncommitted changes (excluding our version files)
-    if ! git diff --quiet --exit-code -- ':!nanopdf-rs/Cargo.toml' ':!nanopdf-js/package.json' ':!VERSION'; then
+    if ! git diff --quiet --exit-code -- ':!micropdf-rs/Cargo.toml' ':!micropdf-js/package.json' ':!VERSION'; then
         echo -e "  ${YELLOW}Warning: Uncommitted changes in other files${NC}"
         echo "  Commit message will include only version updates"
     fi
 
     if [[ "$DRY_RUN" == "true" ]]; then
         echo -e "  ${YELLOW}[DRY RUN] Would commit:${NC}"
-        echo "    - nanopdf-rs/Cargo.toml"
-        echo "    - nanopdf-js/package.json"
+        echo "    - micropdf-rs/Cargo.toml"
+        echo "    - micropdf-js/package.json"
         echo "    - VERSION"
         echo "  Commit message: chore: bump version to $VERSION"
     else
         git add "$CARGO_TOML" "$PACKAGE_JSON" "$VERSION_FILE"
         git commit -m "chore: bump version to $VERSION
 
-- Update nanopdf-rs to $VERSION
-- Update nanopdf-js to $VERSION
+- Update micropdf-rs to $VERSION
+- Update micropdf-js to $VERSION
 - Update VERSION file to $VERSION"
         echo -e "  ${GREEN}✓ Committed${NC}"
     fi
@@ -263,11 +263,11 @@ create_git_tag() {
     else
         git tag -a "$TAG_NAME" -m "Release $VERSION
 
-NanoPDF $VERSION
+MicroPDF $VERSION
 
-- nanopdf-rs: $VERSION
-- nanopdf-js: $VERSION
-- go-nanopdf: $VERSION"
+- micropdf-rs: $VERSION
+- micropdf-js: $VERSION
+- go-micropdf: $VERSION"
         echo -e "  ${GREEN}✓ Created tag: $TAG_NAME${NC}"
         echo ""
         echo -e "  Push with: ${BLUE}git push origin $TAG_NAME${NC}"
@@ -304,8 +304,8 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo "Run without --dry-run to apply changes."
 else
     echo "Updated files:"
-    echo "  ✓ nanopdf-rs/Cargo.toml -> $VERSION"
-    echo "  ✓ nanopdf-js/package.json -> $VERSION"
+    echo "  ✓ micropdf-rs/Cargo.toml -> $VERSION"
+    echo "  ✓ micropdf-js/package.json -> $VERSION"
     echo "  ✓ VERSION -> $VERSION"
 
     if [[ "$CREATE_COMMIT" == "true" ]]; then

@@ -4,14 +4,14 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'nanopdf-rs/**'
-      - 'go-nanopdf/**'
+      - 'micropdf-rs/**'
+      - 'go-micropdf/**'
       - '.github/workflows/fuzz.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'nanopdf-rs/**'
-      - 'go-nanopdf/**'
+      - 'micropdf-rs/**'
+      - 'go-micropdf/**'
   schedule:
     # Run nightly fuzzing at 2 AM UTC
     - cron: '0 2 * * *'
@@ -60,12 +60,12 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            nanopdf-rs/fuzz/target/
+            micropdf-rs/fuzz/target/
           key: ${{ runner.os }}-fuzz-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup seed corpus
         run: |
-          cd nanopdf-rs/fuzz
+          cd micropdf-rs/fuzz
           # Ensure corpus directories exist with seeds
           mkdir -p corpus/${{ matrix.target }}
           
@@ -82,7 +82,7 @@ jobs:
       - name: Run fuzzer
         timeout-minutes: 10
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           DURATION="${{ github.event.inputs.duration || '300' }}"
           
           # Run fuzzer with time limit
@@ -97,7 +97,7 @@ jobs:
       - name: Check for crashes
         id: check_crashes
         run: |
-          cd nanopdf-rs/fuzz
+          cd micropdf-rs/fuzz
           if [ -d "artifacts/${{ matrix.target }}" ] && [ -n "$(ls -A artifacts/${{ matrix.target }})" ]; then
             echo "crash_found=true" >> $GITHUB_OUTPUT
             echo "⚠️ Crashes found in ${{ matrix.target }}!" >> $GITHUB_STEP_SUMMARY
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fuzz-crashes-${{ matrix.target }}
-          path: nanopdf-rs/fuzz/artifacts/${{ matrix.target }}/
+          path: micropdf-rs/fuzz/artifacts/${{ matrix.target }}/
           retention-days: 30
 
       - name: Fail if crashes found
@@ -141,19 +141,19 @@ jobs:
 
       - name: Build Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           cargo build --release
 
       - name: Install Rust library
         run: |
-          cd nanopdf-rs
+          cd micropdf-rs
           # Use sudo -E to preserve PATH with cargo
           sudo -E env "PATH=$PATH" make install PREFIX=/usr
 
       - name: Run Go fuzz tests
         timeout-minutes: 10
         run: |
-          cd go-nanopdf
+          cd go-micropdf
           DURATION="${{ github.event.inputs.duration || '300' }}"
           
           # Run each fuzz test with time limit
@@ -166,7 +166,7 @@ jobs:
       - name: Check for Go fuzz crashes
         id: check_go_crashes
         run: |
-          cd go-nanopdf
+          cd go-micropdf
           if [ -d "testdata/fuzz" ] && find testdata/fuzz -name "*.crash" | grep -q .; then
             echo "crash_found=true" >> $GITHUB_OUTPUT
             echo "⚠️ Go fuzzing crashes found!" >> $GITHUB_STEP_SUMMARY
@@ -181,7 +181,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fuzz-crashes-go
-          path: go-nanopdf/testdata/fuzz/
+          path: go-micropdf/testdata/fuzz/
           retention-days: 30
 
       - name: Fail if crashes found

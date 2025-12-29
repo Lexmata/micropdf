@@ -1,7 +1,7 @@
 #!/bin/bash
-# NanoPDF Deployment Script
+# MicroPDF Deployment Script
 #
-# Complete deployment workflow for NanoPDF releases
+# Complete deployment workflow for MicroPDF releases
 #
 # Usage:
 #   ./scripts/deploy.sh <version> [options]
@@ -62,7 +62,7 @@ while [[ $# -gt 0 ]]; do
             cat << EOF
 Usage: $0 <version> [options]
 
-Complete deployment workflow for NanoPDF releases.
+Complete deployment workflow for MicroPDF releases.
 
 Arguments:
   <version>         Version to deploy (e.g., 0.2.0, 1.0.0-beta.1)
@@ -89,9 +89,9 @@ Deployment Steps:
   7. Push to remote (optional)
 
 Projects:
-  - nanopdf-rs (Rust FFI library)
-  - nanopdf-js (Node.js bindings)
-  - go-nanopdf (Go bindings)
+  - micropdf-rs (Rust FFI library)
+  - micropdf-js (Node.js bindings)
+  - go-micropdf (Go bindings)
 EOF
             exit 0
             ;;
@@ -122,7 +122,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo -e "${CYAN}================================================${NC}"
-echo -e "${CYAN}        NanoPDF Deployment Script${NC}"
+echo -e "${CYAN}        MicroPDF Deployment Script${NC}"
 echo -e "${CYAN}================================================${NC}"
 echo ""
 echo -e "Version:        ${GREEN}$VERSION${NC}"
@@ -225,33 +225,33 @@ if [[ "$RUN_TESTS" == "true" ]]; then
     print_step "Step 3: Running Tests"
 
     # Rust tests
-    echo -e "${BLUE}==> Testing nanopdf-rs${NC}"
+    echo -e "${BLUE}==> Testing micropdf-rs${NC}"
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would run: cd nanopdf-rs && cargo test${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: cd micropdf-rs && cargo test${NC}"
     else
-        cd "$PROJECT_ROOT/nanopdf-rs"
+        cd "$PROJECT_ROOT/micropdf-rs"
         cargo test --release
         echo -e "${GREEN}✓ Rust tests passed${NC}"
     fi
     echo ""
 
     # Go tests
-    echo -e "${BLUE}==> Testing go-nanopdf${NC}"
+    echo -e "${BLUE}==> Testing go-micropdf${NC}"
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would run: cd go-nanopdf && go test -tags=mock ./...${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: cd go-micropdf && go test -tags=mock ./...${NC}"
     else
-        cd "$PROJECT_ROOT/go-nanopdf"
+        cd "$PROJECT_ROOT/go-micropdf"
         go test -tags=mock ./...
         echo -e "${GREEN}✓ Go tests passed${NC}"
     fi
     echo ""
 
     # Node.js tests
-    echo -e "${BLUE}==> Testing nanopdf-js${NC}"
+    echo -e "${BLUE}==> Testing micropdf-js${NC}"
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would run: cd nanopdf-js && pnpm test${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: cd micropdf-js && pnpm test${NC}"
     else
-        cd "$PROJECT_ROOT/nanopdf-js"
+        cd "$PROJECT_ROOT/micropdf-js"
         if [[ -f "package.json" ]] && grep -q '"test"' package.json; then
             pnpm test || echo -e "${YELLOW}Warning: Some tests failed${NC}"
         else
@@ -285,22 +285,22 @@ if [[ "$BUILD_PACKAGES" == "true" ]]; then
     print_step "Step 5: Building Packages"
 
     # Build Rust library
-    echo -e "${BLUE}==> Building nanopdf-rs (release)${NC}"
+    echo -e "${BLUE}==> Building micropdf-rs (release)${NC}"
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would run: cd nanopdf-rs && cargo build --release${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: cd micropdf-rs && cargo build --release${NC}"
     else
-        cd "$PROJECT_ROOT/nanopdf-rs"
+        cd "$PROJECT_ROOT/micropdf-rs"
         cargo build --release
         echo -e "${GREEN}✓ Rust library built${NC}"
     fi
     echo ""
 
     # Build Node.js addon
-    echo -e "${BLUE}==> Building nanopdf-js (native addon)${NC}"
+    echo -e "${BLUE}==> Building micropdf-js (native addon)${NC}"
     if [[ "$DRY_RUN" == "true" ]]; then
-        echo -e "${YELLOW}[DRY RUN] Would run: cd nanopdf-js && pnpm build${NC}"
+        echo -e "${YELLOW}[DRY RUN] Would run: cd micropdf-js && pnpm build${NC}"
     else
-        cd "$PROJECT_ROOT/nanopdf-js"
+        cd "$PROJECT_ROOT/micropdf-js"
         if [[ -f "package.json" ]] && grep -q '"build"' package.json; then
             pnpm build || echo -e "${YELLOW}Warning: Build had issues${NC}"
             echo -e "${GREEN}✓ Node.js addon built${NC}"
@@ -321,14 +321,14 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}[DRY RUN] Would create commit and tag for version $VERSION${NC}"
 else
     # Stage version files
-    git add VERSION nanopdf-rs/Cargo.toml nanopdf-js/package.json
+    git add VERSION micropdf-rs/Cargo.toml micropdf-js/package.json
 
     # Create commit
     git commit -m "chore: bump version to $VERSION
 
-- Update nanopdf-rs to $VERSION
-- Update nanopdf-js to $VERSION
-- Update go-nanopdf to $VERSION
+- Update micropdf-rs to $VERSION
+- Update micropdf-js to $VERSION
+- Update go-micropdf to $VERSION
 - Update VERSION file to $VERSION"
 
     echo -e "${GREEN}✓ Commit created${NC}"
@@ -337,12 +337,12 @@ else
     TAG_NAME="v$VERSION"
     git tag -a "$TAG_NAME" -m "Release $VERSION
 
-NanoPDF $VERSION
+MicroPDF $VERSION
 
 Projects:
-- nanopdf-rs: $VERSION
-- nanopdf-js: $VERSION
-- go-nanopdf: $VERSION
+- micropdf-rs: $VERSION
+- micropdf-js: $VERSION
+- go-micropdf: $VERSION
 
 See CHANGELOG.md for details."
 
@@ -377,7 +377,7 @@ if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}This was a dry run. No changes were made.${NC}"
     echo "Run without --dry-run to perform actual deployment."
 else
-    echo -e "${GREEN}Successfully deployed NanoPDF $VERSION${NC}"
+    echo -e "${GREEN}Successfully deployed MicroPDF $VERSION${NC}"
     echo ""
     echo "Summary:"
     echo "  ✓ Tests passed"
@@ -393,8 +393,8 @@ else
         echo "  1. Monitor CI/CD pipeline for automated builds"
         echo "  2. Create GitHub release from tag: v$VERSION"
         echo "  3. Publish packages:"
-        echo "     - Rust: cd nanopdf-rs && cargo publish"
-        echo "     - Node.js: cd nanopdf-js && pnpm publish"
+        echo "     - Rust: cd micropdf-rs && cargo publish"
+        echo "     - Node.js: cd micropdf-js && pnpm publish"
         echo "  4. Update documentation if needed"
     else
         echo ""

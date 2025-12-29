@@ -64,7 +64,7 @@ func bench(name string, iterations int, f func()) BenchResult {
 	return newBenchResult(name, iterations, elapsed.Nanoseconds())
 }
 
-// Simulate Point type (replace with actual nanopdf.Point when available)
+// Simulate Point type (replace with actual micropdf.Point when available)
 type Point struct {
 	X, Y float64
 }
@@ -168,7 +168,7 @@ func (p Point) Transform(m Matrix) Point {
 	}
 }
 
-// Buffer simulates nanopdf.Buffer
+// Buffer simulates micropdf.Buffer
 type Buffer struct {
 	data []byte
 }
