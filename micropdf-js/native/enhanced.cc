@@ -23,10 +23,10 @@ static int32_t GetContext(const Napi::Object& obj) {
 Napi::Value MergePDFs(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 4 || 
-        !info[0].IsObject() || 
-        !info[1].IsArray() || 
-        !info[2].IsNumber() || 
+    if (info.Length() < 4 ||
+        !info[0].IsObject() ||
+        !info[1].IsArray() ||
+        !info[2].IsNumber() ||
         !info[3].IsString()) {
         Napi::TypeError::New(env, "Expected (context, paths: string[], count: number, outputPath: string)")
             .ThrowAsJavaScriptException();
@@ -64,7 +64,7 @@ Napi::Value MergePDFs(const Napi::CallbackInfo& info) {
  */
 Napi::Object InitEnhanced(Napi::Env env, Napi::Object exports) {
     exports.Set("npMergePDFs", Napi::Function::New(env, MergePDFs));
-    
+
     return exports;
 }
 

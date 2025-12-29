@@ -135,7 +135,8 @@ mod pdf_content_types {
         let data = read_fixture("comprehensive_test.pdf");
         assert!(find_pattern(&data, b"/Type /Metadata"));
         assert!(find_pattern(&data, b"<x:xmpmeta"));
-        assert!(find_pattern(&data, b"MicroPDF Comprehensive Test Document"));
+        // Note: Test PDF still has NanoPDF branding - will be regenerated later
+        assert!(find_pattern(&data, b"NanoPDF Comprehensive Test Document"));
     }
 
     #[test]
