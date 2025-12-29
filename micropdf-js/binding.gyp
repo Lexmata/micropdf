@@ -22,7 +22,8 @@
         "native/colorspace.cc",
         "native/font.cc",
         "native/stream.cc",
-        "native/output.cc"
+        "native/output.cc",
+        "native/enhanced.cc"
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

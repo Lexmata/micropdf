@@ -26,6 +26,7 @@ Napi::Object InitColorspace(Napi::Env env, Napi::Object exports);
 Napi::Object InitFont(Napi::Env env, Napi::Object exports);
 Napi::Object InitStream(Napi::Env env, Napi::Object exports);
 Napi::Object InitOutput(Napi::Env env, Napi::Object exports);
+Napi::Object InitEnhanced(Napi::Env env, Napi::Object exports);
 
 /**
  * Get the MicroPDF library version
@@ -61,6 +62,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     InitFont(env, exports);
     InitStream(env, exports);
     InitOutput(env, exports);
+    InitEnhanced(env, exports);
 
     return exports;
 }

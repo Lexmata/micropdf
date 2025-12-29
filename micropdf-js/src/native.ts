@@ -42,7 +42,7 @@ export interface NativeAddon {
   writeDocument(ctx: NativeContext, doc: NativeDocument): globalThis.Buffer;
 
   // PDF Merging (Enhanced API)
-  npMergePDFs(ctx: NativeContext, paths: string[], outputPath: string): number;
+  npMergePDFs(ctx: NativeContext, paths: string[], count: number, outputPath: string): number;
 
   // Rendering
   renderPage(
@@ -866,6 +866,7 @@ function createMockAddon(): NativeAddon {
     npMergePDFs: requireFFI('npMergePDFs') as (
       ctx: NativeContext,
       paths: string[],
+      count: number,
       outputPath: string
     ) => number,
 

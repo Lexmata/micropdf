@@ -265,7 +265,7 @@ export class Enhanced {
       throw new Error('PDF merging requires native FFI bindings (np_merge_pdfs)');
     }
 
-    native.npMergePDFs(ctx, inputPaths, outputPath);
+    native.npMergePDFs(ctx, inputPaths, inputPaths.length, outputPath);
   }
 
   /**
@@ -372,7 +372,7 @@ export class Enhanced {
     }
 
     try {
-      const pageCount = native.npMergePDFs(ctx, inputPaths, outputPath);
+      const pageCount = native.npMergePDFs(ctx, inputPaths, inputPaths.length, outputPath);
 
       if (pageCount < 0) {
         throw new Error('PDF merge failed');
