@@ -34,7 +34,7 @@ AI: Creates both:
 ```
 User: "Add pkg-config support"
 AI: Creates:
-  - nanopdf.pc.in ✅
+  - micropdf.pc.in ✅
   - mupdf.pc.in ✅
   - build.rs ✅
   - PKG-CONFIG.md ❌ (not explicitly requested)

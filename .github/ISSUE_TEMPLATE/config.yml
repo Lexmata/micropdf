@@ -1,10 +1,10 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/Lexmata/nanopdf/wiki
+    url: https://github.com/Lexmata/micropdf/wiki
     about: Check our documentation for answers to common questions
   - name: Discussions
-    url: https://github.com/Lexmata/nanopdf/discussions
+    url: https://github.com/Lexmata/micropdf/discussions
     about: Ask questions and discuss with the community
   - name: MuPDF Documentation
     url: https://mupdf.com/docs/

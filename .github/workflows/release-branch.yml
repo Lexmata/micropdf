@@ -1,0 +1,328 @@
+name: Release Branch
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize]
+    # Only trigger if PR is from a release branch
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Extract version from branch name
+  detect-version:
+    name: Detect Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      is_release_branch: ${{ steps.extract.outputs.is_release }}
+    steps:
+      - name: Extract version from branch
+        id: extract
+        run: |
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            BRANCH_NAME="${{ github.ref }}"
+            VERSION="${BRANCH_NAME#refs/heads/release/}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Detected release branch for version: $VERSION"
+          elif [[ "${{ github.head_ref }}" == release/* ]]; then
+            VERSION="${{ github.head_ref }}"
+            VERSION="${VERSION#release/}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "is_release=true" >> $GITHUB_OUTPUT
+            echo "Detected release branch in PR for version: $VERSION"
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+            echo "Not a release branch"
+          fi
+
+  # Validate release preparation using deploy script
+  validate-release:
+    name: Validate Release
+    needs: detect-version
+    if: needs.detect-version.outputs.is_release_branch == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Make deploy script executable
+        run: chmod +x scripts/deploy.sh scripts/sync-version.sh
+
+      - name: Validate release (dry run)
+        run: |
+          ./scripts/deploy.sh ${{ needs.detect-version.outputs.version }} --dry-run
+        env:
+          CI: true
+
+      - name: Check version consistency
+        run: |
+          VERSION="${{ needs.detect-version.outputs.version }}"
+
+          # Check Cargo.toml
+          CARGO_VERSION=$(grep '^version = ' micropdf-rs/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "Cargo.toml version: $CARGO_VERSION"
+
+          # Check package.json
+          PACKAGE_VERSION=$(node -p "require('./micropdf-js/package.json').version")
+          echo "package.json version: $PACKAGE_VERSION"
+
+          # Check VERSION file if it exists
+          if [ -f VERSION ]; then
+            FILE_VERSION=$(cat VERSION)
+            echo "VERSION file: $FILE_VERSION"
+          fi
+
+          # Warn if versions don't match
+          if [ "$CARGO_VERSION" != "$VERSION" ] || [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+            echo "::warning::Version mismatch detected. Run: ./scripts/sync-version.sh $VERSION"
+          fi
+
+  # Run comprehensive tests
+  test-release:
+    name: Test Release Candidate
+    needs: [detect-version, validate-release]
+    if: needs.detect-version.outputs.is_release_branch == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            test_go: true
+          - os: macos-latest
+            test_go: true
+          - os: windows-latest
+            test_go: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Go
+        if: matrix.test_go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      # Rust tests
+      - name: Test micropdf-rs
+        working-directory: micropdf-rs
+        run: cargo test --release
+
+      - name: Test micropdf-rs (all features)
+        working-directory: micropdf-rs
+        run: cargo test --release --all-features
+
+      # Node.js tests
+      - name: Install Node.js dependencies
+        working-directory: micropdf-js
+        run: pnpm install --ignore-scripts
+
+      - name: Build TypeScript
+        working-directory: micropdf-js
+        run: pnpm run build:ts
+
+      - name: Test micropdf-js
+        working-directory: micropdf-js
+        run: pnpm test
+        continue-on-error: true
+
+      # Go tests (mock mode only for cross-platform)
+      - name: Test go-micropdf (mock)
+        if: matrix.test_go
+        working-directory: go-micropdf
+        run: CGO_ENABLED=0 go test -tags=mock ./...
+
+  # Build release artifacts
+  build-release-artifacts:
+    name: Build Release Artifacts
+    needs: [detect-version, validate-release, test-release]
+    if: needs.detect-version.outputs.is_release_branch == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Build Rust library (release)
+        working-directory: micropdf-rs
+        run: cargo build --release
+
+      - name: Build Node.js addon
+        working-directory: micropdf-js
+        run: |
+          pnpm install --ignore-scripts
+          pnpm run build
+        continue-on-error: true
+
+      - name: Upload Rust artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: micropdf-rs-${{ needs.detect-version.outputs.version }}
+          path: micropdf-rs/target/release/libmicropdf.*
+
+      - name: Upload Node.js build
+        uses: actions/upload-artifact@v4
+        with:
+          name: micropdf-js-${{ needs.detect-version.outputs.version }}
+          path: micropdf-js/dist/
+          if-no-files-found: ignore
+
+  # Summary and next steps
+  release-summary:
+    name: Release Summary
+    needs: [detect-version, validate-release, test-release, build-release-artifacts]
+    if: always() && needs.detect-version.outputs.is_release_branch == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 🚀 Release Branch Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: \`${{ needs.detect-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.validate-release.result }}" == "success" ]]; then
+            echo "✅ **Validation**: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Validation**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.test-release.result }}" == "success" ]]; then
+            echo "✅ **Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.build-release-artifacts.result }}" == "success" ]]; then
+            echo "✅ **Build**: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Build**: Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.validate-release.result }}" == "success" ]] && \
+             [[ "${{ needs.test-release.result }}" == "success" ]] && \
+             [[ "${{ needs.build-release-artifacts.result }}" == "success" ]]; then
+            echo "✅ **Release is ready to deploy!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "To complete the release:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Merge this release branch to \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Merge back to \`develop\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. Tag will be automatically created on \`main\`" >> $GITHUB_STEP_SUMMARY
+            echo "4. Release workflow will publish packages" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Or run locally:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "./scripts/deploy.sh ${{ needs.detect-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Release has issues that need to be resolved**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please fix the failing checks before proceeding." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ needs.detect-version.outputs.version }}';
+            const validateResult = '${{ needs.validate-release.result }}';
+            const testResult = '${{ needs.test-release.result }}';
+            const buildResult = '${{ needs.build-release-artifacts.result }}';
+
+            const allPassed = validateResult === 'success' && testResult === 'success' && buildResult === 'success';
+
+            const body = `## 🚀 Release Branch Validation
+
+            **Version**: \`${version}\`
+
+            ### Status
+            - ${validateResult === 'success' ? '✅' : '❌'} **Validation**: ${validateResult}
+            - ${testResult === 'success' ? '✅' : '❌'} **Tests**: ${testResult}
+            - ${buildResult === 'success' ? '✅' : '❌'} **Build**: ${buildResult}
+
+            ${allPassed ? `### ✅ Ready to Release
+
+            This release branch has passed all checks and is ready to be merged.
+
+            **Next steps:**
+            1. Merge this PR to \`main\`
+            2. Merge back to \`develop\`
+            3. GitHub Actions will automatically create the release
+
+            Or deploy manually:
+            \`\`\`bash
+            ./scripts/deploy.sh ${version}
+            \`\`\`
+            ` : `### ⚠️ Issues Detected
+
+            Some checks have failed. Please review the workflow logs and fix any issues before merging.
+            `}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+

@@ -1,0 +1,10 @@
+{
+  "go.buildTags": "mock",
+  "gopls": {
+    "buildFlags": ["-tags=mock"],
+    "env": {
+      "CGO_ENABLED": "0"
+    }
+  }
+}
+

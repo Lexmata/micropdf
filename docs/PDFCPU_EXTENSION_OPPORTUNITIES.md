@@ -1,11 +1,11 @@
-# pdfcpu Extension Opportunities for NanoPDF
+# pdfcpu Extension Opportunities for MicroPDF
 
 ## Executive Summary
 
 **Date**: December 4, 2025
 **pdfcpu Version**: Latest (v0.8+)
-**NanoPDF Version**: 0.1.0
-**Purpose**: Identify unique pdfcpu features not in pypdf/MuPDF/FPDF for potential NanoPDF extensions
+**MicroPDF Version**: 0.1.0
+**Purpose**: Identify unique pdfcpu features not in pypdf/MuPDF/FPDF for potential MicroPDF extensions
 
 This document identifies features present in the **pdfcpu** Go library that are **not available** (or not well-implemented) in pypdf, MuPDF, or FPDF. pdfcpu brings unique value through:
 - **Professional Print Production**: Advanced page boxes, imposition, booklet creation
@@ -83,7 +83,7 @@ pdfcpu box remove -box "TrimBox" input.pdf
 pdfcpu box add -box "BleedBox" -bleed 9 input.pdf
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 // Core API
@@ -183,7 +183,7 @@ More flexible than N-Up, allows arbitrary positioning:
 pdfcpu grid -dimensions "[2 2]" -grid "2x2" input.pdf output.pdf
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct NUpOptions {
@@ -267,7 +267,7 @@ pdfcpu validate -repair input.pdf output.pdf
 - ✅ Reconstruct missing trailer
 - ✅ Fix invalid PDF header
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub enum ValidationMode {
@@ -361,7 +361,7 @@ Folded and stacked: Pages 1-8 in order
 3. **Spiral Bound Layout**: Holes for spiral binding
 4. **Signature-Based**: For traditional book printing
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub enum BookletType {
@@ -443,7 +443,7 @@ Print each page on Letter/A4, then assemble
 - Assembly diagram
 - Scale factor adjustment
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct PosterOptions {
@@ -527,7 +527,7 @@ Jane Smith,jane@example.com,28,false,Canada
 - Lock forms after filling
 - Flatten filled forms
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct FormData {
@@ -599,7 +599,7 @@ pdfcpu resize -format Letter -margin 36 input.pdf output.pdf
 - Add margins/borders
 - Handle different page sizes in doc
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub enum ResizeMode {
@@ -685,7 +685,7 @@ bl (bottom-left)   bc (bottom-center)   br (bottom-right)
 - Page-specific stamps
 - Dynamic text replacement
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub enum StampContent {
@@ -763,7 +763,7 @@ pdfcpu collect extract collection.pdf output_dir/
 - Custom viewer layouts
 - File relationships
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 
 ```rust
 pub struct Collection {
@@ -819,7 +819,7 @@ pdfcpu info -filter "author=Smith" *.pdf
 pdfcpu extract -search "Chapter" input.pdf output.pdf
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_search_text(doc, query, options)` - Full-text search
 - `np_filter_pages_by_content(doc, criteria)` - Filter pages
 - `np_search_metadata(docs, query)` - Search across documents
@@ -846,7 +846,7 @@ pdfcpu pagelabels add -style "decimal" -range "11-" -prefix "Chapter 1-" input.p
 - Letters (a, b, c)
 - Custom prefix (Appendix-1, Appendix-2)
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_page_labels_set(doc, range, style, prefix)` - Set labels
 - `np_page_labels_get(doc, page)` - Get label for page
 - `np_page_labels_reset(doc)` - Clear all labels
@@ -867,7 +867,7 @@ pdfcpu pdfa convert -level "1b" input.pdf output.pdf
 pdfcpu pdfa validate -level "2b" input.pdf
 ```
 
-**NanoPDF Extension Needed**:
+**MicroPDF Extension Needed**:
 - `np_convert_to_pdfa(doc, level, options)` - PDF/A conversion
 - `np_validate_pdfa(doc, level)` - Compliance check
 - `np_pdfa_embed_fonts(doc)` - Ensure font embedding
@@ -981,7 +981,7 @@ pdfcpu pdfa validate -level "2b" input.pdf
 
 **FFI Layer** (`ffi/pdfcpu_extensions/`):
 ```
-nanopdf-rs/src/ffi/pdfcpu_extensions/
+micropdf-rs/src/ffi/pdfcpu_extensions/
   ├── boxes.rs         - Page box management
   ├── nup.rs           - N-Up and grid layouts
   ├── validation.rs    - PDF validation and repair
@@ -996,7 +996,7 @@ nanopdf-rs/src/ffi/pdfcpu_extensions/
 
 **Core Rust** (`fitz/pdfcpu/`):
 ```
-nanopdf-rs/src/fitz/pdfcpu/
+micropdf-rs/src/fitz/pdfcpu/
   ├── boxes.rs         - Box calculations
   ├── imposition.rs    - N-Up, booklet, poster algorithms
   ├── validator.rs     - PDF validation engine
@@ -1094,7 +1094,7 @@ for (i, doc) in filled_docs.iter().enumerate() {
 
 ## Competitive Advantage
 
-By implementing pdfcpu features, NanoPDF will:
+By implementing pdfcpu features, MicroPDF will:
 
 1. ✅ **Dominate Print Production**: Only library with full box management + imposition
 2. ✅ **Professional Grade**: Industry-standard validation and repair
@@ -1104,13 +1104,13 @@ By implementing pdfcpu features, NanoPDF will:
    - pypdf: Good editing, weak production tools
    - MuPDF: Great reading, no production tools
    - pdfcpu: Great production tools, Go-only
-   - **NanoPDF: ALL OF THE ABOVE in Rust**
+   - **MicroPDF: ALL OF THE ABOVE in Rust**
 
 ---
 
 ## Conclusion
 
-The **pdfcpu feature set** represents a massive opportunity in the **professional print production and PDF workflow** space. These features are **not well-covered** by existing Python/C libraries and would make NanoPDF the **go-to solution** for:
+The **pdfcpu feature set** represents a massive opportunity in the **professional print production and PDF workflow** space. These features are **not well-covered** by existing Python/C libraries and would make MicroPDF the **go-to solution** for:
 
 - 🖨️ **Print shops and pre-press workflows**
 - 📊 **Document automation and batch processing**

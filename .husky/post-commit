@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Husky v9 post-commit hook
+# Runs after each commit
+
+# Git LFS post-commit (if available)
+if command -v git-lfs >/dev/null 2>&1; then
+  git lfs post-commit "$@"
+fi

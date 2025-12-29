@@ -1,0 +1,781 @@
+---
+alwaysApply: false
+---
+# Go Code Generation Standards
+
+This project follows idiomatic Go conventions and best practices.
+
+## Go Version and Toolchain
+
+- **Minimum Go Version**: `1.21` or later
+- **Module System**: Go modules (`go.mod`)
+- **Target**: Stable Go (avoid `//go:linkname` and other unsupported patterns)
+
+## Project Structure
+
+### Package Layout
+
+```
+go-micropdf/
+├── go.mod              # Module definition
+├── go.sum              # Dependency checksums
+├── buffer.go           # Buffer implementation
+├── buffer_test.go      # Buffer tests
+├── geometry.go         # Geometry types (Point, Rect, Matrix, Quad)
+├── geometry_test.go    # Geometry tests
+├── document.go         # PDF document operations
+├── document_test.go    # Document tests
+├── errors.go           # Error types
+├── internal/           # Internal packages (not exported)
+│   └── native/         # CGO bindings (if any)
+└── cmd/                # Command-line tools (if any)
+    └── micropdf/
+        └── main.go
+```
+
+### Naming Conventions
+
+#### Package Names
+
+```go
+// ✅ CORRECT: Short, lowercase, no underscores
+package micropdf
+package buffer
+package geometry
+
+// ❌ WRONG: Avoid these patterns
+package nano_pdf    // No underscores
+package MicroPDF     // No mixed case
+package micropdflib  // Don't suffix with "lib"
+```
+
+#### File Names
+
+```go
+// ✅ CORRECT: Snake case for files
+buffer.go
+buffer_test.go
+geometry.go
+pdf_document.go
+
+// ❌ WRONG
+Buffer.go           // No PascalCase
+buffer-test.go      // No hyphens
+bufferTest.go       // No camelCase
+```
+
+#### Exported vs Unexported
+
+```go
+// ✅ CORRECT: PascalCase for exported (public)
+type Buffer struct { ... }
+func NewBuffer(capacity int) *Buffer { ... }
+func (b *Buffer) Len() int { ... }
+
+// ✅ CORRECT: camelCase for unexported (private)
+type internalState struct { ... }
+func newInternalHelper() { ... }
+func (b *Buffer) resize(newCap int) { ... }
+```
+
+#### Acronyms
+
+```go
+// ✅ CORRECT: Acronyms are all caps or all lower
+type PDFDocument struct { ... }  // PDF is all caps
+type URLParser struct { ... }    // URL is all caps
+var httpClient *http.Client      // http is all lower
+
+// ❌ WRONG: Mixed case acronyms
+type PdfDocument struct { ... }  // Pdf should be PDF
+type UrlParser struct { ... }    // Url should be URL
+```
+
+## Type Design
+
+### Struct Design
+
+```go
+// ✅ CORRECT: Clear field ordering (exported first, then unexported)
+type Buffer struct {
+    // Exported fields (if any)
+
+    // Unexported fields
+    data     []byte
+    capacity int
+    mu       sync.Mutex
+}
+
+// ✅ CORRECT: Use value types for small immutable data
+type Point struct {
+    X, Y float64
+}
+
+type Rect struct {
+    X0, Y0, X1, Y1 float64
+}
+
+// ✅ CORRECT: Use pointer receivers for mutable or large structs
+type Document struct {
+    pages    []*Page
+    metadata map[string]string
+    mu       sync.RWMutex
+}
+```
+
+### Constructor Functions
+
+```go
+// ✅ CORRECT: NewType pattern for constructors
+func NewBuffer(capacity int) *Buffer {
+    return &Buffer{
+        data:     make([]byte, 0, capacity),
+        capacity: capacity,
+    }
+}
+
+// ✅ CORRECT: Return value type for small immutable structs
+func NewPoint(x, y float64) Point {
+    return Point{X: x, Y: y}
+}
+
+// ✅ CORRECT: Return error for fallible construction
+func NewDocument(path string) (*Document, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read file: %w", err)
+    }
+    return parseDocument(data)
+}
+```
+
+### Interface Design
+
+```go
+// ✅ CORRECT: Small, focused interfaces
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+type ReadWriter interface {
+    Reader
+    Writer
+}
+
+// ✅ CORRECT: Accept interfaces, return concrete types
+func ProcessData(r io.Reader) (*Result, error) {
+    // Implementation
+}
+
+// ❌ WRONG: Large, kitchen-sink interfaces
+type PDFProcessor interface {
+    Open(path string) error
+    Close() error
+    Read(p []byte) (int, error)
+    Write(p []byte) (int, error)
+    GetPage(n int) (*Page, error)
+    AddPage(p *Page) error
+    // ... 20 more methods
+}
+```
+
+## Error Handling
+
+### Error Types
+
+```go
+// ✅ CORRECT: Use sentinel errors for known conditions
+var (
+    ErrNotFound     = errors.New("not found")
+    ErrInvalidInput = errors.New("invalid input")
+    ErrEOF          = errors.New("unexpected end of file")
+)
+
+// ✅ CORRECT: Custom error types for rich errors
+type ParseError struct {
+    Offset  int64
+    Message string
+    Cause   error
+}
+
+func (e *ParseError) Error() string {
+    return fmt.Sprintf("parse error at offset %d: %s", e.Offset, e.Message)
+}
+
+func (e *ParseError) Unwrap() error {
+    return e.Cause
+}
+```
+
+### Error Handling Patterns
+
+```go
+// ✅ CORRECT: Check errors immediately
+data, err := os.ReadFile(path)
+if err != nil {
+    return nil, fmt.Errorf("reading file %s: %w", path, err)
+}
+
+// ✅ CORRECT: Wrap errors with context
+func LoadDocument(path string) (*Document, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf("load document %s: %w", path, err)
+    }
+
+    doc, err := parseDocument(data)
+    if err != nil {
+        return nil, fmt.Errorf("parse document %s: %w", path, err)
+    }
+
+    return doc, nil
+}
+
+// ✅ CORRECT: Use errors.Is and errors.As for checking
+if errors.Is(err, ErrNotFound) {
+    // Handle not found
+}
+
+var parseErr *ParseError
+if errors.As(err, &parseErr) {
+    log.Printf("Parse failed at offset %d", parseErr.Offset)
+}
+
+// ❌ WRONG: Ignoring errors
+data, _ := os.ReadFile(path)  // NEVER ignore errors!
+
+// ❌ WRONG: Losing error context
+if err != nil {
+    return nil, err  // Lost the context of where this happened
+}
+
+// ❌ WRONG: Using string comparison
+if err.Error() == "not found" {  // Fragile!
+    // ...
+}
+```
+
+### Panic Policy
+
+```go
+// ❌ NEVER panic in library code
+func ParsePDF(data []byte) *Document {
+    if len(data) == 0 {
+        panic("empty data")  // DON'T DO THIS!
+    }
+}
+
+// ✅ CORRECT: Return errors instead
+func ParsePDF(data []byte) (*Document, error) {
+    if len(data) == 0 {
+        return nil, ErrInvalidInput
+    }
+    // ...
+}
+
+// ⚠️ ACCEPTABLE: Panic only for programmer errors (impossible states)
+func (b *Buffer) mustGet(index int) byte {
+    if index < 0 || index >= len(b.data) {
+        panic("buffer index out of bounds")  // Only for bugs
+    }
+    return b.data[index]
+}
+```
+
+## Memory Management
+
+### Slice and Map Initialization
+
+```go
+// ✅ CORRECT: Pre-allocate when size is known
+func ProcessItems(items []Item) []Result {
+    results := make([]Result, 0, len(items))  // Pre-allocate capacity
+    for _, item := range items {
+        results = append(results, process(item))
+    }
+    return results
+}
+
+// ✅ CORRECT: Pre-allocate maps
+func BuildIndex(items []Item) map[string]Item {
+    index := make(map[string]Item, len(items))  // Pre-allocate
+    for _, item := range items {
+        index[item.Key] = item
+    }
+    return index
+}
+
+// ❌ WRONG: Growing slice without capacity hint
+results := []Result{}  // Will reallocate multiple times
+for _, item := range items {
+    results = append(results, process(item))
+}
+```
+
+### Avoiding Allocations
+
+```go
+// ✅ CORRECT: Reuse buffers in hot paths
+var bufferPool = sync.Pool{
+    New: func() interface{} {
+        return make([]byte, 4096)
+    },
+}
+
+func ProcessData(r io.Reader) error {
+    buf := bufferPool.Get().([]byte)
+    defer bufferPool.Put(buf)
+
+    // Use buf...
+}
+
+// ✅ CORRECT: Use value receivers for small structs (no allocation)
+func (p Point) Distance(other Point) float64 {
+    dx := p.X - other.X
+    dy := p.Y - other.Y
+    return math.Sqrt(dx*dx + dy*dy)
+}
+
+// ✅ CORRECT: Return values directly (stack allocation)
+func NewPoint(x, y float64) Point {
+    return Point{X: x, Y: y}  // Returned on stack, not heap
+}
+```
+
+### Resource Cleanup
+
+```go
+// ✅ CORRECT: Use defer for cleanup
+func ProcessFile(path string) error {
+    f, err := os.Open(path)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    // Process file...
+    return nil
+}
+
+// ✅ CORRECT: Implement io.Closer for resources
+type Document struct {
+    file   *os.File
+    closed bool
+}
+
+func (d *Document) Close() error {
+    if d.closed {
+        return nil
+    }
+    d.closed = true
+    return d.file.Close()
+}
+
+// ✅ CORRECT: Check Close errors for writes
+func WriteDocument(doc *Document, path string) error {
+    f, err := os.Create(path)
+    if err != nil {
+        return err
+    }
+
+    if err := doc.WriteTo(f); err != nil {
+        f.Close()  // Ignore close error, write error is more important
+        return err
+    }
+
+    return f.Close()  // Check close error for writes!
+}
+```
+
+## Concurrency
+
+### Goroutine Safety
+
+```go
+// ✅ CORRECT: Document concurrency safety
+// Buffer is safe for concurrent use.
+type Buffer struct {
+    mu   sync.RWMutex
+    data []byte
+}
+
+func (b *Buffer) Len() int {
+    b.mu.RLock()
+    defer b.mu.RUnlock()
+    return len(b.data)
+}
+
+func (b *Buffer) Append(data []byte) {
+    b.mu.Lock()
+    defer b.mu.Unlock()
+    b.data = append(b.data, data...)
+}
+
+// ✅ CORRECT: Use channels for communication
+func ProcessAsync(items []Item) <-chan Result {
+    results := make(chan Result, len(items))
+
+    go func() {
+        defer close(results)
+        for _, item := range items {
+            results <- process(item)
+        }
+    }()
+
+    return results
+}
+```
+
+### Context Usage
+
+```go
+// ✅ CORRECT: Accept context as first parameter
+func (d *Document) Load(ctx context.Context, path string) error {
+    // Check for cancellation
+    select {
+    case <-ctx.Done():
+        return ctx.Err()
+    default:
+    }
+
+    // Long operation...
+}
+
+// ✅ CORRECT: Propagate context
+func ProcessPages(ctx context.Context, doc *Document) error {
+    for i := 0; i < doc.PageCount(); i++ {
+        if err := processPage(ctx, doc.Page(i)); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// ❌ WRONG: Using context.Background() when caller provides context
+func (d *Document) Load(ctx context.Context, path string) error {
+    return d.loadInternal(context.Background())  // Lost the caller's context!
+}
+```
+
+## Testing
+
+### Test File Organization
+
+```go
+// buffer_test.go - Tests for buffer.go
+
+package micropdf
+
+import (
+    "testing"
+)
+
+func TestBufferNew(t *testing.T) {
+    buf := NewBuffer(100)
+    if buf.Len() != 0 {
+        t.Errorf("expected len 0, got %d", buf.Len())
+    }
+    if buf.Cap() != 100 {
+        t.Errorf("expected cap 100, got %d", buf.Cap())
+    }
+}
+
+func TestBufferAppend(t *testing.T) {
+    tests := []struct {
+        name     string
+        initial  []byte
+        append   []byte
+        expected []byte
+    }{
+        {"empty to empty", nil, nil, nil},
+        {"append to empty", nil, []byte{1, 2}, []byte{1, 2}},
+        {"append to existing", []byte{1}, []byte{2, 3}, []byte{1, 2, 3}},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            buf := NewBufferFromBytes(tt.initial)
+            buf.Append(tt.append)
+            if !bytes.Equal(buf.Bytes(), tt.expected) {
+                t.Errorf("got %v, want %v", buf.Bytes(), tt.expected)
+            }
+        })
+    }
+}
+```
+
+### Table-Driven Tests
+
+```go
+// ✅ CORRECT: Table-driven tests for multiple cases
+func TestRectContains(t *testing.T) {
+    rect := NewRect(0, 0, 100, 100)
+
+    tests := []struct {
+        name     string
+        point    Point
+        expected bool
+    }{
+        {"center", NewPoint(50, 50), true},
+        {"origin", NewPoint(0, 0), true},
+        {"corner", NewPoint(100, 100), true},
+        {"outside left", NewPoint(-1, 50), false},
+        {"outside right", NewPoint(101, 50), false},
+        {"outside top", NewPoint(50, -1), false},
+        {"outside bottom", NewPoint(50, 101), false},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got := rect.Contains(tt.point)
+            if got != tt.expected {
+                t.Errorf("rect.Contains(%v) = %v, want %v", tt.point, got, tt.expected)
+            }
+        })
+    }
+}
+```
+
+### Benchmarks
+
+```go
+// ✅ CORRECT: Benchmark naming convention
+func BenchmarkBufferAppend(b *testing.B) {
+    data := make([]byte, 100)
+    b.ResetTimer()
+
+    for i := 0; i < b.N; i++ {
+        buf := NewBuffer(0)
+        for j := 0; j < 100; j++ {
+            buf.Append(data)
+        }
+    }
+}
+
+func BenchmarkPointTransform(b *testing.B) {
+    p := NewPoint(100, 200)
+    m := MatrixScale(2, 2)
+    b.ResetTimer()
+
+    for i := 0; i < b.N; i++ {
+        _ = p.Transform(m)
+    }
+}
+
+// ✅ CORRECT: Report allocations
+func BenchmarkBufferFromBytes(b *testing.B) {
+    data := make([]byte, 1024)
+    b.ReportAllocs()
+    b.ResetTimer()
+
+    for i := 0; i < b.N; i++ {
+        buf := NewBufferFromBytes(data)
+        buf.Free()
+    }
+}
+```
+
+## Documentation
+
+### Package Documentation
+
+```go
+// Package micropdf provides high-performance PDF manipulation.
+//
+// MicroPDF is a pure Go library for reading, writing, and manipulating
+// PDF documents. It aims for API compatibility with MuPDF while
+// providing idiomatic Go interfaces.
+//
+// # Quick Start
+//
+//	doc, err := micropdf.Open("input.pdf")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	defer doc.Close()
+//
+//	fmt.Printf("Pages: %d\n", doc.PageCount())
+//
+// # Thread Safety
+//
+// All exported types are safe for concurrent use unless otherwise noted.
+package micropdf
+```
+
+### Function Documentation
+
+```go
+// NewBuffer creates a new buffer with the specified initial capacity.
+//
+// The capacity is a hint for pre-allocation. The buffer will grow
+// automatically if more space is needed.
+//
+// Example:
+//
+//	buf := NewBuffer(1024)
+//	buf.Append([]byte("Hello"))
+//	fmt.Println(buf.Len()) // Output: 5
+func NewBuffer(capacity int) *Buffer {
+    // ...
+}
+
+// Transform applies the matrix transformation to the point.
+//
+// The transformation is applied as:
+//
+//	x' = x*a + y*c + e
+//	y' = x*b + y*d + f
+//
+// Transform returns a new Point; the receiver is not modified.
+func (p Point) Transform(m Matrix) Point {
+    // ...
+}
+```
+
+## Code Formatting
+
+### gofmt and goimports
+
+Always run before committing:
+
+```bash
+# Format code
+gofmt -w .
+
+# Format and organize imports
+goimports -w .
+```
+
+### Import Organization
+
+```go
+// ✅ CORRECT: Grouped imports (stdlib, external, internal)
+import (
+    // Standard library
+    "context"
+    "fmt"
+    "io"
+
+    // External packages
+    "github.com/pkg/errors"
+
+    // Internal packages
+    "github.com/lexmata/micropdf/internal/parser"
+)
+
+// ❌ WRONG: Unsorted imports
+import (
+    "github.com/pkg/errors"
+    "fmt"
+    "github.com/lexmata/micropdf/internal/parser"
+    "io"
+)
+```
+
+## Linting
+
+### golangci-lint Configuration
+
+Use `golangci-lint` with these linters enabled:
+
+```yaml
+# .golangci.yml
+linters:
+  enable:
+    - errcheck      # Check error handling
+    - govet         # Go vet checks
+    - staticcheck   # Staticcheck
+    - unused        # Unused code
+    - gosimple      # Simplifications
+    - ineffassign   # Ineffective assignments
+    - typecheck     # Type checking
+    - misspell      # Spelling
+    - gofmt         # Formatting
+    - goimports     # Import organization
+    - gocritic      # Various checks
+    - revive        # Successor to golint
+
+linters-settings:
+  errcheck:
+    check-blank: true
+  govet:
+    enable-all: true
+```
+
+Run before committing:
+
+```bash
+golangci-lint run
+```
+
+## CGO Guidelines (if applicable)
+
+### When Using CGO
+
+```go
+// ✅ CORRECT: Minimize CGO boundary crossings
+// #cgo LDFLAGS: -lmicropdf
+// #include <micropdf.h>
+import "C"
+
+// Batch operations to reduce CGO overhead
+func (d *Document) GetPages() []*Page {
+    count := int(C.micropdf_page_count(d.handle))
+    pages := make([]*Page, count)
+    for i := 0; i < count; i++ {
+        pages[i] = &Page{handle: C.micropdf_get_page(d.handle, C.int(i))}
+    }
+    return pages
+}
+
+// ✅ CORRECT: Handle C memory carefully
+func (b *Buffer) Data() []byte {
+    size := C.micropdf_buffer_len(b.handle)
+    if size == 0 {
+        return nil
+    }
+    ptr := C.micropdf_buffer_data(b.handle)
+    // Copy data - don't return slice pointing to C memory!
+    return C.GoBytes(unsafe.Pointer(ptr), C.int(size))
+}
+```
+
+### Pure Go Preferred
+
+```go
+// ✅ PREFERRED: Pure Go implementation
+// Avoids CGO overhead, better cross-compilation, simpler deployment
+
+type Buffer struct {
+    data []byte
+}
+
+func NewBuffer(capacity int) *Buffer {
+    return &Buffer{
+        data: make([]byte, 0, capacity),
+    }
+}
+```
+
+## Summary Checklist
+
+- [ ] Package names are short, lowercase, no underscores
+- [ ] Exported names use PascalCase, unexported use camelCase
+- [ ] Acronyms are all caps (PDF, URL, HTTP)
+- [ ] Constructors follow `NewType` pattern
+- [ ] Errors are wrapped with context using `fmt.Errorf(...: %w, err)`
+- [ ] Never ignore errors (no `_` for error return values)
+- [ ] Never panic in library code
+- [ ] Pre-allocate slices and maps when size is known
+- [ ] Use `sync.Pool` for frequently allocated objects
+- [ ] Use value receivers for small immutable structs
+- [ ] Document concurrency safety
+- [ ] Accept `context.Context` as first parameter
+- [ ] Table-driven tests with descriptive names
+- [ ] Benchmarks report allocations
+- [ ] Run `gofmt`, `goimports`, and `golangci-lint`
+- [ ] Package and function documentation complete

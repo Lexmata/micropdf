@@ -246,7 +246,7 @@ tx.send(data).expect("receiver dropped");
 /// # Examples
 ///
 /// ```
-/// use nanopdf::Buffer;
+/// use micropdf::Buffer;
 ///
 /// // Note: unwrap() used for example brevity - use proper error handling in production
 /// let buffer = Buffer::from_base64("SGVsbG8=").unwrap();

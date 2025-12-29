@@ -1,7 +1,7 @@
 <div class="py-16">
   <div class="max-w-5xl mx-auto px-6">
     <h1 class="text-4xl font-bold mb-4">Performance <span class="bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent">Benchmarks</span></h1>
-    <p class="text-text-muted mb-12">Comprehensive performance comparison between NanoPDF and MuPDF across various operations.</p>
+    <p class="text-text-muted mb-12">Comprehensive performance comparison between MicroPDF and MuPDF across various operations.</p>
 
     <!-- Summary Cards -->
     <div class="grid md:grid-cols-3 gap-6 mb-16">
@@ -29,14 +29,14 @@
       
       <div class="benchmark-chart">
         <div class="chart-row">
-          <span class="chart-label">NanoPDF (parallel)</span>
+          <span class="chart-label">MicroPDF (parallel)</span>
           <div class="chart-bar-container">
             <div class="chart-bar chart-bar-primary" style="width: 31%"></div>
             <span class="chart-value">12ms</span>
           </div>
         </div>
         <div class="chart-row">
-          <span class="chart-label">NanoPDF (single)</span>
+          <span class="chart-label">MicroPDF (single)</span>
           <div class="chart-bar-container">
             <div class="chart-bar chart-bar-secondary" style="width: 85%"></div>
             <span class="chart-value">34ms</span>
@@ -58,7 +58,7 @@
       
       <div class="benchmark-chart">
         <div class="chart-row">
-          <span class="chart-label">NanoPDF</span>
+          <span class="chart-label">MicroPDF</span>
           <div class="chart-bar-container">
             <div class="chart-bar chart-bar-primary" style="width: 75%"></div>
             <span class="chart-value">45ms</span>
@@ -80,7 +80,7 @@
       
       <div class="benchmark-chart">
         <div class="chart-row">
-          <span class="chart-label">NanoPDF</span>
+          <span class="chart-label">MicroPDF</span>
           <div class="chart-bar-container">
             <div class="chart-bar chart-bar-primary" style="width: 60%"></div>
             <span class="chart-value">48 MB</span>
@@ -121,7 +121,7 @@
           <span class="text-sm text-text-primary">1.26.3</span>
         </div>
         <div>
-          <span class="block text-xs text-text-muted uppercase tracking-wider">NanoPDF</span>
+          <span class="block text-xs text-text-muted uppercase tracking-wider">MicroPDF</span>
           <span class="text-sm text-text-primary">0.1.0</span>
         </div>
       </div>
@@ -131,8 +131,8 @@
     <section>
       <h2 class="text-xl font-semibold mb-6">Run Benchmarks Yourself</h2>
       <pre><code><span class="comment"># Clone the repository</span>
-git clone https://github.com/lexmata/nanopdf
-cd nanopdf/nanopdf-rs
+git clone https://github.com/lexmata/micropdf
+cd micropdf/micropdf-rs
 
 <span class="comment"># Run all benchmarks</span>
 cargo bench

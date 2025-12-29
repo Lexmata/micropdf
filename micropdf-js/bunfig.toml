@@ -1,0 +1,11 @@
+[install]
+# Bun package manager configuration
+auto = "auto"
+exact = false
+production = false
+
+[test]
+# Bun test configuration
+coverage = true
+coverageDir = "./coverage"
+

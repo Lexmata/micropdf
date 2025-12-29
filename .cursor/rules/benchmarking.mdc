@@ -1,0 +1,474 @@
+---
+alwaysApply: false
+---
+# Benchmarking Guidelines
+
+Performance is critical for MicroPDF. Follow these guidelines for consistent, meaningful benchmarks.
+
+## Rust Benchmarks (Criterion)
+
+### Setup
+
+```toml
+# Cargo.toml
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "geometry"
+harness = false
+
+[[bench]]
+name = "buffer"
+harness = false
+```
+
+### Benchmark Structure
+
+```rust
+// benches/geometry.rs
+use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use micropdf::geometry::{Point, Rect, Matrix};
+
+fn bench_point_transform(c: &mut Criterion) {
+    let point = Point::new(100.0, 200.0);
+    let matrix = Matrix::scale(2.0, 2.0);
+
+    c.bench_function("point_transform", |b| {
+        b.iter(|| black_box(point).transform(black_box(&matrix)))
+    });
+}
+
+fn bench_matrix_rotate(c: &mut Criterion) {
+    let mut group = c.benchmark_group("matrix_rotate");
+
+    // Test common angles
+    for angle in [0.0, 45.0, 90.0, 180.0, 270.0, 33.5] {
+        group.bench_with_input(
+            BenchmarkId::new("angle", angle),
+            &angle,
+            |b, &angle| {
+                b.iter(|| Matrix::rotate(black_box(angle)))
+            },
+        );
+    }
+
+    group.finish();
+}
+
+fn bench_rect_contains(c: &mut Criterion) {
+    let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
+    let point_inside = Point::new(50.0, 50.0);
+    let point_outside = Point::new(150.0, 50.0);
+
+    let mut group = c.benchmark_group("rect_contains");
+
+    group.bench_function("inside", |b| {
+        b.iter(|| rect.contains_point(black_box(&point_inside)))
+    });
+
+    group.bench_function("outside", |b| {
+        b.iter(|| rect.contains_point(black_box(&point_outside)))
+    });
+
+    group.finish();
+}
+
+criterion_group!(
+    benches,
+    bench_point_transform,
+    bench_matrix_rotate,
+    bench_rect_contains,
+);
+criterion_main!(benches);
+```
+
+### Throughput Benchmarks
+
+```rust
+fn bench_buffer_append_throughput(c: &mut Criterion) {
+    let mut group = c.benchmark_group("buffer_append");
+
+    for size in [64, 256, 1024, 4096, 16384] {
+        let data = vec![0u8; size];
+
+        group.throughput(criterion::Throughput::Bytes(size as u64));
+        group.bench_with_input(
+            BenchmarkId::new("size", size),
+            &data,
+            |b, data| {
+                b.iter(|| {
+                    let mut buffer = Buffer::new(0);
+                    buffer.append(black_box(data));
+                    buffer
+                })
+            },
+        );
+    }
+
+    group.finish();
+}
+```
+
+### Running Benchmarks
+
+```bash
+# Run all benchmarks
+cargo bench
+
+# Run specific benchmark
+cargo bench -- geometry
+
+# Compare with baseline
+cargo bench -- --save-baseline main
+cargo bench -- --baseline main
+
+# Generate HTML report
+cargo bench -- --verbose
+# Report at: target/criterion/report/index.html
+```
+
+## Go Benchmarks
+
+### Benchmark Structure
+
+```go
+// benchmark_test.go
+package micropdf
+
+import (
+    "testing"
+)
+
+func BenchmarkPointTransform(b *testing.B) {
+    p := NewPoint(100, 200)
+    m := MatrixScale(2, 2)
+
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = p.Transform(m)
+    }
+}
+
+func BenchmarkMatrixRotate(b *testing.B) {
+    angles := []float64{0, 45, 90, 180, 270, 33.5}
+
+    for _, angle := range angles {
+        b.Run(fmt.Sprintf("angle_%.1f", angle), func(b *testing.B) {
+            for i := 0; i < b.N; i++ {
+                _ = MatrixRotate(angle)
+            }
+        })
+    }
+}
+
+func BenchmarkBufferAppend(b *testing.B) {
+    sizes := []int{64, 256, 1024, 4096, 16384}
+
+    for _, size := range sizes {
+        data := make([]byte, size)
+
+        b.Run(fmt.Sprintf("size_%d", size), func(b *testing.B) {
+            b.SetBytes(int64(size))
+            b.ResetTimer()
+
+            for i := 0; i < b.N; i++ {
+                buf := NewBuffer(0)
+                _ = buf.Append(data)
+            }
+        })
+    }
+}
+
+// Benchmark memory allocations
+func BenchmarkRectTransform(b *testing.B) {
+    r := NewRect(0, 0, 100, 100)
+    m := MatrixScale(2, 2)
+
+    b.ReportAllocs()
+    b.ResetTimer()
+
+    for i := 0; i < b.N; i++ {
+        _ = r.Transform(m)
+    }
+}
+```
+
+### Running Go Benchmarks
+
+```bash
+# Run all benchmarks
+go test -bench=. -benchmem
+
+# Run specific benchmark
+go test -bench=BenchmarkMatrixRotate -benchmem
+
+# Run with count for statistical significance
+go test -bench=. -benchmem -count=10
+
+# Compare with benchstat
+go test -bench=. -benchmem -count=10 > old.txt
+# Make changes
+go test -bench=. -benchmem -count=10 > new.txt
+benchstat old.txt new.txt
+```
+
+## Node.js Benchmarks (tinybench)
+
+### Setup
+
+```json
+{
+  "devDependencies": {
+    "tinybench": "^2.6.0"
+  }
+}
+```
+
+### Benchmark Structure
+
+```typescript
+// bench/geometry.bench.ts
+import { Bench } from 'tinybench';
+import { Point, Rect, Matrix, Quad } from '../src/geometry.js';
+
+const bench = new Bench({ time: 1000 });
+
+bench
+  .add('Point.transform', () => {
+    const p = new Point(100, 200);
+    const m = Matrix.scale(2, 2);
+    p.transform(m);
+  })
+  .add('Matrix.rotate(90)', () => {
+    Matrix.rotate(90);
+  })
+  .add('Matrix.rotate(33.5)', () => {
+    Matrix.rotate(33.5);
+  })
+  .add('Rect.contains (inside)', () => {
+    const r = new Rect(0, 0, 100, 100);
+    const p = new Point(50, 50);
+    r.containsPoint(p);
+  })
+  .add('Rect.contains (outside)', () => {
+    const r = new Rect(0, 0, 100, 100);
+    const p = new Point(150, 50);
+    r.containsPoint(p);
+  })
+  .add('Quad.containsPoint', () => {
+    const q = Quad.fromRect(new Rect(0, 0, 100, 100));
+    const p = new Point(50, 50);
+    q.containsPoint(p);
+  });
+
+await bench.run();
+
+console.table(bench.table());
+```
+
+### Running Node.js Benchmarks
+
+```bash
+# Run benchmarks
+pnpm bench
+
+# Or directly
+npx tsx bench/geometry.bench.ts
+```
+
+## Python Benchmarks (pytest-benchmark)
+
+### Setup
+
+```toml
+[project.optional-dependencies]
+dev = ["pytest-benchmark>=4.0"]
+```
+
+### Benchmark Structure
+
+```python
+# tests/test_benchmark.py
+import pytest
+from micropdf import Point, Rect, Matrix
+
+class TestGeometryBenchmarks:
+    def test_point_transform(self, benchmark):
+        p = Point(100.0, 200.0)
+        m = Matrix.scale(2.0, 2.0)
+
+        result = benchmark(p.transform, m)
+        assert result.x == 200.0
+
+    @pytest.mark.parametrize("angle", [0, 45, 90, 180, 270])
+    def test_matrix_rotate_cached(self, benchmark, angle):
+        # Warm up cache
+        Matrix.rotate(angle)
+
+        result = benchmark(Matrix.rotate, angle)
+        assert result is not None
+
+    def test_matrix_rotate_uncached(self, benchmark):
+        # Use non-integer angle (not cached)
+        result = benchmark(Matrix.rotate, 33.5)
+        assert result is not None
+
+    def test_rect_contains_inside(self, benchmark):
+        r = Rect(0.0, 0.0, 100.0, 100.0)
+        p = Point(50.0, 50.0)
+
+        result = benchmark(r.contains, p)
+        assert result is True
+
+    def test_rect_transform(self, benchmark):
+        r = Rect(0.0, 0.0, 100.0, 100.0)
+        m = Matrix.scale(2.0, 2.0)
+
+        result = benchmark(r.transform, m)
+        assert result.width == 200.0
+```
+
+### Running Python Benchmarks
+
+```bash
+# Run all benchmarks
+pytest --benchmark-only
+
+# Compare with baseline
+pytest --benchmark-save=baseline
+# Make changes
+pytest --benchmark-compare=baseline
+
+# Generate histogram
+pytest --benchmark-histogram
+```
+
+## Best Practices
+
+### 1. Use `black_box` / Prevent Optimization
+
+```rust
+// ✅ CORRECT: Prevent compiler from optimizing away
+use criterion::black_box;
+
+b.iter(|| black_box(point).transform(black_box(&matrix)))
+
+// ❌ WRONG: Compiler might optimize away
+b.iter(|| point.transform(&matrix))  // Result unused!
+```
+
+### 2. Separate Setup from Measurement
+
+```rust
+// ✅ CORRECT: Setup before timer
+fn bench_document_render(c: &mut Criterion) {
+    // Setup (not measured)
+    let doc = Document::open("large.pdf").unwrap();
+    let page = doc.load_page(0).unwrap();
+
+    c.bench_function("render_page", |b| {
+        b.iter(|| {
+            // Only this is measured
+            page.render(Matrix::identity())
+        })
+    });
+}
+```
+
+### 3. Test Multiple Input Sizes
+
+```rust
+// ✅ CORRECT: Parameterized benchmarks
+fn bench_buffer_sizes(c: &mut Criterion) {
+    let mut group = c.benchmark_group("buffer");
+
+    for size in [64, 256, 1024, 4096, 16384, 65536] {
+        group.throughput(Throughput::Bytes(size as u64));
+        group.bench_with_input(BenchmarkId::new("append", size), &size, |b, &size| {
+            let data = vec![0u8; size];
+            b.iter(|| {
+                let mut buf = Buffer::new(0);
+                buf.append(&data);
+                buf
+            })
+        });
+    }
+
+    group.finish();
+}
+```
+
+### 4. Document Performance Expectations
+
+```rust
+/// Transforms a point by a matrix.
+///
+/// # Performance
+///
+/// This operation is O(1) with 6 floating-point multiplications
+/// and 4 additions. Expected time: ~2ns on modern hardware.
+pub fn transform(&self, matrix: &Matrix) -> Point {
+    // ...
+}
+```
+
+### 5. Track Regressions in CI
+
+```yaml
+# .github/workflows/bench.yml
+name: Benchmarks
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run benchmarks
+        run: cargo bench -- --noplot --save-baseline pr
+
+      - name: Compare with main
+        if: github.event_name == 'pull_request'
+        run: |
+          git checkout main
+          cargo bench -- --noplot --save-baseline main
+          git checkout -
+          cargo bench -- --noplot --baseline main --load-baseline pr
+```
+
+## Performance Targets
+
+### Geometry Operations
+
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| Point.transform | < 5ns | 6 mul + 4 add |
+| Matrix.rotate (cached) | < 3ns | Hash lookup |
+| Matrix.rotate (uncached) | < 50ns | sin/cos |
+| Matrix.concat | < 10ns | 12 mul + 6 add |
+| Rect.contains | < 5ns | 4 comparisons |
+| Rect.transform | < 20ns | 4 point transforms |
+| Quad.containsPoint | < 30ns | Cross products |
+
+### Buffer Operations
+
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| new(0) | < 20ns | Allocation |
+| append (64B) | < 50ns | Copy |
+| append (4KB) | < 200ns | memcpy |
+| from_data (copy) | < 100ns + size | Alloc + memcpy |
+
+### Document Operations
+
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| open (small PDF) | < 10ms | Parse headers |
+| load_page | < 5ms | Parse page tree |
+| render (A4 @ 72dpi) | < 50ms | Rasterization |
+| text_extract | < 20ms | Text parsing |

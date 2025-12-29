@@ -1,0 +1,71 @@
+#!/bin/sh
+
+# Husky v9 pre-push hook
+# Runs before pushing to remote
+
+# Git LFS pre-push (if available)
+if command -v git-lfs >/dev/null 2>&1; then
+  git lfs pre-push "$@"
+fi
+
+# Get the current branch
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Prevent direct push to protected branches
+protected_branches="main develop"
+for protected in $protected_branches; do
+  if [ "$branch" = "$protected" ]; then
+    echo "⚠️  Warning: Pushing directly to '$branch' branch."
+    echo "   Consider using a feature branch and pull request instead."
+  fi
+done
+
+# Run tests for changed packages
+echo "🧪 Running pre-push checks..."
+
+# Check if Rust files changed
+if git diff --name-only origin/$branch...HEAD 2>/dev/null | grep -q "^micropdf-rs/"; then
+  echo "📦 Testing Rust package..."
+  cd micropdf-rs && cargo test --lib 2>/dev/null || {
+    echo "❌ Rust tests failed. Push aborted."
+    exit 1
+  }
+  cd ..
+fi
+
+# Check if Node.js files changed
+if git diff --name-only origin/$branch...HEAD 2>/dev/null | grep -q "^micropdf-js/"; then
+  echo "📦 Testing Node.js package..."
+  if [ -f "micropdf-js/package.json" ]; then
+    # Skip integration tests that require native bindings
+    cd micropdf-js && pnpm test -- --exclude test/integration 2>/dev/null || {
+      echo "❌ Node.js tests failed. Push aborted."
+      exit 1
+    }
+    cd ..
+  fi
+fi
+
+# Check if Go files changed
+if git diff --name-only origin/$branch...HEAD 2>/dev/null | grep -q "^go-micropdf/"; then
+  echo "📦 Testing Go package..."
+  cd go-micropdf && go test ./... 2>/dev/null || {
+    echo "❌ Go tests failed. Push aborted."
+    exit 1
+  }
+  cd ..
+fi
+
+# Check if Python files changed
+if git diff --name-only origin/$branch...HEAD 2>/dev/null | grep -q "^micropdf-py/"; then
+  echo "📦 Testing Python package..."
+  if [ -f "micropdf-py/pyproject.toml" ]; then
+    cd micropdf-py && python -m pytest tests/ -q 2>/dev/null || {
+      echo "❌ Python tests failed. Push aborted."
+      exit 1
+    }
+    cd ..
+  fi
+fi
+
+echo "✅ Pre-push checks passed"

@@ -31,16 +31,41 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install dependencies
         working-directory: ./pages
         run: pnpm install
 
+      - name: Install Node.js docs dependencies
+        working-directory: ./micropdf-js
+        run: pnpm install
+
+      - name: Generate TypeDoc documentation
+        working-directory: ./micropdf-js
+        run: pnpm run docs
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python docs dependencies
+        run: |
+          pip install sphinx sphinx-rtd-theme
+
+      - name: Generate Sphinx documentation
+        working-directory: ./micropdf-py/docs
+        run: |
+          sphinx-build -b html . ../../docs/api/python
+
       - name: Build Angular app
         working-directory: ./pages
         run: pnpm build
+
+      - name: Copy API docs to dist
+        run: |
+          mkdir -p ./pages/dist/browser/api
+          cp -r ./docs/api/* ./pages/dist/browser/api/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

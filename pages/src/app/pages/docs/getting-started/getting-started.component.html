@@ -7,37 +7,37 @@
     </nav>
 
     <article class="prose">
-      <h1 class="text-4xl font-bold mb-4">Getting Started with NanoPDF</h1>
+      <h1 class="text-4xl font-bold mb-4">Getting Started with MicroPDF</h1>
       <p class="text-lg text-text-secondary mb-12">
-        NanoPDF is a high-performance PDF library available for Rust, JavaScript, and Go.
-        This guide will help you install and start using NanoPDF in your projects.
+        MicroPDF is a high-performance PDF library available for Rust, JavaScript, and Go.
+        This guide will help you install and start using MicroPDF in your projects.
       </p>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Installation</h2>
         
         <h3 class="text-lg font-semibold mt-6 mb-4">Rust</h3>
-        <p class="text-text-secondary mb-4">Add NanoPDF to your <code>Cargo.toml</code>:</p>
+        <p class="text-text-secondary mb-4">Add MicroPDF to your <code>Cargo.toml</code>:</p>
         <pre class="mb-6"><code>[dependencies]
-nanopdf = "0.1"
+micropdf = "0.1"
 
 # Optional features
-nanopdf = &#123; version = "0.1", features = ["parallel", "async"] &#125;</code></pre>
+micropdf = &#123; version = "0.1", features = ["parallel", "async"] &#125;</code></pre>
 
         <h3 class="text-lg font-semibold mt-6 mb-4">JavaScript (Node.js)</h3>
         <p class="text-text-secondary mb-4">Install via pnpm (recommended), npm, or yarn:</p>
         <pre class="mb-6"><code># pnpm (recommended)
-pnpm add nanopdf
+pnpm add micropdf
 
 # npm
-npm install nanopdf
+npm install micropdf
 
 # yarn
-yarn add nanopdf</code></pre>
+yarn add micropdf</code></pre>
 
         <h3 class="text-lg font-semibold mt-6 mb-4">Go</h3>
         <p class="text-text-secondary mb-4">Install using Go modules:</p>
-        <pre class="mb-6"><code>go get github.com/lexmata/nanopdf/go-nanopdf</code></pre>
+        <pre class="mb-6"><code>go get github.com/lexmata/micropdf/go-micropdf</code></pre>
       </section>
 
       <section class="mb-12">
@@ -48,9 +48,9 @@ yarn add nanopdf</code></pre>
           <div class="code-header">
             <span class="px-2 py-1 bg-orange-400/15 text-orange-400 rounded-full text-xs font-medium">Rust</span>
           </div>
-          <pre><code><span class="keyword">use</span> nanopdf::Document;
+          <pre><code><span class="keyword">use</span> micropdf::Document;
 
-<span class="keyword">fn</span> main() -> nanopdf::Result&lt;()&gt; &#123;
+<span class="keyword">fn</span> main() -> micropdf::Result&lt;()&gt; &#123;
     <span class="keyword">let</span> doc = Document::open(<span class="string">"document.pdf"</span>)?;
     
     println!(<span class="string">"Pages: &#123;&#125;"</span>, doc.page_count());
@@ -64,7 +64,7 @@ yarn add nanopdf</code></pre>
           <div class="code-header">
             <span class="px-2 py-1 bg-yellow-400/15 text-yellow-400 rounded-full text-xs font-medium">JavaScript</span>
           </div>
-          <pre><code><span class="keyword">import</span> &#123; Document &#125; <span class="keyword">from</span> <span class="string">'nanopdf'</span>;
+          <pre><code><span class="keyword">import</span> &#123; Document &#125; <span class="keyword">from</span> <span class="string">'micropdf'</span>;
 
 <span class="keyword">const</span> doc = <span class="keyword">await</span> Document.open(<span class="string">'document.pdf'</span>);
 
@@ -82,11 +82,11 @@ doc.close();</code></pre>
 
 <span class="keyword">import</span> (
     <span class="string">"fmt"</span>
-    nanopdf <span class="string">"github.com/lexmata/nanopdf/go-nanopdf"</span>
+    micropdf <span class="string">"github.com/lexmata/micropdf/go-micropdf"</span>
 )
 
 <span class="keyword">func</span> main() &#123;
-    doc, err := nanopdf.OpenDocument(<span class="string">"document.pdf"</span>)
+    doc, err := micropdf.OpenDocument(<span class="string">"document.pdf"</span>)
     <span class="keyword">if</span> err != <span class="keyword">nil</span> &#123;
         panic(err)
     &#125;
@@ -106,7 +106,7 @@ doc.close();</code></pre>
           <div class="code-header">
             <span class="px-2 py-1 bg-orange-400/15 text-orange-400 rounded-full text-xs font-medium">Rust</span>
           </div>
-          <pre><code><span class="keyword">use</span> nanopdf::&#123;Document, Pixmap&#125;;
+          <pre><code><span class="keyword">use</span> micropdf::&#123;Document, Pixmap&#125;;
 
 <span class="keyword">let</span> doc = Document::open(<span class="string">"document.pdf"</span>)?;
 <span class="keyword">let</span> page = doc.load_page(<span class="number">0</span>)?;
@@ -121,7 +121,7 @@ pixmap.save_png(<span class="string">"page-0.png"</span>)?;</code></pre>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Optional Features</h2>
-        <p class="text-text-secondary mb-4">NanoPDF supports several optional features that can be enabled in Rust:</p>
+        <p class="text-text-secondary mb-4">MicroPDF supports several optional features that can be enabled in Rust:</p>
 
         <div class="bg-bg-secondary border border-bg-tertiary rounded-xl overflow-hidden">
           <div class="flex items-start gap-6 p-4 border-b border-bg-tertiary">
