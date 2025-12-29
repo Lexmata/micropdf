@@ -189,7 +189,6 @@ export interface NativeAddon {
     alpha: number,
     fill: boolean
   ): void;
-  npMergePDFs(ctx: NativeContext, inputPaths: string[], outputPath: string): void;
   npSplitPDF(ctx: NativeContext, inputPath: string, outputDir: string): string[];
   npOptimizePDF(ctx: NativeContext, path: string): void;
   npLinearizePDF(ctx: NativeContext, inputPath: string, outputPath: string): void;
@@ -1091,11 +1090,6 @@ function createMockAddon(): NativeAddon {
       color: number[],
       alpha: number,
       fill: boolean
-    ) => void,
-    npMergePDFs: requireFFI('npMergePDFs') as (
-      ctx: NativeContext,
-      inputPaths: string[],
-      outputPath: string
     ) => void,
     npSplitPDF: requireFFI('npSplitPDF') as (
       ctx: NativeContext,
