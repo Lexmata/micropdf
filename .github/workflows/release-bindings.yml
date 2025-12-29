@@ -1,0 +1,301 @@
+name: Build Release Bindings
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., v0.3.1)'
+        required: true
+        default: 'v0.3.1'
+
+permissions:
+  contents: write  # Required to upload release assets
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Build Node.js prebuilds for all platforms
+  build-nodejs-prebuilds:
+    name: Build Node.js Prebuild (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x64
+          - os: ubuntu-latest
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            node-arch: linux-x64
+          
+          # Linux ARM64
+          - os: ubuntu-latest
+            arch: arm64
+            target: aarch64-unknown-linux-gnu
+            node-arch: linux-arm64
+          
+          # macOS x64
+          - os: macos-latest
+            arch: x64
+            target: x86_64-apple-darwin
+            node-arch: darwin-x64
+          
+          # macOS ARM64
+          - os: macos-latest
+            arch: arm64
+            target: aarch64-apple-darwin
+            node-arch: darwin-arm64
+          
+          # Windows x64
+          - os: windows-latest
+            arch: x64
+            target: x86_64-pc-windows-msvc
+            node-arch: win32-x64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      # ARM64 cross-compilation setup for Linux
+      - name: Setup ARM64 cross-compilation
+        if: matrix.arch == 'arm64' && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+
+      - name: Build Rust library
+        working-directory: micropdf-rs
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Copy Rust library (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p micropdf-js/native/lib/${{ matrix.node-arch }}
+          cp micropdf-rs/target/${{ matrix.target }}/release/libmicropdf.a micropdf-js/native/lib/${{ matrix.node-arch }}/
+
+      - name: Copy Rust library (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path micropdf-js/native/lib/${{ matrix.node-arch }}
+          Copy-Item micropdf-rs/target/${{ matrix.target }}/release/micropdf.lib micropdf-js/native/lib/${{ matrix.node-arch }}/
+
+      - name: Copy headers
+        run: |
+          mkdir -p micropdf-js/native/include
+          cp -r micropdf-rs/include/* micropdf-js/native/include/ 2>/dev/null || \
+          xcopy /E /I /Y micropdf-rs\include micropdf-js\native\include
+
+      - name: Install Node.js dependencies
+        working-directory: micropdf-js
+        run: pnpm install --ignore-scripts
+
+      - name: Build native addon
+        working-directory: micropdf-js
+        run: pnpm run build:native
+        env:
+          npm_config_arch: ${{ matrix.arch }}
+          npm_config_target_arch: ${{ matrix.arch }}
+
+      - name: Create prebuild
+        working-directory: micropdf-js
+        run: pnpm run prebuild
+        continue-on-error: true
+
+      - name: Package prebuild
+        run: |
+          mkdir -p prebuilds-upload
+          cp -r micropdf-js/prebuilds/* prebuilds-upload/ 2>/dev/null || \
+          xcopy /E /I /Y micropdf-js\prebuilds prebuilds-upload
+        continue-on-error: true
+
+      - name: Upload prebuild artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-prebuild-${{ matrix.node-arch }}
+          path: prebuilds-upload/
+          if-no-files-found: warn
+
+  # Build Python wheels for all platforms
+  build-python-wheels:
+    name: Build Python Wheels (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust library
+        working-directory: micropdf-rs
+        run: cargo build --release
+
+      - name: Install system library (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd micropdf-rs
+          sudo make install PREFIX=/usr
+
+      - name: Install system library (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd micropdf-rs
+          sudo make install PREFIX=/usr/local
+
+      - name: Install system library (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Windows doesn't need system install for wheel building
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.16.5
+
+      - name: Build wheels
+        working-directory: micropdf-py
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: "cp38-* cp39-* cp310-* cp311-* cp312-*"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
+          CIBW_ARCHS_LINUX: "x86_64 aarch64"
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_ARCHS_WINDOWS: "AMD64"
+          CIBW_BEFORE_BUILD: "pip install cffi>=1.16.0"
+          CIBW_TEST_REQUIRES: "pytest"
+          CIBW_TEST_COMMAND: "pytest {project}/tests -v"
+          CIBW_TEST_SKIP: "*-macosx_arm64"  # Skip ARM64 tests on x64 runners
+
+      - name: Upload wheel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels-${{ matrix.os }}
+          path: micropdf-py/wheelhouse/*.whl
+          if-no-files-found: warn
+
+  # Upload all bindings to GitHub release
+  upload-to-release:
+    name: Upload Bindings to Release
+    needs: [build-nodejs-prebuilds, build-python-wheels]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display artifact structure
+        run: |
+          ls -R artifacts/
+
+      - name: Create tarball for Node.js prebuilds
+        run: |
+          mkdir -p release
+          if [ -d "artifacts" ]; then
+            # Package all Node.js prebuilds into a single tarball
+            find artifacts/nodejs-prebuild-* -type f -name "*.node" 2>/dev/null | while read file; do
+              cp "$file" release/ || true
+            done
+            
+            # Create prebuilds tarball if any .node files exist
+            if ls release/*.node 1> /dev/null 2>&1; then
+              tar -czf release/micropdf-nodejs-prebuilds-${{ steps.version.outputs.version }}.tar.gz -C release --exclude="*.tar.gz" --exclude="*.whl" .
+              rm release/*.node  # Clean up individual files
+            fi
+          fi
+
+      - name: Collect Python wheels
+        run: |
+          mkdir -p release
+          find artifacts/python-wheels-* -type f -name "*.whl" -exec cp {} release/ \; 2>/dev/null || true
+          ls -la release/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          tag_name: ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Create build summary
+  summary:
+    name: Build Summary
+    needs: [build-nodejs-prebuilds, build-python-wheels, upload-to-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Bindings Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Node.js Prebuilds" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.build-nodejs-prebuilds.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Python Wheels" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.build-python-wheels.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Upload" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ needs.upload-to-release.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.build-nodejs-prebuilds.result }}" == "success" ]] && \
+             [[ "${{ needs.build-python-wheels.result }}" == "success" ]]; then
+            echo "✅ All bindings built successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some bindings failed to build!" >> $GITHUB_STEP_SUMMARY
+          fi
+
