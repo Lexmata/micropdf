@@ -289,13 +289,11 @@ func (p *ByteSlicePool) Get(minCapacity int) []byte {
 }
 
 // Put returns a byte slice to the pool.
-//
-//nolint:staticcheck // SA6002: slice pooling is still beneficial despite interface allocation
 func (p *ByteSlicePool) Put(buf []byte) {
 	cap := cap(buf)
 	for i, size := range p.sizes {
 		if cap == size {
-			p.pools[i].Put(buf[:0])
+			p.pools[i].Put(buf[:0]) //nolint:staticcheck // SA6002: slice pooling is still beneficial despite interface allocation
 			return
 		}
 	}
