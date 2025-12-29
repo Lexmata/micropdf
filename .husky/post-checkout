@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Husky v9 post-checkout hook
+# Runs after git checkout
+
+# Git LFS post-checkout (if available)
+if command -v git-lfs >/dev/null 2>&1; then
+  git lfs post-checkout "$@"
+fi

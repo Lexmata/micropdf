@@ -10,16 +10,16 @@
       <span class="inline-block px-2 py-1 bg-orange-400/15 text-orange-400 rounded-full text-xs font-medium mb-4">Rust</span>
       <h1 class="text-4xl font-bold mb-4">Rust Documentation</h1>
       <p class="text-lg text-text-secondary mb-12">
-        The native Rust implementation of NanoPDF provides the best performance with zero-cost abstractions and full memory safety.
+        The native Rust implementation of MicroPDF provides the best performance with zero-cost abstractions and full memory safety.
       </p>
 
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Installation</h2>
         <pre><code>[dependencies]
-nanopdf = "0.1"
+micropdf = "0.1"
 
 # With all features
-nanopdf = &#123; version = "0.1", features = ["parallel", "async", "jpeg2000"] &#125;</code></pre>
+micropdf = &#123; version = "0.1", features = ["parallel", "async", "jpeg2000"] &#125;</code></pre>
       </section>
 
       <section class="mb-12">
@@ -27,7 +27,7 @@ nanopdf = &#123; version = "0.1", features = ["parallel", "async", "jpeg2000"] &
         
         <h3 class="text-lg font-semibold mt-6 mb-4">Document</h3>
         <p class="text-text-secondary mb-4">The main entry point for working with PDF files:</p>
-        <pre class="mb-6"><code><span class="keyword">use</span> nanopdf::Document;
+        <pre class="mb-6"><code><span class="keyword">use</span> micropdf::Document;
 
 <span class="comment">// Open from file</span>
 <span class="keyword">let</span> doc = Document::open(<span class="string">"file.pdf"</span>)?;
@@ -79,7 +79,7 @@ pixmap.save_jpeg(<span class="string">"output.jpg"</span>, <span class="number">
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Parallel Processing</h2>
         <p class="text-text-secondary mb-4">Enable the <code>parallel</code> feature for batch operations:</p>
-        <pre><code><span class="keyword">use</span> nanopdf::parallel;
+        <pre><code><span class="keyword">use</span> micropdf::parallel;
 
 <span class="comment">// Render multiple pages in parallel</span>
 <span class="keyword">let</span> pixmaps: Vec&lt;Pixmap&gt; = parallel::render_pages(&amp;doc, <span class="number">2.0</span>)?;
@@ -94,7 +94,7 @@ pixmap.save_jpeg(<span class="string">"output.jpg"</span>, <span class="number">
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">Async I/O</h2>
         <p class="text-text-secondary mb-4">Enable the <code>async</code> feature for non-blocking operations:</p>
-        <pre><code><span class="keyword">use</span> nanopdf::async_io;
+        <pre><code><span class="keyword">use</span> micropdf::async_io;
 
 <span class="comment">// Read file asynchronously</span>
 <span class="keyword">let</span> data = async_io::read_file(<span class="string">"large.pdf"</span>).<span class="keyword">await</span>?;
@@ -108,7 +108,7 @@ pixmap.save_jpeg(<span class="string">"output.jpg"</span>, <span class="number">
         <h2 class="text-2xl font-semibold mb-6 pb-2 border-b border-bg-tertiary">API Reference</h2>
         <p class="text-text-secondary mb-4">For complete API documentation, see:</p>
         <ul class="list-none p-0">
-          <li class="py-2"><a href="https://docs.rs/nanopdf" target="_blank" class="text-accent-primary hover:underline">docs.rs/nanopdf</a></li>
+          <li class="py-2"><a href="https://docs.rs/micropdf" target="_blank" class="text-accent-primary hover:underline">docs.rs/micropdf</a></li>
           <li class="py-2"><a routerLink="/api" class="text-accent-primary hover:underline">API Reference</a></li>
         </ul>
       </section>

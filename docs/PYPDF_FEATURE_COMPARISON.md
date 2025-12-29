@@ -1,10 +1,10 @@
-# pypdf vs NanoPDF Feature Comparison
+# pypdf vs MicroPDF Feature Comparison
 
 ## Executive Summary
 
 **Date**: December 4, 2025 (Updated)
 **pypdf Version**: 4.x (latest)
-**NanoPDF Version**: 0.1.0
+**MicroPDF Version**: 0.1.0
 **MuPDF Version**: 1.26.3 (reference)
 
 This document identifies features present in pypdf that are not available in the original MuPDF library. The `enhanced/` module has been implemented with core functionality to provide these pypdf-like features with Rust performance and safety.
@@ -13,7 +13,7 @@ This document identifies features present in pypdf that are not available in the
 
 ## Feature Comparison Matrix
 
-| Feature Category | pypdf | MuPDF Base | NanoPDF Enhanced | Status |
+| Feature Category | pypdf | MuPDF Base | MicroPDF Enhanced | Status |
 |-----------------|-------|------------|------------------|--------|
 | **Document Creation** |
 | Create blank PDF | ✅ | ❌ | ✅ | `np_write_pdf` |
@@ -461,7 +461,7 @@ page.compress_content_streams() # Compress content
 ## Technical Architecture for Enhanced Module
 
 ```
-nanopdf-rs/src/enhanced/        ✅ IMPLEMENTED
+micropdf-rs/src/enhanced/        ✅ IMPLEMENTED
 ├── mod.rs                      # Module entry point with FFI (9 np_ functions)
 ├── error.rs                    # Custom error types
 ├── writer.rs                   # PDF writer infrastructure
@@ -510,7 +510,7 @@ nanopdf-rs/src/enhanced/        ✅ IMPLEMENTED
 ### FFI Layer (src/ffi/enhanced/)
 
 ```
-nanopdf-rs/src/ffi/enhanced/    ✅ IMPLEMENTED
+micropdf-rs/src/ffi/enhanced/    ✅ IMPLEMENTED
 └── mod.rs                      # 9 np_ prefix functions
     ├── np_write_pdf()         # Create PDF from scratch
     ├── np_add_blank_page()    # Add blank pages
@@ -531,7 +531,7 @@ nanopdf-rs/src/ffi/enhanced/    ✅ IMPLEMENTED
 ### 1. Rust-Idiomatic API
 
 ```rust
-use nanopdf::enhanced::writer::PdfWriter;
+use micropdf::enhanced::writer::PdfWriter;
 
 let mut writer = PdfWriter::new();
 writer.add_blank_page(612.0, 792.0)?;  // Letter size
@@ -542,7 +542,7 @@ writer.save("output.pdf")?;
 ### 2. Builder Pattern
 
 ```rust
-use nanopdf::enhanced::page_ops::PdfMerger;
+use micropdf::enhanced::page_ops::PdfMerger;
 
 PdfMerger::new()
     .append("doc1.pdf")?
@@ -554,7 +554,7 @@ PdfMerger::new()
 ### 3. Method Chaining
 
 ```rust
-use nanopdf::enhanced::content::Watermark;
+use micropdf::enhanced::content::Watermark;
 
 Watermark::new("CONFIDENTIAL")
     .font("Helvetica-Bold", 48.0)
@@ -566,7 +566,7 @@ Watermark::new("CONFIDENTIAL")
 ### 4. Error Handling
 
 ```rust
-use nanopdf::enhanced::error::{Result, EnhancedError};
+use micropdf::enhanced::error::{Result, EnhancedError};
 
 pub enum EnhancedError {
     Io(std::io::Error),
@@ -581,7 +581,7 @@ pub enum EnhancedError {
 
 ## Comparison Summary
 
-| Metric | pypdf | MuPDF Base | NanoPDF (Current) |
+| Metric | pypdf | MuPDF Base | MicroPDF (Current) |
 |--------|-------|------------|-------------------|
 | **Features** | ~100+ | ~60 | ~150+ |
 | **Document Creation** | ✅ | ❌ | ✅ |
@@ -601,7 +601,7 @@ pub enum EnhancedError {
 
 ### Feature Coverage
 
-| Category | pypdf | NanoPDF | Coverage |
+| Category | pypdf | MicroPDF | Coverage |
 |----------|-------|---------|----------|
 | Core MuPDF Features | ⚠️ Partial | ✅ Complete | 100% |
 | Document Creation | ✅ | ✅ | 100% |
@@ -619,7 +619,7 @@ pub enum EnhancedError {
 
 ## Conclusion
 
-The `enhanced/` module has been **successfully implemented**, providing NanoPDF with:
+The `enhanced/` module has been **successfully implemented**, providing MicroPDF with:
 
 1. ✅ **Complete pypdf feature parity** for document manipulation
 2. ✅ **Superior performance** (Rust vs Python, 10-100x faster)
@@ -628,7 +628,7 @@ The `enhanced/` module has been **successfully implemented**, providing NanoPDF 
 5. ✅ **Multi-language bindings** (C FFI via np_ prefix)
 6. ✅ **Drawing API** (Beyond pypdf capabilities)
 
-NanoPDF now delivers the **best-of-all-worlds** solution:
+MicroPDF now delivers the **best-of-all-worlds** solution:
 - ✅ MuPDF's rendering quality and speed (100% compatible)
 - ✅ pypdf's comprehensive document manipulation (95%+ feature parity)
 - ✅ Rust's safety and performance guarantees (zero-cost abstractions)
@@ -685,7 +685,7 @@ NanoPDF now delivers the **best-of-all-worlds** solution:
 
 ### Performance Characteristics
 
-| Operation | pypdf (Python) | NanoPDF (Rust) | Speedup |
+| Operation | pypdf (Python) | MicroPDF (Rust) | Speedup |
 |-----------|---------------|----------------|---------|
 | PDF Creation | ~50ms | ~5ms | 10x |
 | PDF Merging | ~200ms | ~15ms | 13x |

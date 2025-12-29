@@ -1,0 +1,74 @@
+# .dockerignore for go-micropdf Docker builds
+#
+# This file excludes unnecessary files from the Docker build context
+# to speed up builds and reduce image size.
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Go build artifacts
+*.a
+*.o
+*.so
+*.dll
+*.exe
+*.test
+*.out
+*.prof
+
+# Go vendor
+vendor/
+
+# Go binary
+go-micropdf
+example/example
+example/main
+
+# Test coverage
+coverage.out
+coverage.html
+*.coverprofile
+
+# Rust build artifacts (will be built in container)
+micropdf-rs/target/
+micropdf-rs/Cargo.lock
+
+# Docker
+docker/output/
+*.tar
+*.tar.gz
+
+# Documentation build artifacts
+docs/_build/
+site/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build output
+build/
+dist/
+out/
+
+# Package managers
+node_modules/
+

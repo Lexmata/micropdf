@@ -13,6 +13,9 @@ on:
         required: true
         default: 'v0.1.0'
 
+permissions:
+  contents: write  # Required to upload release assets
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -55,10 +58,10 @@ jobs:
         if: matrix.package == 'debian'
         uses: docker/build-push-action@v5
         with:
-          context: ./nanopdf-rs
-          file: nanopdf-rs/docker/Dockerfile.debian
+          context: ./micropdf-rs
+          file: micropdf-rs/docker/Dockerfile.debian
           platforms: linux/${{ matrix.arch }}
-          tags: nanopdf-deb-${{ matrix.arch }}:latest
+          tags: micropdf-deb-${{ matrix.arch }}:latest
           load: true
           cache-from: type=gha,scope=${{ matrix.arch }}-debian
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-debian
@@ -67,10 +70,10 @@ jobs:
         if: matrix.package == 'rpm'
         uses: docker/build-push-action@v5
         with:
-          context: ./nanopdf-rs
-          file: nanopdf-rs/docker/Dockerfile.redhat
+          context: ./micropdf-rs
+          file: micropdf-rs/docker/Dockerfile.redhat
           platforms: linux/${{ matrix.arch }}
-          tags: nanopdf-rpm-${{ matrix.arch }}:latest
+          tags: micropdf-rpm-${{ matrix.arch }}:latest
           load: true
           cache-from: type=gha,scope=${{ matrix.arch }}-rpm
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}-rpm
@@ -79,7 +82,7 @@ jobs:
         if: matrix.package == 'debian'
         run: |
           mkdir -p dist
-          container_id=$(docker create nanopdf-deb-${{ matrix.arch }}:latest)
+          container_id=$(docker create micropdf-deb-${{ matrix.arch }}:latest)
           docker cp ${container_id}:/output/. dist/
           docker rm ${container_id}
           
@@ -97,7 +100,7 @@ jobs:
         if: matrix.package == 'rpm'
         run: |
           mkdir -p dist
-          container_id=$(docker create nanopdf-rpm-${{ matrix.arch }}:latest)
+          container_id=$(docker create micropdf-rpm-${{ matrix.arch }}:latest)
           docker cp ${container_id}:/output/. dist/
           docker rm ${container_id}
           
@@ -114,7 +117,7 @@ jobs:
       - name: Upload packages as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nanopdf-${{ matrix.package }}-${{ matrix.arch }}
+          name: micropdf-${{ matrix.package }}-${{ matrix.arch }}
           path: dist/*
           retention-days: 30
 
@@ -140,61 +143,61 @@ jobs:
       - name: Create manifest
         run: |
           cat > packages/MANIFEST.md << 'EOF'
-          # NanoPDF Release Packages
+          # MicroPDF Release Packages
           
           ## Available Packages
           
           ### Debian (.deb)
-          - **AMD64**: `nanopdf_*_amd64.deb` - For x86_64 systems
-          - **ARM64**: `nanopdf_*_arm64.deb` - For ARM64/aarch64 systems
+          - **AMD64**: `micropdf_*_amd64.deb` - For x86_64 systems
+          - **ARM64**: `micropdf_*_arm64.deb` - For ARM64/aarch64 systems
           
           ### Red Hat / Fedora (.rpm)
-          - **AMD64**: `nanopdf-*-amd64.rpm` - For x86_64 systems
-          - **ARM64**: `nanopdf-*-arm64.rpm` - For ARM64/aarch64 systems
+          - **AMD64**: `micropdf-*-amd64.rpm` - For x86_64 systems
+          - **ARM64**: `micropdf-*-arm64.rpm` - For ARM64/aarch64 systems
           
           ## Installation
           
           ### Debian/Ubuntu (AMD64)
           ```bash
-          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_amd64.deb
-          sudo dpkg -i nanopdf_*_amd64.deb
+          wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf_*_amd64.deb
+          sudo dpkg -i micropdf_*_amd64.deb
           sudo apt-get install -f  # Install dependencies if needed
           ```
           
           ### Debian/Ubuntu (ARM64)
           ```bash
-          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_arm64.deb
-          sudo dpkg -i nanopdf_*_arm64.deb
+          wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf_*_arm64.deb
+          sudo dpkg -i micropdf_*_arm64.deb
           sudo apt-get install -f  # Install dependencies if needed
           ```
           
           ### Red Hat/Fedora (AMD64)
           ```bash
-          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-amd64.rpm
-          sudo rpm -i nanopdf-*-amd64.rpm
+          wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf-*-amd64.rpm
+          sudo rpm -i micropdf-*-amd64.rpm
           ```
           
           ### Red Hat/Fedora (ARM64)
           ```bash
-          wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-arm64.rpm
-          sudo rpm -i nanopdf-*-arm64.rpm
+          wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf-*-arm64.rpm
+          sudo rpm -i micropdf-*-arm64.rpm
           ```
           
           ## Verification
           
           After installation, verify the installation:
           ```bash
-          pkg-config --modversion nanopdf
-          pkg-config --cflags nanopdf
-          pkg-config --libs nanopdf
+          pkg-config --modversion micropdf
+          pkg-config --cflags micropdf
+          pkg-config --libs micropdf
           ```
           
           ## Files Included
           
-          - `/usr/lib64/libnanopdf.so` - Shared library
-          - `/usr/lib64/libnanopdf.a` - Static library
-          - `/usr/include/nanopdf/` - C header files
-          - `/usr/lib64/pkgconfig/nanopdf.pc` - pkg-config file
+          - `/usr/lib64/libmicropdf.so` - Shared library
+          - `/usr/lib64/libmicropdf.a` - Static library
+          - `/usr/include/micropdf/` - C header files
+          - `/usr/lib64/pkgconfig/micropdf.pc` - pkg-config file
           - `/usr/lib64/pkgconfig/mupdf.pc` - MuPDF compatibility alias
           
           ## Package Details

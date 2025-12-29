@@ -1,0 +1,474 @@
+---
+alwaysApply: false
+---
+# Memory Profiling and Leak Detection
+
+MicroPDF provides comprehensive memory profiling across all language bindings to detect memory leaks and track resource usage.
+
+## Overview
+
+All language bindings include a `profiler` module with:
+- Handle allocation tracking
+- Leak detection (long-lived allocations)
+- Memory statistics by resource type
+- Stack trace capture (optional)
+- Integration with language-specific profiling tools
+
+## Rust Profiling
+
+### Enable Profiling
+
+```rust
+use micropdf::ffi::memory_profiler;
+
+// Enable profiling
+memory_profiler::fz_enable_memory_profiling(1);
+
+// Enable stack traces (slower but detailed)
+memory_profiler::fz_enable_stack_traces(1);
+```
+
+### Track Allocations
+
+```rust
+use micropdf::ffi::memory_profiler::{
+    track_allocation, track_deallocation, ResourceType
+};
+
+// In HandleStore::insert
+let handle = /* create handle */;
+track_allocation(handle, ResourceType::Buffer, buffer.len());
+
+// In HandleStore::remove
+track_deallocation(handle);
+```
+
+### Get Leak Report
+
+```rust
+use micropdf::ffi::memory_profiler::MEMORY_PROFILER;
+use std::time::Duration;
+
+// Get report for allocations older than 60 seconds
+let report = MEMORY_PROFILER.generate_leak_report(Duration::from_secs(60));
+println!("{}", report.to_string_report());
+
+// Or via FFI
+memory_profiler::fz_profiler_print_leak_report(60);
+```
+
+### FFI Functions
+
+```rust
+// Enable/disable
+fz_enable_memory_profiling(enabled: i32)
+fz_enable_stack_traces(enabled: i32)
+
+// Get statistics
+fz_profiler_live_handle_count() -> u64
+fz_profiler_current_bytes() -> u64
+fz_profiler_peak_handles() -> u64
+fz_profiler_peak_bytes() -> u64
+fz_profiler_potential_leak_count(min_age_seconds: u64) -> u64
+fz_profiler_handle_count_by_type(resource_type: ResourceType) -> u64
+
+// Management
+fz_profiler_reset()
+fz_profiler_print_leak_report(min_age_seconds: u64)
+```
+
+### Running with Profiling Tools
+
+```bash
+# Valgrind memcheck
+valgrind --leak-check=full --show-leak-kinds=all \
+    cargo test --release
+
+# Valgrind massif (heap profiler)
+valgrind --tool=massif cargo run --release
+ms_print massif.out.*
+
+# Heaptrack
+heaptrack cargo run --release
+heaptrack_gui heaptrack.*.gz
+
+# DHAT (heap profiler)
+cargo install dhat
+# Add to Cargo.toml: dhat = { version = "0.3", optional = true }
+# Run with: cargo run --release --features dhat
+```
+
+## Go Profiling
+
+### Enable Profiling
+
+```go
+import "github.com/lexmata/micropdf"
+
+// Enable profiling
+micropdf.EnableProfiling(true)
+
+// Enable stack traces
+micropdf.EnableStackTraces(true)
+```
+
+### Track Allocations
+
+```go
+// Track allocation
+micropdf.TrackAllocation(handle, micropdf.ResourceBuffer, sizeBytes)
+
+// Track with tag
+micropdf.TrackAllocationTagged(handle, micropdf.ResourcePixmap, sizeBytes, "render-output")
+
+// Track deallocation
+micropdf.TrackDeallocation(handle)
+```
+
+### Get Leak Report
+
+```go
+import "time"
+
+// Get leak report
+report := micropdf.GetLeakReport(60 * time.Second)
+fmt.Println(report.String())
+
+// Or print directly
+micropdf.PrintLeakReport(60 * time.Second)
+```
+
+### pprof Integration
+
+```go
+import (
+    "net/http"
+    _ "net/http/pprof"
+    "runtime"
+)
+
+// Start pprof server
+go func() {
+    http.ListenAndServe(":6060", nil)
+}()
+
+// Force GC and get memory stats
+runtime.GC()
+micropdf.PrintMemStats()
+```
+
+```bash
+# Capture heap profile
+go tool pprof http://localhost:6060/debug/pprof/heap
+
+# Analyze
+go tool pprof -http=:8080 heap.prof
+```
+
+## Node.js Profiling
+
+### Enable Profiling
+
+```typescript
+import { enableProfiling, enableStackTraces } from 'micropdf/profiler';
+
+// Enable profiling
+enableProfiling(true);
+
+// Enable stack traces
+enableStackTraces(true);
+```
+
+### Track Allocations
+
+```typescript
+import { trackAllocation, trackDeallocation, ResourceType } from 'micropdf/profiler';
+
+// Track allocation
+trackAllocation(handle, ResourceType.Buffer, sizeBytes);
+
+// Track with tag
+trackAllocation(handle, ResourceType.Pixmap, sizeBytes, 'render-output');
+
+// Track deallocation
+trackDeallocation(handle);
+```
+
+### Get Leak Report
+
+```typescript
+import { getLeakReport, printLeakReport, formatLeakReport } from 'micropdf/profiler';
+
+// Get report (leaks older than 60s)
+const report = getLeakReport(60000);
+console.log(formatLeakReport(report));
+
+// Or print directly
+printLeakReport(60000);
+```
+
+### V8 Heap Snapshot
+
+```typescript
+import { takeHeapSnapshot, forceGC, printProcessMemory } from 'micropdf/profiler';
+
+// Print process memory
+printProcessMemory();
+
+// Force GC (requires --expose-gc flag)
+forceGC();
+
+// Take heap snapshot
+await takeHeapSnapshot('snapshot.heapsnapshot');
+```
+
+```bash
+# Run with heap inspector
+node --inspect --expose-gc your-script.js
+
+# Or with clinic
+npx clinic doctor -- node your-script.js
+npx clinic flame -- node your-script.js
+```
+
+## Python Profiling
+
+### Enable Profiling
+
+```python
+from micropdf.profiler import enable_profiling, enable_stack_traces
+
+# Enable profiling
+enable_profiling(True)
+
+# Enable stack traces
+enable_stack_traces(True)
+```
+
+### Track Allocations
+
+```python
+from micropdf.profiler import track_allocation, track_deallocation, ResourceType
+
+# Track allocation
+track_allocation(handle, ResourceType.BUFFER, size_bytes)
+
+# Track with tag
+track_allocation(handle, ResourceType.PIXMAP, size_bytes, tag="render-output")
+
+# Track deallocation
+track_deallocation(handle)
+```
+
+### Get Leak Report
+
+```python
+from micropdf.profiler import get_leak_report, print_leak_report
+
+# Get report (leaks older than 60s)
+report = get_leak_report(min_age_seconds=60)
+print(report)
+
+# Or print directly
+print_leak_report(min_age_seconds=60)
+```
+
+### tracemalloc Integration
+
+```python
+from micropdf.profiler import (
+    start_tracemalloc,
+    stop_tracemalloc,
+    get_tracemalloc_snapshot,
+    print_tracemalloc_top,
+    compare_snapshots,
+)
+
+# Start tracemalloc
+start_tracemalloc(nframes=25)
+
+# ... do work ...
+
+# Print top allocations
+print_tracemalloc_top(limit=20)
+
+# Take snapshot for comparison
+snapshot1 = get_tracemalloc_snapshot()
+
+# ... more work ...
+
+snapshot2 = get_tracemalloc_snapshot()
+compare_snapshots(snapshot1, snapshot2, limit=10)
+
+# Stop tracemalloc
+stop_tracemalloc()
+```
+
+### GC Integration
+
+```python
+from micropdf.profiler import force_gc, print_gc_stats, print_memory_usage
+
+# Force garbage collection
+stats = force_gc()
+print(f"Collected: {stats['collected']}")
+
+# Print GC statistics
+print_gc_stats()
+
+# Print process memory (requires psutil)
+print_memory_usage()
+```
+
+```bash
+# Run with memory_profiler
+pip install memory_profiler
+python -m memory_profiler your_script.py
+
+# Run with objgraph
+pip install objgraph
+python -c "import objgraph; objgraph.show_most_common_types()"
+```
+
+## Best Practices
+
+### 1. Enable Profiling During Development
+
+```rust
+// Rust
+#[cfg(debug_assertions)]
+memory_profiler::fz_enable_memory_profiling(1);
+```
+
+```go
+// Go
+if os.Getenv("MICROPDF_PROFILE") != "" {
+    micropdf.EnableProfiling(true)
+}
+```
+
+```typescript
+// TypeScript
+if (process.env.MICROPDF_PROFILE) {
+  enableProfiling(true);
+}
+```
+
+```python
+# Python
+import os
+if os.environ.get("MICROPDF_PROFILE"):
+    enable_profiling(True)
+```
+
+### 2. Use Tags for Context
+
+```rust
+track_allocation_tagged(handle, ResourceType::Pixmap, size, "page-render-123");
+```
+
+### 3. Check for Leaks Before Shutdown
+
+```rust
+let leaks = MEMORY_PROFILER.get_potential_leaks(Duration::from_secs(0));
+if !leaks.is_empty() {
+    eprintln!("Warning: {} unreleased handles", leaks.len());
+}
+```
+
+### 4. Periodic Leak Checks in Long-Running Apps
+
+```go
+go func() {
+    ticker := time.NewTicker(5 * time.Minute)
+    for range ticker.C {
+        leaks := micropdf.GetProfiler().GetPotentialLeaks(time.Minute)
+        if len(leaks) > 0 {
+            log.Printf("Warning: %d potential leaks detected", len(leaks))
+        }
+    }
+}()
+```
+
+### 5. Stack Traces Only When Needed
+
+Stack trace capture is expensive. Only enable when debugging specific leaks:
+
+```typescript
+// Enable only when investigating
+if (investigatingLeak) {
+  enableStackTraces(true);
+}
+```
+
+## Resource Types
+
+All languages use consistent resource type enums:
+
+| Type | Value | Description |
+|------|-------|-------------|
+| Context | 0 | FZ context |
+| Buffer | 1 | Byte buffer |
+| Stream | 2 | Input stream |
+| Pixmap | 3 | Pixel map |
+| Document | 4 | PDF document |
+| Page | 5 | Document page |
+| Font | 6 | Font data |
+| Image | 7 | Image data |
+| Path | 8 | Vector path |
+| Text | 9 | Text object |
+| Device | 10 | Render device |
+| DisplayList | 11 | Display list |
+| Colorspace | 12 | Color space |
+| PdfObject | 13 | PDF object |
+| Outline | 14 | Document outline |
+| Link | 15 | Hyperlink |
+| Annotation | 16 | PDF annotation |
+| StextPage | 17 | Structured text |
+| Cookie | 18 | Render cookie |
+| Archive | 19 | Archive handle |
+| Other | 255 | Unknown/other |
+
+## Leak Report Format
+
+All profilers generate consistent reports:
+
+```
+=== MicroPDF Memory Leak Report ===
+
+Generated: 2025-12-28T10:30:00Z
+Min age threshold: 60s
+Total potential leaks: 3
+
+--- Global Statistics ---
+Handles created: 150
+Handles destroyed: 147
+Current handles: 3
+Current memory: 524288 bytes
+Peak handles: 50
+Peak memory: 2097152 bytes
+Uptime: 5m30s
+
+--- Leaks by Type ---
+
+Pixmap (2 leaks):
+  1. Handle 42 - 262144 bytes, age 120s, tag: render-page-5
+      at Buffer.append (buffer.rs:123)
+      at Page.render (page.rs:456)
+  2. Handle 45 - 262144 bytes, age 90s
+
+Buffer (1 leak):
+  1. Handle 101 - 1024 bytes, age 75s
+```
+
+## Checklist for Leak Hunting
+
+- [ ] Enable profiling before the suspected leak
+- [ ] Reproduce the leak scenario
+- [ ] Enable stack traces if needed
+- [ ] Generate leak report with appropriate min_age
+- [ ] Identify resource types with leaks
+- [ ] Check stack traces for allocation site
+- [ ] Verify corresponding deallocation is called
+- [ ] Use language-specific tools (valgrind, pprof, etc.)
+- [ ] Fix and verify fix with profiling

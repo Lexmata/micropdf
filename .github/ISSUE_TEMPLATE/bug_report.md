@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug to help us improve NanoPDF
+about: Report a bug to help us improve MicroPDF
 title: '[BUG] '
 labels: bug
 assignees: ''
@@ -12,7 +12,7 @@ A clear and concise description of what the bug is.
 
 ## Environment
 
-- **NanoPDF Version**: [e.g., 0.1.0]
+- **MicroPDF Version**: [e.g., 0.1.0]
 - **OS**: [e.g., Ubuntu 22.04, Windows 11, macOS 14]
 - **Rust Version**: [e.g., 1.75.0]
 - **Architecture**: [e.g., x86_64, aarch64]
@@ -37,7 +37,7 @@ A clear and concise description of what actually happened.
 If applicable, provide a minimal code sample that reproduces the issue:
 
 ```rust
-use nanopdf::*;
+use micropdf::*;
 
 fn main() {
     // Your code here
@@ -68,5 +68,5 @@ Add any other context about the problem here. Screenshots, related issues, etc.
 
 - [ ] I have searched existing issues to ensure this is not a duplicate
 - [ ] I have provided all requested information
-- [ ] I have tested with the latest version of NanoPDF
+- [ ] I have tested with the latest version of MicroPDF
 

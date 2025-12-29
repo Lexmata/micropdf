@@ -1,0 +1,873 @@
+---
+alwaysApply: false
+---
+# Node.js/TypeScript Code Generation Standards
+
+This project follows modern TypeScript conventions with cross-runtime compatibility for Node.js, Deno, and Bun.
+
+## Runtime Compatibility
+
+### Supported Runtimes
+
+| Runtime | Minimum Version | Notes |
+|---------|-----------------|-------|
+| **Node.js** | 18.0.0+ | Primary target, LTS versions |
+| **Deno** | 1.40+ | Via npm: specifier |
+| **Bun** | 1.0+ | Native TypeScript support |
+
+### Module System
+
+**Always use ESM (ECMAScript Modules)**:
+
+```typescript
+// ✅ CORRECT: ESM imports
+import { Buffer } from './buffer.js';
+import { Point, Rect } from './geometry.js';
+import type { DocumentOptions } from './types.js';
+
+// ✅ CORRECT: package.json
+{
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}
+
+// ❌ WRONG: CommonJS
+const { Buffer } = require('./buffer');  // Don't use require()
+module.exports = { Buffer };             // Don't use module.exports
+```
+
+### File Extensions
+
+```typescript
+// ✅ CORRECT: Always include .js extension in imports (ESM requirement)
+import { Point } from './geometry.js';
+import { parse } from '../utils/parser.js';
+
+// ❌ WRONG: Missing extension (won't work in ESM)
+import { Point } from './geometry';
+import { parse } from '../utils/parser';
+```
+
+### Cross-Runtime Imports
+
+```typescript
+// ✅ CORRECT: Use node: prefix for built-in modules
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { Buffer as NodeBuffer } from 'node:buffer';
+
+// ❌ WRONG: Bare imports (may not work in all runtimes)
+import { readFile } from 'fs/promises';
+import { join } from 'path';
+
+// ✅ CORRECT: Dynamic import for optional dependencies
+async function loadOptionalFeature() {
+  try {
+    const { feature } = await import('optional-package');
+    return feature;
+  } catch {
+    return null;  // Graceful fallback
+  }
+}
+```
+
+## TypeScript Configuration
+
+### tsconfig.json Settings
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
+```
+
+### Strict Mode Requirements
+
+```typescript
+// ✅ CORRECT: Explicit types, null checks
+function getPage(doc: Document, index: number): Page | undefined {
+  if (index < 0 || index >= doc.pageCount) {
+    return undefined;
+  }
+  return doc.pages[index];
+}
+
+// ✅ CORRECT: Non-null assertion only when proven safe
+function getFirstPage(doc: Document): Page {
+  if (doc.pageCount === 0) {
+    throw new Error('Document has no pages');
+  }
+  return doc.pages[0]!;  // Safe: we checked pageCount
+}
+
+// ❌ WRONG: Implicit any
+function process(data) {  // Error: implicit any
+  return data.value;
+}
+
+// ❌ WRONG: Ignoring null/undefined
+function getPage(doc: Document, index: number): Page {
+  return doc.pages[index];  // Could be undefined!
+}
+```
+
+## Type Definitions
+
+### Use Explicit Types
+
+```typescript
+// ✅ CORRECT: Explicit return types for public API
+export function createBuffer(capacity: number): Buffer {
+  return new Buffer(capacity);
+}
+
+export function parseDocument(data: Uint8Array): Result<Document, ParseError> {
+  // Implementation
+}
+
+// ✅ CORRECT: Type inference for local variables is OK
+const buffer = createBuffer(1024);  // Type is inferred as Buffer
+const pages = document.pages.filter(p => p.hasContent);
+
+// ❌ WRONG: Missing return type on exported function
+export function createBuffer(capacity: number) {  // Add return type!
+  return new Buffer(capacity);
+}
+```
+
+### Interface vs Type
+
+```typescript
+// ✅ CORRECT: Use interface for object shapes that may be extended
+export interface DocumentOptions {
+  readonly path?: string;
+  readonly password?: string;
+  readonly permissions?: Permissions;
+}
+
+export interface ExtendedOptions extends DocumentOptions {
+  readonly cachePages?: boolean;
+}
+
+// ✅ CORRECT: Use type for unions, intersections, primitives
+export type PageIndex = number;
+export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+export type EventHandler = (event: Event) => void;
+
+// ✅ CORRECT: Use type for complex mapped types
+export type Readonly<T> = { readonly [K in keyof T]: T[K] };
+```
+
+### Discriminated Unions
+
+```typescript
+// ✅ CORRECT: Use discriminated unions for type-safe variants
+export type PdfObject =
+  | { type: 'null' }
+  | { type: 'bool'; value: boolean }
+  | { type: 'int'; value: number }
+  | { type: 'real'; value: number }
+  | { type: 'string'; value: string }
+  | { type: 'name'; value: string }
+  | { type: 'array'; items: PdfObject[] }
+  | { type: 'dict'; entries: Map<string, PdfObject> };
+
+// Type-safe handling
+function stringify(obj: PdfObject): string {
+  switch (obj.type) {
+    case 'null': return 'null';
+    case 'bool': return obj.value.toString();
+    case 'int': return obj.value.toString();
+    case 'real': return obj.value.toFixed(6);
+    case 'string': return `(${obj.value})`;
+    case 'name': return `/${obj.value}`;
+    case 'array': return `[${obj.items.map(stringify).join(' ')}]`;
+    case 'dict': return `<< ${[...obj.entries].map(([k, v]) => `/${k} ${stringify(v)}`).join(' ')} >>`;
+  }
+}
+```
+
+## Class Design
+
+### Immutable by Default
+
+```typescript
+// ✅ CORRECT: Immutable value types
+export class Point {
+  readonly x: number;
+  readonly y: number;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  // Return new instance instead of mutating
+  transform(matrix: Matrix): Point {
+    return new Point(
+      this.x * matrix.a + this.y * matrix.c + matrix.e,
+      this.x * matrix.b + this.y * matrix.d + matrix.f
+    );
+  }
+
+  add(other: Point): Point {
+    return new Point(this.x + other.x, this.y + other.y);
+  }
+}
+
+// ✅ CORRECT: Use private fields for encapsulation
+export class Buffer {
+  #data: Uint8Array;
+  #length: number;
+
+  constructor(capacity: number = 0) {
+    this.#data = new Uint8Array(capacity);
+    this.#length = 0;
+  }
+
+  get length(): number {
+    return this.#length;
+  }
+}
+```
+
+### Factory Methods
+
+```typescript
+// ✅ CORRECT: Use static factory methods for alternative construction
+export class Rect {
+  constructor(
+    readonly x0: number,
+    readonly y0: number,
+    readonly x1: number,
+    readonly y1: number
+  ) {}
+
+  // Factory methods
+  static fromXYWH(x: number, y: number, width: number, height: number): Rect {
+    return new Rect(x, y, x + width, y + height);
+  }
+
+  static fromPoints(topLeft: Point, bottomRight: Point): Rect {
+    return new Rect(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
+  }
+
+  static empty(): Rect {
+    return new Rect(0, 0, 0, 0);
+  }
+
+  static infinite(): Rect {
+    return new Rect(-Infinity, -Infinity, Infinity, Infinity);
+  }
+}
+```
+
+### Resource Management
+
+```typescript
+// ✅ CORRECT: Implement Symbol.dispose for automatic cleanup (ES2023+)
+export class Document implements Disposable {
+  #handle: number;
+  #disposed = false;
+
+  constructor(handle: number) {
+    this.#handle = handle;
+  }
+
+  [Symbol.dispose](): void {
+    if (!this.#disposed) {
+      this.#disposed = true;
+      native.closeDocument(this.#handle);
+    }
+  }
+
+  // Also provide explicit close() for older runtimes
+  close(): void {
+    this[Symbol.dispose]();
+  }
+}
+
+// Usage with 'using' declaration (TypeScript 5.2+)
+{
+  using doc = await openDocument('file.pdf');
+  // doc is automatically disposed at end of block
+}
+
+// ✅ CORRECT: Async disposal
+export class AsyncDocument implements AsyncDisposable {
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.flush();
+    await this.close();
+  }
+}
+
+// Usage
+{
+  await using doc = await openDocumentAsync('file.pdf');
+}
+```
+
+## Error Handling
+
+### Custom Error Classes
+
+```typescript
+// ✅ CORRECT: Custom error hierarchy
+export class MicroPdfError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'MicroPdfError';
+  }
+}
+
+export class ParseError extends MicroPdfError {
+  constructor(
+    message: string,
+    readonly offset: number,
+    readonly context?: string,
+    options?: ErrorOptions
+  ) {
+    super(`Parse error at offset ${offset}: ${message}`, options);
+    this.name = 'ParseError';
+  }
+}
+
+export class ValidationError extends MicroPdfError {
+  constructor(
+    message: string,
+    readonly field: string,
+    options?: ErrorOptions
+  ) {
+    super(`Validation error for '${field}': ${message}`, options);
+    this.name = 'ValidationError';
+  }
+}
+
+// ✅ CORRECT: Use error cause for chaining
+try {
+  await parseDocument(data);
+} catch (err) {
+  throw new MicroPdfError('Failed to load document', { cause: err });
+}
+```
+
+### Result Type Pattern
+
+```typescript
+// ✅ CORRECT: Use Result type for expected failures
+export type Result<T, E = Error> =
+  | { ok: true; value: T }
+  | { ok: false; error: E };
+
+export function ok<T>(value: T): Result<T, never> {
+  return { ok: true, value };
+}
+
+export function err<E>(error: E): Result<never, E> {
+  return { ok: false, error };
+}
+
+// Usage
+function parseInteger(str: string): Result<number, string> {
+  const num = parseInt(str, 10);
+  if (isNaN(num)) {
+    return err(`Invalid integer: ${str}`);
+  }
+  return ok(num);
+}
+
+// Handling
+const result = parseInteger(input);
+if (result.ok) {
+  console.log(result.value);  // TypeScript knows this is number
+} else {
+  console.error(result.error);  // TypeScript knows this is string
+}
+```
+
+### Never Throw in Library Code (When Avoidable)
+
+```typescript
+// ✅ CORRECT: Return undefined/null for missing values
+export function getPage(index: number): Page | undefined {
+  if (index < 0 || index >= this.pageCount) {
+    return undefined;
+  }
+  return this.pages[index];
+}
+
+// ✅ CORRECT: Return Result for operations that can fail
+export function parse(data: Uint8Array): Result<Document, ParseError> {
+  try {
+    const doc = internalParse(data);
+    return ok(doc);
+  } catch (e) {
+    return err(new ParseError(String(e), 0));
+  }
+}
+
+// ⚠️ ACCEPTABLE: Throw for programmer errors (impossible states)
+export function getPageOrThrow(index: number): Page {
+  const page = this.getPage(index);
+  if (!page) {
+    throw new RangeError(`Page index ${index} out of bounds [0, ${this.pageCount})`);
+  }
+  return page;
+}
+```
+
+## Async Patterns
+
+### Always Use async/await
+
+```typescript
+// ✅ CORRECT: async/await for readability
+export async function loadDocument(path: string): Promise<Document> {
+  const data = await readFile(path);
+  const doc = await parseDocument(data);
+  return doc;
+}
+
+// ✅ CORRECT: Parallel operations with Promise.all
+export async function loadPages(doc: Document): Promise<Page[]> {
+  const pagePromises = Array.from(
+    { length: doc.pageCount },
+    (_, i) => doc.getPageAsync(i)
+  );
+  return Promise.all(pagePromises);
+}
+
+// ✅ CORRECT: Error handling with try/catch
+export async function safeLoad(path: string): Promise<Result<Document, Error>> {
+  try {
+    const doc = await loadDocument(path);
+    return ok(doc);
+  } catch (e) {
+    return err(e instanceof Error ? e : new Error(String(e)));
+  }
+}
+
+// ❌ WRONG: Mixing callbacks and promises
+export function loadDocument(path: string, callback: (err: Error | null, doc?: Document) => void): void {
+  // Don't use callback patterns!
+}
+```
+
+### Async Iterators
+
+```typescript
+// ✅ CORRECT: Use async iterators for streaming
+export async function* readPages(doc: Document): AsyncGenerator<Page, void, unknown> {
+  for (let i = 0; i < doc.pageCount; i++) {
+    yield await doc.getPageAsync(i);
+  }
+}
+
+// Usage
+for await (const page of readPages(document)) {
+  await processPage(page);
+}
+
+// ✅ CORRECT: Implement AsyncIterable
+export class Document implements AsyncIterable<Page> {
+  async *[Symbol.asyncIterator](): AsyncGenerator<Page> {
+    for (let i = 0; i < this.pageCount; i++) {
+      yield await this.getPageAsync(i);
+    }
+  }
+}
+```
+
+## Memory and Performance
+
+### Avoid Unnecessary Allocations
+
+```typescript
+// ✅ CORRECT: Reuse buffers
+const sharedBuffer = new Uint8Array(4096);
+
+export function processChunk(data: Uint8Array): void {
+  // Use sharedBuffer for temporary operations
+}
+
+// ✅ CORRECT: Use TypedArrays for binary data
+export class Buffer {
+  #data: Uint8Array;
+
+  toUint8Array(): Uint8Array {
+    // Return a copy to prevent external mutation
+    return this.#data.slice(0, this.length);
+  }
+
+  // For internal use, return view (no copy)
+  get internalView(): Uint8Array {
+    return this.#data.subarray(0, this.length);
+  }
+}
+
+// ✅ CORRECT: Use ArrayBuffer.transfer for efficient resizing (ES2024)
+function growBuffer(buffer: ArrayBuffer, newSize: number): ArrayBuffer {
+  return ArrayBuffer.transfer(buffer, newSize);
+}
+```
+
+### Object Pooling
+
+```typescript
+// ✅ CORRECT: Pool frequently created objects
+class PointPool {
+  private readonly pool: Point[] = [];
+
+  acquire(x: number, y: number): Point {
+    const point = this.pool.pop();
+    if (point) {
+      (point as { x: number; y: number }).x = x;
+      (point as { x: number; y: number }).y = y;
+      return point;
+    }
+    return new Point(x, y);
+  }
+
+  release(point: Point): void {
+    if (this.pool.length < 1000) {
+      this.pool.push(point);
+    }
+  }
+}
+```
+
+## Testing
+
+### Use Vitest
+
+```typescript
+// ✅ CORRECT: Vitest test structure
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Buffer } from './buffer.js';
+
+describe('Buffer', () => {
+  describe('constructor', () => {
+    it('creates empty buffer with default capacity', () => {
+      const buf = new Buffer();
+      expect(buf.length).toBe(0);
+    });
+
+    it('creates buffer with specified capacity', () => {
+      const buf = new Buffer(1024);
+      expect(buf.length).toBe(0);
+      expect(buf.capacity).toBe(1024);
+    });
+  });
+
+  describe('append', () => {
+    let buffer: Buffer;
+
+    beforeEach(() => {
+      buffer = new Buffer(100);
+    });
+
+    it('appends data to buffer', () => {
+      buffer.append(new Uint8Array([1, 2, 3]));
+      expect(buffer.length).toBe(3);
+      expect(buffer.toUint8Array()).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
+    it('grows buffer when needed', () => {
+      const largeData = new Uint8Array(200);
+      buffer.append(largeData);
+      expect(buffer.length).toBe(200);
+    });
+  });
+});
+```
+
+### Test Utilities
+
+```typescript
+// ✅ CORRECT: Create test fixtures
+export function createTestDocument(pageCount: number = 1): Document {
+  const doc = new Document();
+  for (let i = 0; i < pageCount; i++) {
+    doc.addPage(new Page(612, 792));  // US Letter
+  }
+  return doc;
+}
+
+// ✅ CORRECT: Use test.each for parameterized tests
+import { test } from 'vitest';
+
+test.each([
+  { input: '0', expected: 0 },
+  { input: '42', expected: 42 },
+  { input: '-1', expected: -1 },
+  { input: '3.14', expected: 3 },
+])('parseInt($input) = $expected', ({ input, expected }) => {
+  expect(parseInt(input, 10)).toBe(expected);
+});
+```
+
+## Documentation
+
+### JSDoc for Public API
+
+```typescript
+/**
+ * A dynamic byte buffer backed by a Uint8Array.
+ *
+ * Buffer provides efficient append and read operations for binary data.
+ * It automatically grows when needed.
+ *
+ * @example
+ * ```typescript
+ * const buf = Buffer.create(1024);
+ * buf.append(new Uint8Array([1, 2, 3]));
+ * console.log(buf.length); // 3
+ * ```
+ */
+export class Buffer {
+  /**
+   * Creates a new buffer with the specified initial capacity.
+   *
+   * @param capacity - Initial capacity in bytes (default: 0)
+   * @returns A new empty Buffer
+   *
+   * @example
+   * ```typescript
+   * const buf = Buffer.create(1024);
+   * ```
+   */
+  static create(capacity: number = 0): Buffer {
+    return new Buffer(capacity);
+  }
+
+  /**
+   * Appends data to the end of the buffer.
+   *
+   * The buffer will automatically grow if needed.
+   *
+   * @param data - Data to append
+   * @throws {RangeError} If the resulting size would exceed maximum buffer size
+   *
+   * @example
+   * ```typescript
+   * buf.append(new Uint8Array([1, 2, 3]));
+   * buf.append(encoder.encode('Hello'));
+   * ```
+   */
+  append(data: Uint8Array): void {
+    // Implementation
+  }
+}
+```
+
+### Type Exports
+
+```typescript
+// ✅ CORRECT: Export types explicitly
+export type { DocumentOptions, PageOptions, RenderOptions };
+export type { Point, Rect, Matrix, Quad };
+
+// ✅ CORRECT: Re-export from index.ts
+// src/index.ts
+export { Buffer, type BufferOptions } from './buffer.js';
+export { Document, type DocumentOptions } from './document.js';
+export { Point, Rect, Matrix, Quad } from './geometry.js';
+export type { Result } from './types.js';
+```
+
+## Runtime-Specific Considerations
+
+### Node.js Specific
+
+```typescript
+// ✅ CORRECT: Use node: prefix and check for Node.js
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+// Get __dirname equivalent in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ CORRECT: Check runtime before using Node-specific APIs
+function isNode(): boolean {
+  return typeof process !== 'undefined' &&
+         process.versions != null &&
+         process.versions.node != null;
+}
+```
+
+### Deno Compatibility
+
+```typescript
+// ✅ CORRECT: Use Web APIs when possible (works in all runtimes)
+// Instead of Buffer.from(), use:
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+const bytes = encoder.encode('Hello');
+const text = decoder.decode(bytes);
+
+// ✅ CORRECT: Use fetch() instead of http/https modules
+const response = await fetch('https://example.com/api');
+const data = await response.json();
+
+// ✅ CORRECT: Use Web Crypto API
+const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+const hashArray = new Uint8Array(hashBuffer);
+```
+
+### Bun Compatibility
+
+```typescript
+// ✅ CORRECT: Bun runs TypeScript directly
+// No special considerations needed - just write standard TypeScript
+
+// ✅ CORRECT: Use Bun-optimized APIs when available
+function readFileOptimized(path: string): Promise<Uint8Array> {
+  // Bun.file is faster but not available everywhere
+  if (typeof Bun !== 'undefined') {
+    return Bun.file(path).arrayBuffer().then(b => new Uint8Array(b));
+  }
+  // Fallback for Node.js/Deno
+  return import('node:fs/promises').then(fs => fs.readFile(path));
+}
+```
+
+## Code Formatting
+
+### Prettier Configuration
+
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "avoid"
+}
+```
+
+### ESLint Configuration
+
+```javascript
+// eslint.config.js (flat config)
+import js from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+
+export default [
+  js.configs.recommended,
+  {
+    files: ['**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        project: './tsconfig.json',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/strict-boolean-expressions': 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+];
+```
+
+## Package Manager
+
+### Use pnpm
+
+```bash
+# Install dependencies
+pnpm install
+
+# Add a dependency
+pnpm add lodash
+
+# Add a dev dependency
+pnpm add -D vitest
+
+# Run scripts
+pnpm test
+pnpm build
+```
+
+### Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "quality": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test"
+  }
+}
+```
+
+## Summary Checklist
+
+- [ ] ESM modules with `.js` extensions in imports
+- [ ] `node:` prefix for Node.js built-ins
+- [ ] Strict TypeScript configuration enabled
+- [ ] Explicit return types on exported functions
+- [ ] Interface for extensible shapes, type for unions/intersections
+- [ ] Immutable classes with readonly properties
+- [ ] Private fields using `#` syntax
+- [ ] `Symbol.dispose` / `Symbol.asyncDispose` for resources
+- [ ] Custom error classes extending `Error`
+- [ ] Result type for expected failures
+- [ ] async/await (no callbacks)
+- [ ] Web APIs preferred over Node-specific APIs
+- [ ] Vitest for testing
+- [ ] JSDoc on public API
+- [ ] pnpm as package manager
+- [ ] Prettier + ESLint for formatting/linting

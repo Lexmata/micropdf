@@ -76,7 +76,7 @@ Location: `tests/` directory
 
 ```rust
 // tests/integration_test.rs
-use nanopdf::*;
+use micropdf::*;
 
 #[test]
 fn test_full_workflow() {

@@ -1,0 +1,119 @@
+---
+alwaysApply: true
+---
+# No Automatic Markdown File Creation
+
+**CRITICAL RULE**: Do NOT create markdown (*.md) files unless explicitly requested by the user.
+
+## Rule
+
+**NEVER create markdown files automatically, including:**
+- Summary documents
+- Status reports
+- Progress reports
+- Completion documents
+- Architecture documents
+- Implementation notes
+- Session summaries
+- Project dashboards
+- Any other `.md` files
+
+## Only Create Markdown When:
+
+1. **User explicitly requests it**
+   - "Create a README"
+   - "Write a guide for X"
+   - "Document the API in a markdown file"
+
+2. **User asks for documentation**
+   - "Document this feature"
+   - "Create docs for the API"
+
+3. **Creating a new project from scratch**
+   - Basic README.md is expected for new projects
+
+## What IS Allowed Without Permission:
+
+✅ Code files (*.ts, *.js, *.rs, *.go, etc.)
+✅ Configuration files (.editorconfig, tsconfig.json, etc.)
+✅ Code comments and JSDoc/Rustdoc/Godoc
+✅ Commit messages
+✅ Cursor rules (*.mdc files in .cursor/rules/)
+✅ LICENSE files
+✅ Test files
+
+## What IS NOT Allowed Without Permission:
+
+❌ Any *.md file
+❌ README files (unless new project)
+❌ CHANGELOG files (unless explicitly requested)
+❌ Documentation markdown
+❌ Summary documents
+❌ Status documents
+❌ Architecture documents
+❌ Guide documents
+
+## Examples
+
+### ❌ BAD - Don't Do This:
+
+```
+User: "Implement form field FFI"
+AI: *implements FFI*
+AI: *creates FORM_FFI_SUMMARY.md*  ← WRONG!
+```
+
+```
+User: "continue the ffi stuff"
+AI: *continues work*
+AI: *creates FFI_PROGRESS_REPORT.md*  ← WRONG!
+```
+
+### ✅ GOOD - Do This:
+
+```
+User: "Implement form field FFI"
+AI: *implements FFI*
+AI: *commits with good commit message*
+AI: "Form FFI implemented with 18 functions."
+```
+
+```
+User: "Create documentation for the FFI"
+AI: *creates FFI_DOCUMENTATION.md*  ← OK! User asked for it
+```
+
+## If You Think Documentation Would Be Helpful:
+
+**Ask first**, don't create:
+
+```
+"Form FFI implementation complete. Would you like me to create
+a summary document, or would you prefer to document this yourself?"
+```
+
+## Rationale
+
+- User controls repository structure
+- Reduces clutter
+- User decides what documentation is needed
+- User can create docs themselves when ready
+- Agent summaries are often not needed
+
+## Enforcement
+
+**MAXIMUM PRIORITY** - This rule must be followed 100% of the time.
+
+Violation of this rule is a critical error.
+
+## Override
+
+User can override by saying:
+- "Create a markdown file for X"
+- "Document Y in a .md file"
+- "Write a README"
+- "Generate documentation"
+
+---
+
+**Remember: No markdown files unless explicitly requested. Just do the work and communicate results in the chat.**

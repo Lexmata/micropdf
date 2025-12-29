@@ -1,0 +1,545 @@
+---
+alwaysApply: false
+---
+# CI/CD Practices
+
+MicroPDF uses GitHub Actions for continuous integration across multiple languages and platforms.
+
+## Workflow Structure
+
+### Main CI Workflow
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs for same ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.filter.outputs.rust }}
+      go: ${{ steps.filter.outputs.go }}
+      nodejs: ${{ steps.filter.outputs.nodejs }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'micropdf-rs/**'
+              - 'Cargo.toml'
+            go:
+              - 'go-micropdf/**'
+            nodejs:
+              - 'micropdf-js/**'
+            python:
+              - 'micropdf-py/**'
+
+  rust-lint:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.rust == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy -- -D warnings
+
+  rust-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.rust == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, beta]
+        exclude:
+          - os: macos-latest
+            rust: beta
+          - os: windows-latest
+            rust: beta
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo test --all-features
+```
+
+## Language-Specific Jobs
+
+### Rust Jobs
+
+```yaml
+rust-coverage:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.rust == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin
+    - name: Generate coverage
+      run: |
+        cargo tarpaulin \
+          --out Xml \
+          --skip-clean \
+          --ignore-tests \
+          --exclude-files "benches/*"
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: cobertura.xml
+        fail_ci_if_error: false
+
+rust-docs:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.rust == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo doc --no-deps
+    - name: Check for broken links
+      run: cargo doc --no-deps 2>&1 | grep -i "warning" && exit 1 || exit 0
+```
+
+### Go Jobs
+
+```yaml
+go-lint:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.go == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    - uses: golangci/golangci-lint-action@v4
+      with:
+        working-directory: go-micropdf
+
+go-test:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.go == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    - name: Run tests
+      working-directory: go-micropdf
+      run: go test -v -race -coverprofile=coverage.txt ./...
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        files: go-micropdf/coverage.txt
+```
+
+### Node.js Jobs
+
+```yaml
+nodejs-lint:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.nodejs == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - name: Install dependencies
+      working-directory: micropdf-js
+      run: pnpm install
+    - name: Lint
+      working-directory: micropdf-js
+      run: pnpm lint
+    - name: Type check
+      working-directory: micropdf-js
+      run: pnpm typecheck
+
+nodejs-test:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.nodejs == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - uses: pnpm/action-setup@v3
+      with:
+        version: 9
+    - name: Install dependencies
+      working-directory: micropdf-js
+      run: pnpm install
+    - name: Run tests
+      working-directory: micropdf-js
+      run: pnpm test:coverage
+```
+
+### Python Jobs
+
+```yaml
+python-lint:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.python == 'true'
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      working-directory: micropdf-py
+      run: uv pip install -e ".[dev]" --system
+    - name: Lint with ruff
+      working-directory: micropdf-py
+      run: ruff check .
+    - name: Type check with mypy
+      working-directory: micropdf-py
+      run: mypy src/
+
+python-test:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.python == 'true'
+  strategy:
+    matrix:
+      python-version: ['3.10', '3.11', '3.12']
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      working-directory: micropdf-py
+      run: uv pip install -e ".[dev]" --system
+    - name: Run tests
+      working-directory: micropdf-py
+      run: pytest --cov=micropdf --cov-report=xml
+```
+
+## Test Configuration
+
+### Handling Platform-Specific Tests
+
+```rust
+// Skip tests that don't work on certain platforms
+#[test]
+#[cfg(not(windows))]
+fn test_unix_specific_feature() {
+    // This test only runs on Unix
+}
+
+#[test]
+#[cfg(not(target_os = "macos"))]
+fn test_linux_specific_feature() {
+    // This test doesn't run on macOS
+}
+
+// Skip tests under coverage instrumentation
+#[test]
+#[cfg_attr(tarpaulin, ignore)]
+fn test_with_global_state() {
+    // This test uses global state and may fail under parallel coverage
+}
+```
+
+### Handling Flaky Tests
+
+```yaml
+# Retry flaky tests
+- name: Run tests with retry
+  uses: nick-fields/retry@v2
+  with:
+    timeout_minutes: 10
+    max_attempts: 3
+    command: cargo test
+```
+
+### Test Timeouts
+
+```yaml
+jobs:
+  test:
+    timeout-minutes: 30  # Job-level timeout
+    steps:
+      - name: Run tests
+        timeout-minutes: 15  # Step-level timeout
+        run: cargo test
+```
+
+## Caching
+
+### Rust Caching
+
+```yaml
+- uses: Swatinem/rust-cache@v2
+  with:
+    workspaces: micropdf-rs -> target
+    shared-key: ${{ matrix.os }}-${{ matrix.rust }}
+```
+
+### Go Caching
+
+```yaml
+- uses: actions/setup-go@v5
+  with:
+    go-version: '1.21'
+    cache-dependency-path: go-micropdf/go.sum
+```
+
+### Node.js Caching
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: '20'
+    cache: 'pnpm'
+    cache-dependency-path: micropdf-js/pnpm-lock.yaml
+```
+
+### Python Caching
+
+```yaml
+- uses: actions/setup-python@v5
+  with:
+    python-version: '3.12'
+    cache: 'pip'
+    cache-dependency-path: micropdf-py/pyproject.toml
+```
+
+## Docker Builds
+
+```yaml
+docker-build:
+  needs: detect-changes
+  if: needs.detect-changes.outputs.rust == 'true'
+  strategy:
+    matrix:
+      platform: [amd64, arm64]
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      if: matrix.platform == 'arm64'
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/${{ matrix.platform }}
+        push: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+```
+
+## Release Workflow
+
+```yaml
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Build release
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: micropdf-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/libmicropdf*
+
+  publish-crates:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+        working-directory: micropdf-rs
+
+  publish-npm:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: pnpm/action-setup@v3
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks
+        working-directory: micropdf-js
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-pypi:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: pip install build twine
+      - name: Build package
+        run: python -m build
+        working-directory: micropdf-py
+      - name: Publish to PyPI
+        run: twine upload dist/*
+        working-directory: micropdf-py
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+```
+
+## Status Checks
+
+### Required Status Checks
+
+Configure branch protection to require these checks:
+
+- `rust-lint`
+- `rust-test (ubuntu-latest, stable)`
+- `go-lint`
+- `go-test`
+- `nodejs-lint`
+- `nodejs-test`
+- `python-lint`
+- `python-test (3.12)`
+
+### Status Badge
+
+```markdown
+[![CI](https://github.com/lexmata/micropdf/actions/workflows/ci.yml/badge.svg)](https://github.com/lexmata/micropdf/actions/workflows/ci.yml)
+```
+
+## Secrets Management
+
+### Required Secrets
+
+| Secret | Usage |
+|--------|-------|
+| `CRATES_IO_TOKEN` | Publish to crates.io |
+| `NPM_TOKEN` | Publish to npm |
+| `PYPI_TOKEN` | Publish to PyPI |
+| `CODECOV_TOKEN` | Upload coverage (optional) |
+
+### Environment Protection
+
+```yaml
+jobs:
+  publish:
+    environment: production  # Requires approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+```
+
+## Debugging CI Failures
+
+### Enable Debug Logging
+
+```yaml
+- name: Run with debug
+  run: cargo test -v
+  env:
+    RUST_BACKTRACE: 1
+    RUST_LOG: debug
+```
+
+### SSH Debugging (for complex issues)
+
+```yaml
+- name: Setup tmate session
+  if: failure()
+  uses: mxschmitt/action-tmate@v3
+  with:
+    limit-access-to-actor: true
+```
+
+### Artifact Upload for Failed Tests
+
+```yaml
+- name: Upload test artifacts
+  if: failure()
+  uses: actions/upload-artifact@v4
+  with:
+    name: test-failures
+    path: |
+      target/debug/deps/*.log
+      **/*.diff
+```
+
+## Checklist for New CI Jobs
+
+When adding a new CI job:
+
+- [ ] Add change detection filter
+- [ ] Configure appropriate caching
+- [ ] Set reasonable timeouts
+- [ ] Handle platform-specific behavior
+- [ ] Add to required status checks
+- [ ] Document any required secrets
+- [ ] Test on feature branch first

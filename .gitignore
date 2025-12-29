@@ -5,4 +5,12 @@ node_modules/
 .DS_Store
 
 # MuPDF source directory (cloned submodule for reference)
-mupdf/
+/mupdf/
+
+# Profiling data
+perf.data
+perf.data.old
+*.svg.perf
+
+# MuPDF source reference
+mupdf-source/
