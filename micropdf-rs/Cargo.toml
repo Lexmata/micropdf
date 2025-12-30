@@ -1,6 +1,6 @@
 [package]
 name = "micropdf"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 rust-version = "1.85"
 description = "A pure Rust PDF library - drop-in replacement for MuPDF with 100% API compatibility"
