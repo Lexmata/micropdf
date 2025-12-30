@@ -26,7 +26,7 @@ int32_t np_draw_circle(int32_t _ctx, int32_t _page, float _x, float _y, float ra
 int32_t np_draw_line(int32_t _ctx, int32_t _page, float _x0, float _y0, float _x1, float _y1, float r, float g, float b, float alpha, float line_width);
 int32_t np_draw_rectangle(int32_t _ctx, int32_t _page, float _x, float _y, float width, float height, float r, float g, float b, float alpha, int32_t _fill);
 int32_t np_linearize_pdf(int32_t _ctx, const char * input_path, const char * output_path);
-int32_t np_merge_pdfs(int32_t _ctx, const char * paths, int32_t count, const char * output_path);
+int32_t np_merge_pdfs(int32_t _ctx, const char * const * paths, int32_t count, const char * output_path);
 int32_t np_optimize_pdf(int32_t _ctx, const char * path);
 int32_t np_split_pdf(int32_t _ctx, const char * input_path, const char * output_dir);
 int32_t np_write_pdf(int32_t _ctx, int32_t _doc, const char * _path);
