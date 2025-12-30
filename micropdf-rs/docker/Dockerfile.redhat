@@ -1,4 +1,4 @@
-# Dockerfile for building MicroPDF as an RPM package (.rpm)
+# Dockerfile for building NanoPDF as an RPM package (.rpm)
 # Supports multi-architecture builds (amd64, arm64) via Docker Buildx
 FROM rust:1.87-bookworm AS builder
 

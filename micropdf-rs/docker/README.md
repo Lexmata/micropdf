@@ -1,6 +1,6 @@
-# MicroPDF Docker Packaging
+# NanoPDF Docker Packaging
 
-This directory contains Dockerfiles and scripts for building MicroPDF as system packages (Debian `.deb` and Red Hat/Fedora `.rpm`) for multiple architectures.
+This directory contains Dockerfiles and scripts for building NanoPDF as system packages (Debian `.deb` and Red Hat/Fedora `.rpm`) for multiple architectures.
 
 ## Supported Architectures
 
@@ -50,10 +50,10 @@ Built packages are placed in `../dist/` with architecture suffixes:
 
 ```
 dist/
-├── micropdf_0.1.0_amd64.deb
-├── micropdf_0.1.0_arm64.deb
-├── micropdf-0.1.0-amd64.rpm
-└── micropdf-0.1.0-arm64.rpm
+├── nanopdf_0.1.0_amd64.deb
+├── nanopdf_0.1.0_arm64.deb
+├── nanopdf-0.1.0-amd64.rpm
+└── nanopdf-0.1.0-arm64.rpm
 ```
 
 ## GitHub Actions CI/CD
@@ -91,50 +91,50 @@ git push origin v0.1.0
 All packages include:
 
 ### Libraries
-- `/usr/lib64/libmicropdf.so` - Shared library (755)
-- `/usr/lib64/libmicropdf.a` - Static library (644)
+- `/usr/lib64/libnanopdf.so` - Shared library (755)
+- `/usr/lib64/libnanopdf.a` - Static library (644)
 
 ### Headers
-- `/usr/include/micropdf/micropdf.h` - Main header
-- `/usr/include/micropdf/mupdf-ffi.h` - MuPDF compatibility header
-- `/usr/include/micropdf/mupdf/` - Auto-generated module headers
-- `/usr/include/micropdf/micropdf/enhanced.h` - Enhanced functions
+- `/usr/include/nanopdf/nanopdf.h` - Main header
+- `/usr/include/nanopdf/mupdf-ffi.h` - MuPDF compatibility header
+- `/usr/include/nanopdf/mupdf/` - Auto-generated module headers
+- `/usr/include/nanopdf/nanopdf/enhanced.h` - Enhanced functions
 
 ### pkg-config Files
-- `/usr/lib64/pkgconfig/micropdf.pc`
+- `/usr/lib64/pkgconfig/nanopdf.pc`
 - `/usr/lib64/pkgconfig/mupdf.pc` (compatibility alias)
 
 ### Documentation
-- `/usr/share/doc/micropdf/README`
-- `/usr/share/doc/micropdf/LICENSE-MIT`
-- `/usr/share/doc/micropdf/LICENSE-APACHE`
+- `/usr/share/doc/nanopdf/README`
+- `/usr/share/doc/nanopdf/LICENSE-MIT`
+- `/usr/share/doc/nanopdf/LICENSE-APACHE`
 
 ## Installation
 
 ### Debian/Ubuntu (AMD64)
 ```bash
-wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf_*_amd64.deb
-sudo dpkg -i micropdf_*_amd64.deb
+wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_amd64.deb
+sudo dpkg -i nanopdf_*_amd64.deb
 sudo apt-get install -f  # Resolve dependencies
 ```
 
 ### Debian/Ubuntu (ARM64)
 ```bash
-wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf_*_arm64.deb
-sudo dpkg -i micropdf_*_arm64.deb
+wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf_*_arm64.deb
+sudo dpkg -i nanopdf_*_arm64.deb
 sudo apt-get install -f  # Resolve dependencies
 ```
 
 ### Red Hat/Fedora (AMD64)
 ```bash
-wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf-*-amd64.rpm
-sudo rpm -i micropdf-*-amd64.rpm
+wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-amd64.rpm
+sudo rpm -i nanopdf-*-amd64.rpm
 ```
 
 ### Red Hat/Fedora (ARM64)
 ```bash
-wget https://github.com/Lexmata/micropdf/releases/latest/download/micropdf-*-arm64.rpm
-sudo rpm -i micropdf-*-arm64.rpm
+wget https://github.com/Lexmata/nanopdf/releases/latest/download/nanopdf-*-arm64.rpm
+sudo rpm -i nanopdf-*-arm64.rpm
 ```
 
 ## Verification
@@ -143,20 +143,20 @@ After installation:
 
 ```bash
 # Check version
-pkg-config --modversion micropdf
+pkg-config --modversion nanopdf
 
 # Get compiler flags
-pkg-config --cflags micropdf
+pkg-config --cflags nanopdf
 
 # Get linker flags
-pkg-config --libs micropdf
+pkg-config --libs nanopdf
 
 # Verify library location
-ldconfig -p | grep micropdf
+ldconfig -p | grep nanopdf
 
 # Check installed files
-dpkg -L micropdf      # Debian
-rpm -ql micropdf      # Red Hat
+dpkg -L nanopdf      # Debian
+rpm -ql nanopdf      # Red Hat
 ```
 
 ## Architecture Detection
@@ -165,8 +165,8 @@ The package manager automatically selects the correct architecture:
 
 ```bash
 # This will install the appropriate package for your system
-dpkg -i micropdf_*.deb    # Automatically uses amd64 or arm64
-rpm -i micropdf-*.rpm     # Automatically uses x86_64 or aarch64
+dpkg -i nanopdf_*.deb    # Automatically uses amd64 or arm64
+rpm -i nanopdf-*.rpm     # Automatically uses x86_64 or aarch64
 ```
 
 ## Troubleshooting
@@ -241,12 +241,12 @@ This significantly speeds up builds on repeated CI runs.
 ## Support
 
 For issues with packaging:
-1. Check the [CI logs](https://github.com/Lexmata/micropdf/actions)
+1. Check the [CI logs](https://github.com/Lexmata/nanopdf/actions)
 2. Verify Docker and Buildx versions
 3. Test locally with `./build.sh`
 4. Open an issue with build logs
 
 ## License
 
-Same as MicroPDF: MIT OR Apache-2.0
+Same as NanoPDF: MIT OR Apache-2.0
 

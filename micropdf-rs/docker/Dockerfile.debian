@@ -1,4 +1,4 @@
-# Dockerfile for building MicroPDF as a Debian package (.deb)
+# Dockerfile for building NanoPDF as a Debian package (.deb)
 # Supports multi-architecture builds (amd64, arm64) via Docker Buildx
 FROM rust:1.87-bookworm AS builder
 

@@ -7,6 +7,7 @@ on:
       - 'rs-v*'        # Rust-specific releases: rs-v0.1.0
       - 'js-v*'        # Node.js-specific releases: js-v0.1.0
       - 'go-v*'        # Go-specific releases: go-v0.1.0
+      - 'py-v*'        # Python-specific releases: py-v0.1.0
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,6 +21,7 @@ jobs:
       release_rust: ${{ steps.detect.outputs.rust }}
       release_nodejs: ${{ steps.detect.outputs.nodejs }}
       release_go: ${{ steps.detect.outputs.go }}
+      release_python: ${{ steps.detect.outputs.python }}
       version: ${{ steps.detect.outputs.version }}
     steps:
       - name: Detect release type
@@ -29,26 +31,36 @@ jobs:
           echo "Tag: $TAG"
 
           # Default: release all for v* tags
-          if [[ "$TAG" == v* ]] && [[ "$TAG" != rs-v* ]] && [[ "$TAG" != js-v* ]] && [[ "$TAG" != go-v* ]]; then
+          if [[ "$TAG" == v* ]] && [[ "$TAG" != rs-v* ]] && [[ "$TAG" != js-v* ]] && [[ "$TAG" != go-v* ]] && [[ "$TAG" != py-v* ]]; then
             echo "rust=true" >> $GITHUB_OUTPUT
             echo "nodejs=true" >> $GITHUB_OUTPUT
             echo "go=true" >> $GITHUB_OUTPUT
+            echo "python=true" >> $GITHUB_OUTPUT
             echo "version=${TAG#v}" >> $GITHUB_OUTPUT
           elif [[ "$TAG" == rs-v* ]]; then
             echo "rust=true" >> $GITHUB_OUTPUT
             echo "nodejs=false" >> $GITHUB_OUTPUT
             echo "go=false" >> $GITHUB_OUTPUT
+            echo "python=false" >> $GITHUB_OUTPUT
             echo "version=${TAG#rs-v}" >> $GITHUB_OUTPUT
           elif [[ "$TAG" == js-v* ]]; then
             echo "rust=false" >> $GITHUB_OUTPUT
             echo "nodejs=true" >> $GITHUB_OUTPUT
             echo "go=false" >> $GITHUB_OUTPUT
+            echo "python=false" >> $GITHUB_OUTPUT
             echo "version=${TAG#js-v}" >> $GITHUB_OUTPUT
           elif [[ "$TAG" == go-v* ]]; then
             echo "rust=false" >> $GITHUB_OUTPUT
             echo "nodejs=false" >> $GITHUB_OUTPUT
             echo "go=true" >> $GITHUB_OUTPUT
+            echo "python=false" >> $GITHUB_OUTPUT
             echo "version=${TAG#go-v}" >> $GITHUB_OUTPUT
+          elif [[ "$TAG" == py-v* ]]; then
+            echo "rust=false" >> $GITHUB_OUTPUT
+            echo "nodejs=false" >> $GITHUB_OUTPUT
+            echo "go=false" >> $GITHUB_OUTPUT
+            echo "python=true" >> $GITHUB_OUTPUT
+            echo "version=${TAG#py-v}" >> $GITHUB_OUTPUT
           fi
 
   # Build Rust static libraries for multiple platforms
@@ -395,10 +407,18 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Download prebuilds
+      - name: Download prebuilds from build-nodejs
         uses: actions/download-artifact@v4
         with:
           pattern: micropdf-js-*
+          path: micropdf-js/prebuilds/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Download prebuilds from release-bindings
+        uses: actions/download-artifact@v4
+        with:
+          pattern: nodejs-prebuild-*
           path: micropdf-js/prebuilds/
           merge-multiple: true
         continue-on-error: true
@@ -416,4 +436,50 @@ jobs:
         run: pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+  # Publish Python to PyPI
+  publish-python:
+    name: Publish to PyPI
+    needs: [detect-release, create-release]
+    if: ${{ needs.detect-release.outputs.release_python == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Download wheels from release-bindings
+        uses: actions/download-artifact@v4
+        with:
+          pattern: python-wheels-*
+          path: dist/
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Build source distribution
+        working-directory: micropdf-py
+        run: python -m build --sdist
+
+      - name: Copy wheels to dist
+        run: |
+          mkdir -p micropdf-py/dist
+          find dist -name "*.whl" -exec cp {} micropdf-py/dist/ \; 2>/dev/null || true
+          ls -la micropdf-py/dist/
+
+      - name: Publish to PyPI
+        working-directory: micropdf-py
+        run: python -m twine upload dist/* --skip-existing
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         continue-on-error: true
