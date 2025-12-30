@@ -27,7 +27,7 @@ int32_t fz_story_document(int32_t _ctx, int32_t story);
 float fz_story_em(int32_t story);
 int32_t fz_story_is_complete(int32_t story);
 int32_t fz_story_placed_regions_count(int32_t story);
-void fz_story_positions(int32_t ctx, int32_t story, StoryPositionCallback callback, void * arg);
+void fz_story_positions(int32_t ctx, int32_t story, StoryPositionCallback callback, c_void * arg);
 int32_t fz_story_rectangle_num(int32_t story);
 void fz_story_set_em(int32_t story, float em);
 int32_t fz_story_state(int32_t story);

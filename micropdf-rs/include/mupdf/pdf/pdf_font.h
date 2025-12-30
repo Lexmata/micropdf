@@ -42,24 +42,24 @@ int32_t pdf_font_wmode(int32_t _ctx, int32_t font);
 int32_t pdf_font_writing_supported(int32_t _ctx, int32_t _font);
 float pdf_font_x_height(int32_t _ctx, int32_t font);
 int32_t pdf_keep_font(int32_t _ctx, int32_t font);
-void pdf_load_encoding(*const c_char * estrings, const char * encoding);
+void pdf_load_encoding(const char * * estrings, const char * encoding);
 int32_t pdf_load_font(int32_t _ctx, int32_t _doc, int32_t _rdb, int32_t _obj);
 int32_t pdf_load_hail_mary_font(int32_t _ctx, int32_t _doc);
 int32_t pdf_load_type3_font(int32_t _ctx, int32_t _doc, int32_t _rdb, int32_t _obj);
 void pdf_load_type3_glyphs(int32_t _ctx, int32_t _doc, int32_t font);
 HorizontalMetrics pdf_lookup_hmtx(int32_t _ctx, int32_t font, int32_t cid);
-const u8 * pdf_lookup_substitute_font(int32_t _ctx, int32_t mono, int32_t serif, int32_t bold, int32_t italic, int32_t * len);
+u8 const * pdf_lookup_substitute_font(int32_t _ctx, int32_t mono, int32_t serif, int32_t bold, int32_t italic, int32_t * len);
 VerticalMetrics pdf_lookup_vmtx(int32_t _ctx, int32_t font, int32_t cid);
 int32_t pdf_new_font_desc(int32_t _ctx);
 void pdf_print_font(int32_t _ctx, int32_t _out, int32_t font);
-void pdf_set_cid_to_gid(int32_t _ctx, int32_t font, const u16 * table, size_t len);
-void pdf_set_cid_to_ucs(int32_t _ctx, int32_t font, const u16 * table, size_t len);
+void pdf_set_cid_to_gid(int32_t _ctx, int32_t font, u16 const * table, size_t len);
+void pdf_set_cid_to_ucs(int32_t _ctx, int32_t font, u16 const * table, size_t len);
 void pdf_set_default_hmtx(int32_t _ctx, int32_t font, int32_t w);
 void pdf_set_default_vmtx(int32_t _ctx, int32_t font, int32_t y, int32_t w);
 void pdf_set_font_flags(int32_t _ctx, int32_t font, int32_t flags);
 void pdf_set_font_name(int32_t _ctx, int32_t font, const char * name);
 void pdf_set_font_wmode(int32_t _ctx, int32_t font, int32_t wmode);
-void pdf_subset_fonts(int32_t _ctx, int32_t _doc, int32_t _pages_len, const int32_t * _pages);
+void pdf_subset_fonts(int32_t _ctx, int32_t _doc, int32_t _pages_len, int32_t const * _pages);
 
 #ifdef __cplusplus
 }

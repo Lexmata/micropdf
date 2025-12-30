@@ -17,7 +17,7 @@ extern "C" {
 // Svg Functions (32 total)
 // ============================================================================
 
-int32_t svg_add_path_command(int32_t _ctx, int32_t elem, int32_t cmd, int32_t relative, const float * args, int32_t num_args);
+int32_t svg_add_path_command(int32_t _ctx, int32_t elem, int32_t cmd, int32_t relative, float const * args, int32_t num_args);
 void svg_drop_document(int32_t _ctx, int32_t doc);
 void svg_drop_element(int32_t _ctx, int32_t elem);
 char * svg_element_type_name(int32_t _ctx, int32_t element_type);

@@ -21,7 +21,7 @@ int32_t fz_add_separation(int32_t _ctx, int32_t seps, const char * name, uint64_
 int32_t fz_add_separation_all(int32_t _ctx, int32_t seps);
 int32_t fz_add_separation_none(int32_t _ctx, int32_t seps);
 int32_t fz_clone_separations(int32_t _ctx, int32_t seps);
-void fz_convert_separation_colors(int32_t _ctx, int32_t seps, const float * src, int32_t src_n, float * dst, int32_t dst_n);
+void fz_convert_separation_colors(int32_t _ctx, int32_t seps, float const * src, int32_t src_n, float * dst, int32_t dst_n);
 int32_t fz_count_active_separations(int32_t _ctx, int32_t seps);
 int32_t fz_count_separations(int32_t _ctx, int32_t seps);
 void fz_disable_all_separations(int32_t _ctx, int32_t seps);
@@ -39,7 +39,7 @@ int32_t fz_separations_have_spots(int32_t _ctx, int32_t seps);
 void fz_set_all_separations_to_composite(int32_t _ctx, int32_t seps);
 void fz_set_all_separations_to_spot(int32_t _ctx, int32_t seps);
 void fz_set_separation_behavior(int32_t _ctx, int32_t seps, int32_t idx, int32_t behavior);
-void fz_set_separation_equivalent(int32_t _ctx, int32_t seps, int32_t idx, const float * cmyk);
+void fz_set_separation_equivalent(int32_t _ctx, int32_t seps, int32_t idx, float const * cmyk);
 
 #ifdef __cplusplus
 }

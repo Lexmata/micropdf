@@ -44,7 +44,7 @@ size_t pdf_parser_get_pos(int32_t _ctx, int32_t parser);
 const char * pdf_parser_get_string(int32_t _ctx, int32_t parser);
 int32_t pdf_parser_get_token(int32_t _ctx, int32_t parser);
 int32_t pdf_parser_has_error(int32_t _ctx, int32_t parser);
-int32_t pdf_parser_new(int32_t _ctx, const u8 * data, size_t len);
+int32_t pdf_parser_new(int32_t _ctx, u8 const * data, size_t len);
 void pdf_parser_set_pos(int32_t _ctx, int32_t parser, size_t pos);
 const char * pdf_token_name(int32_t tok);
 

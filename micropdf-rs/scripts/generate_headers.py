@@ -38,25 +38,27 @@ def convert_rust_type_to_c(rust_type: str) -> str:
         return TYPE_MAP[rust_type]
 
     # Handle pointers (including nested paths like std::ffi::c_char)
+    # Process nested pointers recursively
     if rust_type.startswith('*const '):
         inner = rust_type[7:].strip()
-        # Clean up fully qualified paths
-        if '::' in inner:
+        # Clean up fully qualified paths before recursing
+        if '::' in inner and not inner.startswith('*'):
             inner = inner.split('::')[-1]
-        if inner in TYPE_MAP:
-            inner = TYPE_MAP[inner]
-        if inner == 'char':
+        # Map c_char to char before recursing
+        if inner == 'c_char':
+            inner = 'char'
+        # Recursively convert the inner type (handles nested pointers)
+        inner_c = convert_rust_type_to_c(inner)
+        # Special case for char pointers
+        if inner_c == 'char':
             return 'const char *'
-        return f'const {inner} *'
+        return f'{inner_c} const *'
 
     if rust_type.startswith('*mut '):
         inner = rust_type[5:].strip()
-        # Clean up fully qualified paths
-        if '::' in inner:
-            inner = inner.split('::')[-1]
-        if inner in TYPE_MAP:
-            inner = TYPE_MAP[inner]
-        return f'{inner} *'
+        # Recursively convert the inner type (handles nested pointers)
+        inner_c = convert_rust_type_to_c(inner)
+        return f'{inner_c} *'
 
     # Handle Handle types
     if 'Handle' in rust_type:

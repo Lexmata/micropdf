@@ -22,7 +22,7 @@ int32_t fz_is_eof(int32_t _ctx, int32_t stm);
 int32_t fz_keep_stream(int32_t _ctx, int32_t stm);
 int32_t fz_open_buffer(int32_t _ctx, int32_t buf);
 int32_t fz_open_file(int32_t _ctx, const char * filename);
-int32_t fz_open_memory(int32_t _ctx, const u8 * data, size_t len);
+int32_t fz_open_memory(int32_t _ctx, u8 const * data, size_t len);
 int32_t fz_peek_byte(int32_t _ctx, int32_t stm);
 size_t fz_read(int32_t _ctx, int32_t stm, u8 * data, size_t len);
 int32_t fz_read_all(int32_t _ctx, int32_t stm);

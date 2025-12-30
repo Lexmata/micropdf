@@ -37,7 +37,7 @@ void fz_log_module(int32_t _ctx, const char * module, const char * message);
 void fz_log_set_warning_callback(int32_t _ctx, WarningCallback callback, void * user);
 void fz_log_trace(int32_t _ctx, const char * message);
 void fz_log_warn(int32_t _ctx, const char * message);
-WarningCallback fz_log_warning_callback(int32_t _ctx, *mut c_void * user);
+WarningCallback fz_log_warning_callback(int32_t _ctx, void * * user);
 int32_t fz_parse_log_level(const char * name);
 void fz_set_log_buffer_size(int32_t _ctx, size_t size);
 void fz_set_log_callback(int32_t _ctx, LogCallback callback, void * user);

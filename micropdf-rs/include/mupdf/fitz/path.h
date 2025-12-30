@@ -43,7 +43,7 @@ int32_t fz_stroke_state_is_valid(int32_t _ctx, int32_t stroke);
 int32_t fz_stroke_state_linejoin(int32_t _ctx, int32_t stroke);
 float fz_stroke_state_linewidth(int32_t _ctx, int32_t stroke);
 float fz_stroke_state_miterlimit(int32_t _ctx, int32_t stroke);
-void fz_stroke_state_set_dash(int32_t _ctx, int32_t stroke, float phase, const float * dashes, int32_t len);
+void fz_stroke_state_set_dash(int32_t _ctx, int32_t stroke, float phase, float const * dashes, int32_t len);
 void fz_stroke_state_set_end_cap(int32_t _ctx, int32_t stroke, int32_t cap);
 void fz_stroke_state_set_linejoin(int32_t _ctx, int32_t stroke, int32_t join);
 void fz_stroke_state_set_linewidth(int32_t _ctx, int32_t stroke, float linewidth);
