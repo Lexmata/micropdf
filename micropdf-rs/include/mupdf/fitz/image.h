@@ -18,10 +18,10 @@ extern "C" {
 // ============================================================================
 
 int32_t fz_clone_image(int32_t _ctx, int32_t image);
-int32_t fz_decode_image(int32_t _ctx, int32_t image, int32_t _l2factor, const fz_irect * _subarea);
-int32_t fz_decode_image_scaled(int32_t _ctx, int32_t image, int32_t w, int32_t h, int32_t _l2factor, const fz_irect * _subarea);
+int32_t fz_decode_image(int32_t _ctx, int32_t image, int32_t _l2factor, fz_irect const * _subarea);
+int32_t fz_decode_image_scaled(int32_t _ctx, int32_t image, int32_t w, int32_t h, int32_t _l2factor, fz_irect const * _subarea);
 void fz_drop_image(int32_t _ctx, int32_t image);
-int32_t fz_get_pixmap_from_image(int32_t _ctx, int32_t image, const fz_irect * _subarea, fz_matrix * _ctm, int32_t * w, int32_t * h);
+int32_t fz_get_pixmap_from_image(int32_t _ctx, int32_t image, fz_irect const * _subarea, fz_matrix * _ctm, int32_t * w, int32_t * h);
 int32_t fz_image_bpp(int32_t _ctx, int32_t _image);
 int32_t fz_image_colorspace(int32_t _ctx, int32_t image);
 int32_t fz_image_h(int32_t _ctx, int32_t image);
@@ -36,8 +36,8 @@ int32_t fz_image_xres(int32_t _ctx, int32_t image);
 int32_t fz_image_yres(int32_t _ctx, int32_t image);
 int32_t fz_keep_image(int32_t _ctx, int32_t image);
 int32_t fz_new_image_from_buffer(int32_t _ctx, int32_t buffer);
-int32_t fz_new_image_from_buffer_data(int32_t _ctx, const u8 * data, size_t len);
-int32_t fz_new_image_from_data(int32_t _ctx, int32_t w, int32_t h, int32_t _bpc, int32_t _colorspace, int32_t _xres, int32_t _yres, int32_t _interpolate, int32_t _imagemask, const float * _decode, const u8 * _mask, const u8 * data, int32_t len);
+int32_t fz_new_image_from_buffer_data(int32_t _ctx, u8 const * data, size_t len);
+int32_t fz_new_image_from_data(int32_t _ctx, int32_t w, int32_t h, int32_t _bpc, int32_t _colorspace, int32_t _xres, int32_t _yres, int32_t _interpolate, int32_t _imagemask, float const * _decode, u8 const * _mask, u8 const * data, int32_t len);
 int32_t fz_new_image_from_file(int32_t _ctx, const char * filename);
 int32_t fz_new_image_from_pixmap(int32_t _ctx, int32_t pixmap, int32_t _mask);
 

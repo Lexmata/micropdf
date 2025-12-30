@@ -20,7 +20,7 @@ extern "C" {
 void fz_bitmap_clear(int32_t _ctx, int32_t bitmap);
 size_t fz_bitmap_compress_rle(int32_t _ctx, int32_t bitmap, u8 * output, size_t max_size);
 size_t fz_bitmap_compressed_size(int32_t _ctx, int32_t bitmap, int32_t _compression);
-const u8 * fz_bitmap_data(int32_t _ctx, int32_t bitmap);
+u8 const * fz_bitmap_data(int32_t _ctx, int32_t bitmap);
 size_t fz_bitmap_data_size(int32_t _ctx, int32_t bitmap);
 void fz_bitmap_fill(int32_t _ctx, int32_t bitmap);
 int32_t fz_bitmap_get_pixel(int32_t _ctx, int32_t bitmap, int32_t x, int32_t y);

@@ -18,8 +18,8 @@ extern "C" {
 // ============================================================================
 
 int fz_has_simd(void);
-int fz_simd_buffer_copy(u8 * dst, const u8 * src, size_t len);
-int fz_simd_buffer_equal(const u8 * a, const u8 * b, size_t len);
+int fz_simd_buffer_copy(u8 * dst, u8 const * src, size_t len);
+int fz_simd_buffer_equal(u8 const * a, u8 const * b, size_t len);
 int fz_simd_buffer_fill(u8 * dst, size_t len, u8 value);
 [c_float fz_simd_cmyk_to_rgb(float c, float m, float y, float k);
 SimdFeatures fz_simd_features(void);

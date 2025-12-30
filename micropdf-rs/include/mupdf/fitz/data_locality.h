@@ -30,7 +30,7 @@ size_t fz_page_buffer_len(int32_t _ctx, int32_t buf);
 void fz_page_buffer_prefetch_read(int32_t _ctx, int32_t buf, int locality);
 void fz_page_buffer_prefetch_write(int32_t _ctx, int32_t buf, int locality);
 int fz_page_buffer_read(int32_t _ctx, int32_t buf, size_t offset, u8 * dst, size_t len);
-int fz_page_buffer_write(int32_t _ctx, int32_t buf, const u8 * data, size_t len);
+int fz_page_buffer_write(int32_t _ctx, int32_t buf, u8 const * data, size_t len);
 size_t fz_point_soa_len(int32_t _ctx, int32_t soa);
 void fz_point_soa_push(int32_t _ctx, int32_t soa, float x, float y);
 void fz_point_soa_transform(int32_t _ctx, int32_t soa, float a, float b, float c, float d, float e, float f);

@@ -30,8 +30,8 @@ int32_t fz_text_count_items(int32_t _ctx, int32_t text);
 int32_t fz_text_count_spans(int32_t _ctx, int32_t text);
 int32_t fz_text_is_empty(int32_t _ctx, int32_t text);
 int32_t fz_text_is_valid(int32_t _ctx, int32_t text);
-int32_t fz_text_language(int32_t _ctx, int32_t text, char * buf, int32_t len);
-int32_t fz_text_walk(int32_t _ctx, int32_t text, const void * callback, void * arg);
+int32_t fz_text_language(int32_t _ctx, int32_t text, c_char * buf, int32_t len);
+int32_t fz_text_walk(int32_t _ctx, int32_t text, void const * callback, c_void * arg);
 
 #ifdef __cplusplus
 }

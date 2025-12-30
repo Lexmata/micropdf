@@ -20,8 +20,8 @@ extern "C" {
 size_t fz_cache_line_size(void);
 size_t fz_cache_padding(size_t size);
 int fz_fits_in_cache_lines(size_t size, size_t lines);
-int fz_is_cache_aligned(const void * ptr);
-int fz_is_page_aligned(const void * ptr);
+int fz_is_cache_aligned(void const * ptr);
+int fz_is_page_aligned(void const * ptr);
 FfiLayoutInfo fz_layout_matrix(void);
 FfiLayoutInfo fz_layout_point(void);
 FfiLayoutInfo fz_layout_quad(void);

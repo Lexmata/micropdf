@@ -17,7 +17,7 @@ extern "C" {
 // Xps Functions (22 total)
 // ============================================================================
 
-int32_t xps_add_part(int32_t _ctx, int32_t doc, const char * name, const u8 * data, size_t len, const char * content_type);
+int32_t xps_add_part(int32_t _ctx, int32_t doc, const char * name, u8 const * data, size_t len, const char * content_type);
 int32_t xps_add_target(int32_t _ctx, int32_t doc, const char * name, int32_t page);
 char * xps_content_type_string(int32_t _ctx, int32_t content_type);
 int32_t xps_count_documents(int32_t _ctx, int32_t doc);
@@ -30,7 +30,7 @@ char * xps_get_document_name(int32_t _ctx, int32_t doc, int32_t doc_num);
 char * xps_get_page_name(int32_t _ctx, int32_t doc, int32_t page_num);
 int32_t xps_get_page_size(int32_t _ctx, int32_t doc, int32_t page_num, float * width, float * height);
 char * xps_get_part_content_type(int32_t _ctx, int32_t doc, const char * name);
-const u8 * xps_get_part_data(int32_t _ctx, int32_t doc, const char * name, size_t * len_out);
+u8 const * xps_get_part_data(int32_t _ctx, int32_t doc, const char * name, size_t * len_out);
 int32_t xps_has_part(int32_t _ctx, int32_t doc, const char * name);
 int32_t xps_lookup_font(int32_t _ctx, int32_t doc, const char * uri);
 int32_t xps_lookup_target(int32_t _ctx, int32_t doc, const char * name);

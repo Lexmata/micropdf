@@ -25,7 +25,7 @@ int32_t fz_document_writer_is_closed(int32_t wri);
 int32_t fz_document_writer_page_count(int32_t wri);
 void fz_drop_document_writer(int32_t _ctx, int32_t wri);
 void fz_end_page(int32_t _ctx, int32_t wri);
-int32_t fz_has_option(int32_t _ctx, const char * opts, const char * key, *const c_char * val);
+int32_t fz_has_option(int32_t _ctx, const char * opts, const char * key, const char * * val);
 int32_t fz_new_cbz_writer(int32_t _ctx, const char * path, const char * options);
 int32_t fz_new_cbz_writer_with_output(int32_t _ctx, int32_t out, const char * options);
 int32_t fz_new_csv_writer(int32_t _ctx, const char * path, const char * options);

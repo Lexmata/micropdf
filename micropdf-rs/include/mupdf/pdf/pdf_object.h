@@ -26,7 +26,7 @@ int32_t pdf_arena_new_int(int32_t _ctx, uint32_t arena_id, int64_t value);
 int32_t pdf_arena_new_name(int32_t _ctx, uint32_t arena_id, const char * name);
 int32_t pdf_arena_new_null(int32_t _ctx, uint32_t arena_id);
 int32_t pdf_arena_new_real(int32_t _ctx, uint32_t arena_id, float value);
-int32_t pdf_arena_new_string(int32_t _ctx, uint32_t arena_id, const u8 * data, size_t len);
+int32_t pdf_arena_new_string(int32_t _ctx, uint32_t arena_id, u8 const * data, size_t len);
 void pdf_array_delete(int32_t _ctx, int32_t array, int32_t index);
 int32_t pdf_array_get(int32_t _ctx, int32_t array, int32_t index);
 void pdf_array_insert(int32_t _ctx, int32_t array, int32_t index, int32_t obj);

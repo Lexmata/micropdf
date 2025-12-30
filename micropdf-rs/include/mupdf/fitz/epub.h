@@ -18,7 +18,7 @@ extern "C" {
 // ============================================================================
 
 int32_t epub_add_creator(int32_t _ctx, int32_t doc, const char * creator);
-int32_t epub_add_file(int32_t _ctx, int32_t doc, const char * path, const u8 * data, size_t len);
+int32_t epub_add_file(int32_t _ctx, int32_t doc, const char * path, u8 const * data, size_t len);
 int32_t epub_add_manifest_item(int32_t _ctx, int32_t doc, const char * id, const char * href, const char * media_type);
 int32_t epub_add_spine_item(int32_t _ctx, int32_t doc, const char * idref, int32_t linear);
 int32_t epub_add_toc_entry(int32_t _ctx, int32_t doc, const char * id, const char * label, const char * content);
@@ -27,7 +27,7 @@ void epub_free_string(char * s);
 char * epub_get_creator(int32_t _ctx, int32_t doc, int32_t index);
 int32_t epub_get_creator_count(int32_t _ctx, int32_t doc);
 int32_t epub_get_direction(int32_t _ctx, int32_t doc);
-const u8 * epub_get_file_data(int32_t _ctx, int32_t doc, const char * path, size_t * len_out);
+u8 const * epub_get_file_data(int32_t _ctx, int32_t doc, const char * path, size_t * len_out);
 char * epub_get_identifier(int32_t _ctx, int32_t doc);
 char * epub_get_language(int32_t _ctx, int32_t doc);
 char * epub_get_manifest_href(int32_t _ctx, int32_t doc, const char * id);

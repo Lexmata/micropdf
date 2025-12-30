@@ -34,7 +34,7 @@ size_t fz_pool_high_water(int32_t _ctx, int32_t pool);
 void fz_pool_reset(int32_t _ctx, int32_t pool);
 void fz_pool_set_block_size(int32_t _ctx, int32_t pool, size_t size);
 void fz_pool_shrink(int32_t _ctx, int32_t pool);
-char * fz_pool_strdup(int32_t _ctx, int32_t pool, const char * s);
+c_char * fz_pool_strdup(int32_t _ctx, int32_t pool, const char * s);
 size_t fz_pool_used(int32_t _ctx, int32_t pool);
 
 #ifdef __cplusplus

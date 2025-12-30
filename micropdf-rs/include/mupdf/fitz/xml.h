@@ -26,7 +26,7 @@ int32_t fz_xml_att_count(int32_t _ctx, int32_t node);
 int32_t fz_xml_child_count(int32_t _ctx, int32_t node);
 int32_t fz_xml_down(int32_t _ctx, int32_t node);
 int32_t fz_xml_find(int32_t _ctx, int32_t node, const char * path);
-int32_t fz_xml_find_all(int32_t _ctx, int32_t node, const char * tag, Handle * results, int32_t max_results);
+int32_t fz_xml_find_all(int32_t _ctx, int32_t node, const char * tag, int32_t * results, int32_t max_results);
 int32_t fz_xml_is_tag(int32_t _ctx, int32_t node, const char * tag);
 int32_t fz_xml_next(int32_t _ctx, int32_t node);
 int32_t fz_xml_node_type(int32_t _ctx, int32_t node);

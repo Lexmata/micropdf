@@ -31,7 +31,7 @@ void fz_flush_warnings(int32_t _ctx);
 int fz_has_error(int32_t ctx);
 void fz_ignore_error(int32_t ctx);
 int32_t fz_keep_context(int32_t ctx);
-int32_t fz_new_context(const void * _alloc, const void * we use Rust allocator _locks, size_t we use Rust sync max_store);
+int32_t fz_new_context(void const * _alloc, void const * we use Rust allocator _locks, size_t we use Rust sync max_store);
 int32_t fz_new_default_context(void);
 void fz_report_error(int32_t ctx);
 void fz_rethrow(int32_t ctx);

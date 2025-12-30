@@ -17,11 +17,11 @@ extern "C" {
 // Annot Functions (31 total)
 // ============================================================================
 
-int32_t pdf_annot_author(int32_t _ctx, int32_t annot, char * buf, int32_t size);
+int32_t pdf_annot_author(int32_t _ctx, int32_t annot, c_char * buf, int32_t size);
 float pdf_annot_border_width(int32_t _ctx, int32_t annot);
 void pdf_annot_clear_dirty(int32_t _ctx, int32_t annot);
 void pdf_annot_color(int32_t _ctx, int32_t annot, int32_t * n, float * color);
-int32_t pdf_annot_contents(int32_t _ctx, int32_t annot, char * buf, int32_t size);
+int32_t pdf_annot_contents(int32_t _ctx, int32_t annot, c_char * buf, int32_t size);
 uint32_t pdf_annot_flags(int32_t _ctx, int32_t annot);
 int32_t pdf_annot_has_dirty(int32_t _ctx, int32_t annot);
 int32_t pdf_annot_has_popup(int32_t _ctx, int32_t annot);
@@ -40,10 +40,10 @@ int32_t pdf_keep_annot(int32_t _ctx, int32_t annot);
 int32_t pdf_next_annot(int32_t _ctx, int32_t annot);
 void pdf_set_annot_author(int32_t _ctx, int32_t annot, const char * text);
 void pdf_set_annot_border_width(int32_t _ctx, int32_t annot, float width);
-void pdf_set_annot_color(int32_t _ctx, int32_t annot, int32_t n, const float * color);
+void pdf_set_annot_color(int32_t _ctx, int32_t annot, int32_t n, float const * color);
 void pdf_set_annot_contents(int32_t _ctx, int32_t annot, const char * text);
 void pdf_set_annot_flags(int32_t _ctx, int32_t annot, uint32_t flags);
-void pdf_set_annot_interior_color(int32_t _ctx, int32_t annot, int32_t n, const float * color);
+void pdf_set_annot_interior_color(int32_t _ctx, int32_t annot, int32_t n, float const * color);
 void pdf_set_annot_line(int32_t _ctx, int32_t annot, fz_point a, fz_point b);
 void pdf_set_annot_opacity(int32_t _ctx, int32_t annot, float opacity);
 void pdf_set_annot_rect(int32_t _ctx, int32_t annot, fz_rect rect);

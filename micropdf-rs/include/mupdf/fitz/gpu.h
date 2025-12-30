@@ -31,10 +31,10 @@ void fz_gpu_drop_shader(int32_t shader);
 void fz_gpu_drop_texture(int32_t texture);
 int32_t fz_gpu_finish(int32_t device);
 int32_t fz_gpu_flush(int32_t device);
-int32_t fz_gpu_render_page(int32_t device, int32_t page, int32_t texture, const float * ctm);
+int32_t fz_gpu_render_page(int32_t device, int32_t page, int32_t texture, float const * ctm);
 int32_t fz_gpu_texture_download(int32_t device, int32_t texture, u8 * data, int32_t stride);
 int32_t fz_gpu_texture_height(int32_t texture);
-int32_t fz_gpu_texture_upload(int32_t device, int32_t texture, const u8 * data, int32_t stride);
+int32_t fz_gpu_texture_upload(int32_t device, int32_t texture, u8 const * data, int32_t stride);
 int32_t fz_gpu_texture_width(int32_t texture);
 
 #ifdef __cplusplus

@@ -44,9 +44,9 @@ int32_t fz_open_document_with_stream(int32_t _ctx, const char * _magic, int32_t 
 int32_t fz_page_label(int32_t _ctx, int32_t doc, int32_t page_num, char * buf, int32_t size);
 int32_t fz_page_number_from_location(int32_t _ctx, int32_t _doc, int32_t chapter, int32_t page);
 int32_t fz_resolve_link(int32_t _ctx, int32_t doc, const char * uri, float * xp, float * yp);
-void fz_run_page(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
-void fz_run_page_annots(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
-void fz_run_page_contents(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, void * cookie);
+void fz_run_page(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, c_void * cookie);
+void fz_run_page_annots(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, c_void * cookie);
+void fz_run_page_contents(int32_t _ctx, int32_t page, int32_t device, fz_matrix transform, c_void * cookie);
 
 #ifdef __cplusplus
 }

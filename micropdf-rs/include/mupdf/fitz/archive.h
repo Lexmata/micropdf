@@ -28,7 +28,7 @@ int32_t fz_has_archive_entry(int32_t _ctx, int32_t archive, const char * name);
 int32_t fz_keep_archive(int32_t _ctx, int32_t archive);
 int32_t fz_list_archive_entry(int32_t _ctx, int32_t archive, int32_t idx, char * buf, int32_t bufsize);
 int32_t fz_open_archive(int32_t _ctx, const char * path);
-int32_t fz_open_archive_with_buffer(int32_t _ctx, const u8 * data, size_t size);
+int32_t fz_open_archive_with_buffer(int32_t _ctx, u8 const * data, size_t size);
 int32_t fz_read_archive_entry(int32_t _ctx, int32_t archive, const char * name);
 
 #ifdef __cplusplus
